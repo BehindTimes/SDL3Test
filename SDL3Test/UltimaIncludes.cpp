@@ -1,0 +1,34 @@
+#include <string>
+
+std::string U3PrefCheckedResourcesDate("crd");
+std::string U3PrefSoundInactive("sol");
+std::string U3PrefMusicInactive("mui");
+std::string U3PrefSoundVolume("sov");
+std::string U3PrefMusicVolume("muv");
+std::string U3PrefSpeechInactive("spi");
+std::string U3PrefSpeedUnconstrain("spu");
+std::string U3PrefOriginalSize("osz");
+std::string U3PrefFullScreen("fsn");
+std::string U3PrefDontAskDisplayMode("dad");
+std::string U3PrefNoEducateAboutFullScreen("fse");
+std::string U3PrefFullScreenResChange("fss");
+std::string U3PrefClassicAppearance("cla");
+std::string U3PrefIncludeWind("win");
+std::string U3PrefNoDiagonals("dig");
+std::string U3PrefAutoSave("asv");
+std::string U3PrefManualCombat("cmb");
+std::string U3PrefNoAutoHeal("nah");
+std::string U3PrefAsyncSound("asy");
+std::string U3PrefHealThreshold("hth");
+std::string U3PrefCurWindowX("cwx");
+std::string U3PrefCurWindowY("cwy");
+std::string U3PrefSaveWindowX("swx");
+std::string U3PrefSaveWindowY("swy");
+std::string U3PrefGameFont("fon");
+std::string U3PrefTileSet("tyl"); // was 'til' which was full -Tiles.png whatnot
+std::string U3PrefUserName("unm");
+std::string U3PrefRegCode("rgc");
+std::string U3PrefLatestReleaseNumber("crn");
+std::string U3PrefLatestReleaseNote("not");
+std::string U3PrefInformedNewVersionDate("inv");
+std::string U3PrefInformDayInterval("idi");

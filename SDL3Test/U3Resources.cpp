@@ -1,7 +1,6 @@
 #include <SDL_image.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
-#include <filesystem>
 #include <iostream>
 
 #include "U3Resources.h"
@@ -9,17 +8,13 @@
 extern short screenOffsetX;
 extern short screenOffsetY;
 extern SDL_Window* window;
-
-constexpr int UI_NUM_X = 16;
-constexpr int UI_NUM_Y = 3;
+extern TTF_TextEngine* engine_surface;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
 
 constexpr int TILES_NUM_X = 12;
 constexpr int TILES_NUM_Y = 16;
-
-TTF_TextEngine* engine_surface = NULL;
 
 U3Resources::U3Resources() :
 	m_renderer(nullptr),
@@ -39,17 +34,40 @@ U3Resources::U3Resources() :
 	m_ultimaLogoHeight(0),
 	m_blockSize(32),
 	m_font(nullptr),
-	m_font_12(nullptr),
+	m_font_11(nullptr),
 	m_demoptr(0),
-	m_curTick(0),
-	m_elapsedTime(0),
-	m_TileArray(0)
+	m_curTickScroll(0),
+	m_elapsedTimeScroll(0),
+	m_curTickDemo(0),
+	m_elapsedTimeDemo(0),
+	m_TileArray(0),
+	m_demoDelay(0),
+	m_elapsedTimeFlag(0),
+	m_elapsedTimeAnimate(0),
+	m_numUpdateFlag(0),
+	m_numUpdateAnimate(0),
+	m_xPos(0),
+	m_yPos(0),
+	m_cleanupAlert(false)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
+	memset(m_shapeSwap, 0, sizeof(bool) * 256);
+	m_animFlag[0] = 0;
+	m_animFlag[1] = 16;
+	m_animFlag[2] = 0;
+	m_animFlag[3] = 5;
+
+	m_twiddleFlag[0] = 0;
+	m_twiddleFlag[1] = 3;
+	m_twiddleFlag[2] = 2;
+	m_twiddleFlag[3] = 1;
+
+	memset(m_Player, NULL, sizeof(char) * (21 * 65));
 }
 
 U3Resources::~U3Resources()
 {
+	m_AlertDlg.reset();
 	m_buttons.clear();
 
 	for (auto mode : m_allGraphics)
@@ -119,12 +137,23 @@ U3Resources::~U3Resources()
 	{
 		TTF_CloseFont(m_font);
 	}
-	if (m_font_12)
+	if (m_font_11)
 	{
-		TTF_CloseFont(m_font_12);
+		TTF_CloseFont(m_font_11);
 	}
 
 	TTF_Quit();
+}
+
+void U3Resources::m_AlertCallback()
+{
+	m_cleanupAlert = true;
+}
+
+void U3Resources::CreateAlertMessage(int message)
+{
+	m_AlertDlg = std::make_unique<U3Dialog>(m_renderer, engine_surface, &m_currentGraphics, &m_standardGraphics,
+		m_blockSize, message, std::bind(&U3Resources::m_AlertCallback, this));
 }
 
 void U3Resources::SetPreference(U3PreferencesType type, bool value)
@@ -141,22 +170,37 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 
 void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 {
-	m_curTick = curTick;
+	m_curTickScroll = curTick;
+	m_curTickDemo = curTick;
 	if (initializeTimer)
 	{
-		m_elapsedTime = 0;
+		m_elapsedTimeScroll = 0;
+		m_elapsedTimeDemo = 0;
+		m_elapsedTimeFlag = 0;
+		m_elapsedTimeAnimate = 0;
+		m_demoDelay = 0;
 	}
 }
 
-void U3Resources::init(SDL_Renderer* renderer)
+bool U3Resources::init(SDL_Renderer* renderer)
 {
 	m_renderer = renderer;
-	loadFont();
+	if (!loadFont())
+	{
+		return false;
+	}
 	loadGraphics();
 	loadImages();
-	loadPLists();
+	if (!loadPLists())
+	{
+		return false;
+	}
 	loadButtons();
 	loadDemo();
+	if (!loadSaveGame())
+	{
+		return false;
+	}
 
 	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
 	{
@@ -164,6 +208,95 @@ void U3Resources::init(SDL_Renderer* renderer)
 		m_currentGraphics = m_standardGraphics; // 6
 	}
 	//changeMode(1);
+	return true;
+}
+
+bool U3Resources::loadRoster(std::filesystem::path rosterPath)
+{
+	short player, byte;
+	const size_t roster_size = 1280;
+	unsigned char roster_data[roster_size];
+	std::uintmax_t file_size = std::filesystem::file_size(rosterPath);
+
+	if (file_size != roster_size)
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(rosterPath.string().c_str(), "rb");
+	if (!file)
+	{
+		return false;
+	}
+	SDL_ReadIO(file, roster_data, roster_size);
+	SDL_CloseIO(file);
+
+	for (player = 0; player < 20; player++)
+	{
+		for (byte = 0; byte < 64; byte++)
+		{
+			m_Player[player + 1][byte] = *(roster_data + ((player) * 64) + byte);
+		}
+	}
+
+	return true;
+}
+
+bool U3Resources::loadParty(std::filesystem::path partyPath)
+{
+	const size_t party_size = 64;
+	std::uintmax_t file_size = std::filesystem::file_size(partyPath);
+
+	if (file_size != party_size)
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(partyPath.string().c_str(), "rb");
+	if (!file)
+	{
+		return false;
+	}
+	SDL_ReadIO(file, m_Party, party_size);
+	SDL_CloseIO(file);
+
+	return true;
+}
+
+bool U3Resources::loadSaveGame()
+{
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= SaveLoc;
+
+	std::filesystem::path partyPath = currentPath / "PARTY.ULT";
+	std::filesystem::path rosterPath = currentPath / "ROSTER.ULT";
+	std::filesystem::path sosariaPath = currentPath / "SOSARIA.ULT";
+
+	try
+	{
+		if (!std::filesystem::is_directory(currentPath))
+		{
+
+			bool valid = std::filesystem::create_directory(currentPath);
+			if (!valid)
+			{
+				return false;
+			}
+
+		}
+		if (std::filesystem::exists(rosterPath))
+		{
+			loadRoster(rosterPath);
+		}
+		if (std::filesystem::exists(partyPath))
+		{
+			loadParty(partyPath);
+		}
+	}
+	catch (std::exception)
+	{
+		return false;
+	}
+	return true;
 }
 
 void U3Resources::loadDemo()
@@ -229,8 +362,8 @@ bool U3Resources::createFont()
 		return false;
 	}
 
-	m_font_12 = TTF_OpenFont(currentPath.string().c_str(), 12.0f * scaler);
-	if (!m_font_12)
+	m_font_11 = TTF_OpenFont(currentPath.string().c_str(), 11.0f * scaler);
+	if (!m_font_11)
 	{
 		return false;
 	}
@@ -238,7 +371,7 @@ bool U3Resources::createFont()
 	return true;
 }
 
-void U3Resources::CaclulateBlockSize()
+void U3Resources::CalculateBlockSize()
 {
 	int windowWidth, windowHeight;
 	int width, height;
@@ -260,13 +393,20 @@ void U3Resources::CaclulateBlockSize()
 	screenOffsetX = (windowWidth - m_blockSize * 40) / 2;
 	screenOffsetY = (windowHeight - m_blockSize * 24) / 2;
 
+	if (m_AlertDlg.get())
+	{
+		m_AlertDlg->changeBlockSize(m_blockSize);
+	}
+
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+		m_font = nullptr;
 	}
-	if (m_font_12)
+	if (m_font_11)
 	{
-		TTF_CloseFont(m_font_12);
+		TTF_CloseFont(m_font_11);
+		m_font_11 = nullptr;
 	}
 	createFont();
 }
@@ -710,7 +850,7 @@ void U3Resources::renderString(std::string curString, int x, int y)
 	else
 	{
 		TTF_Text* text_obj = NULL;
-		text_obj = TTF_CreateText(engine_surface, m_font, curString.c_str(), 0);
+		text_obj = TTF_CreateText(engine_surface, m_font_11, curString.c_str(), 0);
 		int w, h;
 		TTF_GetTextSize(text_obj, &w, &h);
 
@@ -726,6 +866,31 @@ void U3Resources::renderString(std::string curString, int x, int y)
 			TTF_DestroyText(text_obj);
 			text_obj = NULL;
 		}
+	}
+}
+
+void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align)
+{
+	TTF_Text* text_obj = NULL;
+	text_obj = TTF_CreateText(engine_surface, font, curString.c_str(), 0);
+
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
+
+	int w, h;
+	int offsetW = 0;
+	TTF_GetTextSize(text_obj, &w, &h);
+
+	if (align == 1)
+	{
+		offsetW = w * -1;
+	}
+
+	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX + offsetW, (float)y + screenOffsetY);
+
+	if (text_obj)
+	{
+		TTF_DestroyText(text_obj);
+		text_obj = NULL;
 	}
 }
 
@@ -1028,6 +1193,14 @@ void U3Resources::CenterMessage(short which, short y)
 	}
 }
 
+void U3Resources::SetButtonVisibility(short button, bool visible)
+{
+	if (button >= 0 && m_buttons.size() > button)
+	{
+		m_buttons[button].setVisible(visible);
+	}
+}
+
 void U3Resources::DrawButton(short butNum)
 {
 	short butOffsetX[] = { 67, 202, 473, 26, 205, 384, 384, 563, 338 };
@@ -1076,10 +1249,291 @@ void U3Resources::UpdateButtons(float xPos, float yPos, int mouseState)
 	}
 }
 
+void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect)
+{
+	int yPos = tileNum % TILES_NUM_Y;
+	int xPos = (tileNum / TILES_NUM_Y) * 2;
+	myRect.x = xPos * m_currentGraphics->tiles_width;
+	myRect.y = yPos * m_currentGraphics->tiles_height;
+	myRect.w = m_currentGraphics->tiles_width;
+	myRect.h = m_currentGraphics->tiles_height;
+}
+
+void U3Resources::ScrollShape(int tilenum, float offset)
+{
+	int tileY = (tilenum / 2) % TILES_NUM_Y;
+	int tileX = ((tilenum / 2) / TILES_NUM_Y) * 2;
+	int realTile = tileX * TILES_NUM_Y + tileY;
+
+	SDL_FRect myRect;
+	myRect.x = 0;
+	myRect.y = m_currentGraphics->tiles_height * offset;
+	myRect.w = m_currentGraphics->tiles_width;
+	myRect.h = m_currentGraphics->tiles_height;
+
+	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+	myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+}
+
+void U3Resources::SwapShape(short shape)
+{
+	int realTile = shape / 2;
+
+	int multval = realTile / 16;
+
+	realTile += multval * 16;
+
+	if (realTile >= 256)
+	{
+		return;
+	}
+
+	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+	SDL_RenderClear(m_renderer);
+	if (m_shapeSwap[realTile])
+	{
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile + 16], NULL, NULL);
+	}
+	else
+	{
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, NULL);
+	}
+	SDL_SetRenderTarget(m_renderer, NULL);
+	m_shapeSwap[realTile] = !m_shapeSwap[realTile];
+}
+
+void U3Resources::TwiddleFlags()
+{
+	if (m_numUpdateFlag > 0)
+	{
+		m_twiddleFlag[1]--;
+		if (m_twiddleFlag[1] < 1)
+		{
+			m_twiddleFlag[1] = 3;
+			SwapShape(0x0E);
+		}    // Castle flag changes every fourth pass
+		m_twiddleFlag[2]--;
+		if (m_twiddleFlag[2] < 1)
+		{
+			m_twiddleFlag[2] = 2;
+			SwapShape(0x0C);
+		}    // Towne flag changes every third pass
+		m_twiddleFlag[3]--;
+		if (m_twiddleFlag[3] < 1)
+		{
+			m_twiddleFlag[3] = 1;
+			SwapShape(0x16);
+			SwapShape(0x1E);
+		}    // Ship flag changes every second pass
+	}
+}
+
+void U3Resources::AnimateTiles()
+{
+	if (m_numUpdateAnimate > 0)
+	{
+		short temp;
+		for (int index = 0; index < 5; ++index)
+		{
+			m_animFlag[1]--;
+			if (m_animFlag[1] < 0)
+			{
+				m_animFlag[1] = 19;             // from 15 to 19
+			}
+			temp = (m_animFlag[1] * 2) + 32;    // giving a final range of 0x20-0x46
+			if (temp >= 0x44)
+			{
+				SwapShape(temp - 0x2A);    // also swap Serpent, Man-O-War, and Pirate.
+			}
+			if (temp == 0x20)
+			{
+				SwapShape(0x7E);    // also swap party symbol/l/l/l/l / ranger
+			}
+			if (temp == 62)
+			{
+				temp = 24;
+			}
+			if (temp > 62)
+			{
+				temp += 64; // added
+			}
+			SwapShape(temp);
+			if (temp >= 0x2E && temp <= 0x3C)    // need to swap variants too
+			{
+				char var = ((temp / 2) - 23) * 2 + 80;
+				SwapShape(var++ * 2);
+				SwapShape(var * 2);
+			}
+		}
+	}
+}
+
+void U3Resources::ScrollThings()
+{
+	float offset = (float)m_elapsedTimeScroll / (float)DelayScroll;
+	float offset2 = (float)(m_elapsedTimeScroll * 2.0f) / (float)DelayScroll;
+
+	offset2 = offset2 - (long)offset2;
+
+	ScrollShape(0x00, offset);	// water
+	ScrollShape(0x40, offset2); // forcefield
+	ScrollShape(0x42, offset);	// lava
+	ScrollShape(0x44, offset2); // moongate
+
+	SDL_SetRenderTarget(m_renderer, NULL);
+}
+
+void U3Resources::DemoUpdate(Uint64 curTick)
+{
+	int numUpdate = 0;
+	m_elapsedTimeDemo += (curTick - m_curTickDemo);
+	m_elapsedTimeFlag += (curTick - m_curTickDemo);
+	m_elapsedTimeAnimate += (curTick - m_curTickDemo);
+	m_numUpdateFlag = (int)(m_elapsedTimeFlag / DelayFlags);
+	m_numUpdateAnimate = (int)(m_elapsedTimeAnimate / DelayAnimate);
+	numUpdate = (int)(m_elapsedTimeDemo / DelayDemo);
+	if (numUpdate > 1)
+	{
+		numUpdate = 1;
+	}
+	m_elapsedTimeDemo %= DelayDemo;
+	m_elapsedTimeFlag %= DelayFlags;
+	m_elapsedTimeAnimate %= DelayAnimate;
+	m_curTickDemo = curTick;
+	if (m_demoDelay > 0)
+	{
+		m_demoDelay -= numUpdate;
+		if (m_demoDelay < 0)
+		{
+			numUpdate = 0 - m_demoDelay;
+		}
+		else
+		{
+			return;
+		}
+	}
+
+	while (numUpdate > 0)
+	{
+		bool tempUpdate = false;
+		if (m_demoData.size() > m_demoptr + 512)
+		{
+			unsigned char where = m_demoData[m_demoptr];
+			unsigned char what = m_demoData[m_demoptr + 512];
+			unsigned char repet;
+
+			if (where != 255)
+			{
+				if (where < 128)
+				{
+					m_TileArray[where] = what;
+					repet = 1;
+					if (what < 16)
+					{
+						tempUpdate = true;
+					}
+				}
+			}
+			else
+			{
+				m_demoDelay = what;
+			}
+		}
+
+		m_demoptr += numUpdate;
+		m_demoptr %= 512;
+		numUpdate = tempUpdate ? 1 : 0;
+	}
+}
+
+void U3Resources::DrawDemo(Uint64 curTick)
+{
+	SDL_FRect shapeRect;
+	SDL_FRect myRect;
+
+	short demoffset, lastTile, shapSize;
+	shapSize = m_blockSize * 2;
+	lastTile = 255;
+
+	shapeRect.h = (float)shapSize;
+	shapeRect.w = (float)shapSize;
+
+	ScrollThings();
+	AnimateTiles();
+	TwiddleFlags();
+	if (m_numUpdateFlag > 0)
+	{
+		m_numUpdateFlag = 0;
+	}
+	if (m_numUpdateAnimate > 0)
+	{
+		m_numUpdateAnimate = 0;
+	}
+	demoffset = 0;
+
+	SDL_SetRenderDrawColor(m_renderer, 64, 255, 64, 255);
+
+	for (shapeRect.y = m_blockSize * 11.0f + screenOffsetY; shapeRect.y < (m_blockSize * 23.0f) + screenOffsetY; shapeRect.y += shapSize)
+	{
+		for (shapeRect.x = (float)m_blockSize + screenOffsetX; shapeRect.x < (m_blockSize * 39.0f) + screenOffsetX; shapeRect.x += shapSize)
+		{	
+			unsigned char thisTile = m_TileArray[demoffset];
+
+			if (lastTile != thisTile)
+			{
+				if (thisTile >= 0x28 && thisTile <= 0x2e)   // use "player" tiles for fighter/cleric/wiz/thief
+				{
+					thisTile += 88;
+				}
+				GetTileRectForIndex(thisTile / 2, myRect);
+				lastTile = thisTile;
+			}
+
+			unsigned char bgndTile = m_demoBgndTiles[demoffset];
+
+			if (bgndTile == thisTile)
+			{
+				if (bgndTile < m_currentGraphics->tile_target.size())
+				{
+					int tileY = (bgndTile / 2) % TILES_NUM_Y;
+					int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
+					int realTile = tileX * TILES_NUM_Y + tileY;
+					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+				}
+			}
+			else
+			{
+				int tileY = (bgndTile / 2) % TILES_NUM_Y;
+				int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
+				int realTile = tileX * TILES_NUM_Y + tileY;
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+
+				tileY = (thisTile / 2) % TILES_NUM_Y;
+				tileX = ((thisTile / 2) / TILES_NUM_Y) * 2;
+				realTile = tileX * TILES_NUM_Y + tileY;
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+			}
+			demoffset++;
+		}
+	}
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+	m_elapsedTimeScroll += (curTick - m_curTickScroll);
+
+	m_elapsedTimeScroll %= DelayScroll;
+	m_curTickScroll = curTick;
+
+}
+
+
 void U3Resources::DrawOrganizePartyRect()
 {
 	SDL_FRect myRect;
 	short offx, offy, x, y;
+	unsigned char c;
 
 	offx = 16;
 	offy = 230;
@@ -1138,24 +1592,154 @@ void U3Resources::DrawOrganizePartyRect()
 	x = offx - 2;
 	y = offy + 0;
 
+	std::string strName;
+
 	SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+	SDL_Color sdl_text_color = { 255, 255, 255 };
 	for (int i = 1; i < 21; ++i)
 	{
 		std::string str_number = std::to_string(i);
 
 		TTF_Text* text_obj = NULL;
-		text_obj = TTF_CreateText(engine_surface, m_font_12, str_number.c_str(), 0);
-		int w, h;
-		TTF_GetTextSize(text_obj, &w, &h);
 
-		TTF_SetTextColor(text_obj, 0, 0, 0, 255);
-
-		TTF_DrawRendererText(text_obj, (x * scaler) + (26 * scaler) + screenOffsetX - w, y * scaler + screenOffsetY);
-
-		if (text_obj)
+		if (m_Player[i][16])
 		{
-			TTF_DestroyText(text_obj);
-			text_obj = NULL;
+			sdl_text_color.r = 255;
+			sdl_text_color.g = 255;
+			sdl_text_color.b = 255;
+		}
+		else
+		{
+			sdl_text_color.r = 0;
+			sdl_text_color.g = 0;
+			sdl_text_color.b = 0;
+		}
+
+		renderDisplayString(m_font_11, str_number, (int)((x * scaler) + (26 * scaler)), (int)(y * scaler), sdl_text_color, 1);
+
+		strName.clear();
+		c = 0;
+		while (m_Player[i][c] > 22)
+		{
+			strName += m_Player[i][c];
+			c++;
+			if (c > 64)
+			{
+				break;
+			}
+		}
+		if (strName.size() > 0)
+		{
+			if (m_Player[i][16])
+			{
+				sdl_text_color.r = 255;
+				sdl_text_color.g = 255;
+				sdl_text_color.b = 0;
+				renderDisplayString(m_font_11, strName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
+			}
+
+			renderDisplayString(m_font_11, strName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
+
+			sdl_text_color.r = 255;
+			sdl_text_color.g = 255;
+			sdl_text_color.b = 255;
+
+			std::string str_level = std::to_string(m_Player[i][30] + 1);
+			str_level = std::string("Lvl ") + str_level;
+
+			renderDisplayString(m_font_11, str_level, (int)(((x + 109) * scaler)), (int)(y * scaler), sdl_text_color);
+
+			std::string str_race("Unknown");
+			std::string str_class("Unknown");
+			std::string str_sex("Unknown");
+
+			if (m_plistMap.find("Races") != m_plistMap.end())
+			{
+				int val = m_Player[i][22];
+				for (size_t index = 0; index < m_plistMap["Races"].size(); ++index)
+				{
+					if (val == m_plistMap["Races"][index][0])
+					{
+						str_race = m_plistMap["Races"][index];
+						break;
+					}
+				}
+			}
+			if (m_plistMap.find("Classes") != m_plistMap.end())
+			{
+				int val = m_Player[i][23];
+				for (size_t index = 0; index < m_plistMap["Classes"].size(); ++index)
+				{
+					if (val == m_plistMap["Classes"][index][0])
+					{
+						str_class = m_plistMap["Classes"][index];
+						break;
+					}
+				}
+			}
+			if (m_plistMap.find("MoreMessages") != m_plistMap.end())
+			{
+				int val = m_Player[i][24];
+				if (m_plistMap["MoreMessages"].size() > 68)
+				{
+					switch (val)
+					{
+					case 'F':
+						str_sex = m_plistMap["MoreMessages"][66];
+						break;
+					case 'M':
+						str_sex = m_plistMap["MoreMessages"][67];
+						break;
+					default:
+						str_sex = m_plistMap["MoreMessages"][68];
+						break;
+					}	
+				}
+			}
+
+			std::string str_status;
+
+			if (m_plistMap["MoreMessages"].size() > 68)
+			{
+
+				int statusVal = m_Player[i][17];
+
+				switch (statusVal)
+				{
+				case 'P':
+					str_status = m_plistMap["MoreMessages"][63];
+					sdl_text_color.r = 64;
+					sdl_text_color.g = 255;
+					sdl_text_color.b = 64;
+					break;
+				case 'D':
+					str_status = m_plistMap["MoreMessages"][64];
+					sdl_text_color.r = 255;
+					sdl_text_color.g = 64;
+					sdl_text_color.b = 64;
+					break;
+				case 'A':
+					str_status = m_plistMap["MoreMessages"][65];
+					sdl_text_color.r = 192;
+					sdl_text_color.g = 192;
+					sdl_text_color.b = 192;
+					break;
+				default:
+					sdl_text_color.r = 255;
+					sdl_text_color.g = 255;
+					sdl_text_color.b = 255;
+					break;
+				}
+			}
+
+			std::string str_desc;
+			if (str_status.size() > 0)
+			{
+				str_desc += str_status + std::string(" ");
+			}
+			str_desc += str_race + std::string(" ") + str_class + std::string(" ") + str_sex;
+
+			renderDisplayString(m_font_11, str_desc, (int)(((x + 152) * scaler)), (int)(y * scaler), sdl_text_color);
 		}
 
 		y += 13;
@@ -1169,113 +1753,24 @@ void U3Resources::DrawOrganizePartyRect()
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 }
 
-void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect)
+bool U3Resources::CheckJourneyOnward()
 {
-	int yPos = tileNum % TILES_NUM_Y;
-	int xPos = (tileNum / TILES_NUM_Y) * 2;
-	myRect.x = xPos * m_currentGraphics->tiles_width;
-	myRect.y = yPos * m_currentGraphics->tiles_height;
-	myRect.w = m_currentGraphics->tiles_width;
-	myRect.h = m_currentGraphics->tiles_height;
-}
-
-void U3Resources::ScrollShape(int tilenum, float offset)
-{
-	int tileY = (tilenum / 2) % TILES_NUM_Y;
-	int tileX = ((tilenum / 2) / TILES_NUM_Y) * 2;
-	int realTile = tileX * TILES_NUM_Y + tileY;
-
-	SDL_FRect myRect;
-	myRect.x = 0;
-	myRect.y = m_currentGraphics->tiles_height * offset;
-	myRect.w = m_currentGraphics->tiles_width;
-	myRect.h = m_currentGraphics->tiles_height;
-
-	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
-	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
-	myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;
-	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
-}
-
-void U3Resources::ScrollThings()
-{
-	float offset = (float)m_elapsedTime / (float)Delay;
-	float offset2 = (float)(m_elapsedTime * 2.0f) / (float)Delay;
-
-	offset2 = offset2 - (long)offset2;
-
-	ScrollShape(0x00, offset); // water
-	ScrollShape(0x40, offset2); // forcefield
-	ScrollShape(0x42, offset); // lava
-	ScrollShape(0x44, offset2); // moongate
-
-	SDL_SetRenderTarget(m_renderer, NULL);
-}
-
-void U3Resources::DrawDemo(Uint64 curTick)
-{
-	SDL_FRect shapeRect;
-	SDL_FRect myRect;
-
-	short demoffset, lastTile, shapSize;
-	shapSize = m_blockSize * 2;
-	lastTile = 255;
-
-	shapeRect.h = (float)shapSize;
-	shapeRect.w = (float)shapSize;
-
-	ScrollThings();
-	demoffset = 0;
-
-	SDL_SetRenderDrawColor(m_renderer, 64, 255, 64, 255);
-
-	for (shapeRect.y = m_blockSize * 11.0f + screenOffsetY; shapeRect.y < (m_blockSize * 23.0f) + screenOffsetY; shapeRect.y += shapSize)
+	if (!m_Party[7])
 	{
-		for (shapeRect.x = (float)m_blockSize + screenOffsetX; shapeRect.x < (m_blockSize * 39.0f) + screenOffsetX; shapeRect.x += shapSize)
-		{	
-			unsigned char thisTile = m_TileArray[demoffset];
-
-			if (lastTile != thisTile)
-			{
-				if (thisTile >= 0x28 && thisTile <= 0x2e)   // use "player" tiles for fighter/cleric/wiz/thief
-				{
-					thisTile += 88;
-				}
-				GetTileRectForIndex(thisTile / 2, myRect);
-				lastTile = thisTile;
-			}
-
-			unsigned char bgndTile = m_demoBgndTiles[demoffset];
-
-			if (bgndTile == thisTile)
-			{
-				if (bgndTile < m_currentGraphics->tile_target.size())
-				{
-					int tileY = (bgndTile / 2) % TILES_NUM_Y;
-					int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
-					int realTile = tileX * TILES_NUM_Y + tileY;
-					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
-				}
-			}
-			else
-			{
-				int tileY = (bgndTile / 2) % TILES_NUM_Y;
-				int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
-				int realTile = tileX * TILES_NUM_Y + tileY;
-				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
-
-				tileY = (thisTile / 2) % TILES_NUM_Y;
-				tileX = ((thisTile / 2) / TILES_NUM_Y) * 2;
-				realTile = tileX * TILES_NUM_Y + tileY;
-				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
-			}
-			demoffset++;
-		}
+		return false;
 	}
 
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	return true;
+}
 
-	m_elapsedTime += (curTick - m_curTick);
-	m_elapsedTime %= Delay;
-	m_curTick = curTick;
+bool U3Resources::HasAlert(SDL_Event& event)
+{
+	m_AlertDlg->HandleEvent(event);
+	m_AlertDlg->display();
+	if (m_cleanupAlert)
+	{
+		m_AlertDlg.reset();
+		m_cleanupAlert = false;
+	}
+	return m_AlertDlg.get();
 }

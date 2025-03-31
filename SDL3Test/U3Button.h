@@ -11,7 +11,13 @@ public:
 	void render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY);
 	void setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, int y, int width, int height, bool has_clicked, bool has_disabled);
 	void setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY);
+	void setMouseCapture(int capture, float mouse_x, float mouse_y);
 	void SetButtonCallback(std::function<void()> func);
+	void setVisible(bool visible);
+	void renderCentered(SDL_Renderer* renderer);
+	void updateLocationCentered(SDL_FRect fillRect);
+	SDL_Texture* getDefaultTexture() { return m_texDefault; }
+	SDL_Texture* getPushedTexture() { return m_texPushed; }
 private:
 	SDL_Texture* m_texDefault;
 	SDL_Texture* m_texPushed;
@@ -23,5 +29,6 @@ private:
 	float m_height;
 	bool m_captureMouse;
 	bool m_showPushed;
+	bool m_visible;
 };
 

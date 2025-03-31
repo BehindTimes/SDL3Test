@@ -1,0 +1,1 @@
+You need to terminate an existing character from the roster before you can create a new character.

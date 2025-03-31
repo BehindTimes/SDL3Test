@@ -27,6 +27,23 @@ void CreateIntroData()
     InitializeStartTicks();
 }
 
+void CreateMenuData()
+{
+    m_resources.SetButtonVisibility(0, true);
+    m_resources.SetButtonVisibility(1, true);
+    m_resources.SetButtonVisibility(2, true);
+    m_resources.SetButtonVisibility(8, true);
+}
+
+void CreateOrganizeData()
+{
+    m_resources.SetButtonVisibility(3, true);
+    m_resources.SetButtonVisibility(4, true);
+    m_resources.SetButtonVisibility(5, true);
+    m_resources.SetButtonVisibility(6, false);
+    m_resources.SetButtonVisibility(7, true);
+}
+
 void DrawFrame(short which)
 {
     short x;
@@ -309,7 +326,7 @@ void DrawMenu()
 void DrawOrganizeMenu()
 {
     m_resources.drawExodus(255);
-    m_resources.DrawButtons({ 3, 4, 5, 7 });
+    m_resources.DrawButtons({ 3, 4, 5, 6, 7 });
 
     m_resources.CenterMessage(33, 11);
     m_resources.DrawOrganizePartyRect();

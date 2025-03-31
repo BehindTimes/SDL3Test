@@ -20,7 +20,7 @@ void ToolBoxInit()
 
 void WindowInit(short which)
 {
-    m_resources.CaclulateBlockSize();
+    m_resources.CalculateBlockSize();
 }
 
 void MenuBarInit()

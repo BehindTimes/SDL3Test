@@ -36,6 +36,9 @@
     <ClCompile Include="U3Button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="U3Dialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UltimaMain.h">
@@ -57,6 +60,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="U3Button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="U3Dialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="U3Theme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

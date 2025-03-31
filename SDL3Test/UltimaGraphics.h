@@ -8,6 +8,8 @@ enum class IntroEnum
 };
 
 void CreateIntroData();
+void CreateMenuData();
+void CreateOrganizeData();
 void DrawFrame(short which);
 void DrawFramePiece(short which, short x, short y);
 void FadeOnExodusUltima(Uint64 curTick);

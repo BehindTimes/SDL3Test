@@ -4,11 +4,18 @@
 #include <iostream>
 
 #include "U3Resources.h"
+#include "U3Misc.h"
+#include "U3ScrollArea.h"
+#include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
 extern SDL_Window* window;
 extern TTF_TextEngine* engine_surface;
+extern U3Misc m_misc;
+extern U3Graphics m_graphics;
+extern U3ScrollArea m_scrollArea;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
@@ -16,25 +23,32 @@ constexpr int FONT_NUM_Y = 1;
 constexpr int TILES_NUM_X = 12;
 constexpr int TILES_NUM_Y = 16;
 
+constexpr int NUM_PORTRAITS = 40;
+
 U3Resources::U3Resources() :
 	m_renderer(nullptr),
 	m_currentGraphics(nullptr),
 	m_standardGraphics(nullptr),
 	m_defaultMode(0),
 	m_texStalagtites(nullptr),
+	m_texPortraits(nullptr),
 	m_texExodus(nullptr),
 	m_texUltimaLogo(nullptr),
 	m_texBy(nullptr),
 	m_texCredits(nullptr),
 	m_texExodusFade(nullptr),
 	m_texUltimaLogoFade(nullptr),
+	m_texDisplay(nullptr),
+	m_texStats(nullptr),
 	m_exodusWidth(0),
 	m_exodusHeight(0),
 	m_ultimaLogoWidth(0),
 	m_ultimaLogoHeight(0),
 	m_blockSize(32),
 	m_font(nullptr),
+	m_font_9(nullptr),
 	m_font_11(nullptr),
+	m_font_12(nullptr),
 	m_demoptr(0),
 	m_curTickScroll(0),
 	m_elapsedTimeScroll(0),
@@ -48,7 +62,9 @@ U3Resources::U3Resources() :
 	m_numUpdateAnimate(0),
 	m_xPos(0),
 	m_yPos(0),
-	m_cleanupAlert(false)
+	m_cleanupAlert(false),
+	m_portraitWidth(0),
+	m_portraitHeight(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -61,8 +77,6 @@ U3Resources::U3Resources() :
 	m_twiddleFlag[1] = 3;
 	m_twiddleFlag[2] = 2;
 	m_twiddleFlag[3] = 1;
-
-	memset(m_Player, NULL, sizeof(char) * (21 * 65));
 }
 
 U3Resources::~U3Resources()
@@ -100,12 +114,26 @@ U3Resources::~U3Resources()
 		SDL_DestroyTexture(m_texStalagtites);
 	}
 
+	if (m_texPortraits)
+	{
+		SDL_DestroyTexture(m_texPortraits);
+	}
+
 	for (int index = 0; index < 5; ++index)
 	{
 		if (m_texIntro[index])
 		{
 			SDL_DestroyTexture(m_texIntro[index]);
 		}
+	}
+
+	if (m_texDisplay)
+	{
+		SDL_DestroyTexture(m_texDisplay);
+	}
+	if (m_texStats)
+	{
+		SDL_DestroyTexture(m_texDisplay);
 	}
 
 	if (m_texExodus)
@@ -137,12 +165,28 @@ U3Resources::~U3Resources()
 	{
 		TTF_CloseFont(m_font);
 	}
+	if (m_font_9)
+	{
+		TTF_CloseFont(m_font_9);
+	}
 	if (m_font_11)
 	{
 		TTF_CloseFont(m_font_11);
 	}
+	if (m_font_12)
+	{
+		TTF_CloseFont(m_font_12);
+	}
 
 	TTF_Quit();
+}
+
+void U3Resources::displayFPS(int fps)
+{
+	std::string strFPS = std::to_string(fps);
+
+	SDL_Color sdl_text_color = { 255, 255, 0 };
+	renderDisplayString(m_font, strFPS, 0, 0, sdl_text_color);
 }
 
 void U3Resources::m_AlertCallback()
@@ -156,10 +200,34 @@ void U3Resources::CreateAlertMessage(int message)
 		m_blockSize, message, std::bind(&U3Resources::m_AlertCallback, this));
 }
 
+void U3Resources::GetPreference(U3PreferencesType type, bool& value)
+{
+	switch (type)
+	{
+	case U3PreferencesType::AutoSave:
+		value = m_preferences.auto_save;
+		break;
+	case U3PreferencesType::Include_Wind:
+		value = m_preferences.include_wind;
+		break;
+	case U3PreferencesType::Classic_Appearance:
+		value = m_preferences.classic_appearance;
+		break;
+	default:
+		break;
+	}
+}
+
 void U3Resources::SetPreference(U3PreferencesType type, bool value)
 {
 	switch (type)
 	{
+	case U3PreferencesType::AutoSave:
+		m_preferences.auto_save = value;
+		break;
+	case U3PreferencesType::Include_Wind:
+		m_preferences.include_wind = value;
+		break;
 	case U3PreferencesType::Classic_Appearance:
 		m_preferences.classic_appearance = value;
 		break;
@@ -185,6 +253,7 @@ void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 bool U3Resources::init(SDL_Renderer* renderer)
 {
 	m_renderer = renderer;
+	m_scrollArea.setRenderer(m_renderer);
 	if (!loadFont())
 	{
 		return false;
@@ -197,105 +266,15 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	}
 	loadButtons();
 	loadDemo();
-	if (!loadSaveGame())
-	{
-		return false;
-	}
+	m_misc.OpenRstr();
 
 	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
 	{
 		m_standardGraphics = &m_allGraphics[std::string(Standard)];
 		m_currentGraphics = m_standardGraphics; // 6
 	}
+	CalculateBlockSize();
 	//changeMode(1);
-	return true;
-}
-
-bool U3Resources::loadRoster(std::filesystem::path rosterPath)
-{
-	short player, byte;
-	const size_t roster_size = 1280;
-	unsigned char roster_data[roster_size];
-	std::uintmax_t file_size = std::filesystem::file_size(rosterPath);
-
-	if (file_size != roster_size)
-	{
-		return false;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(rosterPath.string().c_str(), "rb");
-	if (!file)
-	{
-		return false;
-	}
-	SDL_ReadIO(file, roster_data, roster_size);
-	SDL_CloseIO(file);
-
-	for (player = 0; player < 20; player++)
-	{
-		for (byte = 0; byte < 64; byte++)
-		{
-			m_Player[player + 1][byte] = *(roster_data + ((player) * 64) + byte);
-		}
-	}
-
-	return true;
-}
-
-bool U3Resources::loadParty(std::filesystem::path partyPath)
-{
-	const size_t party_size = 64;
-	std::uintmax_t file_size = std::filesystem::file_size(partyPath);
-
-	if (file_size != party_size)
-	{
-		return false;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(partyPath.string().c_str(), "rb");
-	if (!file)
-	{
-		return false;
-	}
-	SDL_ReadIO(file, m_Party, party_size);
-	SDL_CloseIO(file);
-
-	return true;
-}
-
-bool U3Resources::loadSaveGame()
-{
-	std::filesystem::path currentPath = std::filesystem::current_path();
-	currentPath /= ResourceLoc;
-	currentPath /= SaveLoc;
-
-	std::filesystem::path partyPath = currentPath / "PARTY.ULT";
-	std::filesystem::path rosterPath = currentPath / "ROSTER.ULT";
-	std::filesystem::path sosariaPath = currentPath / "SOSARIA.ULT";
-
-	try
-	{
-		if (!std::filesystem::is_directory(currentPath))
-		{
-
-			bool valid = std::filesystem::create_directory(currentPath);
-			if (!valid)
-			{
-				return false;
-			}
-
-		}
-		if (std::filesystem::exists(rosterPath))
-		{
-			loadRoster(rosterPath);
-		}
-		if (std::filesystem::exists(partyPath))
-		{
-			loadParty(partyPath);
-		}
-	}
-	catch (std::exception)
-	{
-		return false;
-	}
 	return true;
 }
 
@@ -362,8 +341,20 @@ bool U3Resources::createFont()
 		return false;
 	}
 
+	m_font_9 = TTF_OpenFont(currentPath.string().c_str(), 9.0f * scaler);
+	if (!m_font_9)
+	{
+		return false;
+	}
+
 	m_font_11 = TTF_OpenFont(currentPath.string().c_str(), 11.0f * scaler);
 	if (!m_font_11)
+	{
+		return false;
+	}
+
+	m_font_12 = TTF_OpenFont(currentPath.string().c_str(), 12.0f * scaler);
+	if (!m_font_12)
 	{
 		return false;
 	}
@@ -398,17 +389,41 @@ void U3Resources::CalculateBlockSize()
 		m_AlertDlg->changeBlockSize(m_blockSize);
 	}
 
+	m_scrollArea.setBlockSize(m_blockSize);
+
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
 		m_font = nullptr;
+	}
+	if (m_font_9)
+	{
+		TTF_CloseFont(m_font_9);
+		m_font_9 = nullptr;
 	}
 	if (m_font_11)
 	{
 		TTF_CloseFont(m_font_11);
 		m_font_11 = nullptr;
 	}
+	if (m_font_12)
+	{
+		TTF_CloseFont(m_font_12);
+		m_font_12 = nullptr;
+	}
 	createFont();
+
+	int final = m_blockSize * 22;
+	if (m_texDisplay)
+	{
+		SDL_DestroyTexture(m_texBy);
+	}
+	if (m_texStats)
+	{
+		SDL_DestroyTexture(m_texBy);
+	}
+	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
+	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
 }
 
 
@@ -421,6 +436,7 @@ void U3Resources::changeMode(int mode)
 		{
 			m_currentGraphics = &m_allGraphics[strMode];
 		}
+		m_scrollArea.forceRedraw();
 	}
 }
 
@@ -439,10 +455,12 @@ xmlNodePtr U3Resources::findNodeByName(xmlNodePtr rootnode, const xmlChar* noden
 		{
 			return node;
 		}
-		else if (node->children != nullptr) {
+		else if (node->children != nullptr)
+		{
 			node = node->children;
 			xmlNodePtr intNode = findNodeByName(node, nodename);
-			if (intNode != nullptr) {
+			if (intNode != nullptr)
+			{
 				return intNode;
 			}
 		}
@@ -451,7 +469,7 @@ xmlNodePtr U3Resources::findNodeByName(xmlNodePtr rootnode, const xmlChar* noden
 	return nullptr;
 }
 
-void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec )
+void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec)
 {
 	xmlNode* root_element = nullptr;
 	root_element = xmlDocGetRootElement(docPtr);
@@ -475,7 +493,7 @@ void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec
 						xmlChar* data = xmlNodeGetContent(stringNode);
 						if (data)
 						{
-							
+
 							curVec.emplace_back(reinterpret_cast<const char*>(data));
 						}
 					}
@@ -490,7 +508,7 @@ bool U3Resources::loadPLists()
 {
 	LIBXML_TEST_VERSION
 
-	bool valid = true;
+		bool valid = true;
 	xmlDocPtr docPtr = nullptr;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -505,7 +523,7 @@ bool U3Resources::loadPLists()
 			continue;
 		}
 		docPtr = xmlReadFile(dirEntry.path().string().c_str(), NULL, 0);
-		
+
 		if (docPtr == nullptr)
 		{
 			continue;
@@ -589,6 +607,17 @@ void U3Resources::loadImages()
 	m_exodusWidth = (int)w;
 	m_exodusHeight = (int)h;
 
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "Portraits.png";
+
+	m_texPortraits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+	SDL_GetTextureSize(m_texPortraits, &w, &h);
+	m_portraitWidth = (int)w / NUM_PORTRAITS;
+	m_portraitHeight = (int)h;
+	SDL_SetTextureScaleMode(m_texPortraits, SDL_SCALEMODE_NEAREST);
+	
 	m_texExodusFade = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_exodusWidth, m_exodusHeight);
 	unsigned char* pixels = NULL;
 	int pitch;
@@ -801,10 +830,10 @@ void U3Resources::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-void U3Resources::renderString(std::string curString, int x, int y)
+void U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY)
 {
 	SDL_FRect frameRect, myRect;
-	
+
 	if (m_preferences.classic_appearance)
 	{
 		for (size_t index = 0; index < curString.size(); ++index)
@@ -816,12 +845,15 @@ void U3Resources::renderString(std::string curString, int x, int y)
 				continue;
 			}
 
-			myRect.x = (float)(x * m_blockSize) + (m_blockSize * index);
-			myRect.y = (float)(y * m_blockSize);
+			myRect.x = (float)(x * m_blockSize) + (m_blockSize * index) + offsetX;
+			myRect.y = (float)(y * m_blockSize) + offsetY;
 			myRect.w = (float)(m_blockSize);
 			myRect.h = (float)(m_blockSize);
 
-			adjustRect(myRect);
+			if (autoadjust)
+			{
+				adjustRect(myRect);
+			}
 
 			int xPart = part % FONT_NUM_X;
 			int yPart = part / FONT_NUM_X;
@@ -850,7 +882,7 @@ void U3Resources::renderString(std::string curString, int x, int y)
 	else
 	{
 		TTF_Text* text_obj = NULL;
-		text_obj = TTF_CreateText(engine_surface, m_font_11, curString.c_str(), 0);
+		text_obj = TTF_CreateText(engine_surface, m_font, curString.c_str(), 0);
 		int w, h;
 		TTF_GetTextSize(text_obj, &w, &h);
 
@@ -859,7 +891,14 @@ void U3Resources::renderString(std::string curString, int x, int y)
 		size_t totalLen = m_blockSize * curString.size();
 		size_t tempOffset = (totalLen - w) / 2;
 
-		TTF_DrawRendererText(text_obj, (float)x * m_blockSize  + screenOffsetX + tempOffset, (float)y * m_blockSize + screenOffsetY);
+		if (autoadjust)
+		{
+			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset, (float)y * m_blockSize + screenOffsetY);
+		}
+		else
+		{
+			TTF_DrawRendererText(text_obj, (float)x * m_blockSize, (float)y * m_blockSize);
+		}
 
 		if (text_obj)
 		{
@@ -869,7 +908,7 @@ void U3Resources::renderString(std::string curString, int x, int y)
 	}
 }
 
-void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align)
+void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align, bool autoadjust)
 {
 	TTF_Text* text_obj = NULL;
 	text_obj = TTF_CreateText(engine_surface, font, curString.c_str(), 0);
@@ -878,14 +917,35 @@ void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int
 
 	int w, h;
 	int offsetW = 0;
+	int offsetH = 0;
 	TTF_GetTextSize(text_obj, &w, &h);
 
-	if (align == 1)
+	if (align == 1) // left adjust
 	{
 		offsetW = w * -1;
 	}
+	else if (align == 2) // center
+	{
+		offsetW = (w / 2) * -1;
+	}
+	else if (align == 4) // center/center
+	{
+		offsetW = (w / 2) * -1;
+		offsetH = (h / 2) * -1;
+	}
+	else if (align == 6) // top
+	{
+		offsetH = h * -1;
+	}
 
-	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX + offsetW, (float)y + screenOffsetY);
+	if (autoadjust)
+	{
+		TTF_DrawRendererText(text_obj, (float)x + screenOffsetX + offsetW, (float)y + screenOffsetY + offsetH);
+	}
+	else
+	{
+		TTF_DrawRendererText(text_obj, (float)x + offsetW, (float)y + offsetH);
+	}
 
 	if (text_obj)
 	{
@@ -894,16 +954,19 @@ void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int
 	}
 }
 
-void U3Resources::renderUI(int part, int x, int y)
+void U3Resources::renderUI(int part, int x, int y, bool adjust, int offsetX, int offsetY)
 {
 	SDL_FRect frameRect, myRect;
 
-	myRect.x = (float)(x * m_blockSize);
-	myRect.y = (float)(y * m_blockSize);
+	myRect.x = (float)(x * m_blockSize) + offsetX;
+	myRect.y = (float)(y * m_blockSize) + offsetY;
 	myRect.w = (float)(m_blockSize);
 	myRect.h = (float)(m_blockSize);
 
-	adjustRect(myRect);
+	if (adjust)
+	{
+		adjustRect(myRect);
+	}
 
 	int xPart = part % UI_NUM_X;
 	int yPart = part / UI_NUM_X;
@@ -1478,7 +1541,7 @@ void U3Resources::DrawDemo(Uint64 curTick)
 	for (shapeRect.y = m_blockSize * 11.0f + screenOffsetY; shapeRect.y < (m_blockSize * 23.0f) + screenOffsetY; shapeRect.y += shapSize)
 	{
 		for (shapeRect.x = (float)m_blockSize + screenOffsetX; shapeRect.x < (m_blockSize * 39.0f) + screenOffsetX; shapeRect.x += shapSize)
-		{	
+		{
 			unsigned char thisTile = m_TileArray[demoffset];
 
 			if (lastTile != thisTile)
@@ -1602,7 +1665,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 		TTF_Text* text_obj = NULL;
 
-		if (m_Player[i][16])
+		if (m_misc.m_Player[i][16])
 		{
 			sdl_text_color.r = 255;
 			sdl_text_color.g = 255;
@@ -1619,9 +1682,9 @@ void U3Resources::DrawOrganizePartyRect()
 
 		strName.clear();
 		c = 0;
-		while (m_Player[i][c] > 22)
+		while (m_misc.m_Player[i][c] > 22)
 		{
-			strName += m_Player[i][c];
+			strName += m_misc.m_Player[i][c];
 			c++;
 			if (c > 64)
 			{
@@ -1630,7 +1693,7 @@ void U3Resources::DrawOrganizePartyRect()
 		}
 		if (strName.size() > 0)
 		{
-			if (m_Player[i][16])
+			if (m_misc.m_Player[i][16])
 			{
 				sdl_text_color.r = 255;
 				sdl_text_color.g = 255;
@@ -1644,7 +1707,7 @@ void U3Resources::DrawOrganizePartyRect()
 			sdl_text_color.g = 255;
 			sdl_text_color.b = 255;
 
-			std::string str_level = std::to_string(m_Player[i][30] + 1);
+			std::string str_level = std::to_string(m_misc.m_Player[i][30] + 1);
 			str_level = std::string("Lvl ") + str_level;
 
 			renderDisplayString(m_font_11, str_level, (int)(((x + 109) * scaler)), (int)(y * scaler), sdl_text_color);
@@ -1655,7 +1718,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 			if (m_plistMap.find("Races") != m_plistMap.end())
 			{
-				int val = m_Player[i][22];
+				int val = m_misc.m_Player[i][22];
 				for (size_t index = 0; index < m_plistMap["Races"].size(); ++index)
 				{
 					if (val == m_plistMap["Races"][index][0])
@@ -1667,7 +1730,7 @@ void U3Resources::DrawOrganizePartyRect()
 			}
 			if (m_plistMap.find("Classes") != m_plistMap.end())
 			{
-				int val = m_Player[i][23];
+				int val = m_misc.m_Player[i][23];
 				for (size_t index = 0; index < m_plistMap["Classes"].size(); ++index)
 				{
 					if (val == m_plistMap["Classes"][index][0])
@@ -1679,7 +1742,7 @@ void U3Resources::DrawOrganizePartyRect()
 			}
 			if (m_plistMap.find("MoreMessages") != m_plistMap.end())
 			{
-				int val = m_Player[i][24];
+				int val = m_misc.m_Player[i][24];
 				if (m_plistMap["MoreMessages"].size() > 68)
 				{
 					switch (val)
@@ -1693,7 +1756,7 @@ void U3Resources::DrawOrganizePartyRect()
 					default:
 						str_sex = m_plistMap["MoreMessages"][68];
 						break;
-					}	
+					}
 				}
 			}
 
@@ -1702,7 +1765,7 @@ void U3Resources::DrawOrganizePartyRect()
 			if (m_plistMap["MoreMessages"].size() > 68)
 			{
 
-				int statusVal = m_Player[i][17];
+				int statusVal = m_misc.m_Player[i][17];
 
 				switch (statusVal)
 				{
@@ -1755,7 +1818,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 bool U3Resources::CheckJourneyOnward()
 {
-	if (!m_Party[7])
+	if (!m_misc.m_Party[6])
 	{
 		return false;
 	}
@@ -1774,3 +1837,860 @@ bool U3Resources::HasAlert(SDL_Event& event)
 	}
 	return m_AlertDlg.get();
 }
+
+void U3Resources::LoadResource(std::string strFile)
+{
+}
+
+SDL_FRect U3Resources::GetTileRectForIndex(short index)
+{
+	SDL_FRect theRect;
+
+	theRect.y = (float)((index % 16) * (m_blockSize * 2));
+	theRect.h = (float)(m_blockSize * 2);
+	theRect.x = (float)((index / 16) * (m_blockSize * 4));
+	/*if (gShapeSwapped[index])
+	{
+		theRect.x += (m_blockSize * 2);
+	}*/
+	theRect.w = (float)(m_blockSize * 2);
+	return theRect;
+}
+
+int U3Resources::GetRealTile(int tilenum)
+{
+	int tileY = (tilenum / 2) % TILES_NUM_Y;
+	int tileX = ((tilenum / 2) / TILES_NUM_Y) * 2;
+	int realTile = tileX * TILES_NUM_Y + tileY;
+
+	return realTile;
+}
+
+void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned short y)
+{
+	short shapSize;
+	SDL_FRect FromRect;
+	SDL_FRect ToRect;
+
+	shapSize = m_blockSize * 2;
+	int realTile = GetRealTile(shape);
+
+	FromRect = GetTileRectForIndex(shape / 2);
+	if (shape == 0x5D)   // door
+	{
+		realTile += 16;
+	}
+	ToRect.x = (float)(x * shapSize);
+	ToRect.y = (float)(y * shapSize);
+	ToRect.w = (float)(shapSize);
+	ToRect.h = (float)(shapSize);
+	
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &ToRect);
+}
+
+void U3Resources::DrawTiles()
+{
+	unsigned char offset;
+	short lastTile, final, shapSize;
+	SDL_FRect shapeRect;
+	SDL_FRect myRect;
+	SDL_FRect offRect;
+
+	
+	SDL_SetRenderTarget(m_renderer, m_texDisplay);
+
+	HideMonsters();
+
+	offset = 0;
+	lastTile = 255;
+	final = m_blockSize * 22;
+	shapSize = m_blockSize * 2;
+
+	shapeRect.w = shapSize;
+	shapeRect.h = shapSize;
+
+	for (shapeRect.y = 0; shapeRect.y < final; shapeRect.y += shapSize)
+	{
+		for (shapeRect.x = 0; shapeRect.x < final; shapeRect.x += shapSize)
+		{
+			unsigned char tile = m_TileArray[offset];
+			int realTile = GetRealTile(tile);
+			if (lastTile != tile)
+			{
+				myRect = GetTileRectForIndex(tile / 2);
+				if (tile == 0x5D)  // Door
+				{
+					realTile += 16;
+				}
+				lastTile = tile;
+			}
+			offRect = shapeRect;
+			offset++;
+			
+			// find out how to put tiles underneath pcs, such as guard (34)
+			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
+		}
+	}
+
+	myRect.x = (float)m_blockSize;
+	myRect.y = (float)m_blockSize;
+	myRect.w = (float)final;
+	myRect.h = (float)final;
+
+	adjustRect(myRect);
+
+	ShowMonsters();
+
+	SDL_SetRenderTarget(m_renderer, NULL);
+
+	SDL_RenderTexture(m_renderer, m_texDisplay, NULL, &myRect);
+}
+
+void U3Resources::HideMonsters()
+{
+	short mon, xm, ym, offset, value;
+	if (m_misc.m_Party[2] == 1)
+	{
+		return;
+	}
+	if (m_misc.m_Party[2] != 0x80)
+	{
+		// first hide the actual monster tiles.
+		for (mon = 0; mon < 32; mon++)
+		{
+			if (m_misc.m_Monsters[mon] != 0)
+			{
+				xm = (m_misc.m_Monsters[mon + XMON] - m_misc.m_stx);
+				if (m_misc.m_Party[2] == 0)
+				{
+					xm = m_graphics.MapConstrain(xm);
+				}
+				ym = (m_misc.m_Monsters[mon + YMON] - m_misc.m_sty);
+				if (m_misc.m_Party[2] == 0)
+				{
+					ym = m_graphics.MapConstrain(ym);
+				}
+				if (xm > -1 && xm < 11 && ym > -1 && ym < 11)
+				{
+					offset = ym * 11 + xm;
+					if (m_TileArray[offset] != 72 && (m_TileArray[offset] < 120 || m_TileArray[offset] > 122))
+					{
+						unsigned char tileChar = m_TileArray[offset];
+						m_graphics.m_maskRestoreArray[offset] = m_TileArray[offset];
+						m_TileArray[offset] = m_misc.m_Monsters[TILEON + mon] / 2;
+						m_graphics.m_maskArray[offset] = tileChar;    //Monsters[mon];
+					}
+				}
+			}
+		}
+		// now hide anything else we'd like to show through.
+		offset = 0;
+		for (ym = 0; ym < 11; ym++)
+		{
+			for (xm = 0; xm < 11; xm++)
+			{
+				value = m_TileArray[offset];
+				switch (value)
+				{
+				case 0x22:    // Jester in castle on water (breaks the Talk cursor!)
+					m_graphics.m_maskRestoreArray[offset] = 0x22;
+					m_graphics.m_maskArray[offset] = 0x22;
+					m_TileArray[offset] = 0;
+					break;
+				case 0x74:    // Snake Bottom
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = 0;
+					break;
+				case 0x76:    // Snake Top
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = 0;
+					break;
+				case 0x7C:    // Shrine
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc.GetXYVal(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5) / 2;
+					//TileArray[offset] = TileArray[offset-1];
+					break;
+				case 0x16:    // Frigate
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = 0;
+					break;
+				case 0x12:    // Chest 1 or
+				case 0x13:    // Chest 2
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = 0x12;
+					value = (m_misc.GetXYVal(m_misc.m_xpos + xm - 5, m_misc.m_ypos + ym - 5) & 0x3) * 2;
+					if (value == 0)
+					{
+						value = 0x10;
+					}
+					m_TileArray[offset] = (unsigned char)value;
+					break;
+				case 0x14:    // Horse
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = 2;
+					break;
+				case 0x18:    // Whirlpool
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = 0;
+					break;
+				case 0x5D:    // Door
+				{
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					int mon = m_misc.MonsterHere(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5);
+					short neighbor = (mon < 255) ? m_misc.m_Monsters[(mon + TILEON) % 256] / 2 : m_misc.GetXYVal(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5) / 2;
+					if (neighbor > 0x10)
+					{
+						neighbor = 0x02;
+					}
+					m_TileArray[offset] = (unsigned char)neighbor;
+				}
+				break;
+				case 0x78:    // Magic ball
+				case 0x7A:    // Fire ball
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc.m_gBallTileBackground;
+				}
+				offset++;
+			}
+		}
+	}
+	else   // it's combat, hide the monsters and the players.
+	{
+		for (mon = 0; mon < 8; mon++)
+		{
+			if (m_misc.m_MonsterHP[mon] > 0)
+			{
+				xm = m_misc.m_MonsterX[mon];
+				ym = m_misc.m_MonsterY[mon];
+				if (m_misc.GetXYTile(xm, ym) < 120 || m_misc.GetXYTile(xm, ym) > 122)
+				{
+					m_misc.PutXYTile(m_misc.m_MonsterTile[mon], xm, ym);
+				}
+			}
+		}
+		for (mon = 0; mon < 4; mon++)
+		{
+			if (m_misc.CheckAlive(mon))
+			{
+				xm = m_misc.m_CharX[mon];
+				ym = m_misc.m_CharY[mon];
+				value = m_misc.GetXYTile(xm, ym);
+				if (value != 0x78 && value != 0x7A)
+				{
+					m_misc.PutXYTile(m_misc.m_CharTile[mon], xm, ym);
+				}
+			}
+		}
+		// other things to hide in combat
+		offset = 0;
+		for (ym = 0; ym < 11; ym++)
+		{
+			for (xm = 0; xm < 11; xm++)
+			{
+				value = m_TileArray[offset];
+				switch (value)
+				{
+				case 0x78:    // Magic ball
+				case 0x7A:    // Fire ball
+					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc.m_gBallTileBackground;
+					break;
+				}
+				offset++;
+			}
+		}
+	}
+}
+
+void U3Resources::ShowMonsters()
+{
+	short mon, xm, ym, value, offset;
+	if (m_misc.m_Party[2] == 1)
+	{
+		return;
+	}
+
+	// Handle globally masked items.
+	offset = 0;
+	for (ym = 0; ym < 11; ym++)
+	{
+		for (xm = 0; xm < 11; xm++)
+		{
+			if (m_graphics.m_maskArray[offset] != 255)
+			{
+				m_TileArray[offset] = m_graphics.m_maskRestoreArray[offset];
+				DrawMasked(m_graphics.m_maskArray[offset], xm, ym);
+				m_graphics.m_maskArray[offset] = 255;
+			}
+			offset++;
+		}
+	}
+
+	// Then either the outdoor party symbol ...
+	if (m_misc.m_Party[2] != 0x80)
+	{
+		if (m_TileArray[0x3C] < 120 || m_TileArray[0x3C] > 122)
+		{
+			if (m_misc.m_Party[0] == 0x14 && m_misc.m_gHorseFacingEast)
+			{
+				m_misc.m_gShapeSwapped[10] = true;
+			}
+			DrawMasked(m_misc.m_Party[0], 5, 5);
+			m_misc.m_gShapeSwapped[10] = false;
+		}
+	}
+	else   // ... or in combat, draw masked mons & chars, restore tiles.
+	{
+		for (mon = 0; mon < 8; mon++)
+		{
+			if (m_misc.m_MonsterHP[mon] > 0)
+			{
+				xm = m_misc.m_MonsterX[mon];
+				ym = m_misc.m_MonsterY[mon];
+				unsigned char tileValue = (unsigned char)m_misc.m_gMonType;    // tile * 2
+				if (m_misc.m_gMonVarType && m_misc.m_gMonType >= 46 && m_misc.m_gMonType <= 63)
+				{
+					tileValue = (((m_misc.m_gMonType / 2) - 23) * 2 + 79 + m_misc.m_gMonVarType) * 2;
+				}
+				if (m_misc.GetXYTile(xm, ym) < 120 || m_misc.GetXYTile(xm, ym) > 122)
+				{
+					DrawMasked(tileValue, xm, ym);
+				}
+				m_misc.PutXYTile(m_misc.m_gMonType, xm, ym);
+			}
+		}
+		for (mon = 0; mon < 4; mon++)
+		{
+			if (m_misc.CheckAlive(mon) && (mon + 1) != m_misc.m_cHide)
+			{
+				xm = m_misc.m_CharX[mon];
+				ym = m_misc.m_CharY[mon];
+				value = m_misc.GetXYTile(xm, ym);
+				if (value != 0x78 && value != 0x7A)
+				{
+					DrawMasked(m_misc.m_CharShape[mon], xm, ym);
+					m_misc.PutXYTile(m_misc.m_CharShape[mon], xm, ym);
+				}
+			}
+		}
+	}
+}
+
+void U3Resources::updateTime(Uint64 curTick)
+{
+	m_elapsedTimeDemo += (curTick - m_curTickDemo);
+	m_elapsedTimeFlag += (curTick - m_curTickDemo);
+	m_elapsedTimeAnimate += (curTick - m_curTickDemo);
+	m_numUpdateFlag = (int)(m_elapsedTimeFlag / DelayFlags);
+	m_numUpdateAnimate = (int)(m_elapsedTimeAnimate / DelayAnimate);
+	int numUpdate = (int)(m_elapsedTimeDemo / DelayDemo);
+	if (numUpdate > 1)
+	{
+		numUpdate = 1;
+	}
+	m_elapsedTimeDemo %= DelayDemo;
+	m_elapsedTimeFlag %= DelayFlags;
+	m_elapsedTimeAnimate %= DelayAnimate;
+	m_curTickDemo = curTick;
+
+	m_elapsedTimeScroll += (curTick - m_curTickScroll);
+
+	m_elapsedTimeScroll %= DelayScroll;
+	m_curTickScroll = curTick;
+}
+
+void U3Resources::ShowChars(bool force) /* $7338 methinx */
+{
+	bool somethingChanged = false;
+	short i, num, ros;
+	SDL_FRect rect;
+	static short oldStatus[4], oldHP[4], oldMaxHP[4], oldMana[4], oldFood[4], oldExp[4];
+
+	for (i = 0; i < 4; i++)
+	{
+		bool thisChanged = false;
+		rect.x = (float)(24 * m_blockSize);
+		rect.w = (float)(15 * m_blockSize);
+		rect.y = (float)(i * (m_blockSize * 4) + m_blockSize);
+		rect.h = (float)(m_blockSize * 3);
+		ros = m_misc.m_Party[6 + i];
+
+		thisChanged = force;
+		num = m_misc.m_Player[ros][17];
+		if (num != oldStatus[i])
+		{
+			oldStatus[i] = num;
+			thisChanged = true;
+		}
+		num = m_misc.m_Player[ros][25];
+		if (num != oldMana[i])
+		{
+			oldMana[i] = num;
+			thisChanged = true;
+		}
+		num = m_misc.m_Player[ros][26] * 256 + m_misc.m_Player[ros][27];    // hp
+		if (num != oldHP[i])
+		{
+			oldHP[i] = num;
+			thisChanged = true;
+		}
+		num = m_misc.m_Player[ros][28] * 256 + m_misc.m_Player[ros][29];    // max hp
+		if (num != oldMaxHP[i])
+		{
+			oldMaxHP[i] = num;
+			thisChanged = true;
+		}
+		num = m_misc.m_Player[ros][30] * 100 + m_misc.m_Player[ros][31];    // exp
+		if (num != oldExp[i])
+		{
+			oldExp[i] = num;
+			thisChanged = true;
+		}
+		num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];    // food
+		if (num != oldFood[i])
+		{
+			oldFood[i] = num;
+			thisChanged = true;
+		}
+		if (thisChanged)
+		{
+			RenderCharStats(i, rect);
+			somethingChanged = true;
+		}
+	}
+}
+
+void U3Resources::DrawPortrait(char charNum)
+{
+	SDL_FRect fromRect;
+	SDL_FRect toRect;
+	SDL_FRect offRect;
+	short rosNum, value, rce, sx;
+	char charRaces[5] = { 'H', 'E', 'D', 'B', 'F' };
+	char usePortrait[12] = { 0, 1, 2, 3, 0, 3, 2, 2, 1, 2, 0, 0 };
+	rosNum = m_misc.m_Party[6 + charNum];
+	short clss = 0;
+	for (value = 0; value < 11; value++)
+	{
+		if (m_misc.m_Player[rosNum][23] == m_misc.m_careerTable[value])
+		{
+			clss = usePortrait[value];
+			break;
+		}
+	}
+	for (value = 0; value < 5; value++)
+	{
+		if (m_misc.m_Player[rosNum][22] == charRaces[value])
+		{
+			rce = value;
+			break;
+		}
+	}
+	sx = 0;
+	if (m_misc.m_Player[rosNum][24] == 'F')
+	{
+		sx = 1;
+	}
+	fromRect.x = (float)(((clss * 10) + (sx * 5) + rce) * (m_portraitWidth));
+	fromRect.y = (float)0;
+	fromRect.w = (float)(m_portraitWidth);
+	fromRect.h = (float)(m_portraitHeight);
+
+	toRect.x = 0;
+	toRect.y = 0;
+	toRect.w = (float)(m_blockSize * 2);
+	toRect.h = (float)(m_blockSize * 3);
+
+	offRect.x = 0;
+	offRect.y = 0;
+	offRect.w = (float)(m_blockSize * 2);
+	offRect.h = (float)(m_blockSize * 3);
+
+	SDL_RenderTexture(m_renderer, m_texPortraits, &fromRect, &offRect);
+
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+
+	if (m_misc.m_Player[rosNum][17] == 'P')
+	{
+		SDL_SetRenderDrawColor(m_renderer, 0, 255, 0, 128);
+		SDL_RenderFillRect(m_renderer, &offRect);
+	}
+	else if (m_misc.m_Player[rosNum][17] == 'D')
+	{
+		SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 128);
+		SDL_RenderFillRect(m_renderer, &offRect);
+	}
+	else if (m_misc.m_Player[rosNum][17] == 'A')
+	{
+		SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 128);
+		SDL_RenderFillRect(m_renderer, &offRect);
+	}
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+}
+
+void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
+{
+	SDL_FRect fromRect;
+	SDL_FRect barRect;
+
+	SDL_SetRenderTarget(m_renderer, m_texStats);
+	SDL_RenderClear(m_renderer);
+
+	short ros;
+	short num;
+	short maxnum;
+	float scale;
+	bool classic = false;
+	GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	bool showPortraits = !classic;
+	fromRect.x = 0;
+	fromRect.y = 0;
+	fromRect.w = m_blockSize * 15.0f;
+	fromRect.h = m_blockSize * 3.0f;
+	ros = m_misc.m_Party[ch + 6];
+	std::string tempstr;
+	short i;
+	SDL_Color sdl_text_color = { 255, 255, 255 };
+
+	if (m_misc.m_Player[ros][0]) // character here
+	{
+		int showPortraitVal = 0;
+		if (!showPortraits)
+		{
+			tempstr += m_misc.m_Player[ros][17];
+			renderString(tempstr, 14, 0, false);
+			tempstr.clear();
+		}
+		else
+		{
+			showPortraitVal = 1;
+			DrawPortrait((unsigned char)ch);
+		}
+		i = 0;
+		while (i < 13 && m_misc.m_Player[ros][i] != 0)
+		{
+			tempstr += (m_misc.m_Player[ros][i] & 0x7F);
+			i++;
+		}
+		if (classic)
+		{
+			renderString(tempstr, 7 - (int)(tempstr.size() / 2) + showPortraitVal, 0, false);
+		}
+		else
+		{
+			renderDisplayString(m_font, tempstr, (int)(rect.w / 2), 0, sdl_text_color, 2, false);
+		}
+
+		tempstr.clear();
+		tempstr += m_misc.m_Player[ros][24];
+		tempstr += m_misc.m_Player[ros][22];
+		tempstr += m_misc.m_Player[ros][23];
+		renderString(tempstr, 1 + showPortraitVal, 1, false);
+		
+		if (!classic) // draw bars & such
+		{
+			float textPos = (m_blockSize * 5.0f) + (m_blockSize * 2.25f);
+			SDL_Color bar_color = { 128, 128, 128 };
+
+			// Hit Points
+			num = (m_misc.m_Player[ros][26] * 256) + (m_misc.m_Player[ros][27]);
+			barRect.x = m_blockSize * 5.0f;
+			barRect.y = m_blockSize * 2.0f + 1;
+			barRect.w = m_blockSize * 4.5f;
+			barRect.h = (m_blockSize * 3.0f - 4) - (m_blockSize * 2.0f + 1);
+			maxnum = m_misc.m_Player[ros][28] * 256 + m_misc.m_Player[ros][29];
+			scale = (float)(barRect.w) / (float)maxnum;
+
+			if (num > maxnum)
+			{
+				num = maxnum;
+			}
+
+			// Paint bar
+			SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+			SDL_RenderFillRect(m_renderer, &barRect);
+			
+			float tempRight = (num * scale);
+			if (tempRight > 1)
+			{
+				barRect.w = tempRight;
+				bar_color.r = 255;
+				bar_color.g = 48;
+				bar_color.b = 48;
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &barRect);
+				// Highlight line
+				SDL_FRect markRect;
+				bar_color.r = 255;
+				bar_color.g = 128;
+				bar_color.b = 128;
+				markRect.x = barRect.x + (m_blockSize / 16.0f);
+				markRect.y = barRect.y + (m_blockSize / 16.0f);
+				markRect.w = ((barRect.x + barRect.w) - (m_blockSize / 16.0f) - 1) - barRect.x;
+				markRect.h = 1;
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+				// Shadow line
+				bar_color.r = 192;
+				bar_color.g = 0;
+				bar_color.b = 0;
+				markRect.y = (barRect.y + barRect.h) - (m_blockSize / 16.0f);
+				markRect.h = (m_blockSize / 16.0f);
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+			}
+			if (m_blockSize > 16)
+			{
+				sdl_text_color.r = 0;
+				sdl_text_color.g = 0;
+				sdl_text_color.b = 0;
+				if (num < 51)
+				{
+					sdl_text_color.r = 255;
+					sdl_text_color.g = 255;
+					sdl_text_color.b = 255;
+				}
+				tempstr = std::to_string(num);
+				tempstr += '/';
+				tempstr += std::to_string(maxnum);
+
+				renderDisplayString(m_font_9, tempstr, (int)textPos, (int)(m_blockSize * 2.5f), sdl_text_color, 4, false);
+			}
+
+			// Mana
+			num = m_misc.m_Player[ros][25];
+			maxnum = (char)m_misc.MaxMana((char)ros);
+			barRect.x = m_blockSize * 5.0f;
+			barRect.y = m_blockSize + 1.0f;
+			barRect.w = m_blockSize * 4.5f;
+			barRect.h = (m_blockSize * 3.0f - 4) - (m_blockSize * 2.0f + 1);
+			if (maxnum > 0)
+			{
+				scale = (float)(barRect.w) / (float)maxnum;
+			}
+			else
+			{
+				scale = 0;
+			}
+
+			if (num > maxnum)
+			{
+				num = maxnum;
+			}
+			
+			// Paint bar
+			bar_color.r = 128;
+			bar_color.g = 128;
+			bar_color.b = 128;
+			SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+			SDL_RenderFillRect(m_renderer, &barRect);
+			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+			tempRight = (num * scale);
+			if (maxnum > 0 && (tempRight > 1))
+			{
+				bar_color.r = 0;
+				bar_color.g = 192;
+				bar_color.b = 192;
+
+				barRect.w = tempRight;
+
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &barRect);
+
+				// Highlight line
+				SDL_FRect markRect;
+				bar_color.r = 0;
+				bar_color.g = 255;
+				bar_color.b = 255;
+				markRect.x = barRect.x + (m_blockSize / 16.0f);
+				markRect.y = barRect.y + (m_blockSize / 16.0f);
+				markRect.w = ((barRect.x + barRect.w) - (m_blockSize / 16.0f) - 1) - barRect.x;
+				markRect.h = 1;
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+				// Shadow line
+				bar_color.r = 0;
+				bar_color.g = 110;
+				bar_color.b = 110;
+				markRect.y = (barRect.y + barRect.h) - (m_blockSize / 16.0f);
+				markRect.h = (m_blockSize / 16.0f);
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+			}
+			if (m_blockSize > 16)
+			{
+				sdl_text_color.r = 0;
+				sdl_text_color.g = 0;
+				sdl_text_color.b = 0;
+
+				if (maxnum < 1)
+				{
+					constexpr int notmage = 74;
+					if (m_plistMap["MoreMessages"].size() > notmage)
+					{
+						tempstr = m_plistMap["MoreMessages"][notmage];
+					}
+				}
+				else
+				{
+					tempstr = std::to_string(num);
+					tempstr += '/';
+					tempstr += std::to_string(maxnum);
+				}
+
+				renderDisplayString(m_font_9, tempstr, (int)textPos, (int)(m_blockSize * 1.5f), sdl_text_color, 4, false);
+			}
+			// Level / experience
+			num = (unsigned char)m_misc.m_Player[ros][31];
+			maxnum = 100;
+			textPos = (m_blockSize * 10.0f) + (m_blockSize * 2.25f);
+
+			barRect.x = m_blockSize * 10.0f;
+			barRect.y = m_blockSize + 1.0f;
+			barRect.w = m_blockSize * 4.5f;
+			barRect.h = (m_blockSize * 3.0f - 4) - (m_blockSize * 2.0f + 1);
+			if (maxnum > 0)
+			{
+				scale = (float)(barRect.w) / (float)maxnum;
+			}
+			else
+			{
+				scale = 0;
+			}
+
+			if (num > maxnum)
+			{
+				num = maxnum;
+			}
+			// Paint bar
+			bar_color.r = 128;
+			bar_color.g = 128;
+			bar_color.b = 36;
+			SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+			SDL_RenderFillRect(m_renderer, &barRect);
+
+			tempRight = (num * scale);
+			if (maxnum > 0 && (tempRight > 1))
+			{
+				bar_color.r = 192;
+				bar_color.g = 48;
+				bar_color.b = 48;
+
+				barRect.w = tempRight;
+
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &barRect);
+
+				// Highlight line
+				SDL_FRect markRect;
+				bar_color.r = 255;
+				bar_color.g = 255;
+				bar_color.b = 128;
+				markRect.x = barRect.x + (m_blockSize / 16.0f);
+				markRect.y = barRect.y + (m_blockSize / 16.0f);
+				markRect.w = ((barRect.x + barRect.w) - (m_blockSize / 16.0f) - 1) - barRect.x;
+				markRect.h = 1;
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+				// Shadow line
+				bar_color.r = 96;
+				bar_color.g = 96;
+				bar_color.b = 24;
+				markRect.y = (barRect.y + barRect.h) - (m_blockSize / 16.0f);
+				markRect.h = (m_blockSize / 16.0f);
+				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
+				SDL_RenderFillRect(m_renderer, &markRect);
+			}
+			if (m_blockSize > 16)
+			{
+				tempstr = LevelStr;
+				tempstr += std::to_string(m_misc.m_Player[ros][30] + 1);
+
+				renderDisplayString(m_font_9, tempstr, (int)textPos, (int)(m_blockSize * 1.5f), sdl_text_color, 4, false);
+			}
+			// Food
+			textPos = m_blockSize * 10.0f;
+			num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];
+			if (num > 150)
+			{
+				sdl_text_color.r = 255;
+				sdl_text_color.g = 255;
+				sdl_text_color.b = 255;
+			}
+			else
+			{
+				scale = ((num - 50) / 100.0f) * 255;
+				if (scale < 0)
+				{
+					scale = 0;
+				}
+
+				sdl_text_color.r = 255;
+				sdl_text_color.g = (Uint8)scale;
+				sdl_text_color.b = (Uint8)scale;
+			}
+
+			std::string strFood(FoodStr);
+			strFood += std::to_string(num);
+			renderDisplayString(m_font_9, strFood, (int)textPos, (int)(m_blockSize * 3), sdl_text_color, 6, false);
+			
+		}
+		else // the old fashioned way
+		{
+			// Hit Points
+			num = (m_misc.m_Player[ros][26] * 256) + (m_misc.m_Player[ros][27]);
+			tempstr = std::string("H:");
+			auto padded = std::to_string(num);
+			padded.insert(0, 4U - std::min(std::string::size_type(4), padded.length()), '0');
+			tempstr += padded;
+			renderString(tempstr, 1 + showPortraitVal, 2, false);
+			// Mana
+			num = (m_misc.m_Player[ros][25]);
+			tempstr = std::string("M:");
+			padded = std::to_string(num);
+			padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+			tempstr += padded;
+			renderString(tempstr, 5 + showPortraitVal, 1, false);
+			// Level
+			num = (m_misc.m_Player[ros][30] + 1);
+			tempstr = std::string("L:");
+			padded = std::to_string(num);
+			padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+			tempstr += padded;
+			renderString(tempstr, 10 + showPortraitVal, 1, false);
+			// Food
+			num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];
+			tempstr = std::string("F:");
+			padded = std::to_string(num);
+			padded.insert(0, 4U - std::min(std::string::size_type(4), padded.length()), '0');
+			tempstr += padded;
+			renderString(tempstr, 8 + showPortraitVal, 2, false);
+		}
+	}
+	adjustRect(rect);
+	SDL_SetRenderTarget(m_renderer, NULL);
+	SDL_RenderTexture(m_renderer, m_texStats, NULL, &rect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+}
+
+void U3Resources::UPrint(std::string gString, char x, char y)
+{
+	renderString(gString, x, y, false);
+}
+
+void U3Resources::DrawPrompt()
+{
+	m_graphics.DrawFramePiece(8, 23, 23);
+}
+

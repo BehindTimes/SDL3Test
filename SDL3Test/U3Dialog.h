@@ -26,7 +26,6 @@ private:
 	void createBorder(int x, int y, int numBlocksW, int numBlocksH);
 	TTF_Text* calcDisplayString(TTF_Font* font, std::string curString, int& outWidth, int& outHeight, SDL_Color color);
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
-	std::vector<std::string> splitString(const std::string& str, char delimiter, bool keepDelim = false);
 	void calculateRects();
 
 	static constexpr std::string_view ResourceLoc = "Resources";

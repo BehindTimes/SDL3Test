@@ -144,7 +144,10 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="U3Button.cpp" />
     <ClCompile Include="U3Dialog.cpp" />
+    <ClCompile Include="U3Misc.cpp" />
     <ClCompile Include="U3Resources.cpp" />
+    <ClCompile Include="U3ScrollArea.cpp" />
+    <ClCompile Include="U3Utilities.cpp" />
     <ClCompile Include="UltimaGraphics.cpp" />
     <ClCompile Include="UltimaIncludes.cpp" />
     <ClCompile Include="UltimaMacIF.cpp" />
@@ -153,8 +156,11 @@
   <ItemGroup>
     <ClInclude Include="U3Button.h" />
     <ClInclude Include="U3Dialog.h" />
+    <ClInclude Include="U3Misc.h" />
     <ClInclude Include="U3Resources.h" />
+    <ClInclude Include="U3ScrollArea.h" />
     <ClInclude Include="U3Theme.h" />
+    <ClInclude Include="U3Utilities.h" />
     <ClInclude Include="UltimaGraphics.h" />
     <ClInclude Include="UltimaIncludes.h" />
     <ClInclude Include="UltimaMacIF.h" />

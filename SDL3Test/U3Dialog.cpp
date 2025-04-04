@@ -2,10 +2,12 @@
 #include <SDL_image.h>
 #include "U3Dialog.h"
 #include "U3Button.h"
+#include "U3Utilities.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;
 extern short screenOffsetY;
+extern U3Utilities m_utilities;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
@@ -222,7 +224,7 @@ void U3Dialog::loadString()
 
 	m_strTitle = std::string(fileTitleData.data());
 	m_strMessage = std::string(fileData.data());
-	auto newLineTokens = splitString(m_strMessage, '\n', true);
+	auto newLineTokens = m_utilities.splitString(m_strMessage, '\n', true);
 	m_strMessage.clear();
 	bool maxLineCountHit = false;
 	const int MAX_LEN_TOKEN = 40;
@@ -241,7 +243,7 @@ void U3Dialog::loadString()
 		{
 			break;
 		}
-		auto tokens = splitString(curLineToken, ' ');
+		auto tokens = m_utilities.splitString(curLineToken, ' ');
 		size_t nCurLen = 0;
 		
 		for (auto& curToken : tokens)
@@ -280,27 +282,6 @@ void U3Dialog::loadString()
 			nCurLen += curToken.size();
 		}
 	}
-}
-
-std::vector<std::string> U3Dialog::splitString(const std::string& str, char delimiter, bool keepDelim)
-{
-	std::vector<std::string> tokens;
-	std::stringstream ss(str);
-	std::string token;
-	while (std::getline(ss, token, delimiter))
-	{
-		if (token.size() > 0)
-		{
-			tokens.push_back(token);
-		}
-		else if (keepDelim)
-		{
-			std::string strDelim("");
-			strDelim += delimiter;
-			tokens.push_back(strDelim);
-		}
-	}
-	return tokens;
 }
 
 TTF_Text* U3Dialog::calcDisplayString(TTF_Font* font, std::string curString, int& outWidth, int& outHeight, SDL_Color color)

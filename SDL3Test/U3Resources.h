@@ -12,18 +12,24 @@
 
 enum class U3PreferencesType
 {
-	Classic_Appearance
+	AutoSave,
+	Classic_Appearance,
+	Include_Wind,
 };
 
 struct U3Preferences
 {
 	U3Preferences()
 	{
+		auto_save = false;
+		include_wind = true;
 		classic_appearance = false;
 		full_screen = false;
 		mode = 0;
 	}
 
+	bool auto_save;
+	bool include_wind;
 	bool classic_appearance;
 	bool full_screen;
 	int mode;
@@ -38,9 +44,11 @@ public:
 	bool init(SDL_Renderer* renderer);
 	void CalculateBlockSize();
 
-	void renderUI(int part, int x, int y);
-	void renderString(std::string curString, int x, int y);
-	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0);
+	void displayFPS(int fps);
+
+	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
+	void renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0);
+	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
 	void renderStalagtites();
 	void drawIntro(int shape, int offset);
 	void drawExodus(Uint8 alpha);
@@ -53,6 +61,7 @@ public:
 	void DrawCredits();
 	void CenterMessage(short which, short y);
 	void SetPreference(U3PreferencesType type, bool value);
+	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
 	void SetButtonCallback(short button, std::function<void()> func);
@@ -64,31 +73,50 @@ public:
 	bool CheckJourneyOnward();
 	void CreateAlertMessage(int message);
 	bool HasAlert(SDL_Event& event);
+	void DrawTiles();
+	void DrawMasked(unsigned short shape, unsigned short x, unsigned short y);
+	void ShowChars(bool force);
+
+	void ScrollThings();
+	void AnimateTiles();
+	void TwiddleFlags();
+
+	void updateTime(Uint64 curTick);
+	void RenderCharStats(short ch, SDL_FRect rect);
+	void DrawPrompt();
+	void adjustRect(SDL_FRect& myRect);
+
+	unsigned char m_TileArray[128];
+	SDL_Texture* m_texDisplay;
+	std::map<std::string, std::vector<std::string>> m_plistMap;
 private:
+	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
 	void DrawButton(short butNum);
 	bool loadFont();
 	bool createFont();
 	void loadGraphics();
 	void loadImages();
-	bool loadSaveGame();
 	void loadButtons();
 	void loadDemo();
 	bool loadPLists();
-	void ScrollThings();
-	void AnimateTiles();
-	void TwiddleFlags();
+	int GetRealTile(int tilenum);
+	void HideMonsters();
+	void ShowMonsters();
+	
+	void UPrint(std::string gString, char x, char y);
+	
 	void drawImage(SDL_Texture* texture, float x, float y, float width, float height);
-	void adjustRect(SDL_FRect& myRect);
+	
 	void processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
 	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize);
 	void ScrollShape(int tilenum, float offset);
 	void SwapShape(short shape);
-	bool loadRoster(std::filesystem::path rosterPath);
-	bool loadParty(std::filesystem::path partyPath);
 	void m_AlertCallback();
+	SDL_FRect GetTileRectForIndex(short index);
+	void DrawPortrait(char charNum);
 
 	static constexpr std::string_view FontLoc = "Fonts";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -98,7 +126,10 @@ private:
 	static constexpr std::string_view Standard = "Standard";
 	static constexpr std::string_view BinLoc = "Bin";
 	static constexpr std::string_view SaveLoc = "Save";
-	static constexpr std::string_view TextLoc = "Text";
+
+	static constexpr std::string_view LevelStr = "Level ";
+	static constexpr std::string_view FoodStr = "Food: ";
+
 
 	static constexpr Uint64 DelayScroll = 2000;
 	static constexpr Uint64 DelayDemo = 250;
@@ -123,22 +154,28 @@ private:
 	SDL_Texture* m_texUltimaLogoFade;
 	SDL_Texture* m_texBy;
 	SDL_Texture* m_texCredits;
+	SDL_Texture* m_texStats;
+	SDL_Texture* m_texPortraits;
 
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
 	std::vector< short> m_currentButtons;
-	std::map<std::string, std::vector<std::string>> m_plistMap;
+	
 	int m_exodusWidth;
 	int m_exodusHeight;
 	int m_ultimaLogoWidth;
 	int m_ultimaLogoHeight;
+	int m_portraitHeight;
+	int m_portraitWidth;
 	int m_blockSize;
 	TTF_Font* m_font; // block size font
+	TTF_Font* m_font_9; // 9 point font
 	TTF_Font* m_font_11; // 11 point font
+	TTF_Font* m_font_12; // 12 point font
 
 	std::vector<unsigned char> m_demoData;
-	unsigned char m_TileArray[128];
+	
 	unsigned char m_demoBgndTiles[114];
 	int m_demoptr;
 	int m_demoDelay;
@@ -154,8 +191,6 @@ private:
 	int m_numUpdateFlag;
 	int m_numUpdateAnimate;
 	bool m_shapeSwap[256];
-	unsigned char m_Player[21][65];
-	unsigned char m_Party[64];
 	bool m_cleanupAlert;
 
 	int m_xPos;

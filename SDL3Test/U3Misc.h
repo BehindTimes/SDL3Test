@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <filesystem>
 #include <functional>
+#include <stack>
 
 struct SosariaHandle
 {
@@ -26,7 +27,9 @@ enum class InputType
 {
 	Default,
 	GetDirection,
-	Transact
+	Transact,
+	InputText,
+	YesNo
 };
 
 class U3Misc
@@ -130,13 +133,23 @@ private:
 	void FinishAll();
 	void PullSosaria();
 	void PushSosaria();
+	void HandleInputYesNo(SDL_Keycode key);
+	void HandleInputText(SDL_Keycode key);
 	void HandleDefaultKeyPress(SDL_Keycode key);
 	void HandleDircetionKeyPress(SDL_Keycode key);
 	void HandleTransactPress(SDL_Keycode key);
 	void PrintMonster(short which, bool plural, char variant);
 	void PrintTile(short tile, bool plural);
 	void InverseChnum(char which, bool value);
+	void ClearInverseCharacter();
 	void Speak(short perNum, short shnum);
+	void Shop(short shopNum, short chnum);
+	void tavernCallback();
+	void InputNumCallback();
+	void InputTextCallback();
+	void setInputTypeNum(std::function<void()> func);
+	void setInputTypeYesNo(std::function<void()> func);
+	void anotherDrinkCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -147,6 +160,7 @@ private:
 	int m_ys;
 	int m_dx;
 	int m_dy;
+	bool m_numOnly;
 
 	short m_storedir;
 	short m_rosNum;
@@ -155,6 +169,9 @@ private:
 	int m_transactNum;
 	std::unique_ptr <SosariaHandle> m_saved_map;
 	InputType m_inputType;
-	std::function<void()> m_callbackFunction;
+	std::stack<std::function<void()>> m_callbackStack;
+	std::string m_input;
+	int m_input_num;
+	int m_maxInputLength;
 };
 

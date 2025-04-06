@@ -65,7 +65,8 @@ U3Resources::U3Resources() :
 	m_cleanupAlert(false),
 	m_portraitWidth(0),
 	m_portraitHeight(0),
-	m_isInversed(false)
+	m_isInversed(false),
+	m_font_y_offset(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -336,7 +337,13 @@ bool U3Resources::createFont()
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";
 
-	m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize);
+	// Need to make sure the font stays within the block size.
+	// The font will take up 75% of the space, and we want to give a 4 pixel buffer and then shift the text upwards
+
+	float font_size = (float)(m_blockSize);
+	m_font_y_offset = (m_blockSize) * (1.0f / 8.0f);
+
+	m_font = TTF_OpenFont(currentPath.string().c_str(), font_size);
 	if (!m_font)
 	{
 		return false;
@@ -831,12 +838,15 @@ void U3Resources::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-void U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY)
+int U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY)
 {
 	SDL_FRect frameRect, myRect;
+	int text_extent = 0;
 
 	if (m_preferences.classic_appearance)
 	{
+		text_extent = (int)((x * m_blockSize) + (m_blockSize * curString.size()) + offsetX);
+
 		for (size_t index = 0; index < curString.size(); ++index)
 		{
 			int part = curString.c_str()[index];
@@ -882,6 +892,7 @@ void U3Resources::renderString(std::string curString, int x, int y, bool autoadj
 	}
 	else
 	{
+		offsetY -= (int)m_font_y_offset;
 		TTF_Text* text_obj = NULL;
 		text_obj = TTF_CreateText(engine_surface, m_font, curString.c_str(), 0);
 		int w, h;
@@ -892,10 +903,13 @@ void U3Resources::renderString(std::string curString, int x, int y, bool autoadj
 
 		if (autoadjust)
 		{
+			text_extent = (int)(x * m_blockSize + screenOffsetX + tempOffset + offsetX + w);
 			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset + offsetX, (float)y * m_blockSize + screenOffsetY + offsetY);
 		}
 		else
 		{
+			text_extent = (int)(x * m_blockSize + offsetX + w);
+
 			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + offsetX, (float)y * m_blockSize + offsetY);
 		}
 
@@ -905,6 +919,8 @@ void U3Resources::renderString(std::string curString, int x, int y, bool autoadj
 			text_obj = NULL;
 		}
 	}
+
+	return text_extent;
 }
 
 void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align, bool autoadjust)
@@ -935,6 +951,12 @@ void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int
 	else if (align == 6) // top
 	{
 		offsetH = h * -1;
+	}
+
+	// We overadjusted the default font, so only worry about correcting that one
+	if (font == m_font)
+	{
+		offsetH -= (int)m_font_y_offset;
 	}
 
 	if (autoadjust)
@@ -968,6 +990,43 @@ int U3Resources::getTextWidth(std::string str)
 	}
 
 	return w;
+}
+
+void U3Resources::DrawFramePieceReal(int part, int x, int y, bool adjust)
+{
+	SDL_FRect frameRect, myRect;
+
+	myRect.x = (float)(x);
+	myRect.y = (float)(y);
+	myRect.w = (float)(m_blockSize);
+	myRect.h = (float)(m_blockSize);
+
+	if (adjust)
+	{
+		adjustRect(myRect);
+	}
+
+	int xPart = part % UI_NUM_X;
+	int yPart = part / UI_NUM_X;
+
+	if (m_currentGraphics->ui)
+	{
+		frameRect.x = (float)(m_currentGraphics->ui_width * xPart);
+		frameRect.y = (float)(m_currentGraphics->ui_height * yPart);
+		frameRect.w = m_currentGraphics->ui_width;
+		frameRect.h = m_currentGraphics->ui_height;
+
+		SDL_RenderTexture(m_renderer, m_currentGraphics->ui, &frameRect, &myRect);
+	}
+	else // fallback for missing graphics
+	{
+		frameRect.x = (float)(m_standardGraphics->ui_width * xPart);
+		frameRect.y = (float)(m_standardGraphics->ui_height * yPart);
+		frameRect.w = m_standardGraphics->ui_width;
+		frameRect.h = m_standardGraphics->ui_height;
+
+		SDL_RenderTexture(m_renderer, m_standardGraphics->ui, &frameRect, &myRect);
+	}
 }
 
 void U3Resources::renderUI(int part, int x, int y, bool adjust, int offsetX, int offsetY)

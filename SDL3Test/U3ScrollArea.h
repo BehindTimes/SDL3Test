@@ -28,7 +28,9 @@ public:
 	{
 		m_forceRedraw = true;
 	}
+	void setInput(bool hasInput);
 	bool isPrompt();
+	void setInputString(std::string strValue);
 
 	float m_top;
 	float m_maxTop;
@@ -43,7 +45,9 @@ private:
 	int m_blockSize;
 	Uint64 m_currentTicks;
 	Uint64 m_elapsedTime;
+	Uint64 m_elapsedTimeCursor;
 	const Uint64 SCROLL_DELAY = 100;
+	const Uint64 CURSOR_DELAY = 100;
 	SDL_Texture* m_texDisplay;
 	bool m_updateRatio;
 	bool m_forceRedraw;
@@ -51,5 +55,9 @@ private:
 	bool m_update;
 	bool m_scrolling;
 	bool m_queueBegin;
+	bool m_hasInput;
+	std::string m_input;
+	int m_cursorPos;
+	int m_curCursor;
 };
 

@@ -66,7 +66,8 @@ public:
 	void displayFPS(int fps);
 
 	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
-	void renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0);
+	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
+	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0);
 	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
 	void renderStalagtites();
 	void drawIntro(int shape, int offset);
@@ -199,6 +200,7 @@ private:
 	TTF_Font* m_font_9; // 9 point font
 	TTF_Font* m_font_11; // 11 point font
 	TTF_Font* m_font_12; // 12 point font
+	float m_font_y_offset;
 
 	std::vector<unsigned char> m_demoData;
 	

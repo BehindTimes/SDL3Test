@@ -31,14 +31,16 @@ U3Misc::U3Misc() :
 	m_WindDir(0),
 	m_heading(0),
 	m_inputType(InputType::Default),
-	m_callbackFunction(nullptr),
 	m_xs(0),
 	m_ys(0),
 	m_dx(0),
 	m_dy(0),
 	m_transactNum(0),
 	m_storedir(0),
-	m_rosNum(0)
+	m_rosNum(0),
+	m_numOnly(false),
+	m_maxInputLength(2),
+	m_input_num(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -983,9 +985,14 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 	if (key >= SDLK_1 && key <= SDLK_4)
 	{
 		m_transactNum = key - SDLK_1;
-		if (m_callbackFunction)
+		if (m_callbackStack.top())
 		{
-			m_callbackFunction();
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
 		}
 	}
 	else
@@ -1068,18 +1075,165 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 	if (dirgot)
 	{
 		m_inputType = InputType::Default;
-		if (m_callbackFunction)
+		if (m_callbackStack.top())
 		{
-			m_callbackFunction();
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
 		}
 	}
 }
 
+void U3Misc::HandleInputYesNo(SDL_Keycode key)
+{
+	bool handled = false;
+	switch (key)
+	{
+	case SDLK_Y:
+		m_input_num = 1;
+		m_input = std::string("Y");
+		handled = true;
+		break;
+	case SDLK_N:
+		m_input_num = 0;
+		m_input = std::string("N");
+		handled = true;
+		break;
+	default:
+		m_input_num = 0;
+		break;
+	}
+	if (handled)
+	{
+		m_inputType = InputType::Default;
+		m_scrollArea.setInputString(m_input);
+		m_scrollArea.setInput(false);
+		if (m_callbackStack.top())
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
+void U3Misc::HandleInputText(SDL_Keycode key)
+{
+	bool handled = false;
+	if (key >= SDLK_A && key <= SDLK_Z)
+	{
+		if (!m_numOnly)
+		{
+			const char* value = SDL_GetKeyName(key);
+			if (m_maxInputLength < m_input.size())
+			{
+				m_input += value;
+				handled = true;
+			}
+		}
+	}
+	else if (key >= SDLK_0 && key <= SDLK_9)
+	{
+		const char* value = SDL_GetKeyName(key);
+		if (m_maxInputLength > m_input.size())
+		{
+			m_input += value;
+			handled = true;
+		}
+	}
+	else
+	{
+		switch (key)
+		{
+		case SDLK_BACKSPACE:
+			if (m_input.size() > 0)
+			{
+				m_input.pop_back();
+				handled = true;
+			}
+			break;
+		case SDLK_RETURN:
+			m_scrollArea.setInput(false);
+			handled = false;
+			if (m_callbackStack.top())
+			{
+				auto callbackFunction = m_callbackStack.top();
+				m_callbackStack.pop();
+				if (callbackFunction)
+				{
+					callbackFunction();
+				}
+			}
+			else
+			{
+				// This should never be called, but just incase, add a new line
+				m_scrollArea.UPrintWin("\n");
+			}
+			break;
+		default:
+			break;
+		}
+	}
+	if (handled)
+	{
+		m_scrollArea.setInputString(m_input);
+	}
+}
+
+void U3Misc::InputTextCallback()
+{
+	if (m_callbackStack.top())
+	{
+		auto callbackFunction = m_callbackStack.top();
+		m_callbackStack.pop();
+		if (callbackFunction)
+		{
+			callbackFunction();
+			return;
+		}
+	}
+	m_inputType = InputType::Default;
+}
+
+void U3Misc::InputNumCallback()
+{
+	m_numOnly = false;
+	m_inputType = InputType::Default;
+	try
+	{
+		m_input_num = std::stoi(m_input);
+	}
+	catch ([[maybe_unused]]std::exception& e)
+	{
+		m_input_num = 0;
+	}
+	if (m_callbackStack.top())
+	{
+		auto callbackFunction = m_callbackStack.top();
+		m_callbackStack.pop();
+		if (callbackFunction)
+		{
+			callbackFunction();
+		}
+	}
+}
 
 void U3Misc::HandleKeyPress(SDL_Keycode key)
 {
 	switch (m_inputType)
 	{
+	case InputType::YesNo:
+		HandleInputYesNo(key);
+		break;
+	case InputType::InputText:
+		HandleInputText(key);
+		break;
 	case InputType::Transact:
 		HandleTransactPress(key);
 		break;
@@ -1090,7 +1244,6 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 		HandleDefaultKeyPress(key);
 		break;
 	}
-	
 }
 
 void U3Misc::ProcessEvent(SDL_Event event)
@@ -1430,7 +1583,7 @@ void U3Misc::Look()
 {
 	m_scrollArea.UPrintMessage(69);
 	m_inputType = InputType::GetDirection;
-	m_callbackFunction = std::bind(&U3Misc::LookCallback, this);
+	m_callbackStack.push(std::bind(&U3Misc::LookCallback, this));
 }
 
 void U3Misc::PrintTile(short tile, bool plural)
@@ -1539,7 +1692,7 @@ void U3Misc::Transact()
 	m_storedir = 0;
 	m_scrollArea.UPrintMessageRewrapped(88);
 	m_inputType = InputType::Transact;
-	m_callbackFunction = std::bind(&U3Misc::TransasctCallback, this);
+	m_callbackStack.push(std::bind(&U3Misc::TransasctCallback, this));
 }
 
 void U3Misc::TransasctCallback()
@@ -1560,7 +1713,7 @@ void U3Misc::TransasctCallback()
 	}
 
 	m_inputType = InputType::GetDirection;
-	m_callbackFunction = std::bind(&U3Misc::TransasctCallback2, this);
+	m_callbackStack.push(std::bind(&U3Misc::TransasctCallback2, this));
 }
 
 void U3Misc::TransasctCallback2()
@@ -1595,7 +1748,7 @@ void U3Misc::TransasctCallback2()
 
 		//gSongCurrent = gSongNext = 6;
 		InverseChnum(m_transactNum, true);
-		//Shop(shopNum, chnum);
+		Shop(shopNum, m_transactNum);
 		//InverseChnum(m_transactNum, false);
 		//gSongNext = m_Party[2];
 		return;
@@ -1632,25 +1785,21 @@ void U3Misc::TransasctCallback2()
 		if (m_Party[15] == 1)
 		{
 			m_scrollArea.UPrintMessageRewrapped(263);
-			//Speech(GetLocalizedPascalString("\pWelcome, my child. Sosaria thanks you!"),19);
 		}
 		else
 		{
 			m_scrollArea.UPrintMessage(91);
-			//Speech(GetLocalizedPascalString("\pWelcome, my child. Experience more!"),19);
 		}
 		return;
 	}
 	if (hpmax >= 25 && m_Party[15] == 0)
 	{
 		m_scrollArea.UPrintMessage(92);
-		//Speech(GetLocalizedPascalString("\pWelcome, my child. No more!"),19);
 		return;
 	}
 	if (hpmax > 4 && (m_Player[m_rosNum][14] & 0x80) == 0)
 	{
 		m_scrollArea.UPrintMessage(93);
-		//Speech(GetLocalizedPascalString("\pWelcome, my child. Seek ye, the mark of kings!"),19);
 		return;
 	}
 	hpmax = ((m_Player[m_rosNum][28] * 256) + m_Player[m_rosNum][29]);
@@ -1731,4 +1880,104 @@ void U3Misc::InverseTiles(bool value)
 	m_resources.m_inverses.tiles = value;
 	m_resources.m_inverses.inverseTileTime = 1000;
 	m_resources.m_inverses.elapsedTileTime = 0;
+}
+
+void U3Misc::Shop(short shopNum, short chnum)
+{
+	short rosNum;
+
+	rosNum = m_Party[5 + chnum];
+	switch (shopNum)
+	{
+	case 0:
+		m_scrollArea.UPrintMessageRewrapped(185);
+		m_scrollArea.UPrintMessage(186);
+		setInputTypeNum(std::bind(&U3Misc::tavernCallback, this));
+		break;
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		break;
+	case 5:
+		break;
+	case 6:
+		break;
+	case 7:
+		break;
+	default:
+		break;
+	}
+}
+
+void U3Misc::setInputTypeNum(std::function<void()> func)
+{
+	m_callbackStack.push(func);
+	m_input.clear();
+	m_numOnly = true;
+	m_scrollArea.setInput(true);
+	m_inputType = InputType::InputText;
+	m_maxInputLength = 2;
+	m_callbackStack.push(std::bind(&U3Misc::InputNumCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::InputTextCallback, this));
+}
+
+void U3Misc::setInputTypeYesNo(std::function<void()> func)
+{
+	m_callbackStack.push(func);
+	m_input.clear();
+	m_scrollArea.setInput(true);
+	m_inputType = InputType::YesNo;
+}
+
+void U3Misc::tavernCallback()
+{
+	short gold;
+	std::string message;
+
+	m_scrollArea.UPrintWin("\n\n");
+	if (m_input_num < 7)
+	{
+		InverseChnum(m_transactNum, false);
+		m_scrollArea.UPrintMessageRewrapped(187);
+		return;
+	}
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (gold < m_input_num)
+	{
+		InverseChnum(m_transactNum, false);
+		m_scrollArea.UPrintMessageRewrapped(188);
+		return;
+	}
+	gold -= m_input_num;
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+
+	message = m_resources.m_plistMap["Pub"][(m_input_num / 10)];
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (!classic)
+	{
+		message = m_scrollArea.RewrapString(message);
+	}
+	m_scrollArea.UPrintWin(message);
+	m_scrollArea.UPrintMessage(189);
+	setInputTypeYesNo(std::bind(&U3Misc::anotherDrinkCallback, this));
+}
+
+void U3Misc::anotherDrinkCallback()
+{
+	if (m_input_num == 1) // yes
+	{
+		m_scrollArea.UPrintMessage(186);
+		setInputTypeNum(std::bind(&U3Misc::tavernCallback, this));
+	}
+	else
+	{
+		m_scrollArea.UPrintMessageRewrapped(190);
+		InverseChnum(m_transactNum, false);
+	}
 }

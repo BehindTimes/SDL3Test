@@ -21,7 +21,11 @@ U3ScrollArea::U3ScrollArea() :
 	m_updateQueue(false),
 	m_update(false),
 	m_scrolling(false),
-	m_queueBegin(false)
+	m_queueBegin(false),
+	m_hasInput(false),
+	m_cursorPos(0),
+	m_elapsedTimeCursor(0),
+	m_curCursor(0)
 {
 	m_messages.emplace_back(1, "");
 }
@@ -118,6 +122,7 @@ void U3ScrollArea::redraw()
 
 	float startPos = 23.0f * m_blockSize;
 	int tempIndex = 6;
+	bool drawInput = true;
 
 	while(!tempMessages.empty())
 	{
@@ -129,7 +134,18 @@ void U3ScrollArea::redraw()
 		}
 		if (curPair.second.size() > 0)
 		{
-			m_resources.renderString(curPair.second, curPair.first ? 1 : 0, tempIndex, false);
+			std::string strTemp = curPair.second;
+			if (m_hasInput && drawInput)
+			{
+				drawInput = false;
+				strTemp += m_input;
+				m_cursorPos = m_resources.renderString(strTemp, curPair.first ? 1 : 0, tempIndex, false);
+			}
+			else
+			{
+				m_resources.renderString(strTemp, curPair.first ? 1 : 0, tempIndex, false);
+			}
+			
 		}
 		tempIndex--;
 	}
@@ -285,13 +301,6 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 		m_forceRedraw = false;
 	}
 
-	bool classic = false;
-	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
-	if(classic)
-	{
-		///yOffset = 0;
-	}
-
 	SDL_FRect fromRect;
 	fromRect.x = (float)(0.0f * m_blockSize);
 	fromRect.y = (float)(0.0f * m_blockSize) + yOffset;
@@ -308,6 +317,16 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 	if (yOffset > 0)
 	{
 		m_scrolling = true;
+	}
+	if (!m_updating)
+	{
+		if (m_cursorPos > 0)
+		{
+			m_resources.DrawFramePieceReal(16 + m_curCursor, (m_cursorPos + 24 * m_blockSize), (23 * m_blockSize), true);
+			m_elapsedTimeCursor += currentTickCount;
+			m_curCursor = (m_elapsedTimeCursor / CURSOR_DELAY) % 7;
+			m_elapsedTimeCursor %= (CURSOR_DELAY * 7);
+		}
 	}
 }
 
@@ -350,22 +369,67 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	std::string strMessage;
 	int textLen;
 	TTF_Text* text_obj = NULL;
-	int maxSize = 15 * m_blockSize;
-	int totalMaxSize = 15 * m_blockSize;
+	int maxSize = 12 * m_blockSize; // leave room for a prompt
+	int totalMaxSize = 12 * m_blockSize;
 	bool emptyBackString = true;
 	std::vector<std::string> tokens;
 	auto vecString = m_utilities.splitString(str, '\n', true);
+	int tempSub = 0;
 
 	for (std::string& tempString : vecString)
 	{
 		auto vecTemp = m_utilities.splitString(tempString, ' ', true);
 		tokens.insert(tokens.end(), vecTemp.begin(), vecTemp.end());
 	}
+	// If there's a queue, we want to base it off of what will be the last message
+	std::deque<std::string> lastElementDeque;
+
+	bool hasCursor = false;
+
 	if (m_messages.size() > 0)
+	{
+		hasCursor = m_messages.back().first;
+		lastElementDeque.push_back(m_messages.back().second);
+	}
+	if (m_messageQueue.size() > 0)
+	{
+		auto tempQueue = m_messageQueue;
+		while(!tempQueue.empty())
+		{
+			lastElementDeque.push_back(tempQueue.front());
+			tempQueue.pop();
+		}
+	}
+
+	while (!lastElementDeque.empty())
+	{
+		std::string tempElement = lastElementDeque.back();
+		lastElementDeque.pop_back();
+		if (tempElement == std::string("\n"))
+		{
+			break;
+		}
+		else
+		{
+			textLen = m_resources.getTextWidth(m_messages.back().second);
+			maxSize -= textLen;
+			emptyBackString = false;
+		}
+	}
+	if (lastElementDeque.empty()) // we know we were at the last line in the messages, so subtract the prompt if there is one
+	{
+		if (hasCursor)
+		{
+			maxSize -= m_blockSize;
+		}
+	}
+
+	/*if (m_messages.size() > 0)
 	{
 		if (m_messages.back().first)
 		{
 			maxSize -= m_blockSize;
+			tempSub = m_blockSize;
 		}
 		if (m_messages.back().second.size() > 0)
 		{
@@ -374,6 +438,14 @@ std::string U3ScrollArea::RewrapString(std::string str)
 			emptyBackString = false;
 		}
 	}
+	if (m_messageQueue.size() > 0)
+	{
+		auto tempque
+		m_messageQueue.p
+		auto tempQueue = 0;
+		int j = 9;
+	}*/
+
 	size_t start_index = 0;
 	size_t end_index = tokens.size() - 1;
 	for (start_index = 0; start_index < tokens.size(); ++start_index)
@@ -404,7 +476,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		}
 	}
 
-
+	bool isNewLine = false;
 	for (size_t index = start_index; index < tokens.size() - endNewLines; ++index)
 	{
 		std::string tempString = tokens[index];
@@ -418,7 +490,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 			if (emptyBackString) // append here no matter what
 			{
 				strMessage += tempString;
-				maxSize -= m_blockSize;
+				maxSize -= tempSub;
 				continue;
 			}
 		}
@@ -426,6 +498,18 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		{
 			strMessage += std::string("\n");
 			maxSize = totalMaxSize;
+			isNewLine = true;
+		}
+		if (isNewLine)
+		{
+			if (tempString != std::string(" "))
+			{
+				isNewLine = false;
+			}
+			else
+			{
+				continue;
+			}
 		}
 		strMessage += tempString;
 		maxSize = maxSize - textLen;
@@ -435,4 +519,27 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		strMessage += std::string("\n");
 	}
 	return strMessage;
+}
+
+void U3ScrollArea::setInput(bool hasInput)
+{
+	// append the input string to the last string for scrolling
+	if (!hasInput && m_hasInput)
+	{
+		m_messages.back().second += m_input;
+		m_input.clear();
+		m_cursorPos = 0;
+		//UPrintWin("\n");
+	}
+	m_hasInput = hasInput;
+	m_forceRedraw = true;
+	m_elapsedTimeCursor = 0;
+	m_curCursor = 0;
+}
+
+void U3ScrollArea::setInputString(std::string strValue)
+{
+	m_cursorPos = 0;
+	m_input = strValue;
+	m_forceRedraw = true;
 }

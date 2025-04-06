@@ -2,12 +2,14 @@
 #include "UltimaGraphics.h"
 #include "U3ScrollArea.h"
 #include "U3Resources.h"
+#include "UltimaSpellCombat.h"
 #include "UltimaIncludes.h"
 #include <SDL3/SDL.h>
 
 extern U3Resources m_resources;
 extern U3Graphics m_graphics;
 extern U3ScrollArea m_scrollArea;
+extern UltimaSpellCombat m_spellCombat;
 
 U3Misc::U3Misc() :
 	m_WhirlX(0),
@@ -27,11 +29,22 @@ U3Misc::U3Misc() :
 	m_cHide(0),
 	m_gResurrect(false),
 	m_WindDir(0),
-	m_heading(0)
+	m_heading(0),
+	m_inputType(InputType::Default),
+	m_callbackFunction(nullptr),
+	m_xs(0),
+	m_ys(0),
+	m_dx(0),
+	m_dy(0),
+	m_transactNum(0),
+	m_storedir(0),
+	m_rosNum(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
 	m_saved_map.reset();
+	m_gMoonDisp[0] = 4;
+	m_gMoonDisp[1] = 4;
 }
 
 U3Misc::~U3Misc()
@@ -545,6 +558,13 @@ unsigned char U3Misc::GetXYTile(short x, short y)
 	return m_resources.m_TileArray[y * 11 + x];
 }
 
+void U3Misc::PutXYVal(unsigned char value, unsigned char x, unsigned char y)
+{
+	m_mapOffset = (m_graphics.MapConstrain(y) * m_mapSize);
+	m_mapOffset += m_graphics.MapConstrain(x);
+	m_map[m_mapOffset] = value;
+}
+
 unsigned char U3Misc::GetXYVal(int x, int y)
 {
 	unsigned char value = 0;
@@ -669,7 +689,7 @@ bool U3Misc::ValidDir(unsigned char value) // $4702
 	{
 		if (value == 128) // Forcefield
 		{
-			// InverseTiles();
+			InverseTiles(true);
 			for (byte = 0; byte < 4; byte++)
 			{
 				if (!(m_Player[m_Party[byte + 6]][14] & 0x10))
@@ -920,6 +940,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	case SDLK_K:
 		break;
 	case SDLK_L:
+		Look();
 		break;
 	case SDLK_M:
 		break;
@@ -936,6 +957,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	case SDLK_S:
 		break;
 	case SDLK_T:
+		Transact();
 		break;
 	case SDLK_U:
 		break;
@@ -954,7 +976,25 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	}
 }
 
-void U3Misc::HandleKeyPress(SDL_Keycode key)
+void U3Misc::HandleTransactPress(SDL_Keycode key)
+{
+	m_transactNum = 0;
+	m_inputType = InputType::Default;
+	if (key >= SDLK_1 && key <= SDLK_4)
+	{
+		m_transactNum = key - SDLK_1;
+		if (m_callbackFunction)
+		{
+			m_callbackFunction();
+		}
+	}
+	else
+	{
+		m_scrollArea.UPrintWin("\n");
+	}
+}
+
+void U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 {
 	if (key >= SDLK_A && key <= SDLK_Z)
 	{
@@ -982,6 +1022,75 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 
 		Routine6E35();
 	}
+}
+
+void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
+{
+	short dirgot = false;
+
+	switch (key)
+	{
+	case SDLK_UP:
+		m_xs = m_xpos;
+		m_ys = m_ypos - 1;
+		m_dx = 0;
+		m_dy = -1;
+		dirgot = true;
+		m_scrollArea.UPrintMessage(24);
+		break;
+	case SDLK_DOWN:
+		m_xs = m_xpos;
+		m_ys = m_ypos + 1;
+		m_dx = 0;
+		m_dy = 1;
+		dirgot = true;
+		m_scrollArea.UPrintMessage(25);
+		break;
+	case SDLK_LEFT:
+		m_xs = m_xpos - 1;
+		m_ys = m_ypos;
+		m_dx = -1;
+		m_dy = 0;
+		dirgot = true;
+		m_scrollArea.UPrintMessage(27);
+		break;
+	case SDLK_RIGHT:
+		m_xs = m_xpos + 1;
+		m_ys = m_ypos;
+		m_dx = 1;
+		m_dy = 0;
+		dirgot = true;
+		m_scrollArea.UPrintMessage(26);
+		break;
+	default:
+		break;
+	}
+	if (dirgot)
+	{
+		m_inputType = InputType::Default;
+		if (m_callbackFunction)
+		{
+			m_callbackFunction();
+		}
+	}
+}
+
+
+void U3Misc::HandleKeyPress(SDL_Keycode key)
+{
+	switch (m_inputType)
+	{
+	case InputType::Transact:
+		HandleTransactPress(key);
+		break;
+	case InputType::GetDirection:
+		HandleDircetionKeyPress(key);
+		break;
+	default:
+		HandleDefaultKeyPress(key);
+		break;
+	}
+	
 }
 
 void U3Misc::ProcessEvent(SDL_Event event)
@@ -1155,8 +1264,6 @@ void U3Misc::Enter()
 	if (m_Party[15] == 1)
 	{
 	}
-
-	
 }
 
 void U3Misc::IncMoves() // $3AF
@@ -1319,3 +1426,309 @@ void U3Misc::PushSosaria()
 	m_saved_map->WhirlY = m_WhirlY & 0xFF;
 }
 
+void U3Misc::Look()
+{
+	m_scrollArea.UPrintMessage(69);
+	m_inputType = InputType::GetDirection;
+	m_callbackFunction = std::bind(&U3Misc::LookCallback, this);
+}
+
+void U3Misc::PrintTile(short tile, bool plural)
+{
+	
+	std::string theString;
+	std::string strKey = plural ? std::string("TilesPlural") : std::string("Tiles");
+
+	if (m_resources.m_plistMap.contains(strKey))
+	{
+		if(m_resources.m_plistMap[strKey].size() > tile)
+		{
+			theString = m_resources.m_plistMap[strKey][tile];
+			m_scrollArea.UPrintWin(theString);
+		}
+	}
+}
+
+/* monster name depended upon player's x and y location.
+even y locations contain the normal name (Thief, Orc, Skeleton, Giant ...)
+odd y locations indicate a variant.
+if x is even, it's variant one (Brigand, Goblin, Ghoul, Golem ...)
+if x is odd, it's variant two (Cutpurse, Troll, Zombie, Titan ...)
+*/
+void U3Misc::PrintMonster(short which, bool plural, char variant) // $8457
+{
+	if (which > 44 && variant > 0)   // Ö2 = >23
+	{
+		PrintTile((which - 46) + 63 + variant, plural);
+	}
+	else
+	{
+		PrintTile(which / 2, plural);
+	}
+}
+
+void U3Misc::LookCallback()
+{
+	short temp;
+	short mon;
+	m_scrollArea.UPrintWin("->");
+	temp = (GetXYVal(m_xs, m_ys));
+	mon = MonsterHere(m_xs, m_ys);
+	bool handled = false;
+
+	if (mon == 255)
+	{
+		if (temp / 4 == 46)
+		{
+			short offset;
+			int xOff = (m_xs - m_xpos) + 5;
+			int yOff = (m_ys - m_ypos) + 5;
+			if (xOff > -1 && xOff < 11 && yOff > -1 && yOff < 11)
+			{
+				offset = yOff * 11 + xOff;
+				unsigned char tileVal = m_resources.m_TileArray[offset];
+				if (tileVal == 0x5D) // Door, which is not actually handled in the original game or the mac remake, but let's handle it
+				{
+					std::string strDoor(DoorString);
+					m_scrollArea.UPrintWin(strDoor);
+					handled = true;
+				}
+			}
+			if (!handled)
+			{
+				PrintTile(temp / 4, false);
+			}
+		}
+		else
+		{
+			PrintTile(temp / 4, false);
+		}
+		if (temp > 0x30 && temp < 0x7C) // try to make it real a la SpawnMonster()
+		{
+			bool madeReal = false;
+			int i = 0;
+			while (!madeReal && i < 32)
+			{
+				if (m_Monsters[i] == 0)
+				{
+					m_Monsters[i] = (unsigned char)temp;
+					m_Monsters[i + TILEON] = (temp < 0x40) ? 0x00 : 0x04;
+					m_Monsters[i + XMON] = m_xs;
+					m_Monsters[i + YMON] = m_ys;
+					m_Monsters[i + HPMON] = 0x40;    // Wander
+					m_Monsters[i + VARMON] = 0;
+					madeReal = true;
+				}
+				++i;
+			}
+			if (madeReal)
+			{
+				PutXYVal(GetXYVal(m_xs - 1, m_ys), m_xs, m_ys);
+			}
+		}
+	}
+	else // plural if not in town or castle.
+	{
+		PrintMonster(m_Monsters[mon] / 2, (m_Party[2] != 2 && m_Party[2] != 3), m_Monsters[mon + VARMON]);
+	}
+	m_scrollArea.UPrintWin("\n");
+}
+
+void U3Misc::Transact()
+{
+	m_storedir = 0;
+	m_scrollArea.UPrintMessageRewrapped(88);
+	m_inputType = InputType::Transact;
+	m_callbackFunction = std::bind(&U3Misc::TransasctCallback, this);
+}
+
+void U3Misc::TransasctCallback()
+{
+	m_rosNum = m_Party[6 + m_transactNum];
+	std::string strRosNum = std::to_string(m_rosNum) + std::string("\n");
+	m_scrollArea.UPrintWin(strRosNum);
+	if (CheckAlive(m_transactNum) == 0)
+	{
+		m_spellCombat.Incap();
+		return;
+	}
+	m_scrollArea.UPrintMessage(85);
+
+	if (m_storedir)
+	{
+		//AddMacro(storeDir);
+	}
+
+	m_inputType = InputType::GetDirection;
+	m_callbackFunction = std::bind(&U3Misc::TransasctCallback2, this);
+}
+
+void U3Misc::TransasctCallback2()
+{
+	short monNum;
+	short tile;
+	short shopNum;
+	short perNum;
+	short level;
+	short hpmax;
+
+	//m_scrollArea.UPrintWin("\n");
+	monNum = MonsterHere(m_xs, m_ys);
+	if (monNum > 127)
+	{
+		tile = GetXYVal(m_xs, m_ys);
+		if (tile < 0x94 || tile >= 0xE8)
+		{
+			NotHere();
+			return;
+		}
+		m_xs = m_xs + m_dx;
+		m_ys = m_ys + m_dy;
+		tile = GetXYVal(m_xs, m_ys);
+
+		if (tile != 0x40) // merchant
+		{
+			NotHere();
+			return;
+		}
+		shopNum = (m_ypos & 0x07);
+
+		//gSongCurrent = gSongNext = 6;
+		InverseChnum(m_transactNum, true);
+		//Shop(shopNum, chnum);
+		//InverseChnum(m_transactNum, false);
+		//gSongNext = m_Party[2];
+		return;
+	}
+	if (m_Monsters[monNum] != 0x4C)   // is not Lord British
+	{
+		perNum = (m_Monsters[(monNum + HPMON) % 256] & 0x0F);
+		if (perNum == 0)
+		{
+			if (m_Party[15] == 1)
+			{
+				m_scrollArea.UPrintMessageRewrapped(262);
+			}
+			else
+			{
+				m_scrollArea.UPrintMessage(89);
+			}
+			return;
+		}
+		Speak(perNum, m_Monsters[monNum] / 4);
+		return;
+	}
+	m_scrollArea.UPrintMessage(90);
+	level = m_Player[m_rosNum][30];
+	hpmax = (m_Player[m_rosNum][28] * 256) + m_Player[m_rosNum][29];
+
+	if ((hpmax % 100) == 50)   // old 150/250 etc.
+	{
+		hpmax -= 50;
+	}
+	hpmax = hpmax / 100;
+	if (level < hpmax)
+	{
+		if (m_Party[15] == 1)
+		{
+			m_scrollArea.UPrintMessageRewrapped(263);
+			//Speech(GetLocalizedPascalString("\pWelcome, my child. Sosaria thanks you!"),19);
+		}
+		else
+		{
+			m_scrollArea.UPrintMessage(91);
+			//Speech(GetLocalizedPascalString("\pWelcome, my child. Experience more!"),19);
+		}
+		return;
+	}
+	if (hpmax >= 25 && m_Party[15] == 0)
+	{
+		m_scrollArea.UPrintMessage(92);
+		//Speech(GetLocalizedPascalString("\pWelcome, my child. No more!"),19);
+		return;
+	}
+	if (hpmax > 4 && (m_Player[m_rosNum][14] & 0x80) == 0)
+	{
+		m_scrollArea.UPrintMessage(93);
+		//Speech(GetLocalizedPascalString("\pWelcome, my child. Seek ye, the mark of kings!"),19);
+		return;
+	}
+	hpmax = ((m_Player[m_rosNum][28] * 256) + m_Player[m_rosNum][29]);
+	hpmax += 100;
+	if (hpmax > 9950)
+	{
+		hpmax = 9950;
+	}
+	m_Player[m_rosNum][28] = hpmax / 256;
+	m_Player[m_rosNum][29] = hpmax - (m_Player[m_rosNum][28] * 256);
+	m_scrollArea.UPrintMessage(94);
+	InverseTiles(true);
+}
+
+void U3Misc::Speak(short perNum, short shnum)
+{
+	short talk;
+	std::string speechStr;
+	std::string outStr;
+	short tlkptr = 0;
+
+	while (perNum > 0 && tlkptr < 256)
+	{
+		while (m_Talk[tlkptr] != 0 && tlkptr < 256)
+		{
+			tlkptr++;
+		}
+		perNum--;
+		tlkptr++;
+	}
+	while (m_Talk[tlkptr] != 0 && tlkptr < 256)
+	{
+		talk = m_Talk[tlkptr];
+		if (talk == 0xFF) {
+			outStr += '\n';
+			speechStr += ' ';
+		}
+		else
+		{
+			talk = talk & 0x7F;
+			outStr += (char)talk;
+			if (talk >= 'A' && talk <= 'Z')
+			{
+				talk += 32;
+			}
+			if (talk == '-')
+			{
+				talk = ' ';
+			}
+			if ((talk >= 'a' && talk <= 'z') || talk == '?' || talk == '&' || talk == '!' || talk == ':' || talk == ' ' ||
+				(talk >= '0' && talk <= '9'))
+			{
+				speechStr += (char)talk;
+			}
+		}
+		tlkptr++;
+	}
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (!classic)
+	{
+		outStr = m_scrollArea.RewrapString(outStr);
+	}
+	m_scrollArea.UPrintWin(outStr);
+}
+
+void U3Misc::InverseChnum(char which, bool value)
+{
+	if (which < 0 || which > 3)
+	{
+		return;
+	}
+	m_resources.m_inverses.character_num[which] = value;
+}
+
+void U3Misc::InverseTiles(bool value)
+{
+	m_resources.m_inverses.tiles = value;
+	m_resources.m_inverses.inverseTileTime = 1000;
+	m_resources.m_inverses.elapsedTileTime = 0;
+}

@@ -28,7 +28,8 @@ struct ModeGraphics
 	SDL_Texture* ui;
 
 	std::vector<SDL_Texture*> tiles;
-	std::vector < SDL_Texture*> tile_target;
+	std::vector< SDL_Texture*> tile_target;
+	std::vector<SDL_Texture*> ui_tiles;
 
 	float ui_width;
 	float ui_height;

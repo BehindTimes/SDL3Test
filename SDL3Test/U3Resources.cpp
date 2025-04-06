@@ -64,7 +64,8 @@ U3Resources::U3Resources() :
 	m_yPos(0),
 	m_cleanupAlert(false),
 	m_portraitWidth(0),
-	m_portraitHeight(0)
+	m_portraitHeight(0),
+	m_isInversed(false)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -189,7 +190,7 @@ void U3Resources::displayFPS(int fps)
 	renderDisplayString(m_font, strFPS, 0, 0, sdl_text_color);
 }
 
-void U3Resources::m_AlertCallback()
+void U3Resources::AlertCallback()
 {
 	m_cleanupAlert = true;
 }
@@ -197,7 +198,7 @@ void U3Resources::m_AlertCallback()
 void U3Resources::CreateAlertMessage(int message)
 {
 	m_AlertDlg = std::make_unique<U3Dialog>(m_renderer, engine_surface, &m_currentGraphics, &m_standardGraphics,
-		m_blockSize, message, std::bind(&U3Resources::m_AlertCallback, this));
+		m_blockSize, message, std::bind(&U3Resources::AlertCallback, this));
 }
 
 void U3Resources::GetPreference(U3PreferencesType type, bool& value)
@@ -886,18 +887,16 @@ void U3Resources::renderString(std::string curString, int x, int y, bool autoadj
 		int w, h;
 		TTF_GetTextSize(text_obj, &w, &h);
 
-		//screenOffsetX
-
 		size_t totalLen = m_blockSize * curString.size();
 		size_t tempOffset = (totalLen - w) / 2;
 
 		if (autoadjust)
 		{
-			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset, (float)y * m_blockSize + screenOffsetY);
+			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset + offsetX, (float)y * m_blockSize + screenOffsetY + offsetY);
 		}
 		else
 		{
-			TTF_DrawRendererText(text_obj, (float)x * m_blockSize, (float)y * m_blockSize);
+			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + offsetX, (float)y * m_blockSize + offsetY);
 		}
 
 		if (text_obj)
@@ -952,6 +951,23 @@ void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int
 		TTF_DestroyText(text_obj);
 		text_obj = NULL;
 	}
+}
+
+int U3Resources::getTextWidth(std::string str)
+{
+	int w, h;
+	TTF_Text* text_obj = NULL;
+	text_obj = TTF_CreateText(engine_surface, m_font, str.c_str(), 0);
+
+	TTF_GetTextSize(text_obj, &w, &h);
+
+	if (text_obj)
+	{
+		TTF_DestroyText(text_obj);
+		text_obj = NULL;
+	}
+
+	return w;
 }
 
 void U3Resources::renderUI(int part, int x, int y, bool adjust, int offsetX, int offsetY)
@@ -1119,6 +1135,110 @@ void U3Resources::loadSignatureData()
 	SDL_CloseIO(file);
 }
 
+void U3Resources::DrawMoongates()
+{
+	SDL_FRect myRect;
+
+	bool classic;
+	GetPreference(U3PreferencesType::Classic_Appearance, classic);
+
+	if (classic)
+	{
+		m_graphics.DrawFramePiece(12, 8, 0);
+		m_graphics.DrawFramePiece(13, 15, 0);
+
+		myRect.x = (float)(9 * m_blockSize);
+		myRect.y = (float)(0 * m_blockSize);
+		myRect.w = (float)(6 * m_blockSize);
+		myRect.h = (float)(m_blockSize);
+
+		adjustRect(myRect);
+
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+		UPrint("(", 9, 0, true);
+		UPrint(")(", 11, 0, true);
+		UPrint(")", 14, 0, true);
+		std::string strX = std::to_string(m_misc.m_gMoonDisp[0]);
+		std::string strY = std::to_string(m_misc.m_gMoonDisp[0]);
+		UPrint(strX, 10, 0, true);
+		UPrint(strY, 13, 0, true);
+	}
+	else
+	{
+		SDL_Color sdl_text_color = { 255, 255, 255 };
+
+		myRect.x = (float)(8 * m_blockSize);
+		myRect.y = (float)(0 * m_blockSize);
+		myRect.w = (float)(8 * m_blockSize);
+		myRect.h = (float)(m_blockSize);
+
+		m_graphics.DrawFramePiece(12, 7, 0);
+		m_graphics.DrawFramePiece(13, 16, 0);
+
+		adjustRect(myRect);
+
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+		std::string strX = std::string("(") +  std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
+		std::string strY = std::string("(") + std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
+
+		m_graphics.DrawFramePiece(32 + m_misc.m_gMoonDisp[0], 8, 0);
+		m_graphics.DrawFramePiece(40 + m_misc.m_gMoonDisp[1], 12, 0);
+
+		int xPos = (int)(10.5f * m_blockSize);
+		int yPos = (int)(14.5f * m_blockSize);
+		renderDisplayString(m_font, strX, xPos, 0, sdl_text_color, 2);
+		renderDisplayString(m_font, strY, yPos, 0, sdl_text_color, 2);
+	}
+	if (m_misc.m_Party[2] != 0)
+	{
+		return;
+	}
+	if ((m_misc.m_gMoonDisp[0] == '0') && (m_misc.m_gMoonDisp[1] == '0'))
+	{
+		m_misc.PutXYVal(24, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
+	}    // Towne (Dawn)
+	else if (m_misc.GetXYVal(m_misc.m_LocationX[8], m_misc.m_LocationY[8]) == 24)
+	{
+		m_misc.PutXYVal(12, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
+	}    // or forest
+	
+}
+
+void U3Resources::DrawWind()
+{
+	SDL_FRect myRect;
+
+	m_graphics.DrawFramePiece(12, 6, 23);
+	m_graphics.DrawFramePiece(13, 17, 23);
+
+	myRect.x = (float)(7 * m_blockSize);
+	myRect.y = (float)(23 * m_blockSize);
+	myRect.w = (float)(10 * m_blockSize);
+	myRect.h = (float)(m_blockSize);
+
+	adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+	std::string dispString;
+	int winddir = m_misc.m_WindDir;
+	if (winddir < 0 || winddir > 4)
+	{
+		winddir = 0;
+	}
+
+	dispString = m_plistMap["MoreMessages"][42 + winddir];
+	renderString(dispString, 7, 23);
+}
+
 void U3Resources::PlotSig(int x, int y)
 {
 	float sScaler = m_blockSize / 16.0f;
@@ -1227,6 +1347,23 @@ void U3Resources::WriteLordBritish(Uint64 curPass)
 void U3Resources::DrawCredits()
 {
 	drawImage(m_texCredits, (float)m_blockSize, m_blockSize * 17.5625f, m_blockSize * 38.0f, m_blockSize * 1.4375f);
+}
+
+void U3Resources::CenterMessage(std::string message, short xStart, short xEnd, short y)
+{
+	SDL_FRect myRect;
+	int difference = xEnd * m_blockSize - xStart * m_blockSize;
+	int startTile = difference / 2;
+	myRect.x = (float)(xStart * m_blockSize);
+	myRect.y = (float)y * m_blockSize;
+	myRect.h = (float)m_blockSize;
+	myRect.w = (float)(difference);
+	adjustRect(myRect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	
+	renderString(message, xStart, y);
 }
 
 void U3Resources::CenterMessage(short which, short y)
@@ -2274,7 +2411,9 @@ void U3Resources::DrawPortrait(char charNum)
 	SDL_FRect fromRect;
 	SDL_FRect toRect;
 	SDL_FRect offRect;
-	short rosNum, value, rce, sx;
+	short rosNum, value;
+	short rce = 0;
+	short sx;
 	char charRaces[5] = { 'H', 'E', 'D', 'B', 'F' };
 	char usePortrait[12] = { 0, 1, 2, 3, 0, 3, 2, 2, 1, 2, 0, 0 };
 	rosNum = m_misc.m_Party[6 + charNum];
@@ -2684,9 +2823,9 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 }
 
-void U3Resources::UPrint(std::string gString, char x, char y)
+void U3Resources::UPrint(std::string gString, char x, char y, bool autoadjust)
 {
-	renderString(gString, x, y, false);
+	renderString(gString, x, y, autoadjust);
 }
 
 void U3Resources::DrawPrompt()
@@ -2694,3 +2833,50 @@ void U3Resources::DrawPrompt()
 	m_graphics.DrawFramePiece(8, 23, 23);
 }
 
+void U3Resources::DrawInverses(Uint64 delta_time)
+{
+	SDL_FRect myRect;
+
+	SDL_BlendMode blendmode_sub = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_SUBTRACT,
+		SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_SUBTRACT);
+
+	for (int index = 0; index < 4; ++index)
+	{
+		if (m_inverses.character_num[index] == true)
+		{
+			SDL_SetRenderDrawBlendMode(m_renderer, blendmode_sub);
+			myRect.x = (float)(31 * m_blockSize);
+			myRect.y = (float)(index * (m_blockSize * 4));
+			myRect.w = (float)m_blockSize;
+			myRect.h = (float)m_blockSize;
+
+			adjustRect(myRect);
+
+			SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+			SDL_RenderFillRect(m_renderer, &myRect);
+			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+			SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+		}
+	}
+	if (m_inverses.tiles)
+	{
+		m_isInversed = true;
+		SDL_SetRenderDrawBlendMode(m_renderer, blendmode_sub);
+		myRect.x = (float)(1 * m_blockSize);
+		myRect.y = (float)(1 * m_blockSize);
+		myRect.w = (float)m_blockSize * 22;
+		myRect.h = (float)m_blockSize * 22;
+
+		SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+		m_inverses.elapsedTileTime += delta_time;
+		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
+		{
+			m_misc.InverseTiles(false);
+			m_isInversed = false;
+		}
+	}
+}

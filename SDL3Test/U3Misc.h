@@ -2,15 +2,31 @@
 
 #include <SDL3/SDL.h>
 #include <filesystem>
+#include <functional>
 
 struct SosariaHandle
 {
+	SosariaHandle() :
+		WhirlX(0),
+		WhirlY(0),
+		WhirlDX(0),
+		WhirlDY(0)
+	{
+		memset(Monsters, 0, sizeof(unsigned char) * 256);
+	}
 	std::vector<unsigned char> Map;
 	unsigned char Monsters[256];
 	unsigned char WhirlX;
 	unsigned char WhirlY;
 	unsigned char WhirlDX;
 	unsigned char WhirlDY;
+};
+
+enum class InputType
+{
+	Default,
+	GetDirection,
+	Transact
 };
 
 class U3Misc
@@ -26,6 +42,7 @@ public:
 	void GetSosaria();
 	unsigned char GetXYTile(short x, short y);
 	unsigned char GetXYVal(int x, int y);
+	void PutXYVal(unsigned char value, unsigned char x, unsigned char y);
 	void PutXYTile(short value, short x, short y);
 	bool CheckAlive(short member);
 	void LoadUltimaMap(int map);
@@ -33,6 +50,7 @@ public:
 	short MonsterHere(short x, short y);
 	short MaxMana(char rosNum);
 	void ProcessEvent(SDL_Event event);
+	void InverseTiles(bool value);
 
 	void North();
 	void South();
@@ -89,6 +107,7 @@ public:
 	unsigned char careerTable[12];
 	char m_WindDir;
 	short m_zp[255];
+	short m_gMoonDisp[2];
 
 private:
 	void HandleKeyPress(SDL_Keycode key);
@@ -97,6 +116,11 @@ private:
 	bool ValidDir(unsigned char value);
 	void NoGo();
 	void Enter();
+	void Look();
+	void LookCallback();
+	void Transact();
+	void TransasctCallback();
+	void TransasctCallback2();
 	void What();
 	void What2();
 	void NotHere();
@@ -106,12 +130,31 @@ private:
 	void FinishAll();
 	void PullSosaria();
 	void PushSosaria();
+	void HandleDefaultKeyPress(SDL_Keycode key);
+	void HandleDircetionKeyPress(SDL_Keycode key);
+	void HandleTransactPress(SDL_Keycode key);
+	void PrintMonster(short which, bool plural, char variant);
+	void PrintTile(short tile, bool plural);
+	void InverseChnum(char which, bool value);
+	void Speak(short perNum, short shnum);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view BinLoc = "Bin";
+	static constexpr std::string_view DoorString = "Door";
+
+	int m_xs;
+	int m_ys;
+	int m_dx;
+	int m_dy;
+
+	short m_storedir;
+	short m_rosNum;
 
 	short m_heading;
+	int m_transactNum;
 	std::unique_ptr <SosariaHandle> m_saved_map;
+	InputType m_inputType;
+	std::function<void()> m_callbackFunction;
 };
 

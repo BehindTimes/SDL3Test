@@ -31,6 +31,8 @@ public:
 	unsigned char m_maskArray[128];
 
 private:
+	void DrawMoonGateStuff();
+
 	bool m_classic;
 	Uint64 m_startTickCount;
 	Uint64 m_fadeTime;

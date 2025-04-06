@@ -14,7 +14,7 @@ extern U3Resources m_resources;
 extern U3Misc m_misc;
 
 U3Graphics::U3Graphics() :
-    m_classic(true),
+    m_classic(false),
     m_startTickCount(0),
     m_fadeTime(2400)
 {
@@ -51,9 +51,15 @@ void U3Graphics::CreateOrganizeData()
     m_resources.SetButtonVisibility(7, true);
 }
 
+void U3Graphics::DrawMoonGateStuff()
+{
+    m_resources.DrawMoongates();
+}
+
 void U3Graphics::DrawFrame(short which)
 {
     short x;
+    std::string str;
 
     if (which == 1)
     {
@@ -94,21 +100,20 @@ void U3Graphics::DrawFrame(short which)
         DrawFramePiece(4, 23, 12);
         DrawFramePiece(6, 39, 12);
         DrawFramePiece(4, 23, 16);
-        /*for (x = 0; x < 4; x++)
+        for (x = 0; x < 4; x++)
         {
             DrawFramePiece(12, 30, x * 4);
             DrawFramePiece(13, 32, x * 4);
-            str[0] = 1;
-            str[1] = '1' + x;
-            UCenterAt(str, 31, x * 4);
+            str = std::to_string(x);
+            m_resources.CenterMessage(str, 31, 32, x * 4);
         }
-        if (CFPreferencesGetAppBooleanValue(U3PrefIncludeWind, kCFPreferencesCurrentApplication, NULL))
+        bool hasWind;
+        m_resources.GetPreference(U3PreferencesType::Include_Wind, hasWind);
+        if(hasWind)
         {
-            UCenterAt("\p          ", 7, 23);
-            DrawFramePiece(12, 6, 23);
-            DrawFramePiece(13, 17, 23);
+            m_resources.DrawWind();
         }
-        DrawMoonGateStuff();*/
+        DrawMoonGateStuff();
     }
 	if ((which == 2) || (which == 3))
 	{

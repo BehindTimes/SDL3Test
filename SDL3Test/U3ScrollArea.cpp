@@ -14,18 +14,14 @@ U3ScrollArea::U3ScrollArea() :
 	m_texDisplay(nullptr),
 	m_currentTicks(0),
 	m_elapsedTime(0),
-	m_totalDelay(0),
 	m_top(0),
 	m_maxTop(0),
-	m_appendLine(false),
-	m_ratio(0),
-	m_totalElapsedTime(0),
-	m_append(false),
-	m_first_update(false),
 	m_updateRatio(false),
 	m_forceRedraw(true),
 	m_updateQueue(false),
-	m_update(false)
+	m_update(false),
+	m_scrolling(false),
+	m_queueBegin(false)
 {
 	m_messages.emplace_back(1, "");
 }
@@ -41,53 +37,38 @@ U3ScrollArea::~U3ScrollArea()
 void U3ScrollArea::UPrintWin(std::string gString)
 {
 	auto vecString = m_utilities.splitString(gString, '\n', true);
-	
+	if (m_messageQueue.size() == 0)
+	{
+		m_queueBegin = true;
+	}
 	for (size_t index = 0; index < vecString.size(); ++index)
 	{
-		if (vecString[index] == std::string("\n"))
+		if (index == 0 && m_messageQueue.size() > 0)
 		{
-			m_messageQueue.emplace(std::string(""));
-		}
-		else
-		{
-			if (index == 0 && m_messageQueue.size() > 0)
-			{
-				if (m_messageQueue.back() == std::string("\n"))
-				{
-					m_messageQueue.emplace(vecString[index]);
-				}
-				else
-				{
-					m_messageQueue.back() += vecString[index];
-				}
-			}
-			else
+			if (m_messageQueue.back() == std::string("\n"))
 			{
 				m_messageQueue.emplace(vecString[index]);
 			}
+			else if(vecString[index] == std::string("\n"))
+			{
+				m_messageQueue.emplace(vecString[index]);
+			}
+			else
+			{
+				m_messageQueue.back() += vecString[index];
+			}
 		}
-		if (index != vecString.size() - 1)
+		else
 		{
-			m_messageQueue.emplace("\n");
+			m_messageQueue.emplace(vecString[index]);
 		}
-	}
-	if (gString.ends_with('\n'))
-	{
-		m_messageQueue.emplace("\n");
 	}
 
 	if (m_messageQueue.size() > 0)
 	{
-		m_totalDelay = (m_messageQueue.size() - 1) * SCROLL_DELAY;
 		m_updating = true;
 		m_elapsedTime = 0;
-		m_ratio = 0;
-		m_totalElapsedTime = 0;
-		m_first_update = true;
-
-		
 		m_updateQueue = true;
-
 	}
 }
 
@@ -100,6 +81,29 @@ void U3ScrollArea::UPrintMessage(short msgNum)
 		{
 			std::string message = m_resources.m_plistMap["Messages"][msgNum];
 			UPrintWin(message);
+		}
+	}
+}
+
+void U3ScrollArea::UPrintMessageRewrapped(short msgNum)
+{
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	msgNum--;
+	if (m_resources.m_plistMap.contains("Messages"))
+	{
+		if (m_resources.m_plistMap["Messages"].size() > msgNum)
+		{
+			std::string message = m_resources.m_plistMap["Messages"][msgNum];
+			if (classic)
+			{
+				UPrintWin(message);
+			}
+			else
+			{
+				message = RewrapString(message);
+				UPrintWin(message);
+			}
 		}
 	}
 }
@@ -119,7 +123,10 @@ void U3ScrollArea::redraw()
 	{
 		auto curPair = tempMessages.back();
 		tempMessages.pop_back();
-		m_graphics.DrawFramePieceScroll(12, 0, tempIndex);
+		if (curPair.first)
+		{
+			m_graphics.DrawFramePieceScroll(12, 0, tempIndex);
+		}
 		if (curPair.second.size() > 0)
 		{
 			m_resources.renderString(curPair.second, curPair.first ? 1 : 0, tempIndex, false);
@@ -131,6 +138,14 @@ void U3ScrollArea::redraw()
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 }
 
+void U3ScrollArea::cleanupMessages()
+{
+	while (m_messages.size() > 8)
+	{
+		m_messages.pop_front();
+	}
+}
+
 bool U3ScrollArea::updateQueue()
 {
 	bool retval = false;
@@ -138,78 +153,101 @@ bool U3ScrollArea::updateQueue()
 
 	if (m_messageQueue.size() == 0)
 	{
+		cleanupMessages();
 		return true;
 	}
-	auto curStr = m_messageQueue.front();
-	m_messageQueue.pop();
+	if (m_queueBegin)
+	{
+		m_queueBegin = false;
+		auto curStr = m_messageQueue.front();
+		if (curStr == std::string("\n"))
+		{
+			m_forceRedraw = true;
+			m_update = true;
+			cleanupMessages();
+			return false;
+		}
+		else
+		{
+			while (curStr != std::string("\n"))
+			{
+				m_messageQueue.pop();
+				m_messages.back().second += curStr;
+				if (m_messageQueue.size() == 0)
+				{
+					cleanupMessages();
+					return false;
+				}
+				m_forceRedraw = true;
+				m_update = true;
+				curStr = m_messageQueue.front();	
+			}
+			if (m_messageQueue.size() == 0)
+			{
+				cleanupMessages();
+				return true;
+			}
+			else
+			{
+				cleanupMessages();
+				return false;
+			}
+		}
+	}
 	m_forceRedraw = true;
 	m_update = true;
-
-	if (curStr != std::string("\n"))
-	{
-		m_messages.back().second += curStr;
-		if (m_messageQueue.size() == 0)
-		{
-			m_update = false;
-		}
-		/*if (m_update)
-		{
-			m_messages.push_back(std::make_pair(0, ""));
-		}*/
-	}
-	else
+	bool updated = false;
+	auto curStr = m_messageQueue.front();
+	if (curStr == std::string("\n"))
 	{
 		m_messages.push_back(std::make_pair(0, ""));
+		m_messageQueue.pop();
+
 		if (m_messageQueue.size() == 0)
 		{
 			m_update = false;
 			m_messages.back().first = true;
-			retval = true;
+			cleanupMessages();
+			return true;
 		}
-		else
-		{
-			// append the next message
-			curStr = m_messageQueue.front();
-			m_messageQueue.pop();
-			bool isNewLine = false;
-			if (curStr != std::string("\n"))
-			{
-				m_messages.back().second += curStr;
-			}
-			else
-			{
-				isNewLine = true;
-			}
-			if (m_messageQueue.size() == 0)
-			{
-				m_update = false;
-				if (isNewLine)
-				{
-					m_messages.back().first = true;
-					retval = true;
-				}
-			}
-		}
+		curStr = m_messageQueue.front();
 	}
-	while (m_messages.size() > 8)
+	while (curStr != std::string("\n"))
 	{
-		m_messages.pop_front();
+		m_messageQueue.pop();
+		m_messages.back().second += curStr;
+		if (m_messageQueue.size() == 0)
+		{
+			m_update = false;
+			cleanupMessages();
+			return true;
+		}
+		curStr = m_messageQueue.front();
+		updated = true;
 	}
+	cleanupMessages();
 	return retval;
 }
 
 void U3ScrollArea::render(Uint64 currentTickCount)
 {
 	float yOffset = 0;
+	m_scrolling = false;
 	bool bFinished = false;
 
 	if (m_updating)
 	{
-		if (m_updateQueue)
+		if (m_updateQueue && m_queueBegin)
 		{
 			bFinished = updateQueue();
 			m_forceRedraw = true;
 		}
+		else if(SCROLL_DELAY == 0)
+		{
+			bFinished = updateQueue();
+			m_forceRedraw = true;
+		}
+
 		if (SCROLL_DELAY == 0)
 		{
 			m_updateQueue = true;
@@ -267,172 +305,10 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 	
 	m_resources.adjustRect(toRect);
 	SDL_RenderTexture(m_renderer, m_texDisplay, &fromRect, &toRect);
-
-#if 0
-	SDL_FRect myRect;
-
-	myRect.x = (float)0;
-	myRect.y = (float)0;
-	myRect.w = (float)17.0f * m_blockSize;
-	myRect.h = (float)8.0f * m_blockSize;
-	SDL_SetRenderTarget(m_renderer, m_texDisplay);
-	SDL_RenderClear(m_renderer);
-	//SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
-	//SDL_RenderFillRect(m_renderer, &myRect);
-	//SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
-
-	if (!m_updating)
+	if (yOffset > 0)
 	{
-		while (m_messages.size() > 7)
-		{
-			m_messages.pop_front();
-		}
-		auto tempMessages = m_messages;
-		for (size_t index = 0; index < m_messages.size(); ++index)
-		{
-			auto curPair = tempMessages.front();
-			tempMessages.pop_front();
-			if (curPair.first)
-			{
-				m_graphics.DrawFramePieceScroll(12, 0, (short)(7 - (m_messages.size() - index)));
-			}
-			if (curPair.second.size() > 0)
-			{
-				m_resources.renderString(curPair.second, curPair.first ? 1 : 0, (int)(7 - (m_messages.size() - index)), false);
-			}
-		}
+		m_scrolling = true;
 	}
-	else
-	{
-		if (m_first_update)
-		{
-			m_first_update = false;
-			auto curPair = m_messageQueue.front();
-			m_messageQueue.pop();
-			if (curPair.second != std::string("\n"))
-			{
-				m_messages.back().second += curPair.second;
-				m_updateRatio = false;
-			}
-			else
-			{
-				m_updateRatio = true;
-			}
-			if (!m_messageQueue.empty())
-			{
-				m_updateRatio = true;
-			}
-		}
-		else
-		{
-			if (SCROLL_DELAY > 0)
-			{
-				m_ratio = (float)m_elapsedTime / (float)SCROLL_DELAY;
-				while (m_ratio >= 1.0f)
-				{
-					bool isNewLine = false;
-					if (m_messageQueue.size() == 0) // we've overshot, so end now
-					{
-						if (m_messages.back().second == std::string("\n"))
-						{
-							m_messages.back().first = true;
-							m_messages.back().second.clear();
-						}
-						m_updating = false;
-						m_ratio = 0;
-						break;
-					}
-					m_ratio -= 1;
-					m_messages.push_back(std::make_pair(false, ""));
-					if (m_messageQueue.front().second != std::string("\n"))
-					{
-						m_messages.back().second = m_messageQueue.front().second;
-					}
-					else
-					{
-						isNewLine = true;
-					}
-					
-					m_messageQueue.pop();
-					if (m_messageQueue.size() == 0 && isNewLine)
-					{
-						m_messages.back().first = true;
-					}
-				}
-			}
-			else
-			{
-				if (m_messageQueue.size() == 0) // we've overshot, so end now
-				{
-					if (m_messages.back().second == std::string("\n"))
-					{
-						m_messages.back().first = true;
-						m_messages.back().second.clear();
-					}
-					m_updating = false;
-					m_ratio = 0;
-				}
-				else
-				{
-					m_ratio -= 1;
-					bool isNewLine = false;
-					m_messages.push_back(std::make_pair(false, ""));
-					if (m_messageQueue.front().second != std::string("\n"))
-					{
-						m_messages.back().second = m_messageQueue.front().second;
-					}
-					else
-					{
-						isNewLine = true;
-					}
-					m_messageQueue.pop();
-					if (m_messageQueue.size() == 0 && isNewLine)
-					{
-						m_messages.back().first = true;
-					}
-				}
-			}
-			if (!m_updating)
-			{
-				while (m_messages.size() > 7)
-				{
-					m_messages.pop_front();
-				}
-			}
-			auto tempMessages = m_messages;
-			for (size_t index = 0; index < m_messages.size(); ++index)
-			{
-				int offsetY = 0;
-				if (m_updateRatio)
-				{
-					offsetY = (int)((m_ratio * m_blockSize) * -1);
-				}
-				else
-				{
-					//offsetY = (int)((m_blockSize) * -1);
-				}
-				
-				auto curPair = tempMessages.front();
-				tempMessages.pop_front();
-				if (curPair.first)
-				{
-					m_graphics.DrawFramePieceScroll(12, 0, (short)(7 - (m_messages.size() - index)), 0, offsetY);
-				}
-				if (curPair.second.size() > 0)
-				{
-					m_resources.renderString(curPair.second, curPair.first ? 1 : 0, (int)(7 - (m_messages.size() - index)), false, 0, offsetY);
-				}
-			}
-		}
-
-		m_elapsedTime += currentTickCount;
-	}
-	SDL_SetRenderTarget(m_renderer, NULL);
-	myRect.x += (24.0f * m_blockSize);
-	myRect.y += (17.0f * m_blockSize);
-	m_resources.adjustRect(myRect);
-	SDL_RenderTexture(m_renderer, m_texDisplay, NULL, &myRect);
-#endif
 }
 
 void U3ScrollArea::setRenderer(SDL_Renderer* renderer)
@@ -456,3 +332,107 @@ void U3ScrollArea::DrawPrompt()
 	m_graphics.DrawFramePieceScroll(12, 0, 6);
 }
 
+bool U3ScrollArea::isPrompt()
+{
+	if (m_scrolling)
+	{
+		return false;
+	}
+	if (m_messages.size() > 0)
+	{
+		return m_messages.back().first;
+	}
+	return true;
+}
+
+std::string U3ScrollArea::RewrapString(std::string str)
+{
+	std::string strMessage;
+	int textLen;
+	TTF_Text* text_obj = NULL;
+	int maxSize = 15 * m_blockSize;
+	int totalMaxSize = 15 * m_blockSize;
+	bool emptyBackString = true;
+	std::vector<std::string> tokens;
+	auto vecString = m_utilities.splitString(str, '\n', true);
+
+	for (std::string& tempString : vecString)
+	{
+		auto vecTemp = m_utilities.splitString(tempString, ' ', true);
+		tokens.insert(tokens.end(), vecTemp.begin(), vecTemp.end());
+	}
+	if (m_messages.size() > 0)
+	{
+		if (m_messages.back().first)
+		{
+			maxSize -= m_blockSize;
+		}
+		if (m_messages.back().second.size() > 0)
+		{
+			textLen = m_resources.getTextWidth(m_messages.back().second);
+			maxSize -= textLen;
+			emptyBackString = false;
+		}
+	}
+	size_t start_index = 0;
+	size_t end_index = tokens.size() - 1;
+	for (start_index = 0; start_index < tokens.size(); ++start_index)
+	{
+		std::string tempString = tokens[start_index];
+		if (tempString == std::string("\n"))
+		{
+			tempString = std::string("\n");
+			strMessage += tempString;
+			maxSize = totalMaxSize;
+		}
+		else
+		{
+			break;
+		}
+	}
+	int endNewLines = 0;
+	for (size_t temp_index = tokens.size() - 1; temp_index > start_index; --temp_index)
+	{
+		std::string tempString = tokens[temp_index];
+		if (tempString == std::string("\n"))
+		{
+			endNewLines++;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+
+	for (size_t index = start_index; index < tokens.size() - endNewLines; ++index)
+	{
+		std::string tempString = tokens[index];
+		if (tempString == std::string("\n"))
+		{
+			tempString = std::string(" ");
+		}
+		textLen = m_resources.getTextWidth(tempString);
+		if (index == 0) // Special append case
+		{
+			if (emptyBackString) // append here no matter what
+			{
+				strMessage += tempString;
+				maxSize -= m_blockSize;
+				continue;
+			}
+		}
+		if (maxSize < textLen)
+		{
+			strMessage += std::string("\n");
+			maxSize = totalMaxSize;
+		}
+		strMessage += tempString;
+		maxSize = maxSize - textLen;
+	}
+	for (size_t temp_index = 0; temp_index < endNewLines; ++temp_index)
+	{
+		strMessage += std::string("\n");
+	}
+	return strMessage;
+}

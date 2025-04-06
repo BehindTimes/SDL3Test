@@ -35,6 +35,25 @@ struct U3Preferences
 	int mode;
 };
 
+struct InverseStruct
+{
+	InverseStruct()
+	{
+		character_num[0] = false;
+		character_num[1] = false;
+		character_num[2] = false;
+		character_num[3] = false;
+		tiles = false;
+		inverseTileTime = 0;
+		elapsedTileTime = 0;
+	}
+
+	bool character_num[4];
+	bool tiles;
+	Uint64 inverseTileTime;
+	Uint64 elapsedTileTime;
+};
+
 class U3Resources
 {
 public:
@@ -60,6 +79,7 @@ public:
 	void WriteLordBritish(Uint64 curPass);
 	void DrawCredits();
 	void CenterMessage(short which, short y);
+	void CenterMessage(std::string message, short xStart, short xEnd, short y);
 	void SetPreference(U3PreferencesType type, bool value);
 	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
@@ -76,6 +96,9 @@ public:
 	void DrawTiles();
 	void DrawMasked(unsigned short shape, unsigned short x, unsigned short y);
 	void ShowChars(bool force);
+	void DrawWind();
+	void DrawInverses(Uint64 delta_time);
+	void DrawMoongates();
 
 	void ScrollThings();
 	void AnimateTiles();
@@ -85,10 +108,13 @@ public:
 	void RenderCharStats(short ch, SDL_FRect rect);
 	void DrawPrompt();
 	void adjustRect(SDL_FRect& myRect);
+	int getTextWidth(std::string str);
+	bool isInversed() { return m_isInversed; }
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
 	std::map<std::string, std::vector<std::string>> m_plistMap;
+	InverseStruct m_inverses;
 private:
 	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
@@ -104,7 +130,7 @@ private:
 	void HideMonsters();
 	void ShowMonsters();
 	
-	void UPrint(std::string gString, char x, char y);
+	void UPrint(std::string gString, char x, char y, bool autoadjust = false);
 	
 	void drawImage(SDL_Texture* texture, float x, float y, float width, float height);
 	
@@ -114,7 +140,7 @@ private:
 	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize);
 	void ScrollShape(int tilenum, float offset);
 	void SwapShape(short shape);
-	void m_AlertCallback();
+	void AlertCallback();
 	SDL_FRect GetTileRectForIndex(short index);
 	void DrawPortrait(char charNum);
 
@@ -195,5 +221,7 @@ private:
 
 	int m_xPos;
 	int m_yPos;
+	bool m_isInversed;
+	
 };
 

@@ -152,6 +152,7 @@
     <ClCompile Include="UltimaIncludes.cpp" />
     <ClCompile Include="UltimaMacIF.cpp" />
     <ClCompile Include="UltimaSound.cpp" />
+    <ClCompile Include="UltimaSpellCombat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="U3Button.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="UltimaMacIF.h" />
     <ClInclude Include="UltimaMain.h" />
     <ClInclude Include="UltimaSound.h" />
+    <ClInclude Include="UltimaSpellCombat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

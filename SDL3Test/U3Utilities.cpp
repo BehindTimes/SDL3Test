@@ -6,17 +6,37 @@ std::vector<std::string> U3Utilities::splitString(const std::string& str, char d
 	std::vector<std::string> tokens;
 	std::stringstream ss(str);
 	std::string token;
-	while (std::getline(ss, token, delimiter))
+	std::string strDelim("");
+	strDelim += delimiter;
+	bool init = true;
+
+	if (str.size() > 0)
 	{
-		if (token.size() > 0)
+
+		while (std::getline(ss, token, delimiter))
 		{
-			tokens.push_back(token);
+			if (init)
+			{
+				init = false;
+			}
+			else
+			{
+				if (keepDelim)
+				{
+					tokens.push_back(strDelim);
+				}
+			}
+			if (token.size() > 0)
+			{
+				tokens.push_back(token);
+			}
 		}
-		else if (keepDelim)
+		if (keepDelim)
 		{
-			std::string strDelim("");
-			strDelim += delimiter;
-			tokens.push_back(strDelim);
+			if (str.ends_with(delimiter))
+			{
+				tokens.push_back(strDelim);
+			}
 		}
 	}
 	return tokens;

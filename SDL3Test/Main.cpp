@@ -9,6 +9,7 @@
 #include "UltimaMacIF.h"
 #include "UltimaMain.h"
 #include "UltimaSound.h"
+#include "UltimaSpellCombat.h"
 #include "U3ScrollArea.h"
 #include "U3Utilities.h"
 
@@ -28,6 +29,7 @@ U3Misc m_misc;
 U3Graphics m_graphics;
 U3ScrollArea m_scrollArea;
 U3Utilities m_utilities;
+UltimaSpellCombat m_spellCombat;
 
 void DoSplashScreen();
 void MainLoop();
@@ -723,12 +725,22 @@ void Game()
         m_graphics.DrawMap(m_misc.m_xpos, m_misc.m_ypos);
         m_resources.ShowChars(true);
         CheckAllDead();
-        m_resources.DrawPrompt();
-        if (!m_scrollArea.isUpdating())
+        
+        if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
         {
             m_misc.ProcessEvent(event);
         }
+
+		if (m_scrollArea.isPrompt())
+		{
+			m_resources.DrawPrompt();
+		}
+
         m_scrollArea.render(deltaTime);
+
+        m_resources.DrawWind();
+
+        m_resources.DrawInverses(deltaTime);
 
         count++;
         if (elapsedTime > 1000)

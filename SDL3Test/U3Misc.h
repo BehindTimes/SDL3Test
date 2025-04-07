@@ -155,9 +155,11 @@ private:
 	void Speak(short perNum, short shnum);
 	void Shop(short shopNum, short chnum);
 	void tavernCallback();
+	void grocerCallback();
+	void moreFoodCallback();
 	void InputNumCallback();
 	void InputTextCallback();
-	void setInputTypeNum(std::function<void()> func);
+	void setInputTypeNum(std::function<void()> func, int inputLength = 2);
 	void setInputTypeYesNo(std::function<void()> func);
 	void setInputTypeBuySell(std::function<void()> func);
 	void setInputTypeRestricted(std::function<void()> func, short start);

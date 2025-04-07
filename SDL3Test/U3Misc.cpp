@@ -2020,6 +2020,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 	case 1:
 		m_scrollArea.UPrintMessage(191);
 		m_scrollArea.UPrintMessage(192);
+		setInputTypeNum(std::bind(&U3Misc::grocerCallback, this), 4);
 		break;
 	case 2:
 		m_scrollArea.UPrintMessage(196);
@@ -2235,14 +2236,14 @@ void U3Misc::armorsBuyOrSell()
 	setInputTypeBuySell(std::bind(&U3Misc::armorsBuySellCallback, this));
 }
 
-void U3Misc::setInputTypeNum(std::function<void()> func)
+void U3Misc::setInputTypeNum(std::function<void()> func, int inputLength)
 {
 	m_callbackStack.push(func);
 	m_input.clear();
 	m_numOnly = true;
 	m_scrollArea.setInput(true);
 	m_inputType = InputType::InputText;
-	m_maxInputLength = 2;
+	m_maxInputLength = inputLength;
 	m_callbackStack.push(std::bind(&U3Misc::InputNumCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::InputTextCallback, this));
 }
@@ -2270,6 +2271,59 @@ void U3Misc::setInputTypeRestricted(std::function<void()> func, short start)
 	m_callbackStack.push(func);
 	m_input.clear();
 	m_inputType = InputType::Restricted;
+}
+
+void U3Misc::grocerCallback()
+{
+	short gold;
+	if (m_input_num == 0)
+	{
+		InverseChnum(m_transactNum, false);
+		m_scrollArea.UPrintWin("\n\n");
+		return;
+	}
+	int existingFood = (m_Player[m_rosNum][32] * 100) + m_Player[m_rosNum][33];
+	if (m_input_num > (9999 - existingFood))
+	{
+		m_scrollArea.UPrintMessageRewrapped(260);
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessage(192);
+		setInputTypeNum(std::bind(&U3Misc::grocerCallback, this), 4);
+		return;
+	}
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (gold < m_input_num)
+	{
+		InverseChnum(m_transactNum, false);
+		m_scrollArea.UPrintMessageRewrapped(193);
+		return;
+	}
+	gold -= m_input_num;
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+	existingFood += m_input_num;
+	m_Player[m_rosNum][32] = existingFood / 100;
+	m_Player[m_rosNum][33] = existingFood - (m_Player[m_rosNum][32] * 100);
+	m_scrollArea.UPrintMessageRewrapped(194);
+	setInputTypeYesNo(std::bind(&U3Misc::moreFoodCallback, this));
+}
+
+void U3Misc::moreFoodCallback()
+{
+	m_scrollArea.setInput(true);
+	if (m_input_num == 1) // yes
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessage(192);
+		setInputTypeNum(std::bind(&U3Misc::grocerCallback, this));
+	}
+	else
+	{
+		m_scrollArea.setInput(false);
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessageRewrapped(195);
+		InverseChnum(m_transactNum, false);
+	}
 }
 
 void U3Misc::tavernCallback()

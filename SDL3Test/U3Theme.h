@@ -11,9 +11,7 @@ struct ModeGraphics
 	ModeGraphics() :
 		font(nullptr),
 		mini(nullptr),
-		//tiles(nullptr),
 		ui(nullptr),
-		//tile_target(nullptr),
 		ui_width(0),
 		ui_height(0),
 		font_width(0),

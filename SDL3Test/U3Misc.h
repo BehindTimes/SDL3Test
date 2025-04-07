@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <stack>
+#include <queue>
 
 struct SosariaHandle
 {
@@ -29,7 +30,8 @@ enum class InputType
 	GetDirection,
 	Transact,
 	InputText,
-	YesNo
+	YesNo,
+	AnyKey
 };
 
 class U3Misc
@@ -133,6 +135,7 @@ private:
 	void FinishAll();
 	void PullSosaria();
 	void PushSosaria();
+	void HandleAnyKey();
 	void HandleInputYesNo(SDL_Keycode key);
 	void HandleInputText(SDL_Keycode key);
 	void HandleDefaultKeyPress(SDL_Keycode key);
@@ -141,7 +144,6 @@ private:
 	void PrintMonster(short which, bool plural, char variant);
 	void PrintTile(short tile, bool plural);
 	void InverseChnum(char which, bool value);
-	void ClearInverseCharacter();
 	void Speak(short perNum, short shnum);
 	void Shop(short shopNum, short chnum);
 	void tavernCallback();
@@ -150,6 +152,11 @@ private:
 	void setInputTypeNum(std::function<void()> func);
 	void setInputTypeYesNo(std::function<void()> func);
 	void anotherDrinkCallback();
+	void weaponsListCallback();
+	void BuyOrSell();
+	void listWeaponsCallback();
+	void WeaponList();
+	void PrintWeaponList(short weapon);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -161,6 +168,7 @@ private:
 	int m_dx;
 	int m_dy;
 	bool m_numOnly;
+	short m_opnum;
 
 	short m_storedir;
 	short m_rosNum;
@@ -173,5 +181,6 @@ private:
 	std::string m_input;
 	int m_input_num;
 	int m_maxInputLength;
+	std::queue<int> m_weaponsList;
 };
 

@@ -7,6 +7,17 @@
 #include <SDL3/SDL_rect.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+struct sTextFlags
+{
+	sTextFlags()
+	{
+		pretty_print = false;
+		prompt = false;
+	}
+	bool pretty_print;
+	bool prompt;
+};
+
 class U3ScrollArea
 {
 public:
@@ -22,7 +33,7 @@ public:
 	void setRenderer(SDL_Renderer* m_renderer);
 	void setBlockSize(int blockSize);
 	void DrawPrompt();
-	void UPrintWin(std::string gString);
+	void UPrintWin(std::string gString, bool prettyPrint = false);
 	std::string RewrapString(std::string str);
 	void forceRedraw()
 	{
@@ -31,6 +42,7 @@ public:
 	void setInput(bool hasInput);
 	bool isPrompt();
 	void setInputString(std::string strValue);
+	void blockPrompt(bool block);
 
 	float m_top;
 	float m_maxTop;
@@ -59,5 +71,6 @@ private:
 	std::string m_input;
 	int m_cursorPos;
 	int m_curCursor;
+	bool m_block;
 };
 

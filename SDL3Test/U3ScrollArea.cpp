@@ -25,7 +25,8 @@ U3ScrollArea::U3ScrollArea() :
 	m_hasInput(false),
 	m_cursorPos(0),
 	m_elapsedTimeCursor(0),
-	m_curCursor(0)
+	m_curCursor(0),
+	m_block(false)
 {
 	m_messages.emplace_back(1, "");
 }
@@ -38,7 +39,7 @@ U3ScrollArea::~U3ScrollArea()
 	}
 }
 
-void U3ScrollArea::UPrintWin(std::string gString)
+void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 {
 	auto vecString = m_utilities.splitString(gString, '\n', true);
 	if (m_messageQueue.size() == 0)
@@ -222,7 +223,10 @@ bool U3ScrollArea::updateQueue()
 		if (m_messageQueue.size() == 0)
 		{
 			m_update = false;
-			m_messages.back().first = true;
+			if (!m_block)
+			{
+				m_messages.back().first = true;
+			}
 			cleanupMessages();
 			return true;
 		}
@@ -542,4 +546,9 @@ void U3ScrollArea::setInputString(std::string strValue)
 	m_cursorPos = 0;
 	m_input = strValue;
 	m_forceRedraw = true;
+}
+
+void U3ScrollArea::blockPrompt(bool block)
+{
+	m_block = block;
 }

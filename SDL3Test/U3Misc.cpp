@@ -40,7 +40,8 @@ U3Misc::U3Misc() :
 	m_rosNum(0),
 	m_numOnly(false),
 	m_maxInputLength(2),
-	m_input_num(0)
+	m_input_num(0),
+	m_opnum(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -1186,6 +1187,20 @@ void U3Misc::HandleInputText(SDL_Keycode key)
 	}
 }
 
+void U3Misc::HandleAnyKey()
+{
+	m_inputType = InputType::Default;
+	if (m_callbackStack.top())
+	{
+		auto callbackFunction = m_callbackStack.top();
+		m_callbackStack.pop();
+		if (callbackFunction)
+		{
+			callbackFunction();
+		}
+	}
+}
+
 void U3Misc::InputTextCallback()
 {
 	if (m_callbackStack.top())
@@ -1239,6 +1254,9 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 		break;
 	case InputType::GetDirection:
 		HandleDircetionKeyPress(key);
+		break;
+	case InputType::AnyKey:
+		HandleAnyKey();
 		break;
 	default:
 		HandleDefaultKeyPress(key);
@@ -1887,6 +1905,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 	short rosNum;
 
 	rosNum = m_Party[5 + chnum];
+	//shopNum = 2;
 	switch (shopNum)
 	{
 	case 0:
@@ -1895,22 +1914,128 @@ void U3Misc::Shop(short shopNum, short chnum)
 		setInputTypeNum(std::bind(&U3Misc::tavernCallback, this));
 		break;
 	case 1:
+		m_scrollArea.UPrintMessage(191);
+		m_scrollArea.UPrintMessage(192);
 		break;
 	case 2:
+		m_scrollArea.UPrintMessage(196);
+		m_scrollArea.UPrintMessage(197);
 		break;
 	case 3:
+		m_opnum = 'I';
+		if (m_Party[3] == 37)
+		{
+			m_opnum = 'P';    // x location of party on Sosaria
+		}
+		m_scrollArea.UPrintMessage(206);
+		setInputTypeYesNo(std::bind(&U3Misc::weaponsListCallback, this));
 		break;
 	case 4:
 		break;
 	case 5:
 		break;
 	case 6:
+		m_scrollArea.UPrintMessage(221);
 		break;
 	case 7:
+		m_scrollArea.UPrintMessage(225);
 		break;
 	default:
 		break;
 	}
+}
+
+void U3Misc::WeaponList()
+{
+	m_scrollArea.blockPrompt(true);
+	m_scrollArea.UPrintMessage(237);
+	m_weaponsList.push(1);
+	m_weaponsList.push(2);
+	m_weaponsList.push(3);
+	m_weaponsList.push(4);
+	m_weaponsList.push(5);
+	m_weaponsList.push(0);
+	m_weaponsList.push(6);
+	m_weaponsList.push(7);
+	if (m_opnum == 'P')
+	{
+		m_weaponsList.push(8);
+		m_weaponsList.push(9);
+		m_weaponsList.push(10);
+		m_weaponsList.push(11);
+		m_weaponsList.push(12);
+		m_weaponsList.push(13);
+		m_weaponsList.push(14);
+	}
+	m_weaponsList.push(0);
+	listWeaponsCallback();
+}
+
+void U3Misc::PrintWeaponList(short weapon)
+{
+	char curWeapon = 'A' + weapon;
+	std::string strWeapon;
+	std::string dispString = m_resources.m_plistMap["WeaponsArmour"][weapon];
+	strWeapon += curWeapon + std::string(":");
+	if (!dispString.ends_with('s') && dispString.size() < 7)
+	{
+		dispString += 's';
+	}
+	strWeapon += dispString;
+	dispString = m_resources.m_plistMap["WeaponsArmour"][weapon + 24];
+	dispString += std::string("gp");
+	dispString += std::string("\n");
+	std::string strSpaces;
+	for (int index = 0; index < 17 - (strWeapon.size() + dispString.size()); ++index)
+	{
+		strSpaces += ' ';
+	}
+	strWeapon += strSpaces + dispString;
+	m_scrollArea.UPrintWin(strWeapon, true);
+}
+
+void U3Misc::listWeaponsCallback()
+{
+	bool anykey = false;
+	std::string dispString;
+	while (!m_weaponsList.empty())
+	{
+		int num = m_weaponsList.front();
+		m_weaponsList.pop();
+		if (num == 0)
+		{
+			anykey = true;
+			break;
+		}
+		PrintWeaponList(num);
+	}
+	if (anykey)
+	{
+		m_inputType = InputType::AnyKey;
+		m_callbackStack.push(std::bind(&U3Misc::listWeaponsCallback, this));
+	}
+	else
+	{
+		BuyOrSell();
+	}
+}
+
+void U3Misc::weaponsListCallback()
+{
+	if (m_input_num == 1) // yes
+	{
+		WeaponList();
+	}
+	else
+	{
+		BuyOrSell();
+	}
+}
+
+void U3Misc::BuyOrSell()
+{
+	m_scrollArea.UPrintMessage(207);
+	m_scrollArea.blockPrompt(false);
 }
 
 void U3Misc::setInputTypeNum(std::function<void()> func)

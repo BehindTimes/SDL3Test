@@ -635,6 +635,8 @@ void CheckAllDead() /* $71B4 */
 
 void Game()
 {
+    m_misc.m_xpos = 10;
+    m_misc.m_ypos = 10;
     bool quit = false;
     bool gInterrupt = false;
     bool updateMouse = false;

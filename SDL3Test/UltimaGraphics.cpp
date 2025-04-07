@@ -399,6 +399,7 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
             {
                 // and the item left of it is not a letter
                 unsigned char left = m_misc.GetXYVal(xm - 1, ym);
+                bool isLetter = false;
                 if (left < 0x98 || left > 0xE4 || left == 0xB8)
                 {
                     // and the item right of it is not a letter
@@ -409,7 +410,19 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
                         unsigned char above = m_misc.GetXYVal(xm, ym - 1);
                         if (above < 0x98 || above > 0xE4)
                         {
-                            m_resources.m_TileArray[offset - 1] = 0x5D;    // 0x5C normally for I
+                            if (left == 0xB8 && xm > 2)
+                            {
+                                // This is a special case for Moon
+                                char left2 = m_misc.GetXYVal(xm - 2, ym);
+                                if (left >= 0x98 && left <= 0xE4)
+                                {
+                                    isLetter = true;
+                                }
+                            }
+                            if (!isLetter)
+                            {
+                                m_resources.m_TileArray[offset - 1] = 0x5D;    // 0x5C normally for I
+                            }
                         }
                     }
                 }

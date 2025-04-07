@@ -2035,6 +2035,13 @@ void U3Misc::Shop(short shopNum, short chnum)
 		setInputTypeYesNo(std::bind(&U3Misc::weaponsListCallback, this));
 		break;
 	case 4:
+		m_opnum = 'F';
+		if (m_Party[3] == 37)
+		{
+			m_opnum = 'H';    // x location of party on Sosaria
+		}
+		m_scrollArea.UPrintMessage(216);
+		setInputTypeYesNo(std::bind(&U3Misc::armorsListCallback, this));
 		break;
 	case 5:
 		break;
@@ -2075,6 +2082,23 @@ void U3Misc::WeaponList()
 	listWeaponsCallback();
 }
 
+void U3Misc::ArmorsList()
+{
+	m_scrollArea.blockPrompt(true);
+	m_scrollArea.UPrintMessage(237);
+	m_weaponsList.push(1);
+	m_weaponsList.push(2);
+	m_weaponsList.push(3);
+	m_weaponsList.push(4);
+	if (m_opnum == 'H')
+	{
+		m_weaponsList.push(5);
+		m_weaponsList.push(6);
+	}
+	m_weaponsList.push(0);
+	listArmorsCallback();
+}
+
 void U3Misc::PrintWeaponList(short weapon)
 {
 	char curWeapon = 'A' + weapon;
@@ -2087,6 +2111,29 @@ void U3Misc::PrintWeaponList(short weapon)
 	}
 	strWeapon += dispString;
 	dispString = m_resources.m_plistMap["WeaponsArmour"][weapon + 24];
+	dispString += std::string("gp");
+	dispString += std::string("\n");
+	std::string strSpaces;
+	for (int index = 0; index < 17 - (strWeapon.size() + dispString.size()); ++index)
+	{
+		strSpaces += ' ';
+	}
+	strWeapon += strSpaces + dispString;
+	m_scrollArea.UPrintWin(strWeapon, true);
+}
+
+void U3Misc::PrintArmorList(short armor)
+{
+	char curWeapon = 'A' + armor;
+	std::string strWeapon;
+	std::string dispString = m_resources.m_plistMap["WeaponsArmour"][armor + 16];
+	strWeapon += curWeapon + std::string(":");
+	if (!dispString.ends_with('s') && dispString.size() < 7)
+	{
+		dispString += 's';
+	}
+	strWeapon += dispString;
+	dispString = m_resources.m_plistMap["WeaponsArmour"][armor + 40];
 	dispString += std::string("gp");
 	dispString += std::string("\n");
 	std::string strSpaces;
@@ -2120,7 +2167,33 @@ void U3Misc::listWeaponsCallback()
 	}
 	else
 	{
-		BuyOrSell();
+		weaponsBuyOrSell();
+	}
+}
+
+void U3Misc::listArmorsCallback()
+{
+	bool anykey = false;
+	std::string dispString;
+	while (!m_weaponsList.empty())
+	{
+		int num = m_weaponsList.front();
+		m_weaponsList.pop();
+		if (num == 0)
+		{
+			anykey = true;
+			break;
+		}
+		PrintArmorList(num);
+	}
+	if (anykey)
+	{
+		m_inputType = InputType::AnyKey;
+		m_callbackStack.push(std::bind(&U3Misc::listArmorsCallback, this));
+	}
+	else
+	{
+		armorsBuyOrSell();
 	}
 }
 
@@ -2132,15 +2205,34 @@ void U3Misc::weaponsListCallback()
 	}
 	else
 	{
-		BuyOrSell();
+		weaponsBuyOrSell();
 	}
 }
 
-void U3Misc::BuyOrSell()
+void U3Misc::armorsListCallback()
+{
+	if (m_input_num == 1) // yes
+	{
+		ArmorsList();
+	}
+	else
+	{
+		armorsBuyOrSell();
+	}
+}
+
+void U3Misc::weaponsBuyOrSell()
 {
 	m_scrollArea.UPrintMessage(207);
 	m_scrollArea.blockPrompt(false);
-	setInputTypeBuySell(std::bind(&U3Misc::buySellCallback, this));
+	setInputTypeBuySell(std::bind(&U3Misc::weaponsBuySellCallback, this));
+}
+
+void U3Misc::armorsBuyOrSell()
+{
+	m_scrollArea.UPrintMessage(207);
+	m_scrollArea.blockPrompt(false);
+	setInputTypeBuySell(std::bind(&U3Misc::armorsBuySellCallback, this));
 }
 
 void U3Misc::setInputTypeNum(std::function<void()> func)
@@ -2230,30 +2322,49 @@ void U3Misc::anotherDrinkCallback()
 	}
 }
 
-void U3Misc::buySellCallback()
+void U3Misc::weaponsBuySellCallback()
 {
 	m_scrollArea.setInput(false);
 	if (m_input_num == 1) // buy
 	{
 		m_scrollArea.UPrintMessage(208);
-		setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+		setInputTypeRestricted(std::bind(&U3Misc::weaponsBuyCallback, this), 'B');
 	}
 	else if (m_input_num == 0) // sell
 	{
 		m_scrollArea.UPrintMessage(211);
-		setInputTypeRestricted(std::bind(&U3Misc::sellCallback, this), 'A');
+		setInputTypeRestricted(std::bind(&U3Misc::weaponsSellCallback, this), 'A');
 	}
 	else // cancel
 	{
-		buySellFinishedCallback();
+		weaponsBuySellFinishedCallback();
 	}
 }
 
-void U3Misc::buyCallback()
+void U3Misc::armorsBuySellCallback()
+{
+	m_scrollArea.setInput(false);
+	if (m_input_num == 1) // buy
+	{
+		m_scrollArea.UPrintMessage(208);
+		setInputTypeRestricted(std::bind(&U3Misc::armorsBuyCallback, this), 'B');
+	}
+	else if (m_input_num == 0) // sell
+	{
+		m_scrollArea.UPrintMessage(211);
+		setInputTypeRestricted(std::bind(&U3Misc::armorsSellCallback, this), 'B');
+	}
+	else // cancel
+	{
+		armorsBuySellFinishedCallback();
+	}
+}
+
+void U3Misc::weaponsBuyCallback()
 {
 	if (m_input_num < 0)
 	{
-		buySellFinishedCallback();
+		weaponsBuySellFinishedCallback();
 	}
 	else
 	{
@@ -2275,7 +2386,7 @@ void U3Misc::buyCallback()
 		}
 		if (amount > gold)
 		{
-			buyPoor();
+			weaponsBuyPoor();
 			return;
 		}
 		if (m_Player[m_rosNum][48 + m_input_num] > 98)
@@ -2284,7 +2395,7 @@ void U3Misc::buyCallback()
 			m_scrollArea.UPrintWin("\n\n");
 			m_scrollArea.setInput(false);
 			m_scrollArea.blockPrompt(true);
-			setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+			setInputTypeRestricted(std::bind(&U3Misc::weaponsBuyCallback, this), 'B');
 			m_scrollArea.UPrintMessageRewrapped(208);
 			return;
 		}
@@ -2301,23 +2412,23 @@ void U3Misc::buyCallback()
 		m_scrollArea.UPrintMessageRewrapped(210);
 		m_scrollArea.setInput(false);
 		m_scrollArea.blockPrompt(true);
-		setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+		setInputTypeRestricted(std::bind(&U3Misc::weaponsBuyCallback, this), 'B');
 		m_scrollArea.UPrintMessageRewrapped(208);
 	}
 }
 
-void U3Misc::sellCallback()
+void U3Misc::weaponsSellCallback()
 {
 	if (m_input_num == 0)
 	{
 		m_resources.CreateAlertMessage(9);
 		m_inputType = InputType::Callback;
-		m_callbackStack.push(std::bind(&U3Misc::buySellFinishedCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::weaponsBuySellFinishedCallback, this));
 		return;
 	}
 	else if (m_input_num < 0)
 	{
-		buySellFinishedCallback();
+		weaponsBuySellFinishedCallback();
 	}
 	else
 	{
@@ -2327,7 +2438,7 @@ void U3Misc::sellCallback()
 		m_scrollArea.setInput(false);
 		if (m_Player[m_rosNum][49 + m_input_num] < 1)
 		{
-			sellMissing();
+			weaponsSellMissing();
 			return;
 		}
 		std::string dispString = m_resources.m_plistMap["WeaponsArmour"][m_input_num + 25];
@@ -2354,11 +2465,113 @@ void U3Misc::sellCallback()
 			m_scrollArea.UPrintMessageRewrapped(214);
 		}
 		m_input_num = 0;
-		buySellCallback();
+		weaponsBuySellCallback();
 	}
 }
 
-void U3Misc::buyPoor()
+void U3Misc::armorsBuyCallback()
+{
+	if (m_input_num < 0)
+	{
+		armorsBuySellFinishedCallback();
+	}
+	else
+	{
+		std::string strInput;
+		strInput += m_input_num + 'A';
+		m_scrollArea.setInputString(strInput);
+		m_scrollArea.setInput(false);
+		short gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+		// m_input_num starts at b
+		std::string dispString = m_resources.m_plistMap["WeaponsArmour"][m_input_num + 40];
+		int amount;
+		try
+		{
+			amount = std::stoi(dispString);
+		}
+		catch ([[maybe_unused]] std::exception& e)
+		{
+			amount = 0;
+		}
+		if (amount > gold)
+		{
+			armorsBuyPoor();
+			return;
+		}
+		if (m_Player[m_rosNum][48 + m_input_num] > 98)
+		{
+			m_scrollArea.UPrintMessage(260);
+			m_scrollArea.UPrintWin("\n\n");
+			m_scrollArea.setInput(false);
+			m_scrollArea.blockPrompt(true);
+			setInputTypeRestricted(std::bind(&U3Misc::armorsBuyCallback, this), 'B');
+			m_scrollArea.UPrintMessageRewrapped(208);
+			return;
+		}
+		gold -= amount;
+		m_Player[m_rosNum][35] = gold / 256;
+		m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+		m_Player[m_rosNum][40 + m_input_num]++;
+
+		if (m_Player[m_rosNum][40 + m_input_num] > 99)
+		{
+			m_Player[m_rosNum][40 + m_input_num] = 99;
+		}
+
+		m_scrollArea.UPrintMessageRewrapped(210);
+		m_scrollArea.setInput(false);
+		m_scrollArea.blockPrompt(true);
+		setInputTypeRestricted(std::bind(&U3Misc::armorsBuyCallback, this), 'B');
+		m_scrollArea.UPrintMessageRewrapped(208);
+	}
+}
+
+void U3Misc::armorsSellCallback()
+{
+	if (m_input_num < 1)
+	{
+		armorsBuySellFinishedCallback();
+	}
+	else
+	{
+		std::string strInput;
+		strInput += m_input_num + 'A';
+		m_scrollArea.setInputString(strInput);
+		m_scrollArea.setInput(false);
+		if (m_Player[m_rosNum][49 + m_input_num] < 1)
+		{
+			armorsSellMissing();
+			return;
+		}
+		std::string dispString = m_resources.m_plistMap["WeaponsArmour"][m_input_num + 40];
+		int amount;
+		try
+		{
+			amount = std::stoi(dispString);
+		}
+		catch ([[maybe_unused]] std::exception& e)
+		{
+			amount = 0;
+		}
+		if (AddGold(m_rosNum, amount, false))
+		{
+			m_Player[m_rosNum][40 + m_input_num]--;
+			if (m_Player[m_rosNum][40 + m_input_num] < 1 && m_Player[m_rosNum][48] == m_input_num + 1)
+			{
+				m_Player[m_rosNum][39] = 0;
+			}
+			m_scrollArea.UPrintMessage(213);
+		}
+		else
+		{
+			m_scrollArea.UPrintMessageRewrapped(214);
+		}
+		m_input_num = 0;
+		armorsBuySellCallback();
+	}
+}
+
+void U3Misc::weaponsBuyPoor()
 {
 	m_scrollArea.UPrintMessageRewrapped(209);
 	m_inputType = InputType::Default;
@@ -2367,7 +2580,16 @@ void U3Misc::buyPoor()
 	InverseChnum(m_transactNum, false);
 }
 
-void U3Misc::sellMissing()
+void U3Misc::armorsBuyPoor()
+{
+	m_scrollArea.UPrintMessageRewrapped(209);
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+}
+
+void U3Misc::weaponsSellMissing()
 {
 	m_scrollArea.UPrintMessageRewrapped(212);
 	m_inputType = InputType::Default;
@@ -2376,7 +2598,26 @@ void U3Misc::sellMissing()
 	InverseChnum(m_transactNum, false);
 }
 
-void U3Misc::buySellFinishedCallback()
+void U3Misc::armorsSellMissing()
+{
+	m_scrollArea.UPrintMessageRewrapped(212);
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+}
+
+
+void U3Misc::weaponsBuySellFinishedCallback()
+{
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+	m_scrollArea.UPrintMessageRewrapped(215);
+}
+
+void U3Misc::armorsBuySellFinishedCallback()
 {
 	m_inputType = InputType::Default;
 	m_scrollArea.blockPrompt(false);

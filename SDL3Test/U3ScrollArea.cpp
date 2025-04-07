@@ -136,11 +136,13 @@ void U3ScrollArea::redraw()
 		if (curPair.second.size() > 0)
 		{
 			std::string strTemp = curPair.second;
-			if (m_hasInput && drawInput)
+			if (m_hasInput && drawInput && m_messageQueue.size() == 0)
 			{
 				drawInput = false;
 				strTemp += m_input;
-				m_cursorPos = m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false);
+				bool classic;
+				m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+				m_cursorPos = m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, curPair.first.pretty_print);
 			}
 			else
 			{

@@ -398,7 +398,17 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 
 	switch (event.type)
 	{
+	case SDL_EVENT_KEY_UP:
+		if (event.key.key == SDLK_RETURN)
+		{
+			m_backButton.click();
+		}
+		break;
 	case SDL_EVENT_KEY_DOWN:
+		if (event.key.key == SDLK_RETURN)
+		{
+			m_backButton.forceCapture();
+		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		mouseState = 1;

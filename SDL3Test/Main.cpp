@@ -725,22 +725,33 @@ void Game()
         m_graphics.DrawMap(m_misc.m_xpos, m_misc.m_ypos);
         m_resources.ShowChars(true);
         CheckAllDead();
-        
-        if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
-        {
-            m_misc.ProcessEvent(event);
-        }
-
-		if (m_scrollArea.isPrompt())
-		{
-			m_resources.DrawPrompt();
-		}
 
         m_scrollArea.render(deltaTime);
 
         m_resources.DrawWind();
 
         m_resources.DrawInverses(deltaTime);
+
+        bool alertValid = m_resources.HasAlert(event);
+        if (!alertValid)
+        {
+            if (m_misc.m_inputType == InputType::Callback)
+            {
+                m_misc.HandleCallback();
+            }
+            else
+            {
+                if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
+                {
+                    m_misc.ProcessEvent(event);
+                }
+
+                if (m_scrollArea.isPrompt())
+                {
+                    m_resources.DrawPrompt();
+                }
+            }
+        }
 
         count++;
         if (elapsedTime > 1000)

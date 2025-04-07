@@ -8,6 +8,8 @@ public:
 	U3Button();
 	~U3Button();
 
+	void forceCapture();
+	void click();
 	void render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY);
 	void setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, int y, int width, int height, bool has_clicked, bool has_disabled);
 	void setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY);
@@ -30,5 +32,6 @@ private:
 	bool m_captureMouse;
 	bool m_showPushed;
 	bool m_visible;
+	bool m_forcecapture;
 };
 

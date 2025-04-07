@@ -41,7 +41,8 @@ U3Misc::U3Misc() :
 	m_numOnly(false),
 	m_maxInputLength(2),
 	m_input_num(0),
-	m_opnum(0)
+	m_opnum(0),
+	m_restrictedStart(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -986,7 +987,7 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 	if (key >= SDLK_1 && key <= SDLK_4)
 	{
 		m_transactNum = key - SDLK_1;
-		if (m_callbackStack.top())
+		if (m_callbackStack.size() > 0)
 		{
 			auto callbackFunction = m_callbackStack.top();
 			m_callbackStack.pop();
@@ -1076,7 +1077,49 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 	if (dirgot)
 	{
 		m_inputType = InputType::Default;
-		if (m_callbackStack.top())
+		if (m_callbackStack.size() > 0)
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
+void U3Misc::HandleInputBuySell(SDL_Keycode key)
+{
+	bool handled = false;
+	switch (key)
+	{
+	case SDLK_B:
+		m_input_num = 1;
+		m_input = std::string("B");
+		handled = true;
+		break;
+	case SDLK_S:
+		m_input_num = 0;
+		m_input = std::string("S");
+		handled = true;
+		break;
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		m_input_num = -1;
+		m_input = std::string("");
+		handled = true;
+		break;
+	default:
+		m_input_num = 0;
+		break;
+	}
+	if (handled)
+	{
+		m_inputType = InputType::Default;
+		m_scrollArea.setInputString(m_input);
+		m_scrollArea.setInput(false);
+		if (m_callbackStack.size() > 0)
 		{
 			auto callbackFunction = m_callbackStack.top();
 			m_callbackStack.pop();
@@ -1103,6 +1146,12 @@ void U3Misc::HandleInputYesNo(SDL_Keycode key)
 		m_input = std::string("N");
 		handled = true;
 		break;
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		m_input_num = -1;
+		m_input = std::string("");
+		handled = true;
+		break;
 	default:
 		m_input_num = 0;
 		break;
@@ -1112,7 +1161,38 @@ void U3Misc::HandleInputYesNo(SDL_Keycode key)
 		m_inputType = InputType::Default;
 		m_scrollArea.setInputString(m_input);
 		m_scrollArea.setInput(false);
-		if (m_callbackStack.top())
+		if (m_callbackStack.size() > 0)
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
+void U3Misc::HandleInputRestricted(SDL_Keycode key)
+{
+	int value = key - SDLK_A;
+	if (value >= (int)((m_restrictedStart - 'A')) && value < (int)((m_opnum - 'A')))
+	{
+		m_input_num = value;
+		if (m_callbackStack.size() > 0)
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+	else if (key == SDLK_SPACE || key == SDLK_RETURN)
+	{
+		m_input_num = -1;
+		if (m_callbackStack.size() > 0)
 		{
 			auto callbackFunction = m_callbackStack.top();
 			m_callbackStack.pop();
@@ -1162,7 +1242,7 @@ void U3Misc::HandleInputText(SDL_Keycode key)
 		case SDLK_RETURN:
 			m_scrollArea.setInput(false);
 			handled = false;
-			if (m_callbackStack.top())
+			if (m_callbackStack.size() > 0)
 			{
 				auto callbackFunction = m_callbackStack.top();
 				m_callbackStack.pop();
@@ -1190,7 +1270,7 @@ void U3Misc::HandleInputText(SDL_Keycode key)
 void U3Misc::HandleAnyKey()
 {
 	m_inputType = InputType::Default;
-	if (m_callbackStack.top())
+	if (m_callbackStack.size() > 0)
 	{
 		auto callbackFunction = m_callbackStack.top();
 		m_callbackStack.pop();
@@ -1203,7 +1283,7 @@ void U3Misc::HandleAnyKey()
 
 void U3Misc::InputTextCallback()
 {
-	if (m_callbackStack.top())
+	if (m_callbackStack.size() > 0)
 	{
 		auto callbackFunction = m_callbackStack.top();
 		m_callbackStack.pop();
@@ -1228,7 +1308,22 @@ void U3Misc::InputNumCallback()
 	{
 		m_input_num = 0;
 	}
-	if (m_callbackStack.top())
+	if (m_callbackStack.size() > 0)
+	{
+		auto callbackFunction = m_callbackStack.top();
+		m_callbackStack.pop();
+		if (callbackFunction)
+		{
+			callbackFunction();
+		}
+	}
+}
+
+void U3Misc::HandleCallback()
+{
+	// Most likely we threw up an alert message, so this is just to delay any followup until the alert is closed
+	m_inputType = InputType::Default;
+	if (m_callbackStack.size() > 0)
 	{
 		auto callbackFunction = m_callbackStack.top();
 		m_callbackStack.pop();
@@ -1243,6 +1338,12 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 {
 	switch (m_inputType)
 	{
+	case InputType::Restricted:
+		HandleInputRestricted(key);
+		break;
+	case InputType::BuySell:
+		HandleInputBuySell(key);
+		break;
 	case InputType::YesNo:
 		HandleInputYesNo(key);
 		break;
@@ -1257,6 +1358,9 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 		break;
 	case InputType::AnyKey:
 		HandleAnyKey();
+		break;
+	case InputType::Callback:
+		HandleCallback();
 		break;
 	default:
 		HandleDefaultKeyPress(key);
@@ -2036,6 +2140,7 @@ void U3Misc::BuyOrSell()
 {
 	m_scrollArea.UPrintMessage(207);
 	m_scrollArea.blockPrompt(false);
+	setInputTypeBuySell(std::bind(&U3Misc::buySellCallback, this));
 }
 
 void U3Misc::setInputTypeNum(std::function<void()> func)
@@ -2052,10 +2157,27 @@ void U3Misc::setInputTypeNum(std::function<void()> func)
 
 void U3Misc::setInputTypeYesNo(std::function<void()> func)
 {
+	m_scrollArea.setInput(true);
 	m_callbackStack.push(func);
 	m_input.clear();
-	m_scrollArea.setInput(true);
 	m_inputType = InputType::YesNo;
+}
+
+void U3Misc::setInputTypeBuySell(std::function<void()> func)
+{
+	m_scrollArea.setInput(true);
+	m_callbackStack.push(func);
+	m_input.clear();
+	m_inputType = InputType::BuySell;
+}
+
+void U3Misc::setInputTypeRestricted(std::function<void()> func, short start)
+{
+	m_restrictedStart = start;
+	m_scrollArea.setInput(true);
+	m_callbackStack.push(func);
+	m_input.clear();
+	m_inputType = InputType::Restricted;
 }
 
 void U3Misc::tavernCallback()
@@ -2095,6 +2217,7 @@ void U3Misc::tavernCallback()
 
 void U3Misc::anotherDrinkCallback()
 {
+	m_scrollArea.setInput(true);
 	if (m_input_num == 1) // yes
 	{
 		m_scrollArea.UPrintMessage(186);
@@ -2105,4 +2228,179 @@ void U3Misc::anotherDrinkCallback()
 		m_scrollArea.UPrintMessageRewrapped(190);
 		InverseChnum(m_transactNum, false);
 	}
+}
+
+void U3Misc::buySellCallback()
+{
+	m_scrollArea.setInput(false);
+	if (m_input_num == 1) // buy
+	{
+		m_scrollArea.UPrintMessage(208);
+		setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+	}
+	else if (m_input_num == 0) // sell
+	{
+		m_scrollArea.UPrintMessage(211);
+		setInputTypeRestricted(std::bind(&U3Misc::sellCallback, this), 'A');
+	}
+	else // cancel
+	{
+		buySellFinishedCallback();
+	}
+}
+
+void U3Misc::buyCallback()
+{
+	if (m_input_num < 0)
+	{
+		buySellFinishedCallback();
+	}
+	else
+	{
+		std::string strInput;
+		strInput += m_input_num + 'A';
+		m_scrollArea.setInputString(strInput);
+		m_scrollArea.setInput(false);
+		short gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+		// m_input_num starts at b
+		std::string dispString = m_resources.m_plistMap["WeaponsArmour"][m_input_num + 24];
+		int amount;
+		try
+		{
+			amount = std::stoi(dispString);
+		}
+		catch ([[maybe_unused]] std::exception& e)
+		{
+			amount = 0;
+		}
+		if (amount > gold)
+		{
+			buyPoor();
+			return;
+		}
+		if (m_Player[m_rosNum][48 + m_input_num] > 98)
+		{
+			m_scrollArea.UPrintMessage(260);
+			m_scrollArea.UPrintWin("\n\n");
+			m_scrollArea.setInput(false);
+			m_scrollArea.blockPrompt(true);
+			setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+			m_scrollArea.UPrintMessageRewrapped(208);
+			return;
+		}
+		gold -= amount;
+		m_Player[m_rosNum][35] = gold / 256;
+		m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+		m_Player[m_rosNum][48 + m_input_num]++;
+
+		if (m_Player[m_rosNum][48 + m_input_num] > 99)
+		{
+			m_Player[m_rosNum][48 + m_input_num] = 99;
+		}
+
+		m_scrollArea.UPrintMessageRewrapped(210);
+		m_scrollArea.setInput(false);
+		m_scrollArea.blockPrompt(true);
+		setInputTypeRestricted(std::bind(&U3Misc::buyCallback, this), 'B');
+		m_scrollArea.UPrintMessageRewrapped(208);
+	}
+}
+
+void U3Misc::sellCallback()
+{
+	if (m_input_num == 0)
+	{
+		m_resources.CreateAlertMessage(9);
+		m_inputType = InputType::Callback;
+		m_callbackStack.push(std::bind(&U3Misc::buySellFinishedCallback, this));
+		return;
+	}
+	else if (m_input_num < 0)
+	{
+		buySellFinishedCallback();
+	}
+	else
+	{
+		std::string strInput;
+		strInput += m_input_num + 'A';
+		m_scrollArea.setInputString(strInput);
+		m_scrollArea.setInput(false);
+		if (m_Player[m_rosNum][49 + m_input_num] < 1)
+		{
+			sellMissing();
+			return;
+		}
+		std::string dispString = m_resources.m_plistMap["WeaponsArmour"][m_input_num + 25];
+		int amount;
+		try
+		{
+			amount = std::stoi(dispString);
+		}
+		catch ([[maybe_unused]] std::exception& e)
+		{
+			amount = 0;
+		}
+		if (AddGold(m_rosNum, amount, false))
+		{
+			m_Player[m_rosNum][49 + m_input_num]--;
+			if (m_Player[m_rosNum][49 + m_input_num] < 1 && m_Player[m_rosNum][48] == m_input_num + 1)
+			{
+				m_Player[m_rosNum][48] = 0;
+			}
+			m_scrollArea.UPrintMessage(213);
+		}
+		else
+		{
+			m_scrollArea.UPrintMessageRewrapped(214);
+		}
+		m_input_num = 0;
+		buySellCallback();
+	}
+}
+
+void U3Misc::buyPoor()
+{
+	m_scrollArea.UPrintMessageRewrapped(209);
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+}
+
+void U3Misc::sellMissing()
+{
+	m_scrollArea.UPrintMessageRewrapped(212);
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+}
+
+void U3Misc::buySellFinishedCallback()
+{
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	m_scrollArea.setInput(false);
+	InverseChnum(m_transactNum, false);
+	m_scrollArea.UPrintMessageRewrapped(215);
+}
+
+bool U3Misc::AddGold(short rosNum, short gold, bool overflow) // $70BB
+{
+	short presentGold;
+	bool retVal = true;
+	presentGold = ((m_Player[rosNum][35]) * 256) + m_Player[rosNum][36];
+	gold += presentGold;
+	if (gold > 9999)
+	{
+		if (overflow == false)
+		{
+			return false;
+		}
+		retVal = false;
+		gold = 9999;
+	}
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[rosNum][35] * 256);
+	return retVal;
 }

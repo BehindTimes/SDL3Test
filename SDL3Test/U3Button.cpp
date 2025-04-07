@@ -9,7 +9,8 @@ U3Button::U3Button() :
 	m_captureMouse(false),
 	m_showPushed(false),
 	m_callbackFunction(nullptr),
-	m_visible(false)
+	m_visible(false),
+	m_forcecapture(false)
 {
 }
 
@@ -221,8 +222,30 @@ void U3Button::setMouseCapture(int blockSize, int capture, float mouse_x, float 
 	}
 }
 
+void U3Button::forceCapture()
+{
+	m_captureMouse = true;
+	m_showPushed = true;
+
+	m_forcecapture = true;
+}
+
+void U3Button::click()
+{
+	m_forcecapture = false;
+
+	if (m_callbackFunction)
+	{
+		m_callbackFunction();
+	}
+}
+
 void U3Button::setMouseCapture(int capture, float mouse_x, float mouse_y)
 {
+	if (m_forcecapture)
+	{
+		return;
+	}
 	bool bCallback = false;
 	switch (capture)
 	{

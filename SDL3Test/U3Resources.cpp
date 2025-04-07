@@ -2059,6 +2059,10 @@ bool U3Resources::CheckJourneyOnward()
 
 bool U3Resources::HasAlert(SDL_Event& event)
 {
+	if (!m_AlertDlg.get())
+	{
+		return false;
+	}
 	m_AlertDlg->HandleEvent(event);
 	m_AlertDlg->display();
 	if (m_cleanupAlert)

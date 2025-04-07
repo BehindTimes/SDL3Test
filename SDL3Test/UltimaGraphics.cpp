@@ -104,7 +104,7 @@ void U3Graphics::DrawFrame(short which)
         {
             DrawFramePiece(12, 30, x * 4);
             DrawFramePiece(13, 32, x * 4);
-            str = std::to_string(x);
+            str = std::to_string(x + 1);
             m_resources.CenterMessage(str, 31, 32, x * 4);
         }
         bool hasWind;

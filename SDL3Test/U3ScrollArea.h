@@ -14,6 +14,11 @@ struct sTextFlags
 		pretty_print = false;
 		prompt = false;
 	}
+	sTextFlags(bool has_pretty, bool has_prompt)
+	{
+		pretty_print = has_pretty;
+		prompt = has_prompt;
+	}
 	bool pretty_print;
 	bool prompt;
 };
@@ -52,8 +57,8 @@ private:
 	void cleanupMessages();
 	bool m_updating;
 	SDL_Renderer* m_renderer;
-	std::deque<std::pair<bool, std::string>> m_messages;
-	std::queue<std::string> m_messageQueue;
+	std::deque<std::pair<sTextFlags, std::string>> m_messages;
+	std::queue<std::pair<sTextFlags, std::string>> m_messageQueue;
 	int m_blockSize;
 	Uint64 m_currentTicks;
 	Uint64 m_elapsedTime;

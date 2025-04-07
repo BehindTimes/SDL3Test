@@ -28,7 +28,7 @@ U3ScrollArea::U3ScrollArea() :
 	m_curCursor(0),
 	m_block(false)
 {
-	m_messages.emplace_back(1, "");
+	m_messages.emplace_back(sTextFlags(false, true), "");
 }
 
 U3ScrollArea::~U3ScrollArea()
@@ -50,22 +50,22 @@ void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 	{
 		if (index == 0 && m_messageQueue.size() > 0)
 		{
-			if (m_messageQueue.back() == std::string("\n"))
+			if (m_messageQueue.back().second == std::string("\n"))
 			{
-				m_messageQueue.emplace(vecString[index]);
+				m_messageQueue.emplace(std::make_pair(sTextFlags(prettyPrint, false), vecString[index]));
 			}
 			else if(vecString[index] == std::string("\n"))
 			{
-				m_messageQueue.emplace(vecString[index]);
+				m_messageQueue.emplace(std::make_pair(sTextFlags(prettyPrint, false), vecString[index]));
 			}
 			else
 			{
-				m_messageQueue.back() += vecString[index];
+				m_messageQueue.back().second += vecString[index];
 			}
 		}
 		else
 		{
-			m_messageQueue.emplace(vecString[index]);
+			m_messageQueue.emplace(std::make_pair(sTextFlags(prettyPrint, false), vecString[index]));
 		}
 	}
 
@@ -129,7 +129,7 @@ void U3ScrollArea::redraw()
 	{
 		auto curPair = tempMessages.back();
 		tempMessages.pop_back();
-		if (curPair.first)
+		if (curPair.first.prompt)
 		{
 			m_graphics.DrawFramePieceScroll(12, 0, tempIndex);
 		}
@@ -140,11 +140,20 @@ void U3ScrollArea::redraw()
 			{
 				drawInput = false;
 				strTemp += m_input;
-				m_cursorPos = m_resources.renderString(strTemp, curPair.first ? 1 : 0, tempIndex, false);
+				m_cursorPos = m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false);
 			}
 			else
 			{
-				m_resources.renderString(strTemp, curPair.first ? 1 : 0, tempIndex, false);
+				bool classic;
+				m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+				if (!classic && curPair.first.pretty_print)
+				{
+					m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, true);
+				}
+				else
+				{
+					m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false);
+				}
 			}
 			
 		}
@@ -177,7 +186,7 @@ bool U3ScrollArea::updateQueue()
 	{
 		m_queueBegin = false;
 		auto curStr = m_messageQueue.front();
-		if (curStr == std::string("\n"))
+		if (curStr.second == std::string("\n"))
 		{
 			m_forceRedraw = true;
 			m_update = true;
@@ -186,10 +195,14 @@ bool U3ScrollArea::updateQueue()
 		}
 		else
 		{
-			while (curStr != std::string("\n"))
+			while (curStr.second != std::string("\n"))
 			{
 				m_messageQueue.pop();
-				m_messages.back().second += curStr;
+				if (m_messages.back().second.size() == 0)
+				{
+					m_messages.back().first.pretty_print = curStr.first.pretty_print;
+				}
+				m_messages.back().second += curStr.second;
 				if (m_messageQueue.size() == 0)
 				{
 					cleanupMessages();
@@ -215,9 +228,9 @@ bool U3ScrollArea::updateQueue()
 	m_update = true;
 	bool updated = false;
 	auto curStr = m_messageQueue.front();
-	if (curStr == std::string("\n"))
+	if (curStr.second == std::string("\n"))
 	{
-		m_messages.push_back(std::make_pair(0, ""));
+		m_messages.push_back(std::make_pair(sTextFlags(), ""));
 		m_messageQueue.pop();
 
 		if (m_messageQueue.size() == 0)
@@ -225,17 +238,21 @@ bool U3ScrollArea::updateQueue()
 			m_update = false;
 			if (!m_block)
 			{
-				m_messages.back().first = true;
+				m_messages.back().first.prompt = true;
 			}
 			cleanupMessages();
 			return true;
 		}
 		curStr = m_messageQueue.front();
 	}
-	while (curStr != std::string("\n"))
+	while (curStr.second != std::string("\n"))
 	{
 		m_messageQueue.pop();
-		m_messages.back().second += curStr;
+		if (m_messages.back().second.size() == 0)
+		{
+			m_messages.back().first.pretty_print = curStr.first.pretty_print;
+		}
+		m_messages.back().second += curStr.second;
 		if (m_messageQueue.size() == 0)
 		{
 			m_update = false;
@@ -363,7 +380,7 @@ bool U3ScrollArea::isPrompt()
 	}
 	if (m_messages.size() > 0)
 	{
-		return m_messages.back().first;
+		return m_messages.back().first.prompt;
 	}
 	return true;
 }
@@ -386,14 +403,14 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		tokens.insert(tokens.end(), vecTemp.begin(), vecTemp.end());
 	}
 	// If there's a queue, we want to base it off of what will be the last message
-	std::deque<std::string> lastElementDeque;
+	std::deque<std::pair<sTextFlags, std::string>> lastElementDeque;
 
 	bool hasCursor = false;
 
 	if (m_messages.size() > 0)
 	{
-		hasCursor = m_messages.back().first;
-		lastElementDeque.push_back(m_messages.back().second);
+		hasCursor = m_messages.back().first.prompt;
+		lastElementDeque.push_back(m_messages.back());
 	}
 	if (m_messageQueue.size() > 0)
 	{
@@ -407,9 +424,9 @@ std::string U3ScrollArea::RewrapString(std::string str)
 
 	while (!lastElementDeque.empty())
 	{
-		std::string tempElement = lastElementDeque.back();
+		std::pair<sTextFlags, std::string> tempElement = lastElementDeque.back();
 		lastElementDeque.pop_back();
-		if (tempElement == std::string("\n"))
+		if (tempElement.second == std::string("\n"))
 		{
 			break;
 		}
@@ -427,28 +444,6 @@ std::string U3ScrollArea::RewrapString(std::string str)
 			maxSize -= m_blockSize;
 		}
 	}
-
-	/*if (m_messages.size() > 0)
-	{
-		if (m_messages.back().first)
-		{
-			maxSize -= m_blockSize;
-			tempSub = m_blockSize;
-		}
-		if (m_messages.back().second.size() > 0)
-		{
-			textLen = m_resources.getTextWidth(m_messages.back().second);
-			maxSize -= textLen;
-			emptyBackString = false;
-		}
-	}
-	if (m_messageQueue.size() > 0)
-	{
-		auto tempque
-		m_messageQueue.p
-		auto tempQueue = 0;
-		int j = 9;
-	}*/
 
 	size_t start_index = 0;
 	size_t end_index = tokens.size() - 1;
@@ -533,7 +528,6 @@ void U3ScrollArea::setInput(bool hasInput)
 		m_messages.back().second += m_input;
 		m_input.clear();
 		m_cursorPos = 0;
-		//UPrintWin("\n");
 	}
 	m_hasInput = hasInput;
 	m_forceRedraw = true;

@@ -838,8 +838,9 @@ void U3Resources::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-int U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY)
+int U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY, bool pretty_print)
 {
+	SDL_Color sdl_text_color = { 255, 255, 255 };
 	SDL_FRect frameRect, myRect;
 	int text_extent = 0;
 
@@ -892,31 +893,65 @@ int U3Resources::renderString(std::string curString, int x, int y, bool autoadju
 	}
 	else
 	{
-		offsetY -= (int)m_font_y_offset;
-		TTF_Text* text_obj = NULL;
-		text_obj = TTF_CreateText(engine_surface, m_font, curString.c_str(), 0);
-		int w, h;
-		TTF_GetTextSize(text_obj, &w, &h);
-
-		size_t totalLen = m_blockSize * curString.size();
-		size_t tempOffset = (totalLen - w) / 2;
-
-		if (autoadjust)
+		if (pretty_print)
 		{
-			text_extent = (int)(x * m_blockSize + screenOffsetX + tempOffset + offsetX + w);
-			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset + offsetX, (float)y * m_blockSize + screenOffsetY + offsetY);
+			std::string strDisplayString;
+			for (size_t index = 0; index < curString.size(); ++index)
+			{
+				if (curString[index] == ':')
+				{
+					renderString(strDisplayString, (int)((x + index) - strDisplayString.size()), y, autoadjust, offsetX, offsetY);
+					renderString(":", (int)(x + index), y, autoadjust, offsetX, offsetY);
+					strDisplayString.clear();
+				}
+				else if (curString[index] == ' ')
+				{
+					renderString(strDisplayString, (int)((x + index) - strDisplayString.size()), y, autoadjust, offsetX, offsetY);
+					strDisplayString.clear();
+				}
+				else
+				{
+					strDisplayString += curString[index];
+				}
+			}
+			if (curString.size() != 16) // right adjust
+			{
+				
+				renderString(strDisplayString, (int)(curString.size() - strDisplayString.size()), y, autoadjust, offsetX, offsetY);
+			}
+			else
+			{
+				renderDisplayString(m_font, strDisplayString, 16 * m_blockSize, y * m_blockSize, sdl_text_color, 1, autoadjust);
+			}
 		}
 		else
 		{
-			text_extent = (int)(x * m_blockSize + offsetX + w);
+			offsetY -= (int)m_font_y_offset;
+			TTF_Text* text_obj = NULL;
+			text_obj = TTF_CreateText(engine_surface, m_font, curString.c_str(), 0);
+			int w, h;
+			TTF_GetTextSize(text_obj, &w, &h);
 
-			TTF_DrawRendererText(text_obj, (float)x * m_blockSize + offsetX, (float)y * m_blockSize + offsetY);
-		}
+			size_t totalLen = m_blockSize * curString.size();
+			size_t tempOffset = (totalLen - w) / 2;
 
-		if (text_obj)
-		{
-			TTF_DestroyText(text_obj);
-			text_obj = NULL;
+			if (autoadjust)
+			{
+				text_extent = (int)(x * m_blockSize + screenOffsetX + tempOffset + offsetX + w);
+				TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset + offsetX, (float)y * m_blockSize + screenOffsetY + offsetY);
+			}
+			else
+			{
+				text_extent = (int)(x * m_blockSize + offsetX + w);
+
+				TTF_DrawRendererText(text_obj, (float)x * m_blockSize + offsetX, (float)y * m_blockSize + offsetY);
+			}
+
+			if (text_obj)
+			{
+				TTF_DestroyText(text_obj);
+				text_obj = NULL;
+			}
 		}
 	}
 

@@ -67,7 +67,7 @@ public:
 
 	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
 	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
-	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0);
+	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0, bool pretty_print = false);
 	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
 	void renderStalagtites();
 	void drawIntro(int shape, int offset);

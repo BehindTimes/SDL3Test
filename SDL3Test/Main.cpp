@@ -23,6 +23,8 @@ TTF_TextEngine* engine_surface = NULL;
 bool changeMode = false;
 GameMode newMode = GameMode::Intro;
 GameMode oldMode = GameMode::Unknown;
+Uint64 count = 0;
+int fps = 0;
 
 U3Resources m_resources;
 U3Misc m_misc;
@@ -40,6 +42,7 @@ void Organize();
 void JourneyOnward();
 void Game();
 void CheckAllDead();
+void updateGame(Uint64 deltaTime, bool wasMove);
 
 int main(int argc, char* argv[])
 {
@@ -646,13 +649,13 @@ void Game()
 
     Uint64 startTick = SDL_GetTicks();
     Uint64 elapsedTime = 0;
-    Uint64 count = 0;
-    int fps = 0;
+    bool wasMove = false;
 
     m_resources.ShowChars(true);
 
     while (1)
     {
+        wasMove = false;
         if (gInterrupt)
         {
             break;
@@ -745,7 +748,7 @@ void Game()
             {
                 if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
                 {
-                    m_misc.ProcessEvent(event);
+                    wasMove = m_misc.ProcessEvent(event);
                 }
 
                 if (m_scrollArea.isPrompt())
@@ -755,26 +758,32 @@ void Game()
             }
         }
 
-        count++;
-        if (elapsedTime > 1000)
-        {
-            fps = (int)(count / (elapsedTime / 1000));
-            elapsedTime = 0;
-            count = 0;
-        }
         m_resources.displayFPS(fps);
 
         SDL_RenderPresent(renderer);
 
-        m_resources.updateTime(curTick);
-
-        m_resources.ScrollThings();
-        m_resources.AnimateTiles();
-        m_resources.TwiddleFlags();
+        updateGame(deltaTime, wasMove);
 
         if (changeMode)
         {
             gInterrupt = true;
         }
     }
+}
+
+
+Uint64 fps_elapsed_time = 0;
+
+void updateGame(Uint64 deltaTime, bool wasMove)
+{
+    count++;
+    fps_elapsed_time += deltaTime;
+    if (fps_elapsed_time > 1000)
+    {
+        fps = (int)(count / (fps_elapsed_time / 1000));
+        fps_elapsed_time = 0;
+        count = 0;
+    }
+
+    m_resources.updateTime(deltaTime, wasMove);
 }

@@ -4,12 +4,15 @@
 #include "U3Resources.h"
 #include "UltimaSpellCombat.h"
 #include "UltimaIncludes.h"
+#include "U3Utilities.h"
 #include <SDL3/SDL.h>
+#include <iostream>
 
 extern U3Resources m_resources;
 extern U3Graphics m_graphics;
 extern U3ScrollArea m_scrollArea;
 extern UltimaSpellCombat m_spellCombat;
+extern U3Utilities m_utilities;
 
 U3Misc::U3Misc() :
 	m_WhirlX(0),
@@ -43,7 +46,8 @@ U3Misc::U3Misc() :
 	m_input_num(0),
 	m_opnum(0),
 	m_opnum2(0),
-	m_restrictedStart(0)
+	m_restrictedStart(0),
+	m_gTorch(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -947,27 +951,34 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	switch (key)
 	{
 	case SDLK_A:
+		Attack();
 		break;
 	case SDLK_B:
+		Board();
 		break;
 	case SDLK_C:
 		break;
 	case SDLK_D:
+		Descend();
 		break;
 	case SDLK_E:
 		Enter();
 		break;
 	case SDLK_F:
+		Fire();
 		break;
 	case SDLK_G:
 		break;
 	case SDLK_H:
 		break;
 	case SDLK_I:
+		Ignite();
 		break;
 	case SDLK_J:
+		JoinGold();
 		break;
 	case SDLK_K:
+		Klimb();
 		break;
 	case SDLK_L:
 		Look();
@@ -979,23 +990,27 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	case SDLK_O:
 		break;
 	case SDLK_P:
+		PeerGem();
 		break;
 	case SDLK_Q:
 		break;
 	case SDLK_R:
 		break;
 	case SDLK_S:
+		Steal();
 		break;
 	case SDLK_T:
 		Transact();
 		break;
 	case SDLK_U:
+		Unlock();
 		break;
 	case SDLK_V:
 		break;
 	case SDLK_W:
 		break;
 	case SDLK_X:
+		Exit();
 		break;
 	case SDLK_Y:
 		break;
@@ -1039,7 +1054,7 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 	}
 }
 
-void U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
+bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 {
 	if (key >= SDLK_A && key <= SDLK_Z)
 	{
@@ -1061,12 +1076,16 @@ void U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 		case SDLK_RIGHT:
 			East();
 			break;
+		case SDLK_SPACE:
+			Pass();
+			break;
 		default:
 			break;
 		}
 
 		Routine6E35();
 	}
+	return true;
 }
 
 void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
@@ -1451,7 +1470,7 @@ void U3Misc::HandleCallback()
 	}
 }
 
-void U3Misc::HandleKeyPress(SDL_Keycode key)
+bool U3Misc::HandleKeyPress(SDL_Keycode key)
 {
 	switch (m_inputType)
 	{
@@ -1487,16 +1506,18 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 		break;
 	default:
 		HandleDefaultKeyPress(key);
-		break;
+		return true;
 	}
+	return false;
 }
 
-void U3Misc::ProcessEvent(SDL_Event event)
+bool U3Misc::ProcessEvent(SDL_Event event)
 {
 	bool quit = false;
 	bool gInterrupt = false;
 	bool updateMouse = false;
 	int mouseState = 0;
+	bool retVal = false;
 
 	switch (event.type)
 	{
@@ -1506,7 +1527,7 @@ void U3Misc::ProcessEvent(SDL_Event event)
 	case SDL_EVENT_KEY_DOWN:
 		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
 		{
-			HandleKeyPress(event.key.key);
+			retVal = HandleKeyPress(event.key.key);
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -1524,6 +1545,7 @@ void U3Misc::ProcessEvent(SDL_Event event)
 	default:
 		break;
 	}
+	return retVal;
 }
 
 void U3Misc::What() // $5135
@@ -1539,6 +1561,11 @@ void U3Misc::What2() // $5279
 void U3Misc::NotHere() // $5288
 {
 	m_scrollArea.UPrintMessage(108);
+}
+
+void U3Misc::Pass()
+{
+	m_scrollArea.UPrintMessage(23);
 }
 
 void U3Misc::Enter()
@@ -1627,7 +1654,7 @@ void U3Misc::Enter()
 		return;
 	}
 	bool autosave;
-	m_resources.GetPreference(U3PreferencesType::AutoSave, autosave);
+	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
 	{
 		PushSosaria();
@@ -1701,7 +1728,7 @@ void U3Misc::Routine6E6B()
 	m_Party[4] = m_ypos;
 
 	bool autosave;
-	m_resources.GetPreference(U3PreferencesType::AutoSave, autosave);
+	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
 	{
 		PullSosaria();
@@ -1790,8 +1817,8 @@ void U3Misc::FinishAll() // $79DD
 		gTimeNegate--;
 		return;
 	}
-	SpawnMonster();
-	MoveMonsters();*/
+	SpawnMonster();*/
+	MoveMonsters();
 }
 
 void U3Misc::PullSosaria()
@@ -2154,6 +2181,11 @@ void U3Misc::InverseCharDetails(short num, bool value)
 void U3Misc::Shop(short shopNum, short chnum)
 {
 	short rosNum;
+
+	/*if (shopNum == 0)
+	{
+		shopNum = 7;
+	}*/
 
 	rosNum = m_Party[5 + chnum];
 	switch (shopNum)
@@ -3197,4 +3229,437 @@ bool U3Misc::AddGold(short rosNum, short gold, bool overflow) // $70BB
 	m_Player[m_rosNum][35] = gold / 256;
 	m_Player[m_rosNum][36] = gold - (m_Player[rosNum][35] * 256);
 	return retVal;
+}
+
+void U3Misc::GetMonsterDir(short monNum) // $7C37
+{
+	if (m_Party[2] != 0)
+	{
+		m_zp[0xF5] = m_xpos - m_Monsters[monNum + XMON];
+		m_dx = GetHeading(m_zp[0xF5]);
+		m_xs = m_graphics.MapConstrain(m_dx + m_Monsters[monNum + XMON]);
+		m_zp[0xF6] = m_ypos - m_Monsters[monNum + YMON];
+		m_dy = GetHeading(m_zp[0xF6]);
+		m_ys = m_graphics.MapConstrain(m_dy + m_Monsters[monNum + YMON]);
+	}
+	else
+	{
+		m_zp[0xF5] = m_xpos - m_Monsters[monNum + XMON];
+		m_dx = GetHeading(m_zp[0xF5] * 4);
+		m_xs = m_graphics.MapConstrain(m_dx + m_Monsters[monNum + XMON]);
+		m_zp[0xF6] = m_ypos - m_Monsters[monNum + YMON];
+		m_dy = GetHeading(m_zp[0xF6] * 4);
+		m_ys = m_graphics.MapConstrain(m_dy + m_Monsters[monNum + YMON]);
+	}
+	m_zp[0xFB] = m_utilities.Absolute(m_zp[0xF5]);
+	m_zp[0xFB] += m_utilities.Absolute(m_zp[0xF6]);
+}
+
+unsigned char ValidMonsterDir(short tile, short montype) // $7C0C
+{
+	if (montype > 0x28 && montype < 0x40) // pirate/sea monster
+	{
+		return (tile == 0) ? 0 : 255;
+	}
+	else
+	{
+		if (tile == 4 || tile == 8 || tile == 12 || tile == 32)
+		{
+			return 0;
+		}
+		else
+		{
+			return 255;
+		}
+	}
+}
+
+char U3Misc::GetHeading(short value) // $7DFC
+{
+	if (value == 0)
+	{
+		return 0;
+	}
+	if (value < 0)
+	{
+		return -1;
+	}
+	if (value > 127)
+	{
+		return -1;
+	}
+	return 1;
+}
+
+// TO DO:
+// They're updating the graphics in the monster move loop.
+// Rather, we want to rewrite this to handle being in the main loop
+bool U3Misc::moveshoot(int offset) // $7B36
+{
+	int randnum = m_utilities.getRandom(0, 255);
+	if (randnum > 128)
+	{
+		return false;
+	}
+	GetMonsterDir(offset);
+
+	m_xs = 5 - m_zp[0xF5];
+	if (m_xs > 10 || m_xs < 0)
+	{
+		return false;
+	}
+	m_ys = 5 - m_zp[0xF6];
+	if (m_ys > 10 || m_ys < 0)
+	{
+		return false;
+	}
+	//DrawMap(xpos, ypos);
+	//PlaySoundFile(CFSTR("Shoot"), TRUE);    // was 0xEA
+	m_zp[0xFB] = 3;
+
+	// moveshoot2
+
+	return true;
+}
+
+void U3Misc::move7AAA(int offset)
+{
+	short value;
+	// check if this is a valid place for the monster to walk on.
+
+	value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
+	if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+	{
+		value = 255;
+	}
+	if (value != 0)
+	{
+		m_xs = m_Monsters[offset + XMON];
+		value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
+		if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+		{
+			value = 255;
+		}
+		if (value != 0)
+		{
+			m_xs = m_graphics.MapConstrain(m_Monsters[offset + XMON] + m_dx);
+			m_ys = m_graphics.MapConstrain(m_Monsters[offset + YMON]);    // no +dy!?
+			value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
+			if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+			{
+				value = 255;
+			}
+			if (value != 0)
+			{
+				if (m_Monsters[offset] == 0x3C || m_Monsters[offset] == 0x74)
+				{
+					moveshoot(offset);
+				}
+				return;
+			}
+		}
+	}
+	if (m_xpos == m_xs && m_ypos == m_ys)
+	{
+		return;
+	}
+	PutXYVal(m_Monsters[offset + TILEON], m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
+	m_Monsters[offset + XMON] = m_xs;
+	m_Monsters[offset + YMON] = m_ys;
+	m_Monsters[offset + TILEON] = GetXYVal(m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
+	unsigned char monsterTile = m_Monsters[offset];
+	if (m_Monsters[offset + VARMON])
+	{
+		monsterTile += m_Monsters[offset + VARMON];
+	}
+	PutXYVal(monsterTile, m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
+	if (m_Monsters[offset] == 0x3C || m_Monsters[offset] == 0x74)
+	{
+		moveshoot(offset);
+	}
+}
+
+bool U3Misc::moveoutside(int offset)
+{
+	GetMonsterDir(offset);
+	if (m_xpos == m_xs && m_ypos == m_ys)
+	{
+		//AttackCode(offset);
+		return false;
+	}
+	return true;
+}
+
+void U3Misc::MoveMonsters() // $7A81
+{
+	short value;
+
+	for (int offset = 0; offset < 32; ++offset)
+	{
+		if (m_Monsters[offset] == 0)
+		{
+			continue;
+		}
+		if (m_Party[2] == 0 && m_Party[15] == 0) // // Player hasn't beaten Exodus.
+		{
+			if (!moveoutside(offset))
+			{
+				return;
+			}
+			move7AAA(offset);
+		}
+		else
+		{
+			value = m_Monsters[offset + 128];
+			value = value & 0xC0;
+			if (value == 0)
+			{
+				continue;
+			}
+			if (value == 0x40)
+			{
+				int randnum = m_utilities.getRandom(0, 255);
+				if (randnum < 128)
+				{
+					continue;
+				}
+				randnum = m_utilities.getRandom(0, 255);
+				m_xs = m_graphics.MapConstrain(m_Monsters[offset + XMON] + GetHeading(randnum));
+				if (m_xs == 0)
+				{
+					continue;
+				}
+				randnum = m_utilities.getRandom(0, 255);
+				m_ys = m_graphics.MapConstrain(m_Monsters[offset + YMON] + GetHeading(randnum));
+				if (m_ys == 0)
+				{
+					continue;
+				}
+
+				// Sosaria, and user has already defeated Exodus.  Handle monsters running into one another.
+				if (m_Party[15] != 0 && m_Party[2] == 0)
+				{
+				}
+				move7AAA(offset);
+			}
+			else if (value == 0x80)
+			{
+				GetMonsterDir(offset);
+				move7AAA(offset);
+			}
+			else
+			{
+				if (!moveoutside(offset))
+				{
+					return;
+				}
+				move7AAA(offset);
+			}
+		}
+	}
+}
+
+void U3Misc::Attack()
+{
+	m_scrollArea.UPrintMessage(28);
+	m_inputType = InputType::GetDirection;
+	m_callbackStack.push(std::bind(&U3Misc::AttackCallback, this));
+}
+
+void U3Misc::AttackCallback()
+{
+	short monNum;
+	monNum = MonsterHere(m_xs, m_ys);
+	if (monNum == 255)
+	{
+		NotHere();
+		return;
+	}
+	//AttackCode(monNum);
+}
+
+
+void U3Misc::Board()
+{
+	short tileOn;
+	if (m_Party[0] != 0x7E) // Not 'Ranger' shape?
+	{
+		m_scrollArea.UPrintMessage(29); // Board
+		What2();
+	}
+	else
+	{
+		tileOn = GetXYVal(m_xpos, m_ypos);
+		if (tileOn == 0x28) // horse
+		{
+			PutXYVal(0x04, m_xpos, m_ypos); // replace with grass
+			m_Party[0] = 0x14;
+			m_scrollArea.UPrintMessage(30);
+		}
+		else if (tileOn == 0x2C) // ship
+		{
+			PutXYVal(0x00, m_xpos, m_ypos); // replace with water
+			m_Party[0] = 0x16;
+			m_scrollArea.UPrintMessage(31);
+		}
+		else
+		{
+			m_scrollArea.UPrintMessage(29); // Board
+			What2();
+		}
+	}
+}
+
+void U3Misc::Descend()
+{
+	if (m_Party[15] == 0)
+	{
+		m_scrollArea.UPrintMessage(32);
+		What2();
+		return;
+	}
+	std::string strDiorama = std::string(DioramaString);
+	m_scrollArea.UPrintWin(strDiorama);
+	//DrawDioramaMap();
+}
+
+void U3Misc::Exit()
+{
+	short tileOn;
+	if (m_Party[0] == 0x7E)
+	{
+		std::string dispString = m_resources.m_plistMap["Messages"][101];
+		std::string addString = m_resources.m_plistMap["Messages"][106];
+		dispString += addString;
+		m_scrollArea.UPrintWin(dispString);
+	}
+	else
+	{
+		tileOn = GetXYVal(m_xpos, m_ypos);
+		if (tileOn > 4) // not water or grass
+		{
+			m_scrollArea.UPrintMessage(102);    // X-it
+			m_scrollArea.UPrintWin("\n");
+			m_scrollArea.UPrintMessage(108);    // Not here!\n
+			//ErrorTone();
+		}
+		else
+		{
+			PutXYVal(m_Party[0] * 2, m_xpos, m_ypos);
+			if (m_Party[1] == 0x14)
+			{
+				m_scrollArea.UPrintMessage(17);    // Dismount\n
+			}
+			else
+			{
+				m_scrollArea.UPrintMessage(103);    // X-it craft
+			}
+			m_Party[0] = 0x7E;
+		}
+	}
+}
+
+void U3Misc::Fire()
+{
+}
+
+void U3Misc::Ignite()
+{
+	m_scrollArea.UPrintMessage(64);
+	if (m_Party[2] != 1)
+	{
+		NotHere();
+		return;
+	}
+	m_scrollArea.UPrintMessage(65);
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::IgniteCallback, this));
+}
+
+void U3Misc::IgniteCallback()
+{
+	short rosNum;
+	if(m_input_num < 1 || m_input_num > 4)
+	{
+		return;
+	}
+	rosNum = m_Party[5 + m_input_num];
+	if (m_Player[rosNum][15] < 1)
+	{
+		m_scrollArea.UPrintMessage(67);
+		return;
+	}
+	m_Player[rosNum][15]--;
+	m_gTorch = 255;
+}
+
+void U3Misc::JoinGold()
+{
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::JoinGoldCallback, this));
+}
+
+void U3Misc::JoinGoldCallback()
+{
+	if (m_input_num < 1 || m_input_num > 4)
+	{
+		m_scrollArea.UPrintMessage(41);
+		return;
+	}
+	JoinGold(m_input_num);
+}
+
+void U3Misc::JoinGold(short chnum)
+{
+	short x, mainRosNum, rosNum, total, gold, transfer;
+
+	mainRosNum = m_Party[5 + chnum];
+	total = ((m_Player[mainRosNum][35]) * 256) + m_Player[mainRosNum][36];
+	for (x = 1; x < 5; x++)
+	{
+		if (x != chnum)
+		{
+			rosNum = m_Party[5 + x];
+			gold = ((m_Player[rosNum][35]) * 256) + m_Player[rosNum][36];
+			transfer = gold;
+			if (total + transfer > 9999)
+			{
+				transfer = 9999 - total;
+			}
+			if (transfer > 0)
+			{
+				total += transfer;
+				gold -= transfer;
+				m_Player[rosNum][35] = gold / 256;
+				m_Player[rosNum][36] = gold - (m_Player[rosNum][35] * 256);
+			}
+		}
+	}
+	m_Player[mainRosNum][35] = total / 256;
+	m_Player[mainRosNum][36] = total - (m_Player[mainRosNum][35] * 256);
+}
+
+void U3Misc::Klimb()
+{
+	if (m_Party[15] != 1 || m_Party[2] != 0)
+	{
+		m_scrollArea.UPrintMessage(68);
+		What2();
+	}
+	else
+	{
+		// ?
+	}
+}
+
+void U3Misc::PeerGem()
+{
+}
+
+void U3Misc::Steal()
+{
+}
+
+void U3Misc::Unlock()
+{
 }

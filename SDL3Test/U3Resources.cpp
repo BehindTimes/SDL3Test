@@ -8,6 +8,7 @@
 #include "U3ScrollArea.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "U3Utilities.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -16,6 +17,7 @@ extern TTF_TextEngine* engine_surface;
 extern U3Misc m_misc;
 extern U3Graphics m_graphics;
 extern U3ScrollArea m_scrollArea;
+extern U3Utilities m_utilities;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
@@ -66,7 +68,9 @@ U3Resources::U3Resources() :
 	m_portraitWidth(0),
 	m_portraitHeight(0),
 	m_isInversed(false),
-	m_font_y_offset(0)
+	m_font_y_offset(0),
+	m_fullUpdate(true),
+	m_updateWind(false)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -206,7 +210,10 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value)
 {
 	switch (type)
 	{
-	case U3PreferencesType::AutoSave:
+	case U3PreferencesType::Allow_Diagonal:
+		value = m_preferences.allow_diagonal;
+		break;
+	case U3PreferencesType::Auto_Save:
 		value = m_preferences.auto_save;
 		break;
 	case U3PreferencesType::Include_Wind:
@@ -224,7 +231,10 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 {
 	switch (type)
 	{
-	case U3PreferencesType::AutoSave:
+	case U3PreferencesType::Allow_Diagonal:
+		m_preferences.allow_diagonal = value;
+		break;
+	case U3PreferencesType::Auto_Save:
 		m_preferences.auto_save = value;
 		break;
 	case U3PreferencesType::Include_Wind:
@@ -432,11 +442,25 @@ void U3Resources::CalculateBlockSize()
 	}
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
 	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
+	m_fullUpdate = true;
 }
 
 
 void U3Resources::changeMode(int mode)
 {
+	if (mode == 2)
+	{
+		m_graphics.ChangeClassic();
+		m_scrollArea.forceRedraw();
+		return;
+	}
+	if (mode == 6)
+	{
+		m_currentGraphics = &m_allGraphics["Standard"];
+		m_scrollArea.forceRedraw();
+		return;
+	}
+
 	if (mode >= 0 && mode < m_modes.size())
 	{
 		std::string strMode = m_modes[mode];
@@ -1301,7 +1325,6 @@ void U3Resources::DrawMoongates()
 	{
 		m_misc.PutXYVal(12, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
 	}    // or forest
-	
 }
 
 void U3Resources::DrawWind()
@@ -1331,6 +1354,32 @@ void U3Resources::DrawWind()
 
 	dispString = m_plistMap["MoreMessages"][42 + winddir];
 	renderString(dispString, 7, 23);
+}
+
+void U3Resources::DoWind()
+{
+	if (m_misc.m_Party[2] == 1)
+	{
+		return;
+	}
+	if (!m_updateWind)
+	{
+		return;
+	}
+	m_updateWind = false;
+	
+	int newDir = m_misc.m_WindDir;
+	
+
+	while (newDir == m_misc.m_WindDir)
+	{
+		newDir = m_utilities.getRandom(0, 8);
+		if (newDir > 4)
+		{
+			newDir -= 4;
+		}
+	}
+	m_misc.m_WindDir = newDir;
 }
 
 void U3Resources::PlotSig(int x, int y)
@@ -2420,11 +2469,33 @@ void U3Resources::ShowMonsters()
 	}
 }
 
-void U3Resources::updateTime(Uint64 curTick)
+void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 {
-	m_elapsedTimeDemo += (curTick - m_curTickDemo);
-	m_elapsedTimeFlag += (curTick - m_curTickDemo);
-	m_elapsedTimeAnimate += (curTick - m_curTickDemo);
+	if (!wasMove)
+	{
+		m_elapsedWindTime += deltaTime;
+
+		if (m_elapsedWindTime > DelayWind)
+		{
+			m_updateWind = true;
+			m_elapsedWindTime %= DelayWind;
+		}
+	}
+	else
+	{
+		if (m_elapsedWindTime > DelayAnimate)
+		{
+			m_elapsedWindTime -= DelayAnimate;
+		}
+		else
+		{
+			m_elapsedWindTime = 0;
+		}
+	}
+
+	m_elapsedTimeDemo += deltaTime;
+	m_elapsedTimeFlag += deltaTime;
+	m_elapsedTimeAnimate += deltaTime;
 	m_numUpdateFlag = (int)(m_elapsedTimeFlag / DelayFlags);
 	m_numUpdateAnimate = (int)(m_elapsedTimeAnimate / DelayAnimate);
 	int numUpdate = (int)(m_elapsedTimeDemo / DelayDemo);
@@ -2435,12 +2506,19 @@ void U3Resources::updateTime(Uint64 curTick)
 	m_elapsedTimeDemo %= DelayDemo;
 	m_elapsedTimeFlag %= DelayFlags;
 	m_elapsedTimeAnimate %= DelayAnimate;
-	m_curTickDemo = curTick;
+	m_curTickDemo += deltaTime;
 
-	m_elapsedTimeScroll += (curTick - m_curTickScroll);
+	m_elapsedTimeScroll += deltaTime;
 
 	m_elapsedTimeScroll %= DelayScroll;
-	m_curTickScroll = curTick;
+	m_curTickScroll = m_elapsedTimeScroll;
+
+	ScrollThings();
+	AnimateTiles();
+	TwiddleFlags();
+	DoWind();
+
+	m_fullUpdate = false;
 }
 
 void U3Resources::ShowChars(bool force) /* $7338 methinx */

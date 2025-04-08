@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <random>
 #include <string>
 #include <vector>
 #include <libxml/xmlreader.h>
@@ -12,7 +13,8 @@
 
 enum class U3PreferencesType
 {
-	AutoSave,
+	Auto_Save,
+	Allow_Diagonal,
 	Classic_Appearance,
 	Include_Wind,
 };
@@ -26,6 +28,7 @@ struct U3Preferences
 		classic_appearance = false;
 		full_screen = false;
 		mode = 0;
+		allow_diagonal = false;
 	}
 
 	bool auto_save;
@@ -33,6 +36,7 @@ struct U3Preferences
 	bool classic_appearance;
 	bool full_screen;
 	int mode;
+	bool allow_diagonal;
 };
 
 struct InverseStruct
@@ -105,6 +109,7 @@ public:
 	void DrawMasked(unsigned short shape, unsigned short x, unsigned short y);
 	void ShowChars(bool force);
 	void DrawWind();
+	void DoWind();
 	void DrawInverses(Uint64 delta_time);
 	void DrawMoongates();
 
@@ -112,7 +117,7 @@ public:
 	void AnimateTiles();
 	void TwiddleFlags();
 
-	void updateTime(Uint64 curTick);
+	void updateTime(Uint64 curTick, bool wasMove);
 	void RenderCharStats(short ch, SDL_FRect rect);
 	void DrawPrompt();
 	void adjustRect(SDL_FRect& myRect);
@@ -123,6 +128,7 @@ public:
 	SDL_Texture* m_texDisplay;
 	std::map<std::string, std::vector<std::string>> m_plistMap;
 	InverseStruct m_inverses;
+	
 private:
 	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
@@ -169,6 +175,7 @@ private:
 	static constexpr Uint64 DelayDemo = 250;
 	static constexpr Uint64 DelayFlags = 80;
 	static constexpr Uint64 DelayAnimate = 80;
+	static constexpr Uint64 DelayWind = 2560;
 
 	SDL_Renderer* m_renderer;
 
@@ -220,6 +227,7 @@ private:
 	Uint64 m_elapsedTimeDemo;
 	Uint64 m_elapsedTimeFlag;
 	Uint64 m_elapsedTimeAnimate;
+	Uint64 m_elapsedWindTime;
 
 	short m_animFlag[4];
 	short m_twiddleFlag[4];
@@ -231,6 +239,7 @@ private:
 	int m_xPos;
 	int m_yPos;
 	bool m_isInversed;
-	
+	bool m_fullUpdate;
+	bool m_updateWind;
 };
 

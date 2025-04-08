@@ -109,10 +109,10 @@ void U3Graphics::DrawFrame(short which)
         }
         bool hasWind;
         m_resources.GetPreference(U3PreferencesType::Include_Wind, hasWind);
-        if(hasWind)
+        /*if(hasWind)
         {
-            m_resources.DrawWind();
-        }
+            m_resources.DoWind();
+        }*/
         DrawMoonGateStuff();
     }
 	if ((which == 2) || (which == 3))
@@ -320,6 +320,12 @@ void U3Graphics::DrawDemoScreen(Uint64 curTick)
     DrawFramePiece(12, 14, 10);
     DrawFramePiece(13, 25, 10);
     m_resources.DrawDemo(curTick);
+}
+
+void U3Graphics::ChangeClassic()
+{
+    m_classic = !m_classic;
+    m_resources.SetPreference(U3PreferencesType::Classic_Appearance, m_classic);
 }
 
 void U3Graphics::DrawMenu()

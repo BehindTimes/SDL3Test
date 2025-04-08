@@ -1,6 +1,11 @@
 #include "U3Utilities.h"
 #include <sstream>
 
+U3Utilities::U3Utilities()
+{
+	m_rGen.seed(m_rd());
+}
+
 std::vector<std::string> U3Utilities::splitString(const std::string& str, char delimiter, bool keepDelim)
 {
 	std::vector<std::string> tokens;
@@ -40,4 +45,25 @@ std::vector<std::string> U3Utilities::splitString(const std::string& str, char d
 		}
 	}
 	return tokens;
+}
+
+short U3Utilities::Absolute(short value) // $7E0D
+{
+	if (value > 127)
+	{
+		value = (255 - value) + 1;
+	}
+	if (value < 0)
+	{
+		value = (-value);
+	}
+	return value;
+}
+
+int U3Utilities::getRandom(int min, int max)
+{
+	int ret;
+	std::uniform_int_distribution<> distrib(min, max);
+	ret = distrib(m_rGen);
+	return ret;
 }

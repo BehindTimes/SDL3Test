@@ -26,6 +26,7 @@ public:
 	void DrawOrganizeMenu();
 	void DrawMap(unsigned char x, unsigned char y);
 	short MapConstrain(short value);
+	void ChangeClassic();
 
 	unsigned char m_maskRestoreArray[128];
 	unsigned char m_maskArray[128];

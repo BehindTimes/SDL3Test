@@ -478,6 +478,10 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	}
 
 	bool isNewLine = false;
+	if (endNewLines > 0)
+	{
+		maxSize += (3 * m_blockSize);
+	}
 	for (size_t index = start_index; index < tokens.size() - endNewLines; ++index)
 	{
 		std::string tempString = tokens[index];
@@ -492,13 +496,14 @@ std::string U3ScrollArea::RewrapString(std::string str)
 			{
 				strMessage += tempString;
 				maxSize -= tempSub;
+				
 				continue;
 			}
 		}
 		if (maxSize < textLen)
 		{
 			strMessage += std::string("\n");
-			maxSize = totalMaxSize;
+			maxSize = totalMaxSize + ((endNewLines > 0) ? (3 * m_blockSize) : 0);
 			isNewLine = true;
 		}
 		if (isNewLine)

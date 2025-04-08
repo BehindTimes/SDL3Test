@@ -59,7 +59,7 @@ public:
 	void BlockExodus();
 	short MonsterHere(short x, short y);
 	short MaxMana(char rosNum);
-	void ProcessEvent(SDL_Event event);
+	bool ProcessEvent(SDL_Event event);
 	void InverseTiles(bool value);
 	void InverseCharDetails(short num, bool value);
 	void HandleCallback();
@@ -123,15 +123,32 @@ public:
 	InputType m_inputType;
 
 private:
-	void HandleKeyPress(SDL_Keycode key);
+	void Attack();
+	void Board();
+	void Descend();
+	void Enter();
+	void Exit();
+	void Fire();
+	void Ignite();
+	void JoinGold();
+	void JoinGold(short chnum);
+	void Look();
+	void Klimb();
+	void PeerGem();
+	void Steal();
+	void Transact();
+	void Unlock();
+
+	bool HandleKeyPress(SDL_Keycode key);
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value);
 	bool ValidDir(unsigned char value);
 	void NoGo();
-	void Enter();
-	void Look();
+	
+	void Pass();
+	
 	void LookCallback();
-	void Transact();
+	
 	void TransactCallback();
 	void TransactCallback2();
 	void What();
@@ -152,7 +169,7 @@ private:
 	void HandleInputYesNo(SDL_Keycode key);
 	void HandleInputBuySell(SDL_Keycode key);
 	void HandleInputText(SDL_Keycode key);
-	void HandleDefaultKeyPress(SDL_Keycode key);
+	bool HandleDefaultKeyPress(SDL_Keycode key);
 	void HandleDircetionKeyPress(SDL_Keycode key);
 	void HandleTransactPress(SDL_Keycode key);
 	void PrintMonster(short which, bool plural, char variant);
@@ -205,11 +222,21 @@ private:
 	void oracleCallback();
 	void oracleFinishCallback();
 	void horseVendorCallback();
+	void MoveMonsters();
+	void GetMonsterDir(short monNum);
+	char GetHeading(short value);
+	bool moveshoot(int offset);
+	void move7AAA(int offset);
+	bool moveoutside(int offset);
+	void AttackCallback();
+	void IgniteCallback();
+	void JoinGoldCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view BinLoc = "Bin";
 	static constexpr std::string_view DoorString = "Door";
+	static constexpr std::string_view DioramaString = "Diorama\n";
 
 	int m_xs;
 	int m_ys;
@@ -219,6 +246,7 @@ private:
 	short m_opnum;
 	short m_opnum2;
 	short m_restrictedStart;
+	short m_gTorch;
 
 	short m_storedir;
 	short m_rosNum;

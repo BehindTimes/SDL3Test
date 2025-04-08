@@ -204,6 +204,7 @@ private:
 	void guildCompleteCallback();
 	void oracleCallback();
 	void oracleFinishCallback();
+	void horseVendorCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

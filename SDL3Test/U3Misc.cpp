@@ -2156,7 +2156,6 @@ void U3Misc::Shop(short shopNum, short chnum)
 	short rosNum;
 
 	rosNum = m_Party[5 + chnum];
-	//shopNum = 6;
 	switch (shopNum)
 	{
 	case 0:
@@ -2209,10 +2208,51 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	case 7:
 		m_scrollArea.UPrintMessage(225);
+		m_scrollArea.UPrintWin(std::to_string(m_Party[1]));
+		m_scrollArea.UPrintMessage(226);
+		m_opnum = m_Party[1] * 200;
+		m_scrollArea.UPrintWin(std::to_string(m_opnum));
+		m_scrollArea.UPrintMessage(227);
+		setInputTypeYesNo(std::bind(&U3Misc::horseVendorCallback, this));
+		m_scrollArea.setInput(true);
 		break;
 	default:
+		InverseChnum(m_transactNum, false);
 		break;
 	}
+}
+
+void U3Misc::horseVendorCallback()
+{
+	short gold;
+	m_scrollArea.setInput(false);
+	if (m_input_num != 1)
+	{
+		if (m_input_num < 0)
+		{
+			m_scrollArea.UPrintWin("N");
+		}
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessageRewrapped(228);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (gold < m_opnum)
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessageRewrapped(229);
+		//Speech(GetLocalizedPascalString("\pI'm sorry, but you haven't the gold!"),63);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	gold -= m_opnum;
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+	m_scrollArea.UPrintWin("\n\n");
+	m_scrollArea.UPrintMessageRewrapped(230);
+	m_Party[0] = 0x14;
+	InverseChnum(m_transactNum, false);
 }
 
 void U3Misc::setInputTypeNumImmediate(std::function<void()> func)

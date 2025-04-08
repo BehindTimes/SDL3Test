@@ -1167,6 +1167,58 @@ void U3Misc::HandleInputBuySell(SDL_Keycode key)
 	}
 }
 
+void U3Misc::HandleInputGuild(SDL_Keycode key)
+{
+	bool handled = false;
+	switch (key)
+	{
+	case SDLK_T:
+		m_input_num = 0;
+		m_input = std::string("T");
+		handled = true;
+		break;
+	case SDLK_K:
+		m_input_num = 1;
+		m_input = std::string("K");
+		handled = true;
+		break;
+	case SDLK_P:
+		m_input_num = 2;
+		m_input = std::string("P");
+		handled = true;
+		break;
+	case SDLK_G:
+		m_input_num = 3;
+		m_input = std::string("G");
+		handled = true;
+		break;
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		m_input_num = -1;
+		m_input = std::string("");
+		handled = true;
+		break;
+	default:
+		m_input_num = 0;
+		break;
+	}
+	if (handled)
+	{
+		m_inputType = InputType::Default;
+		m_scrollArea.setInputString(m_input);
+		m_scrollArea.setInput(false);
+		if (m_callbackStack.size() > 0)
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
 void U3Misc::HandleInputYesNo(SDL_Keycode key)
 {
 	bool handled = false;
@@ -1374,6 +1426,9 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 {
 	switch (m_inputType)
 	{
+	case InputType::GuildVendor:
+		HandleInputGuild(key);
+		break;
 	case InputType::Restricted:
 		HandleInputRestricted(key);
 		break;
@@ -2069,7 +2124,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 	short rosNum;
 
 	rosNum = m_Party[5 + chnum];
-	//shopNum = 2;
+	//shopNum = 5;
 	switch (shopNum)
 	{
 	case 0:
@@ -2108,6 +2163,12 @@ void U3Misc::Shop(short shopNum, short chnum)
 		setInputTypeYesNo(std::bind(&U3Misc::armorsListCallback, this));
 		break;
 	case 5:
+		m_scrollArea.UPrintMessage(217);
+		m_scrollArea.UPrintMessage(261);
+		m_scrollArea.UPrintMessage(218);
+		m_inputType = InputType::GuildVendor;
+		m_scrollArea.setInput(true);
+		m_callbackStack.push(std::bind(&U3Misc::guildCallback, this));
 		break;
 	case 6:
 		m_scrollArea.UPrintMessage(221);
@@ -2117,6 +2178,109 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	default:
 		break;
+	}
+}
+
+void U3Misc::guildCallback()
+{
+	short cost = 0;
+	short attrib;
+	short qty = 1;
+	switch (m_input_num)
+	{
+	case 0:
+		cost = 30;
+		attrib = 15;
+		qty = 5;
+		break;
+	case 1:
+		cost = 50;
+		attrib = 38;
+		break;
+	case 2:
+		cost = 90;
+		attrib = 39;
+		break;
+	case 3:
+		cost = 75;
+		attrib = 37;
+		break;
+	default:
+		m_scrollArea.UPrintWin("N\n\n");
+		m_scrollArea.UPrintMessageRewrapped(219);
+		m_scrollArea.setInput(false);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+
+	m_scrollArea.setInput(false);
+	m_scrollArea.UPrintWin("\n");
+	if (m_Player[m_rosNum][attrib] + qty > 99)
+	{
+		m_scrollArea.UPrintMessageRewrapped(260);
+		m_scrollArea.UPrintMessage(261);
+		m_scrollArea.UPrintMessage(218);
+		m_inputType = InputType::GuildVendor;
+		m_scrollArea.setInput(true);
+		m_callbackStack.push(std::bind(&U3Misc::guildCallback, this));
+		return;
+	}
+
+	if (GuildPay(m_rosNum, cost) == 0)
+	{
+		GuildGive(m_rosNum, attrib, qty);
+	}
+	else
+	{
+		m_scrollArea.setInput(false);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	m_scrollArea.UPrintMessage(220);
+	setInputTypeYesNo(std::bind(&U3Misc::guildCompleteCallback, this));
+}
+
+void U3Misc::guildCompleteCallback()
+{
+	m_scrollArea.setInput(false);
+	if (m_input_num == 1) // yes
+	{
+		m_scrollArea.UPrintMessage(261);
+		m_scrollArea.UPrintMessage(218);
+		m_inputType = InputType::GuildVendor;
+		m_scrollArea.setInput(true);
+		m_callbackStack.push(std::bind(&U3Misc::guildCallback, this));
+	}
+	else
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessage(219);
+		InverseChnum(m_transactNum, false);
+	}
+}
+
+bool U3Misc::GuildPay(short rosNum, short cost)
+{
+	short gold;
+	gold = (m_Player[rosNum][35] * 256) + m_Player[rosNum][36];
+	if (gold < cost)
+	{
+		m_scrollArea.UPrintMessageRewrapped(231);
+		//Speech(GetLocalizedPascalString("\pI'm sorry, but you have not the funds!"),23);
+		return true;
+	}
+	gold -= cost;
+	m_Player[rosNum][35] = gold / 256;
+	m_Player[rosNum][36] = gold - (m_Player[rosNum][35] * 256);
+	return false;
+}
+
+void U3Misc::GuildGive(short rosNum, short item, short amount)
+{
+	m_Player[rosNum][item] += amount;
+	if (m_Player[rosNum][item] > 99)
+	{
+		m_Player[rosNum][item] = 99;
 	}
 }
 

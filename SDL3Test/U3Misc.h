@@ -34,7 +34,8 @@ enum class InputType
 	AnyKey,
 	BuySell,
 	Restricted,
-	Callback
+	Callback,
+	GuildVendor
 };
 
 class U3Misc
@@ -144,6 +145,7 @@ private:
 	void HandleAnyKey();
 	void FinalizeHealingCallback();
 	
+	void HandleInputGuild(SDL_Keycode key);
 	void HandleInputRestricted(SDL_Keycode key);
 	void HandleInputYesNo(SDL_Keycode key);
 	void HandleInputBuySell(SDL_Keycode key);
@@ -193,6 +195,10 @@ private:
 	void healingCallback2();
 	void healingPayCallback();
 	void SpellNoize(short opnum, short opnum2);
+	void guildCallback();
+	bool GuildPay(short rosNum, short cost);
+	void GuildGive(short rosNum, short item, short amount);
+	void guildCompleteCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

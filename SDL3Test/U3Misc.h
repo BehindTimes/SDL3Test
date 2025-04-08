@@ -35,7 +35,8 @@ enum class InputType
 	BuySell,
 	Restricted,
 	Callback,
-	GuildVendor
+	GuildVendor,
+	NumImmediate
 };
 
 class U3Misc
@@ -145,6 +146,7 @@ private:
 	void HandleAnyKey();
 	void FinalizeHealingCallback();
 	
+	void HandleNumImmediate(SDL_Keycode key);
 	void HandleInputGuild(SDL_Keycode key);
 	void HandleInputRestricted(SDL_Keycode key);
 	void HandleInputYesNo(SDL_Keycode key);
@@ -167,6 +169,7 @@ private:
 	void setInputTypeYesNo(std::function<void()> func);
 	void setInputTypeBuySell(std::function<void()> func);
 	void setInputTypeRestricted(std::function<void()> func, short start);
+	void setInputTypeNumImmediate(std::function<void()> func);
 	void anotherDrinkCallback();
 	void weaponsListCallback();
 	void armorsListCallback();
@@ -199,6 +202,8 @@ private:
 	bool GuildPay(short rosNum, short cost);
 	void GuildGive(short rosNum, short item, short amount);
 	void guildCompleteCallback();
+	void oracleCallback();
+	void oracleFinishCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

@@ -1292,6 +1292,35 @@ void U3Misc::HandleInputRestricted(SDL_Keycode key)
 	}
 }
 
+void U3Misc::HandleNumImmediate(SDL_Keycode key)
+{
+	bool handled = false;
+
+	if (key >= SDLK_0 && key <= SDLK_9)
+	{
+		m_input_num = key - SDLK_0;
+		handled = true;
+	}
+	else if (key == SDLK_SPACE || key == SDLK_RETURN)
+	{
+		m_input_num = 0;
+		handled = true;
+	}
+	if (handled)
+	{
+		if (m_callbackStack.size() > 0)
+		{
+			m_scrollArea.setInputString(std::to_string(m_input_num));
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
 void U3Misc::HandleInputText(SDL_Keycode key)
 {
 	bool handled = false;
@@ -1426,6 +1455,9 @@ void U3Misc::HandleKeyPress(SDL_Keycode key)
 {
 	switch (m_inputType)
 	{
+	case InputType::NumImmediate:
+		HandleNumImmediate(key);
+		break;
 	case InputType::GuildVendor:
 		HandleInputGuild(key);
 		break;
@@ -2124,7 +2156,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 	short rosNum;
 
 	rosNum = m_Party[5 + chnum];
-	//shopNum = 5;
+	//shopNum = 6;
 	switch (shopNum)
 	{
 	case 0:
@@ -2172,12 +2204,82 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	case 6:
 		m_scrollArea.UPrintMessage(221);
+		m_scrollArea.UPrintMessageRewrapped(222);
+		setInputTypeNumImmediate(std::bind(&U3Misc::oracleCallback, this));
 		break;
 	case 7:
 		m_scrollArea.UPrintMessage(225);
 		break;
 	default:
 		break;
+	}
+}
+
+void U3Misc::setInputTypeNumImmediate(std::function<void()> func)
+{
+	m_scrollArea.setInput(true);
+	m_callbackStack.push(func);
+	m_input.clear();
+	m_inputType = InputType::NumImmediate;
+}
+
+void U3Misc::oracleCallback()
+{
+	m_inputType = InputType::Default;
+	short input;
+	short gold;
+	m_scrollArea.setInput(false);
+	m_scrollArea.UPrintWin("\n\n");
+	input = m_input_num * 100;
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (input > gold)
+	{
+		m_scrollArea.UPrintMessage(188);
+		//Speech(GetLocalizedPascalString("\pWhat? Can't pay? Out, you scum!"),16);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	gold -= input;
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+
+	if (m_resources.m_plistMap["Radrion"].size() <= m_input_num)
+	{
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	std::string dispString = m_resources.m_plistMap["Radrion"][m_input_num];
+
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (!classic)
+	{
+		dispString = m_scrollArea.RewrapString(dispString);
+	}
+	m_scrollArea.UPrintWin(dispString);
+	m_scrollArea.UPrintMessage(223);
+	setInputTypeYesNo(std::bind(&U3Misc::oracleFinishCallback, this));
+	m_scrollArea.setInput(true);
+}
+
+void U3Misc::oracleFinishCallback()
+{
+	m_scrollArea.setInput(false);
+	if (m_input_num == 1)
+	{
+		m_scrollArea.UPrintMessageRewrapped(222);
+		setInputTypeNumImmediate(std::bind(&U3Misc::oracleCallback, this));
+	}
+	else
+	{
+		if (m_input_num < 0)
+		{
+			m_scrollArea.UPrintWin("N");
+		}
+		m_scrollArea.UPrintWin("\n");
+		m_scrollArea.UPrintMessageRewrapped(224);
+		InverseChnum(m_transactNum, false);
+		return;
 	}
 }
 

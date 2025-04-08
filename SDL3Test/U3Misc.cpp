@@ -42,6 +42,7 @@ U3Misc::U3Misc() :
 	m_maxInputLength(2),
 	m_input_num(0),
 	m_opnum(0),
+	m_opnum2(0),
 	m_restrictedStart(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
@@ -49,6 +50,31 @@ U3Misc::U3Misc() :
 	m_saved_map.reset();
 	m_gMoonDisp[0] = 4;
 	m_gMoonDisp[1] = 4;
+
+	memset(m_zp, 0, sizeof(short) * 255);
+	memset(m_MonsterX, 0, sizeof(unsigned char) * 8);
+	memset(m_MonsterY, 0, sizeof(unsigned char) * 8);
+	memset(m_MonsterTile, 0, sizeof(unsigned char) * 8);
+	memset(m_MonsterHP, 0, sizeof(unsigned char) * 8);
+	memset(m_CharX, 0, sizeof(unsigned char) * 4);
+	memset(m_CharY, 0, sizeof(unsigned char) * 4);
+	memset(m_CharTile, 0, sizeof(unsigned char) * 4);
+	memset(m_CharShape, 0, sizeof(unsigned char) * 4);
+
+	memset(m_MoonXTable, 0, sizeof(unsigned char) * 8);
+	memset(m_MoonYTable, 0, sizeof(unsigned char) * 8);
+	memset(m_careerTable, 0, sizeof(unsigned char) * 12);
+	memset(m_wpnUseTable, 0, sizeof(unsigned char) * 12);
+	memset(m_armUseTable, 0, sizeof(unsigned char) * 12);
+	memset(m_LocationX, 0, sizeof(unsigned char) * 20);
+	memset(m_LocationY, 0, sizeof(unsigned char) * 20);
+	memset(m_Experience, 0, sizeof(unsigned char) * 17);
+	memset(m_Monsters, 0, sizeof(unsigned char) * 256);
+	memset(m_Talk, 0, sizeof(unsigned char) * 256);
+	memset(m_Dungeon, 0, sizeof(unsigned char) * 2048);
+
+	memset(careerTable, 0, sizeof(unsigned char) * 12);
+	memset(m_Party, 0, sizeof(unsigned char) * 64);
 }
 
 U3Misc::~U3Misc()
@@ -982,11 +1008,12 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 
 void U3Misc::HandleTransactPress(SDL_Keycode key)
 {
-	m_transactNum = 0;
-	m_inputType = InputType::Default;
+	m_input_num = -1;
+	
 	if (key >= SDLK_1 && key <= SDLK_4)
 	{
-		m_transactNum = key - SDLK_1;
+		m_inputType = InputType::Default;
+		m_input_num = key - SDLK_1;
 		if (m_callbackStack.size() > 0)
 		{
 			auto callbackFunction = m_callbackStack.top();
@@ -997,9 +1024,18 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 			}
 		}
 	}
-	else
+	else if(key == SDLK_SPACE || key == SDLK_RETURN)
 	{
-		m_scrollArea.UPrintWin("\n");
+		m_inputType = InputType::Default;
+		if (m_callbackStack.size() > 0)
+		{
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
 	}
 }
 
@@ -1814,31 +1850,39 @@ void U3Misc::Transact()
 	m_storedir = 0;
 	m_scrollArea.UPrintMessageRewrapped(88);
 	m_inputType = InputType::Transact;
-	m_callbackStack.push(std::bind(&U3Misc::TransasctCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::TransactCallback, this));
 }
 
-void U3Misc::TransasctCallback()
+void U3Misc::TransactCallback()
 {
-	m_rosNum = m_Party[6 + m_transactNum];
-	std::string strRosNum = std::to_string(m_rosNum) + std::string("\n");
-	m_scrollArea.UPrintWin(strRosNum);
-	if (CheckAlive(m_transactNum) == 0)
+	if (m_input_num < 0 || m_input_num > 3)
 	{
-		m_spellCombat.Incap();
-		return;
+		m_scrollArea.UPrintWin("\n");
 	}
-	m_scrollArea.UPrintMessage(85);
-
-	if (m_storedir)
+	else
 	{
-		//AddMacro(storeDir);
-	}
+		m_transactNum = m_input_num;
+		m_rosNum = m_Party[6 + m_transactNum];
+		std::string strRosNum = std::to_string(m_rosNum) + std::string("\n");
+		m_scrollArea.UPrintWin(strRosNum);
+		if (CheckAlive(m_transactNum) == 0)
+		{
+			m_spellCombat.Incap();
+			return;
+		}
+		m_scrollArea.UPrintMessage(85);
 
-	m_inputType = InputType::GetDirection;
-	m_callbackStack.push(std::bind(&U3Misc::TransasctCallback2, this));
+		if (m_storedir)
+		{
+			//AddMacro(storeDir);
+		}
+
+		m_inputType = InputType::GetDirection;
+		m_callbackStack.push(std::bind(&U3Misc::TransactCallback2, this));
+	}
 }
 
-void U3Misc::TransasctCallback2()
+void U3Misc::TransactCallback2()
 {
 	short monNum;
 	short tile;
@@ -2002,6 +2046,22 @@ void U3Misc::InverseTiles(bool value)
 	m_resources.m_inverses.tiles = value;
 	m_resources.m_inverses.inverseTileTime = 1000;
 	m_resources.m_inverses.elapsedTileTime = 0;
+	if (!value)
+	{
+		m_resources.m_inverses.char_details[0] = false;
+		m_resources.m_inverses.char_details[1] = false;
+		m_resources.m_inverses.char_details[2] = false;
+		m_resources.m_inverses.char_details[3] = false;
+	}
+}
+
+// Might need to rethink the inversing
+void U3Misc::InverseCharDetails(short num, bool value)
+{
+	if (num >= 0 && num < 4)
+	{
+		m_resources.m_inverses.char_details[num] = value;
+	}
 }
 
 void U3Misc::Shop(short shopNum, short chnum)
@@ -2025,6 +2085,9 @@ void U3Misc::Shop(short shopNum, short chnum)
 	case 2:
 		m_scrollArea.UPrintMessage(196);
 		m_scrollArea.UPrintMessage(197);
+		m_inputType = InputType::Transact;
+		m_scrollArea.setInput(true);
+		m_callbackStack.push(std::bind(&U3Misc::healingCallback, this));
 		break;
 	case 3:
 		m_opnum = 'I';
@@ -2371,6 +2434,7 @@ void U3Misc::anotherDrinkCallback()
 	}
 	else
 	{
+		m_scrollArea.setInput(false);
 		m_scrollArea.UPrintMessageRewrapped(190);
 		InverseChnum(m_transactNum, false);
 	}
@@ -2678,6 +2742,135 @@ void U3Misc::armorsBuySellFinishedCallback()
 	m_scrollArea.setInput(false);
 	InverseChnum(m_transactNum, false);
 	m_scrollArea.UPrintMessageRewrapped(215);
+}
+
+void U3Misc::healingCallback()
+{
+	m_scrollArea.setInput(false);
+	switch (m_input_num)
+	{
+	case 0:
+		m_scrollArea.UPrintMessage(198);
+		break;
+	case 1:
+		m_scrollArea.UPrintMessage(200);
+		break;
+	case 2:
+		m_scrollArea.UPrintMessage(202);
+		break;
+	case 3:
+		m_scrollArea.UPrintMessage(204);
+		break;
+	default:
+		InverseChnum(m_transactNum, false);
+		m_scrollArea.UPrintWin("\n");
+		return;
+	}
+	m_opnum = m_input_num;
+	m_scrollArea.setInput(true);
+	setInputTypeYesNo(std::bind(&U3Misc::healingPayCallback, this));
+}
+
+void U3Misc::healingPayCallback()
+{
+	short cost[4] = { 100, 200, 500, 900 };
+	short gold;
+	m_scrollArea.setInput(false);
+	if (m_input_num != 1)
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessageRewrapped(232);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (cost[m_opnum] > gold)
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea.UPrintMessageRewrapped(233);
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+
+	gold -= cost[m_opnum];
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+	m_scrollArea.UPrintWin("\n");
+	switch (m_opnum)
+	{
+	case 0:
+		m_scrollArea.UPrintMessage(199);
+		break;
+	case 1:
+		m_scrollArea.UPrintMessage(201);
+		break;
+	case 2:
+		m_scrollArea.UPrintMessage(203);
+		break;
+	case 3:
+		m_scrollArea.UPrintMessage(205);
+		break;
+	default:
+		InverseChnum(m_transactNum, false);
+		return;
+	}
+	m_scrollArea.setInput(true);
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::healingCallback2, this));
+}
+
+void U3Misc::SpellNoize(short opnum, short opnum2)
+{
+	InverseTiles(true);
+	InverseCharDetails(opnum, true);
+	m_resources.m_inverses.func = std::bind(&U3Misc::FinalizeHealingCallback, this);
+}
+
+void U3Misc::FinalizeHealingCallback()
+{
+	switch (m_opnum)
+	{
+	case 0:
+		if (m_Player[m_Party[5 + m_input_num]][17] == 'P')
+		{
+			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+		}
+		break;
+	case 1:
+		m_Player[m_Party[5 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
+		m_Player[m_Party[5 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
+		break;
+	case 2:
+		if (m_Player[m_Party[5 + m_input_num]][17] == 'D')
+		{
+			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+		}
+		break;
+	case 3:
+		if (m_Player[m_Party[5 + m_input_num]][17] == 'A')
+		{
+			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+		}
+		break;
+	default:
+		break;
+	}
+	InverseChnum(m_transactNum, false);
+}
+
+void U3Misc::healingCallback2()
+{
+	if (m_input_num >= 0 && m_input_num < 4)
+	{
+		m_scrollArea.setInput(false);
+		m_scrollArea.UPrintWin("\n");
+		SpellNoize(m_input_num, m_opnum);
+		return;
+	}
+
+	m_scrollArea.setInput(false);
+	m_scrollArea.UPrintWin("\n");
+	InverseChnum(m_transactNum, false);
 }
 
 bool U3Misc::AddGold(short rosNum, short gold, bool overflow) // $70BB

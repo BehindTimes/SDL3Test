@@ -46,12 +46,19 @@ struct InverseStruct
 		tiles = false;
 		inverseTileTime = 0;
 		elapsedTileTime = 0;
+		char_details[0] = false;
+		char_details[1] = false;
+		char_details[2] = false;
+		char_details[3] = false;
+		func = nullptr;
 	}
 
 	bool character_num[4];
+	bool char_details[4];
 	bool tiles;
 	Uint64 inverseTileTime;
 	Uint64 elapsedTileTime;
+	std::function<void()> func;
 };
 
 class U3Resources

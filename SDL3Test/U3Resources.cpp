@@ -2955,6 +2955,22 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 			SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
 		}
+
+		if (m_inverses.char_details[index] == true)
+		{
+			SDL_SetRenderDrawBlendMode(m_renderer, blendmode_sub);
+			myRect.x = (float)(24 * m_blockSize);
+			myRect.w = (float)(15 * m_blockSize);
+			myRect.y = (float)(index * (m_blockSize * 4) + m_blockSize);
+			myRect.h = (float)(m_blockSize * 3);
+
+			adjustRect(myRect);
+
+			SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+			SDL_RenderFillRect(m_renderer, &myRect);
+			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+			SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+		}
 	}
 	if (m_inverses.tiles)
 	{
@@ -2975,6 +2991,12 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		{
 			m_misc.InverseTiles(false);
 			m_isInversed = false;
+			if (m_inverses.func)
+			{
+				auto tempfun = m_inverses.func;
+				m_inverses.func = nullptr;
+				tempfun();
+			}
 		}
 	}
 }

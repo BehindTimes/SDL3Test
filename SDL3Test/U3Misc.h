@@ -59,6 +59,7 @@ public:
 	short MaxMana(char rosNum);
 	void ProcessEvent(SDL_Event event);
 	void InverseTiles(bool value);
+	void InverseCharDetails(short num, bool value);
 	void HandleCallback();
 
 	void North();
@@ -129,8 +130,8 @@ private:
 	void Look();
 	void LookCallback();
 	void Transact();
-	void TransasctCallback();
-	void TransasctCallback2();
+	void TransactCallback();
+	void TransactCallback2();
 	void What();
 	void What2();
 	void NotHere();
@@ -141,6 +142,7 @@ private:
 	void PullSosaria();
 	void PushSosaria();
 	void HandleAnyKey();
+	void FinalizeHealingCallback();
 	
 	void HandleInputRestricted(SDL_Keycode key);
 	void HandleInputYesNo(SDL_Keycode key);
@@ -187,6 +189,10 @@ private:
 	void weaponsBuyPoor();
 	void armorsBuyPoor();
 	bool AddGold(short rosNum, short gold, bool overflow);
+	void healingCallback();
+	void healingCallback2();
+	void healingPayCallback();
+	void SpellNoize(short opnum, short opnum2);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -199,6 +205,7 @@ private:
 	int m_dy;
 	bool m_numOnly;
 	short m_opnum;
+	short m_opnum2;
 	short m_restrictedStart;
 
 	short m_storedir;

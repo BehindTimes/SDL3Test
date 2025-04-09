@@ -1,0 +1,10 @@
+# 3 entries
+# item 0: BUTTON (0x04) enabled
+#   bounds: x1=169 y1=89 x2=227 y2=109
+#   text: "OK"
+# item 1: ICON (0xA0) disabled
+#   bounds: x1=12 y1=9 x2=44 y2=41
+#   ICON resource ID: 400
+# item 2: TEXT (0x88) disabled
+#   bounds: x1=54 y1=7 x2=224 y2=74
+#   text: "You can’t save a game until you have created a party AND are outdoors in Sosaria."

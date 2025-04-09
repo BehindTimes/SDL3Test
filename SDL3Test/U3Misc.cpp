@@ -47,7 +47,9 @@ U3Misc::U3Misc() :
 	m_opnum(0),
 	m_opnum2(0),
 	m_restrictedStart(0),
-	m_gTorch(0)
+	m_gTorch(0),
+	m_wx(0),
+	m_wy(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -1547,6 +1549,11 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		mouseState = 1;
 		updateMouse = true;
+		if (m_inputType == InputType::AnyKey)
+		{
+			HandleAnyKey();
+			retVal = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
 		mouseState = 2;
@@ -3775,6 +3782,40 @@ void U3Misc::UnlockKeyCallback()
 	}
 }
 
-void U3Misc::CheckAllDead() /* $71B4 */
+bool stayingalive = false;
+void U3Misc::CheckAllDead() // $71B4
 {
+	bool alive;
+	char byte;
+
+	for (byte = 0; byte < 4; byte++)
+	{
+		if (CheckAlive(byte) == true)
+		{
+			alive = true;
+		}
+	}
+	alive = stayingalive;
+	stayingalive = true;
+	if (!alive)
+	{
+		m_wx = 25;
+		m_wy = 23;
+		m_scrollArea.UPrintMessage(109);    // ALL PLAYERS OUT!
+		bool autosave;
+		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+		if (autosave)
+		{
+			/*PutParty();
+			PutRoster();
+			PutSosaria();*/
+		}
+		m_inputType = InputType::AnyKey;
+		m_callbackStack.push(std::bind(&U3Misc::CheckAllDeadPause, this));
+	}
+}
+
+void U3Misc::CheckAllDeadPause()
+{
+	m_resources.CreateAlertMessage(416, DialogType::DITL);
 }

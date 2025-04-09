@@ -67,3 +67,11 @@ int U3Utilities::getRandom(int min, int max)
 	ret = distrib(m_rGen);
 	return ret;
 }
+
+void U3Utilities::trim(std::string& str)
+{
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch)
+	{
+		return !std::isspace(ch);
+	}));
+}

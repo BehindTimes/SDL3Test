@@ -203,10 +203,10 @@ void U3Resources::AlertCallback()
 	m_cleanupAlert = true;
 }
 
-void U3Resources::CreateAlertMessage(int message)
+void U3Resources::CreateAlertMessage(int message, DialogType type)
 {
 	m_AlertDlg = std::make_unique<U3Dialog>(m_renderer, engine_surface, &m_currentGraphics, &m_standardGraphics,
-		m_blockSize, message, std::bind(&U3Resources::AlertCallback, this));
+		m_blockSize, message, type, std::bind(&U3Resources::AlertCallback, this));
 }
 
 void U3Resources::GetPreference(U3PreferencesType type, bool& value)
@@ -405,11 +405,6 @@ void U3Resources::CalculateBlockSize()
 	screenOffsetX = (windowWidth - m_blockSize * 40) / 2;
 	screenOffsetY = (windowHeight - m_blockSize * 24) / 2;
 
-	if (m_AlertDlg.get())
-	{
-		m_AlertDlg->changeBlockSize(m_blockSize);
-	}
-
 	m_scrollArea.setBlockSize(m_blockSize);
 	m_graphics.setBlockSize(m_blockSize);
 
@@ -434,6 +429,11 @@ void U3Resources::CalculateBlockSize()
 		m_font_12 = nullptr;
 	}
 	createFont();
+
+	if (m_AlertDlg.get())
+	{
+		m_AlertDlg->changeBlockSize(m_blockSize);
+	}
 
 	int final = m_blockSize * 22;
 	if (m_texDisplay)
@@ -731,9 +731,9 @@ void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
 	int curVecPos = 0;
 	SDL_FRect frameRect;
 
-	for (int indexX = 0; indexX < MINITILES_NUM_Y; ++indexX)
+	for (int indexX = 0; indexX < MINITILES_NUM_X; ++indexX)
 	{
-		for (int indexY = 0; indexY < MINITILES_NUM_X; ++indexY)
+		for (int indexY = 0; indexY < MINITILES_NUM_Y; ++indexY)
 		{
 			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize, 1);
 			SDL_SetRenderTarget(m_renderer, curGraphics.mini_tiles[curVecPos]);

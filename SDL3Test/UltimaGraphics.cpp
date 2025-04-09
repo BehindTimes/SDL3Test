@@ -429,6 +429,7 @@ void U3Graphics::renderMiniMap()
         for (short x = 0; x < m_misc.m_mapSize; x++)
         {
             value = m_misc.GetXYVal(x, y) / 4;
+            int minival = value;
             int multval = value / 16;
             value += (16 * multval);
             //value = m_resources.GetRealTile(value);
@@ -438,15 +439,7 @@ void U3Graphics::renderMiniMap()
             {
                 if (m_resources.m_currentGraphics->mini_tiles.size() == 64)
                 {
-                    if (value < 64)
-                    {
-                        /*SDL_FRect fromRect;
-                        fromRect.h = m_resources.m_currentGraphics->mini_height;
-                        fromRect.w = m_resources.m_currentGraphics->mini_width;
-                        fromRect.y = 0;
-                        fromRect.x = value * m_resources.m_currentGraphics->mini_width;*/
-                        SDL_RenderTexture(m_resources.m_renderer, m_resources.m_currentGraphics->mini_tiles[value], NULL, &outRect);
-                    }
+                    SDL_RenderTexture(m_resources.m_renderer, m_resources.m_currentGraphics->mini_tiles[minival], NULL, &outRect);
                 }
                 else
                 {
@@ -637,7 +630,6 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     DrawFrame(1);
     DrawMiniMap();
     m_resources.ShowChars(true);
-    m_misc.CheckAllDead();
     m_scrollArea.render(deltaTime);
     m_resources.DrawWind();
     bool returnToGame = m_misc.ProcessAnyEvent(event);

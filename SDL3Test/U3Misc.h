@@ -123,6 +123,8 @@ public:
 	short m_zp[255];
 	short m_gMoonDisp[2];
 	InputType m_inputType;
+	int m_wx;
+	int m_wy;
 
 private:
 	void Attack();
@@ -236,6 +238,7 @@ private:
 	void UnlockCallback();
 	void UnlockKeyCallback();
 	void PeerGemCallback();
+	void CheckAllDeadPause();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

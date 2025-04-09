@@ -3,15 +3,17 @@
 #include "U3Dialog.h"
 #include "U3Button.h"
 #include "U3Utilities.h"
+#include "U3Resources.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;
 extern short screenOffsetY;
 extern U3Utilities m_utilities;
+extern U3Resources m_resources;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
-	int blockSize, int message, std::function<void()> callback) :
+	int blockSize, int message, DialogType type, std::function<void()> callback) :
 	m_renderer(renderer),
 	m_engine_surface(engine_surface),
 	m_currentGraphics(currentGraphics),
@@ -29,16 +31,30 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	m_titleX(0),
 	m_titleY(0),
 	m_messageX(0),
-	m_messageY(0)
+	m_messageY(0),
+	m_icon(nullptr)
 {
 	createFont();
-	loadString();
-	createButton(callback);
+	if (type == DialogType::Alert)
+	{
+		loadString();
+		createButton(callback);
+	}
+	else if (type == DialogType::DITL)
+	{
+		loadDitl();
+		//createButton(callback);
+	}
 	calculateRects();
 }
 
 U3Dialog::~U3Dialog()
 {
+	if (m_icon)
+	{
+		SDL_DestroyTexture(m_icon);
+	}
+	m_vecButtons.clear();
 	if (m_text_obj_title)
 	{
 		TTF_DestroyText(m_text_obj_title);
@@ -73,13 +89,24 @@ void U3Dialog::calculateRects()
 	m_text_obj_title = calcDisplayString(m_font, m_strTitle, title_width, title_height, sdl_text_color);
 	m_text_obj_message = calcDisplayString(m_font, m_strMessage, message_width, message_height, sdl_text_color);
 
+	int offsetTitle = 0;
+	if (!m_strTitle.empty())
+	{
+		offsetTitle = 2;
+	}
 	int maxWidth = std::max<int>(message_width, title_width);
 	int totalHeight = title_height + message_height;
 
 	m_numblocksW = (int)(std::ceil((float)maxWidth / (float)m_blockSize));
 	m_numblocksH = (int)(std::ceil((float)totalHeight / (float)m_blockSize));
-	m_numblocksW += 2;
+
 	m_numblocksH += 4;
+	m_numblocksW += 2;
+
+	if (m_strTitle.empty())
+	{
+		m_numblocksH--;
+	}
 
 	int xStart = (windowWidth - (m_numblocksW * m_blockSize)) / 2;
 	int yStart = (windowHeight - (m_numblocksH * m_blockSize)) / 2;
@@ -99,22 +126,50 @@ void U3Dialog::calculateRects()
 
 	m_messageRect = m_titleRect;
 
-	m_messageRect.y += (float)(m_blockSize * 2);
-	m_messageRect.h = (float)(m_numblocksH - 4) * m_blockSize;
+	m_messageRect.y += (float)(m_blockSize * offsetTitle);
+	m_messageRect.h = (float)(m_numblocksH - (2 + offsetTitle)) * m_blockSize;
 
 	xStart = (int)((windowWidth - title_width) / 2.0f);
 
 	m_titleX = xStart - screenOffsetX;
 	m_titleY = (int)(m_dialogRect.y + m_blockSize);
 	m_messageX = (int)(m_dialogRect.x + m_blockSize);
-	m_messageY = (int)(m_dialogRect.y + m_blockSize * 3);
+	m_messageY = (int)(m_dialogRect.y + m_blockSize * (3 - (2 - offsetTitle)));
 
 	SDL_FRect fillRect = m_messageRect;
 
 	fillRect.y = m_dialogRect.y + (float)(m_numblocksH - 2) * m_blockSize;
 	fillRect.h = (float)m_blockSize;
 
-	m_backButton.updateLocationCentered(fillRect);
+	if (m_vecButtons.size() > 0)
+	{
+		float totalsize = 0;
+		for (auto& curButton : m_vecButtons)
+		{
+			totalsize += curButton->getWidth();
+		}
+
+		float hRatio = fillRect.h / m_vecButtons[0]->getHeight();
+		totalsize *= hRatio;
+		
+		float tempStart = (m_messageRect.w - totalsize) / 2.0f;
+		fillRect.x += tempStart;
+		const int BUTTON_SPACE = 2;
+		//fillRect.x -= (BUTTON_SPACE * (m_vecButtons.size() - 1));
+		
+		for (size_t index = 0; index < m_vecButtons.size(); ++index)
+		{
+			fillRect.w = m_vecButtons[index]->getWidth() * hRatio;
+			m_vecButtons[index]->updateLocationCentered(fillRect);
+			fillRect.x += (m_vecButtons[index]->getWidth() * hRatio);
+			fillRect.x += 2;
+			//fillRect.x += BUTTON_SPACE;
+		}
+	}
+	else
+	{
+		m_backButton.updateLocationCentered(fillRect);
+	}
 }
 
 void U3Dialog::changeBlockSize(int blockSize)
@@ -126,6 +181,10 @@ void U3Dialog::changeBlockSize(int blockSize)
 		m_font = nullptr;
 	}
 	createFont();
+	for (auto& curButton : m_vecButtons)
+	{
+		curButton->resizeButton(m_renderer, m_engine_surface, m_resources.m_font);
+	}
 	calculateRects();
 }
 
@@ -182,20 +241,20 @@ void U3Dialog::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-void U3Dialog::loadString()
+void U3Dialog::loadDitl()
 {
-	std::filesystem::path currentPathTitle = std::filesystem::current_path();
-	currentPathTitle /= ResourceLoc;
-	currentPathTitle /= TextLoc;
-	currentPathTitle /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2) + std::string(".txt");
-
 	std::filesystem::path currentPathMessage = std::filesystem::current_path();
 	currentPathMessage /= ResourceLoc;
 	currentPathMessage /= TextLoc;
-	currentPathMessage /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2 + 1) + std::string(".txt");
+	currentPathMessage /= std::string("MainResources.rsrc_DITL_") + std::to_string(m_message + 1) + std::string(".txt");
 
-	std::uintmax_t file_size = std::filesystem::file_size(currentPathTitle);
-	SDL_IOStream* file = SDL_IOFromFile(currentPathTitle.string().c_str(), "rb");
+	if (!std::filesystem::exists(currentPathMessage))
+	{
+		return;
+	}
+
+	std::uintmax_t file_size = std::filesystem::file_size(currentPathMessage);
+	SDL_IOStream* file = SDL_IOFromFile(currentPathMessage.string().c_str(), "rb");
 
 	if (!file)
 	{
@@ -221,9 +280,106 @@ void U3Dialog::loadString()
 	SDL_ReadIO(file, fileData.data(), file_size);
 	SDL_CloseIO(file);
 	fileData.emplace_back(0);
+	std::string strData = std::string(fileData.data());
 
-	m_strTitle = std::string(fileTitleData.data());
-	m_strMessage = std::string(fileData.data());
+	auto tokens = m_utilities.splitString(strData, '\n');
+
+	int mode = 0;
+
+	m_strMessage.clear();
+
+	for (auto& curToken : tokens)
+	{
+		if (curToken.size() == 0)
+		{
+			continue;
+		}
+		curToken.erase(0, 1);
+		m_utilities.trim(curToken);
+		auto linetokens = m_utilities.splitString(curToken, ':');
+		if (linetokens.size() < 2)
+		{
+			continue;
+		}
+		if (linetokens[0].find("item", 0) != std::string::npos)
+		{
+			if (linetokens[1].find("BUTTON", 0) != std::string::npos)
+			{
+				mode = 1;
+			}
+			else if (linetokens[1].find("TEXT", 0) != std::string::npos)
+			{
+				mode = 2;
+			}
+			else if (linetokens[1].find("ICON", 0) != std::string::npos)
+			{
+				mode = 3;
+			}
+			else
+			{
+				mode = 0;
+			}
+		}
+		else if (linetokens[0].rfind("text", 0) != std::string::npos)
+		{
+			// m_textButtons
+			if (mode == 1)
+			{
+				std::string strText = linetokens[1];
+				m_utilities.trim(strText);
+				size_t nStart = strText.find('\"');
+				size_t nEnd = strText.rfind('\"');
+				if (nStart != std::string::npos && nStart < nEnd)
+				{
+					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
+					//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
+
+					m_vecButtons.emplace_back(std::make_unique<U3Button>());
+					m_vecButtons.back()->CreateTextButton(m_renderer, m_engine_surface, m_resources.m_font, strText);
+				}
+			}
+			else if (mode == 2)
+			{
+				std::string strText = linetokens[1];
+				m_utilities.trim(strText);
+				size_t nStart = strText.find('\"');
+				size_t nEnd = strText.rfind('\"');
+				if (nStart != std::string::npos && nStart < nEnd)
+				{
+					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
+
+					m_strMessage += strText;
+				}
+			}
+		}
+		else if (linetokens[0].rfind("ICON", 0) != std::string::npos)
+		{
+			if (mode == 3)
+			{
+				std::string icon_str = linetokens[1];
+				m_utilities.trim(icon_str);
+				std::filesystem::path IconPathMessage = std::filesystem::current_path();
+				IconPathMessage /= ResourceLoc;
+				IconPathMessage /= BinLoc;
+				IconPathMessage /= IconPathMessage;
+				IconPathMessage /= std::string("MainResources.rsrc_cicn_");
+				IconPathMessage += icon_str;
+				IconPathMessage += std::string(".bmp");
+
+				if (std::filesystem::exists(IconPathMessage) && !m_icon)
+				{
+					m_icon = IMG_LoadTexture(m_renderer, IconPathMessage.string().c_str());
+				}
+			}
+		}
+	}
+
+	m_strTitle.clear();
+	RewrapMessage(m_strMessage);
+}
+
+void U3Dialog::RewrapMessage(std::string& strMesssage)
+{
 	auto newLineTokens = m_utilities.splitString(m_strMessage, '\n', true);
 	m_strMessage.clear();
 	bool maxLineCountHit = false;
@@ -245,7 +401,7 @@ void U3Dialog::loadString()
 		}
 		auto tokens = m_utilities.splitString(curLineToken, ' ');
 		size_t nCurLen = 0;
-		
+
 		for (auto& curToken : tokens)
 		{
 			if (curToken == std::string("\n"))
@@ -282,6 +438,62 @@ void U3Dialog::loadString()
 			nCurLen += curToken.size();
 		}
 	}
+}
+
+void U3Dialog::loadString()
+{
+	std::filesystem::path currentPathTitle = std::filesystem::current_path();
+	currentPathTitle /= ResourceLoc;
+	currentPathTitle /= TextLoc;
+	currentPathTitle /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2) + std::string(".txt");
+
+	std::filesystem::path currentPathMessage = std::filesystem::current_path();
+	currentPathMessage /= ResourceLoc;
+	currentPathMessage /= TextLoc;
+	currentPathMessage /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2 + 1) + std::string(".txt");
+
+	if (!std::filesystem::exists(currentPathTitle))
+	{
+		return;
+	}
+
+	if (!std::filesystem::exists(currentPathMessage))
+	{
+		return;
+	}
+
+	std::uintmax_t file_size = std::filesystem::file_size(currentPathTitle);
+	SDL_IOStream* file = SDL_IOFromFile(currentPathTitle.string().c_str(), "rb");
+
+	if (!file)
+	{
+		return;
+	}
+	std::vector<char> fileTitleData;
+	fileTitleData.resize(file_size);
+
+	SDL_ReadIO(file, fileTitleData.data(), file_size);
+	SDL_CloseIO(file);
+	fileTitleData.emplace_back(0);
+
+	file_size = std::filesystem::file_size(currentPathMessage);
+	file = SDL_IOFromFile(currentPathMessage.string().c_str(), "rb");
+
+	if (!file)
+	{
+		return;
+	}
+	std::vector<char> fileData;
+	fileData.resize(file_size);
+
+	SDL_ReadIO(file, fileData.data(), file_size);
+	SDL_CloseIO(file);
+	fileData.emplace_back(0);
+
+	m_strTitle = std::string(fileTitleData.data());
+	m_strMessage = std::string(fileData.data());
+	
+	RewrapMessage(m_strMessage);
 }
 
 TTF_Text* U3Dialog::calcDisplayString(TTF_Font* font, std::string curString, int& outWidth, int& outHeight, SDL_Color color)
@@ -345,12 +557,16 @@ void U3Dialog::createBorder(int x, int y, int numBlocksW, int numBlocksH)
 	for (int index = 1; index < numBlocksW - 1; index++)
 	{
 		DrawFramePiece(9, x + (index * m_blockSize), y);
+		if (!m_strTitle.empty())
+		{
+			DrawFramePiece(9, x + (index * m_blockSize), y + (2 * m_blockSize));
+		}
 		DrawFramePiece(9, x + (index * m_blockSize), y + ((numBlocksH - 1) * m_blockSize));
-		DrawFramePiece(9, x + (index * m_blockSize), y + (2 * m_blockSize));
+		
 	}
 	for (int index = 1; index < numBlocksH - 1; index++)
 	{
-		if (index != 2)
+		if (index != 2 || m_strTitle.empty())
 		{
 			DrawFramePiece(10, x, y + (index * m_blockSize));
 			DrawFramePiece(10, x + ((numBlocksW - 1) * m_blockSize), y + (index * m_blockSize));
@@ -371,8 +587,12 @@ bool U3Dialog::display()
 	}
 	SDL_Color sdl_text_color = { 255, 255, 255 };
 
-	SDL_SetRenderDrawColor(m_renderer, 128, 128, 128, 255);
-	SDL_RenderFillRect(m_renderer, &m_titleRect);
+	if (!m_strTitle.empty())
+	{
+		SDL_SetRenderDrawColor(m_renderer, 128, 128, 128, 255);
+		SDL_RenderFillRect(m_renderer, &m_titleRect);
+		renderDisplayString(m_text_obj_title, m_titleX, m_titleY, sdl_text_color);
+	}
 
 	SDL_SetRenderDrawColor(m_renderer, 160, 160, 160, 160);
 	SDL_RenderFillRect(m_renderer, &m_messageRect);
@@ -380,11 +600,31 @@ bool U3Dialog::display()
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
 	createBorder((int)m_dialogRect.x, (int)m_dialogRect.y, m_numblocksW, m_numblocksH);
-
-	renderDisplayString(m_text_obj_title, m_titleX, m_titleY, sdl_text_color);
+	
 	renderDisplayString(m_text_obj_message, m_messageX, m_messageY, sdl_text_color);
 
-	m_backButton.renderCentered(m_renderer);
+	if (m_vecButtons.size() > 0)
+	{
+		for (auto& curButton : m_vecButtons)
+		{
+			curButton->renderCentered(m_renderer);
+		}
+	}
+	else
+	{
+		m_backButton.renderCentered(m_renderer);
+	}
+
+	if (m_icon)
+	{
+		SDL_FRect frameRect;
+		frameRect.x = m_dialogRect.x + (((m_numblocksW - 1) / 2.0f) * m_blockSize);
+		frameRect.y = m_dialogRect.y;
+		frameRect.w = (float)m_blockSize;
+		frameRect.h = (float)m_blockSize;
+		m_resources.adjustRect(frameRect);
+		SDL_RenderTexture(m_renderer, m_icon, NULL, &frameRect);
+	}
 
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
@@ -428,6 +668,16 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 
 	if (updateMouse)
 	{
-		m_backButton.setMouseCapture(mouseState, event.motion.x, event.motion.y);
+		if (m_vecButtons.size() > 0)
+		{
+			for (auto& curButton : m_vecButtons)
+			{
+				curButton->setMouseCapture(mouseState, event.motion.x, event.motion.y);
+			}
+		}
+		else
+		{
+			m_backButton.setMouseCapture(mouseState, event.motion.x, event.motion.y);
+		}
 	}
 }

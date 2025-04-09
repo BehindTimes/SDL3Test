@@ -6,21 +6,30 @@
 #include "U3Theme.h"
 #include "U3Button.h"
 
+
+enum class DialogType
+{
+	Alert,
+	DITL
+};
+
 class U3Dialog
 {
 public:
 	explicit U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 		ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
-		int blockSize, int message, std::function<void()> func);
+		int blockSize, int message, DialogType type, std::function<void()> func);
 	~U3Dialog();
 
 	bool display();
 	void changeBlockSize(int blockSize);
 	void HandleEvent(SDL_Event& event);
 private:
+	void RewrapMessage(std::string& strMesssage);
 	void DrawFramePiece(int part, int x, int y);
 	void adjustRect(SDL_FRect& myRect);
 	void loadString();
+	void loadDitl();
 	bool createFont();
 	void createButton(std::function<void()> callback);
 	void createBorder(int x, int y, int numBlocksW, int numBlocksH);
@@ -32,6 +41,7 @@ private:
 	static constexpr std::string_view TextLoc = "Text";
 	static constexpr std::string_view FontLoc = "Fonts";
 	static constexpr std::string_view ImagesLoc = "Images";
+	static constexpr std::string_view BinLoc = "Bin";
 
 	U3Button m_backButton;
 
@@ -58,5 +68,8 @@ private:
 	int m_titleY;
 	int m_messageX;
 	int m_messageY;
+	std::vector<std::unique_ptr<U3Button>> m_vecButtons;
+	SDL_Texture* m_icon;
+	//std::vector<TTF_Text*> m_textButtons;
 };
 

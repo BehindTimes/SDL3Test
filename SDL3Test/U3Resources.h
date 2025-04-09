@@ -103,7 +103,7 @@ public:
 	void setTickCount(Uint64 curTick, bool initializeTimer = true);
 	void DemoUpdate(Uint64 curTick);
 	bool CheckJourneyOnward();
-	void CreateAlertMessage(int message);
+	void CreateAlertMessage(int message, DialogType type = DialogType::Alert);
 	bool HasAlert(SDL_Event& event);
 	void DrawTiles();
 	void DrawMasked(unsigned short shape, unsigned short x, unsigned short y);
@@ -131,6 +131,11 @@ public:
 	InverseStruct m_inverses;
 	SDL_Renderer* m_renderer;
 	ModeGraphics* m_currentGraphics;
+
+	TTF_Font* m_font; // block size font
+	TTF_Font* m_font_9; // 9 point font
+	TTF_Font* m_font_11; // 11 point font
+	TTF_Font* m_font_12; // 12 point font
 	
 private:
 	void LoadResource(std::string strFile);
@@ -211,10 +216,7 @@ private:
 	int m_portraitHeight;
 	int m_portraitWidth;
 	int m_blockSize;
-	TTF_Font* m_font; // block size font
-	TTF_Font* m_font_9; // 9 point font
-	TTF_Font* m_font_11; // 11 point font
-	TTF_Font* m_font_12; // 12 point font
+	
 	float m_font_y_offset;
 
 	std::vector<unsigned char> m_demoData;

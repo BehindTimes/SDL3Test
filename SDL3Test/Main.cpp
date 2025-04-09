@@ -540,6 +540,8 @@ void JourneyOnward()
     Uint64 elapsedTime = 0;
     //const Uint64 gameDelay = 750;
     const Uint64 gameDelay = 0;
+
+    //journey = false;
     
     if (!journey)
     {

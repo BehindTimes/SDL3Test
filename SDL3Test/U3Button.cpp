@@ -10,7 +10,8 @@ U3Button::U3Button() :
 	m_showPushed(false),
 	m_callbackFunction(nullptr),
 	m_visible(false),
-	m_forcecapture(false)
+	m_forcecapture(false),
+	m_renderRect(0)
 {
 }
 
@@ -19,14 +20,83 @@ U3Button::~U3Button()
 	if (m_texDefault)
 	{
 		SDL_DestroyTexture(m_texDefault);
+		m_texDefault = NULL;
 	}
 	if (m_texPushed)
 	{
 		SDL_DestroyTexture(m_texPushed);
+		m_texPushed = NULL;
 	}
 	if (m_texDisabled)
 	{
 		SDL_DestroyTexture(m_texDisabled);
+		m_texDisabled = NULL;
+	}
+}
+
+void U3Button::resizeButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font)
+{
+	if (m_texDefault)
+	{
+		SDL_DestroyTexture(m_texDefault);
+		m_texDefault = NULL;
+	}
+	if (m_texPushed)
+	{
+		SDL_DestroyTexture(m_texPushed);
+		m_texPushed = NULL;
+	}
+	if (m_texDisabled)
+	{
+		SDL_DestroyTexture(m_texDisabled);
+		m_texDisabled = NULL;
+	}
+	CreateTextButton(renderer, engine_surface, font, m_text);
+}
+
+void U3Button::CreateTextButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText)
+{
+	TTF_Text* text_obj = NULL;
+	text_obj = TTF_CreateText(engine_surface, font, strText.c_str(), 0);
+	if (text_obj)
+	{
+		int w, h;
+		TTF_GetTextSize(text_obj, &w, &h);
+
+		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+
+		SDL_SetRenderTarget(renderer, m_texDefault);
+		SDL_RenderClear(renderer);
+		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+		SDL_RenderFillRect(renderer, NULL);
+		TTF_SetTextColor(text_obj, 0, 0, 0, 255);
+		TTF_DrawRendererText(text_obj, 2, 0);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderRect(renderer, NULL);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+
+		SDL_SetRenderTarget(renderer, m_texPushed);
+		SDL_RenderClear(renderer);
+		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
+		SDL_RenderFillRect(renderer, NULL);
+		TTF_SetTextColor(text_obj, 255,255, 255, 255);
+		TTF_DrawRendererText(text_obj, 2, 0);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderRect(renderer, NULL);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+		SDL_SetRenderTarget(renderer, NULL);
+
+		m_width = (float)w + 4;
+		m_height = (float)h;
+
+		m_visible = true;
+
+		TTF_DestroyText(text_obj);
+		text_obj = NULL;
+		m_text = strText;
 	}
 }
 

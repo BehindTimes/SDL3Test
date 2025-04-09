@@ -1,13 +1,17 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <functional>
+#include <string>
+#include <SDL3_ttf/SDL_ttf.h>
 
 class U3Button
 {
 public:
-	U3Button();
+	explicit U3Button();
 	~U3Button();
 
+	void resizeButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font);
+	void CreateTextButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText);
 	void forceCapture();
 	void click();
 	void render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY);
@@ -20,6 +24,8 @@ public:
 	void updateLocationCentered(SDL_FRect fillRect);
 	SDL_Texture* getDefaultTexture() { return m_texDefault; }
 	SDL_Texture* getPushedTexture() { return m_texPushed; }
+	float getWidth() { return m_width; }
+	float getHeight() { return m_height; }
 private:
 	SDL_Texture* m_texDefault;
 	SDL_Texture* m_texPushed;
@@ -33,5 +39,6 @@ private:
 	bool m_showPushed;
 	bool m_visible;
 	bool m_forcecapture;
+	std::string m_text;
 };
 

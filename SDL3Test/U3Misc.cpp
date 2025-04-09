@@ -767,7 +767,7 @@ bool U3Misc::ValidDir(unsigned char value) // $4702
 		}
 	}
 
-return GoodPlace;
+	return GoodPlace;
 }
 
 void U3Misc::North()
@@ -1024,7 +1024,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 void U3Misc::HandleTransactPress(SDL_Keycode key)
 {
 	m_input_num = -1;
-	
+
 	if (key >= SDLK_1 && key <= SDLK_4)
 	{
 		m_inputType = InputType::Default;
@@ -1039,7 +1039,7 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 			}
 		}
 	}
-	else if(key == SDLK_SPACE || key == SDLK_RETURN)
+	else if (key == SDLK_SPACE || key == SDLK_RETURN)
 	{
 		m_inputType = InputType::Default;
 		if (m_callbackStack.size() > 0)
@@ -1440,7 +1440,7 @@ void U3Misc::InputNumCallback()
 	{
 		m_input_num = std::stoi(m_input);
 	}
-	catch ([[maybe_unused]]std::exception& e)
+	catch ([[maybe_unused]] std::exception& e)
 	{
 		m_input_num = 0;
 	}
@@ -1507,6 +1507,20 @@ bool U3Misc::HandleKeyPress(SDL_Keycode key)
 	default:
 		HandleDefaultKeyPress(key);
 		return true;
+	}
+	return false;
+}
+
+bool U3Misc::ProcessAnyEvent(SDL_Event event)
+{
+	switch (event.type)
+	{
+	case SDL_EVENT_KEY_DOWN:
+		return true;
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		return true;
+	default:
+		break;
 	}
 	return false;
 }
@@ -1860,13 +1874,13 @@ void U3Misc::Look()
 
 void U3Misc::PrintTile(short tile, bool plural)
 {
-	
+
 	std::string theString;
 	std::string strKey = plural ? std::string("TilesPlural") : std::string("Tiles");
 
 	if (m_resources.m_plistMap.contains(strKey))
 	{
-		if(m_resources.m_plistMap[strKey].size() > tile)
+		if (m_resources.m_plistMap[strKey].size() > tile)
 		{
 			theString = m_resources.m_plistMap[strKey][tile];
 			m_scrollArea.UPrintWin(theString);
@@ -2187,7 +2201,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 		shopNum = 7;
 	}*/
 
-	rosNum = m_Party[5 + chnum];
+	rosNum = m_Party[6 + chnum];
 	switch (shopNum)
 	{
 	case 0:
@@ -3169,25 +3183,25 @@ void U3Misc::FinalizeHealingCallback()
 	switch (m_opnum)
 	{
 	case 0:
-		if (m_Player[m_Party[5 + m_input_num]][17] == 'P')
+		if (m_Player[m_Party[6 + m_input_num]][17] == 'P')
 		{
-			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+			m_Player[m_Party[6 + m_input_num]][17] = 'G';
 		}
 		break;
 	case 1:
-		m_Player[m_Party[5 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
-		m_Player[m_Party[5 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
+		m_Player[m_Party[6 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
+		m_Player[m_Party[6 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
 		break;
 	case 2:
-		if (m_Player[m_Party[5 + m_input_num]][17] == 'D')
+		if (m_Player[m_Party[6 + m_input_num]][17] == 'D')
 		{
-			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+			m_Player[m_Party[6 + m_input_num]][17] = 'G';
 		}
 		break;
 	case 3:
-		if (m_Player[m_Party[5 + m_input_num]][17] == 'A')
+		if (m_Player[m_Party[6 + m_input_num]][17] == 'A')
 		{
-			m_Player[m_Party[5 + m_input_num]][17] = 'G';
+			m_Player[m_Party[6 + m_input_num]][17] = 'G';
 		}
 		break;
 	default:
@@ -3512,14 +3526,15 @@ void U3Misc::Board()
 
 void U3Misc::Descend()
 {
-	if (m_Party[15] == 0)
+	// Seems like a little easter egg, not going to implement yet
+	//if (m_Party[15] == 0)
 	{
 		m_scrollArea.UPrintMessage(32);
 		What2();
 		return;
 	}
-	std::string strDiorama = std::string(DioramaString);
-	m_scrollArea.UPrintWin(strDiorama);
+	//std::string strDiorama = std::string(DioramaString);
+	//m_scrollArea.UPrintWin(strDiorama);
 	//DrawDioramaMap();
 }
 
@@ -3579,7 +3594,7 @@ void U3Misc::Ignite()
 void U3Misc::IgniteCallback()
 {
 	short rosNum;
-	if(m_input_num < 1 || m_input_num > 4)
+	if (m_input_num < 1 || m_input_num > 4)
 	{
 		return;
 	}
@@ -3595,6 +3610,7 @@ void U3Misc::IgniteCallback()
 
 void U3Misc::JoinGold()
 {
+	m_scrollArea.UPrintMessage(66);
 	m_inputType = InputType::Transact;
 	m_callbackStack.push(std::bind(&U3Misc::JoinGoldCallback, this));
 }
@@ -3603,6 +3619,7 @@ void U3Misc::JoinGoldCallback()
 {
 	if (m_input_num < 1 || m_input_num > 4)
 	{
+		m_scrollArea.UPrintWin("\n");
 		m_scrollArea.UPrintMessage(41);
 		return;
 	}
@@ -3611,9 +3628,12 @@ void U3Misc::JoinGoldCallback()
 
 void U3Misc::JoinGold(short chnum)
 {
+	std::string strOutVal = std::to_string(chnum);
+	strOutVal += '\n';
+	m_scrollArea.UPrintWin(strOutVal);
 	short x, mainRosNum, rosNum, total, gold, transfer;
 
-	mainRosNum = m_Party[5 + chnum];
+	mainRosNum = m_Party[6 + chnum];
 	total = ((m_Player[mainRosNum][35]) * 256) + m_Player[mainRosNum][36];
 	for (x = 1; x < 5; x++)
 	{
@@ -3641,19 +3661,50 @@ void U3Misc::JoinGold(short chnum)
 
 void U3Misc::Klimb()
 {
-	if (m_Party[15] != 1 || m_Party[2] != 0)
+	// Another easter egg, implement later
+	// Exodus not defeated or not on the overworld
+	//if (m_Party[15] != 1 || m_Party[2] != 0)
 	{
 		m_scrollArea.UPrintMessage(68);
 		What2();
 	}
-	else
-	{
+	//else
+	//{
 		// ?
-	}
+	//}
 }
 
 void U3Misc::PeerGem()
 {
+	m_scrollArea.UPrintMessage(75);
+	m_inputType = InputType::Transact;
+	m_graphics.resetBlink();
+	m_callbackStack.push(std::bind(&U3Misc::PeerGemCallback, this));
+}
+
+void U3Misc::PeerGemCallback()
+{
+	short rosnum;
+
+	if (m_input_num > 4 || m_input_num < 0 || m_Party[6 + m_input_num] == 0)
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		return;
+	}
+	rosnum = m_Party[6 + m_input_num];
+	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
+	/*if (m_Player[rosnum][37] < 1)
+	{
+		m_scrollArea.UPrintWin(strRosNum);
+		m_scrollArea.UPrintMessage(67);
+	}
+	else*/
+	{
+		m_scrollArea.blockPrompt(true);
+		m_scrollArea.UPrintWin(strRosNum);
+		m_Player[rosnum][37]--;
+		m_graphics.m_queuedMode = U3GraphicsMode::MiniMap;
+	}
 }
 
 void U3Misc::Steal()
@@ -3661,5 +3712,69 @@ void U3Misc::Steal()
 }
 
 void U3Misc::Unlock()
+{
+	m_scrollArea.UPrintMessage(95);
+	m_inputType = InputType::GetDirection;
+	m_callbackStack.push(std::bind(&U3Misc::UnlockCallback, this));
+}
+
+void U3Misc::UnlockCallback()
+{
+	if ((m_ys != m_ypos) && (m_xs == m_xpos))
+	{
+		NotHere();
+	}
+	else
+	{
+		short temp = GetXYVal(m_xs, m_ys);
+		if (temp != 184) // not a door
+		{
+			NotHere();
+		}
+		else
+		{
+			m_scrollArea.UPrintMessage(96);
+			m_inputType = InputType::Transact;
+			m_callbackStack.push(std::bind(&U3Misc::UnlockKeyCallback, this));
+		}
+	}
+}
+void U3Misc::UnlockKeyCallback()
+{
+	short rosNum;
+	if (m_input_num < 0)
+	{
+		m_scrollArea.UPrintWin("\n");
+		return;
+	}
+	if (m_input_num > 4 || m_Party[6 + m_input_num] == 0)
+	{
+		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
+		m_scrollArea.UPrintWin(dispString);
+		m_scrollArea.UPrintMessage(41);
+	}
+	else
+	{
+		rosNum = m_Party[6 + m_input_num];
+		if (m_Player[rosNum][38] < 1)
+		{
+			m_scrollArea.UPrintMessage(67);
+		}
+		else
+		{
+			m_Player[rosNum][38]--;
+			// see HideMonsters for visual under-tile choice equivalent
+			int mon = MonsterHere(m_xs - 1, m_ys);
+			unsigned char value = (mon < 255) ? m_Monsters[(mon + TILEON) % 256] : GetXYVal(m_xs - 1, m_ys);
+			if (value > 0x20)
+			{
+				value = 0x04;
+			}
+			PutXYVal(value, m_xs, m_ys);
+		}
+	}
+}
+
+void U3Misc::CheckAllDead() /* $71B4 */
 {
 }

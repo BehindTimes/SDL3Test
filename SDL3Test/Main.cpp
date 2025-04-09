@@ -41,7 +41,7 @@ void MainMenu();
 void Organize();
 void JourneyOnward();
 void Game();
-void CheckAllDead();
+
 void updateGame(Uint64 deltaTime, bool wasMove);
 
 int main(int argc, char* argv[])
@@ -632,10 +632,6 @@ void JourneyOnward()
     }
 }
 
-void CheckAllDead() /* $71B4 */
-{
-}
-
 void Game()
 {
     //m_misc.m_xpos = 10;
@@ -726,42 +722,13 @@ void Game()
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
         
-        m_graphics.DrawFrame(1);
-        m_graphics.DrawMap(m_misc.m_xpos, m_misc.m_ypos);
-        m_resources.ShowChars(true);
-        CheckAllDead();
-
-        m_scrollArea.render(deltaTime);
-
-        m_resources.DrawWind();
-
-        m_resources.DrawInverses(deltaTime);
-
-        bool alertValid = m_resources.HasAlert(event);
-        if (!alertValid)
-        {
-            if (m_misc.m_inputType == InputType::Callback)
-            {
-                m_misc.HandleCallback();
-            }
-            else
-            {
-                if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
-                {
-                    wasMove = m_misc.ProcessEvent(event);
-                }
-
-                if (m_scrollArea.isPrompt())
-                {
-                    m_resources.DrawPrompt();
-                }
-            }
-        }
+        bool wasMove = false;
+        m_graphics.render(event, deltaTime, wasMove);
 
         m_resources.displayFPS(fps);
 
         SDL_RenderPresent(renderer);
-
+        
         updateGame(deltaTime, wasMove);
 
         if (changeMode)
@@ -785,5 +752,8 @@ void updateGame(Uint64 deltaTime, bool wasMove)
         count = 0;
     }
 
-    m_resources.updateTime(deltaTime, wasMove);
+    if (m_graphics.m_curMode == U3GraphicsMode::Map)
+    {
+        m_resources.updateTime(deltaTime, wasMove);
+    }
 }

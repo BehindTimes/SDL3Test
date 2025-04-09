@@ -6,20 +6,51 @@
 #include "U3Misc.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "U3ScrollArea.h"
 
 extern short blkSiz;
 
 extern SDL_Renderer* renderer;
 extern U3Resources m_resources;
 extern U3Misc m_misc;
+extern U3ScrollArea m_scrollArea;
 
 U3Graphics::U3Graphics() :
     m_classic(false),
     m_startTickCount(0),
-    m_fadeTime(2400)
+    m_fadeTime(2400),
+    m_curMode(U3GraphicsMode::Map),
+    m_texMap(nullptr),
+    m_queuedMode(U3GraphicsMode::None),
+    m_blockSize(0),
+    m_forceRedraw(true),
+    m_fading(true),
+    m_blinkElapsed(0)
 {
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
     memset(m_maskArray, 0, sizeof(unsigned char) * 128);
+}
+
+U3Graphics::~U3Graphics()
+{
+    if (!m_texMap)
+    {
+        SDL_DestroyTexture(m_texMap);
+        m_texMap = nullptr;
+    }
+}
+
+void U3Graphics::setBlockSize(int blockSize)
+{
+    m_blockSize = blockSize;
+    if (!m_texMap)
+    {
+        SDL_DestroyTexture(m_texMap);
+        m_texMap = nullptr;
+    }
+    m_texMap = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 22 * blockSize, 22 * blockSize);
+    SDL_SetTextureScaleMode(m_texMap, SDL_SCALEMODE_NEAREST);
+    setForceRedraw();
 }
 
 void U3Graphics::InitializeStartTicks()
@@ -311,8 +342,6 @@ void U3Graphics::WriteLordBritish(Uint64 curTick)
     }
 }
 
-
-
 void U3Graphics::DrawDemoScreen(Uint64 curTick)
 {
     m_resources.drawExodus(255);
@@ -374,6 +403,108 @@ short U3Graphics::MapConstrain(short value)
         value -= m_misc.m_mapSize;
     }
     return value;
+}
+
+void U3Graphics::renderMiniMap()
+{
+    SDL_FRect outRect;
+    unsigned char value;
+
+    if (m_misc.m_mapSize <= 0)
+    {
+        return;
+    }
+
+    SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
+    SDL_SetRenderTarget(m_resources.m_renderer, m_texMap);
+    SDL_RenderClear(m_resources.m_renderer);
+
+    float minSize = (m_blockSize * 22.0f) / m_misc.m_mapSize;
+
+    outRect.w = minSize;
+    outRect.h = minSize;
+    for (short y = 0; y < m_misc.m_mapSize; y++)
+    {
+        outRect.y = (float)(y * minSize);
+        for (short x = 0; x < m_misc.m_mapSize; x++)
+        {
+            value = m_misc.GetXYVal(x, y) / 4;
+            int multval = value / 16;
+            value += (16 * multval);
+            //value = m_resources.GetRealTile(value);
+            outRect.x = (float)(x * minSize);
+
+            if (value < 192)
+            {
+                if (m_resources.m_currentGraphics->mini_tiles.size() == 64)
+                {
+                    if (value < 64)
+                    {
+                        /*SDL_FRect fromRect;
+                        fromRect.h = m_resources.m_currentGraphics->mini_height;
+                        fromRect.w = m_resources.m_currentGraphics->mini_width;
+                        fromRect.y = 0;
+                        fromRect.x = value * m_resources.m_currentGraphics->mini_width;*/
+                        SDL_RenderTexture(m_resources.m_renderer, m_resources.m_currentGraphics->mini_tiles[value], NULL, &outRect);
+                    }
+                }
+                else
+                {
+                    SDL_RenderTexture(m_resources.m_renderer, m_resources.m_currentGraphics->tiles[value], NULL, &outRect);
+                }
+            }
+        }
+    }
+
+    SDL_SetRenderTarget(m_resources.m_renderer, NULL);
+    m_forceRedraw = false;
+    SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+}
+
+void U3Graphics::DrawMiniMap()
+{
+    SDL_FRect theRect;
+
+    if (m_forceRedraw)
+    {
+        m_fading = true;
+        renderMiniMap();
+    }
+
+    if (!m_texMap)
+    {
+        return;
+    } 
+
+    theRect.x = (float)m_blockSize;
+    theRect.y = (float)m_blockSize;
+    theRect.w = (float)m_blockSize * 22;
+    theRect.h = (float)m_blockSize * 22;
+    m_resources.adjustRect(theRect);
+    SDL_RenderTexture(m_resources.m_renderer, m_texMap, NULL, &theRect);
+
+    float minSize = (m_blockSize * 22.0f) / m_misc.m_mapSize;
+
+    theRect.x = (float)minSize * m_misc.m_xpos + m_blockSize;
+    theRect.y = (float)minSize * m_misc.m_ypos + m_blockSize;
+    theRect.w = (float)minSize;
+    theRect.h = (float)minSize;
+
+    float ratio = 0;
+    if (m_fading)
+    {
+        ratio = (DelayScroll - m_blinkElapsed) / (float)DelayScroll;
+    }
+    else
+    {
+        ratio = (m_blinkElapsed) / (float)DelayScroll;
+    }
+
+    m_resources.adjustRect(theRect);
+
+    SDL_SetRenderDrawColor(m_resources.m_renderer, (int)(255 * ratio), (int)(255 * ratio), (int)(255 * ratio), 255);
+    SDL_RenderFillRect(m_resources.m_renderer, &theRect);
+    SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
 }
 
 void U3Graphics::DrawMap(unsigned char x, unsigned char y)
@@ -485,4 +616,82 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     m_misc.m_stx = x - 5;
     m_misc.m_sty = y - 5;
     m_resources.DrawTiles();
+}
+
+void U3Graphics::render(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+{
+    switch (m_curMode)
+    {
+    case U3GraphicsMode::MiniMap:
+        renderMiniMap(event, deltaTime, wasMove);
+        break;
+    default:
+        renderGameMap(event, deltaTime, wasMove);
+        break;
+    }
+}
+
+void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+{
+    m_scrollArea.forceRedraw();
+    DrawFrame(1);
+    DrawMiniMap();
+    m_resources.ShowChars(true);
+    m_misc.CheckAllDead();
+    m_scrollArea.render(deltaTime);
+    m_resources.DrawWind();
+    bool returnToGame = m_misc.ProcessAnyEvent(event);
+    m_blinkElapsed += deltaTime;
+    if (m_blinkElapsed > DelayScroll)
+    {
+        m_blinkElapsed %= DelayScroll;
+        m_fading = !m_fading;
+    }
+    if (returnToGame)
+    {
+        m_forceRedraw = true;
+        m_curMode = U3GraphicsMode::Map;
+        m_scrollArea.blockPrompt(false);
+        m_scrollArea.UPrintWin("");
+    }
+}
+
+void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+{
+    DrawFrame(1);
+    DrawMap(m_misc.m_xpos, m_misc.m_ypos);
+    m_resources.ShowChars(true);
+    m_misc.CheckAllDead();
+
+    m_scrollArea.render(deltaTime);
+
+    m_resources.DrawWind();
+
+    m_resources.DrawInverses(deltaTime);
+
+    bool alertValid = m_resources.HasAlert(event);
+    if (!alertValid)
+    {
+        if (m_misc.m_inputType == InputType::Callback)
+        {
+            m_misc.HandleCallback();
+        }
+        else
+        {
+            if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
+            {
+                wasMove = m_misc.ProcessEvent(event);
+                if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+                {
+                    m_curMode = m_queuedMode;
+                    m_queuedMode = U3GraphicsMode::None;
+                }
+            }
+
+            if (m_scrollArea.isPrompt())
+            {
+                m_resources.DrawPrompt();
+            }
+        }
+    }
 }

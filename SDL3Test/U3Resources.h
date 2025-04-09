@@ -123,15 +123,19 @@ public:
 	void adjustRect(SDL_FRect& myRect);
 	int getTextWidth(std::string str);
 	bool isInversed() { return m_isInversed; }
+	int GetRealTile(int tilenum);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
 	std::map<std::string, std::vector<std::string>> m_plistMap;
 	InverseStruct m_inverses;
+	SDL_Renderer* m_renderer;
+	ModeGraphics* m_currentGraphics;
 	
 private:
 	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
+	void loadMiniTiles(ModeGraphics& curGraphics, std::string strFile);
 	void DrawButton(short butNum);
 	bool loadFont();
 	bool createFont();
@@ -140,7 +144,7 @@ private:
 	void loadButtons();
 	void loadDemo();
 	bool loadPLists();
-	int GetRealTile(int tilenum);
+	
 	void HideMonsters();
 	void ShowMonsters();
 	
@@ -151,7 +155,7 @@ private:
 	void processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
-	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize);
+	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
 	void ScrollShape(int tilenum, float offset);
 	void SwapShape(short shape);
 	void AlertCallback();
@@ -177,11 +181,8 @@ private:
 	static constexpr Uint64 DelayAnimate = 80;
 	static constexpr Uint64 DelayWind = 2560;
 
-	SDL_Renderer* m_renderer;
-
 	std::map<std::string, ModeGraphics> m_allGraphics;
 	std::vector<std::string> m_modes;
-	ModeGraphics* m_currentGraphics;
 	ModeGraphics* m_standardGraphics; // Fills in missing graphics
 	std::unique_ptr<U3Dialog> m_AlertDlg;
 

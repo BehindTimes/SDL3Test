@@ -25,6 +25,9 @@ constexpr int FONT_NUM_Y = 1;
 constexpr int TILES_NUM_X = 12;
 constexpr int TILES_NUM_Y = 16;
 
+constexpr int MINITILES_NUM_X = 64;
+constexpr int MINITILES_NUM_Y = 1;
+
 constexpr int NUM_PORTRAITS = 40;
 
 U3Resources::U3Resources() :
@@ -96,10 +99,6 @@ U3Resources::~U3Resources()
 		{
 			SDL_DestroyTexture(mode.second.font);
 		}
-		if (mode.second.mini)
-		{
-			SDL_DestroyTexture(mode.second.mini);
-		}
 		if (mode.second.ui)
 		{
 			SDL_DestroyTexture(mode.second.ui);
@@ -110,6 +109,10 @@ U3Resources::~U3Resources()
 			SDL_DestroyTexture(curTex);
 		}
 		for (auto& curTex : mode.second.tile_target)
+		{
+			SDL_DestroyTexture(curTex);
+		}
+		for (auto& curTex : mode.second.mini_tiles)
 		{
 			SDL_DestroyTexture(curTex);
 		}
@@ -408,6 +411,7 @@ void U3Resources::CalculateBlockSize()
 	}
 
 	m_scrollArea.setBlockSize(m_blockSize);
+	m_graphics.setBlockSize(m_blockSize);
 
 	if (m_font)
 	{
@@ -452,12 +456,14 @@ void U3Resources::changeMode(int mode)
 	{
 		m_graphics.ChangeClassic();
 		m_scrollArea.forceRedraw();
+		m_graphics.setForceRedraw();
 		return;
 	}
 	if (mode == 6)
 	{
 		m_currentGraphics = &m_allGraphics["Standard"];
 		m_scrollArea.forceRedraw();
+		m_graphics.setForceRedraw();
 		return;
 	}
 
@@ -469,6 +475,7 @@ void U3Resources::changeMode(int mode)
 			m_currentGraphics = &m_allGraphics[strMode];
 		}
 		m_scrollArea.forceRedraw();
+		m_graphics.setForceRedraw();
 	}
 }
 
@@ -690,14 +697,60 @@ void U3Resources::loadImages()
 
 }
 
-void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize)
+void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
 {
-	int yPos = tileNum % TILES_NUM_Y;
-	int xPos = (tileNum / TILES_NUM_Y);
+	int yPos = tileNum % num_tiles_y;
+	int xPos = (tileNum / num_tiles_y);
 	myRect.x = xPos * tileXSize;
 	myRect.y = yPos * tileYSize;
 	myRect.w = tileXSize;
 	myRect.h = tileYSize;
+}
+
+void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
+{
+	float xSize;
+	float ySize;
+
+	curGraphics.mini_tiles.resize(MINITILES_NUM_X * MINITILES_NUM_Y);
+
+	SDL_Texture* curTexture = nullptr;
+
+	curTexture = IMG_LoadTexture(m_renderer, strFile.c_str());
+	SDL_SetTextureScaleMode(curTexture, SDL_SCALEMODE_NEAREST);
+	SDL_GetTextureSize(curTexture, &xSize, &ySize);
+	float tileXSize = xSize / MINITILES_NUM_X;
+	float tileYSize = ySize / MINITILES_NUM_Y;
+
+	for (size_t index = 0; index < MINITILES_NUM_X * MINITILES_NUM_Y; ++index)
+	{
+		curGraphics.mini_tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 10, 10);
+		SDL_SetTextureScaleMode(curGraphics.mini_tiles[index], SDL_SCALEMODE_NEAREST);
+	}
+
+	int curVecPos = 0;
+	SDL_FRect frameRect;
+
+	for (int indexX = 0; indexX < MINITILES_NUM_Y; ++indexX)
+	{
+		for (int indexY = 0; indexY < MINITILES_NUM_X; ++indexY)
+		{
+			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize, 1);
+			SDL_SetRenderTarget(m_renderer, curGraphics.mini_tiles[curVecPos]);
+			SDL_RenderClear(m_renderer);
+			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+
+			curVecPos++;
+		}
+	}
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+	SDL_SetRenderTarget(m_renderer, NULL);
+
+	if (curTexture)
+	{
+		SDL_DestroyTexture(curTexture);
+	}
 }
 
 void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
@@ -735,7 +788,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	{
 		for (int indexY = 0; indexY < TILES_NUM_Y; ++indexY)
 		{
-			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize);
+			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize, TILES_NUM_Y);
 			SDL_SetRenderTarget(m_renderer, curGraphics.tiles[curVecPos]);
 			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
 			SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
@@ -810,7 +863,12 @@ void U3Resources::loadGraphics()
 		}
 		else if (type == "mini")
 		{
-			curTexture = &m_allGraphics[mode].mini;
+			/*curTexture = &m_allGraphics[mode].mini;
+			numX = MINI_X;
+			numY = MINI_Y;
+			xSize = &m_allGraphics[mode].mini_width;
+			ySize = &m_allGraphics[mode].mini_height;*/
+			loadMiniTiles(m_allGraphics[mode], dirEntry.path().string());
 		}
 		else if (type == "tiles")
 		{
@@ -2211,7 +2269,6 @@ void U3Resources::DrawTiles()
 			offRect = shapeRect;
 			offset++;
 			
-			// find out how to put tiles underneath pcs, such as guard (34)
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
 		}
 	}

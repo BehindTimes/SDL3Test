@@ -45,6 +45,7 @@ public:
 	explicit U3Misc();
 	~U3Misc();
 
+	void CheckAllDead();
 	void OpenRstr();
 	void GetMiscStuff(bool defaultData);
 	bool GetRoster();
@@ -60,6 +61,7 @@ public:
 	short MonsterHere(short x, short y);
 	short MaxMana(char rosNum);
 	bool ProcessEvent(SDL_Event event);
+	bool ProcessAnyEvent(SDL_Event event);
 	void InverseTiles(bool value);
 	void InverseCharDetails(short num, bool value);
 	void HandleCallback();
@@ -231,6 +233,9 @@ private:
 	void AttackCallback();
 	void IgniteCallback();
 	void JoinGoldCallback();
+	void UnlockCallback();
+	void UnlockKeyCallback();
+	void PeerGemCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

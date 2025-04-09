@@ -46,6 +46,17 @@ void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 	{
 		m_queueBegin = true;
 	}
+	if (vecString.size() == 0)
+	{
+		if (m_messages.back().second.empty())
+		{
+			if (!m_block)
+			{
+				m_messages.back().first.prompt = true;
+				m_forceRedraw = true;
+			}
+		}
+	}
 	for (size_t index = 0; index < vecString.size(); ++index)
 	{
 		if (index == 0 && m_messageQueue.size() > 0)
@@ -480,7 +491,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	bool isNewLine = false;
 	if (endNewLines > 0)
 	{
-		maxSize += (3 * m_blockSize);
+		maxSize += (2 * m_blockSize);
 	}
 	for (size_t index = start_index; index < tokens.size() - endNewLines; ++index)
 	{
@@ -503,7 +514,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		if (maxSize < textLen)
 		{
 			strMessage += std::string("\n");
-			maxSize = totalMaxSize + ((endNewLines > 0) ? (3 * m_blockSize) : 0);
+			maxSize = totalMaxSize + ((endNewLines > 0) ? (2 * m_blockSize) : 0);
 			isNewLine = true;
 		}
 		if (isNewLine)

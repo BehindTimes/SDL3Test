@@ -44,11 +44,14 @@ public:
 	{
 		m_forceRedraw = true;
 	}
+	bool MessageQueueEmpty()
+	{
+		return m_messageQueue.empty();
+	}
 	void setInput(bool hasInput);
 	bool isPrompt();
 	void setInputString(std::string strValue);
 	void blockPrompt(bool block);
-
 	float m_top;
 	float m_maxTop;
 private:

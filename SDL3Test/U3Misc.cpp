@@ -50,7 +50,11 @@ U3Misc::U3Misc() :
 	m_gTorch(0),
 	m_wx(0),
 	m_wy(0),
-	m_YellStat(false)
+	m_YellStat(false),
+	m_lastCard(0),
+	m_checkDead(false),
+	m_elapsedSleepTime(0),
+	m_sleepCheckTime(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -1316,6 +1320,52 @@ void U3Misc::HandleInputRestricted(SDL_Keycode key)
 	}
 }
 
+void U3Misc::HandleLetterImmediate(SDL_Keycode key)
+{
+	bool handled = false;
+
+	m_input.clear();
+	if (key >= SDLK_0 && key <= SDLK_9)
+	{
+		const char* value = SDL_GetKeyName(key);
+		if (m_maxInputLength > m_input.size())
+		{
+			m_input += value;
+			handled = true;
+		}
+	}
+	else if (key >= SDLK_A && key <= SDLK_Z)
+	{
+		if (!m_numOnly)
+		{
+			const char* value = SDL_GetKeyName(key);
+			if (m_maxInputLength > m_input.size())
+			{
+				m_input += value;
+				handled = true;
+			}
+		}
+	}
+	else if (key == SDLK_SPACE || key == SDLK_RETURN)
+	{
+		handled = true;
+	}
+	if (handled)
+	{
+		m_inputType = InputType::Default;
+		if (m_callbackStack.size() > 0)
+		{
+			m_scrollArea.setInputString(m_input);
+			auto callbackFunction = m_callbackStack.top();
+			m_callbackStack.pop();
+			if (callbackFunction)
+			{
+				callbackFunction();
+			}
+		}
+	}
+}
+
 void U3Misc::HandleNumImmediate(SDL_Keycode key)
 {
 	bool handled = false;
@@ -1332,6 +1382,7 @@ void U3Misc::HandleNumImmediate(SDL_Keycode key)
 	}
 	if (handled)
 	{
+		m_inputType = InputType::Default;
 		if (m_callbackStack.size() > 0)
 		{
 			m_scrollArea.setInputString(std::to_string(m_input_num));
@@ -1481,14 +1532,17 @@ void U3Misc::InputNumCallback()
 	}
 }
 
-void U3Misc::HandleCallback()
+void U3Misc::HandleCallback(bool sleeping)
 {
-	// Most likely we threw up an alert message, so this is just to delay any followup until the alert is closed
 	m_inputType = InputType::Default;
+	// Most likely we threw up an alert message, so this is just to delay any followup until the alert is closed	
 	if (m_callbackStack.size() > 0)
 	{
 		auto callbackFunction = m_callbackStack.top();
-		m_callbackStack.pop();
+		if (!sleeping)
+		{
+			m_callbackStack.pop();
+		}
 		if (callbackFunction)
 		{
 			callbackFunction();
@@ -1500,6 +1554,11 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 {
 	switch (m_inputType)
 	{
+	case InputType::None:
+		return false;
+	case InputType::LetterImmediate:
+		HandleLetterImmediate(key.key);
+		break;
 	case InputType::NumImmediate:
 		HandleNumImmediate(key.key);
 		break;
@@ -1528,7 +1587,10 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 		HandleAnyKey();
 		break;
 	case InputType::Callback:
-		HandleCallback();
+		HandleCallback(false);
+		break;
+	case InputType::SleepCallback:
+		HandleCallback(true);
 		break;
 	default:
 		HandleDefaultKeyPress(key.key);
@@ -3716,7 +3778,7 @@ void U3Misc::PeerGem()
 {
 	m_scrollArea.UPrintMessage(75);
 	m_inputType = InputType::Transact;
-	m_graphics.resetBlink();
+	m_graphics.setFade(false);
 	m_callbackStack.push(std::bind(&U3Misc::PeerGemCallback, this));
 }
 
@@ -3741,6 +3803,7 @@ void U3Misc::PeerGemCallback()
 		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintWin(strRosNum);
 		m_Player[rosnum][37]--;
+		m_scrollArea.forceRedraw();
 		m_graphics.m_queuedMode = U3GraphicsMode::MiniMap;
 	}
 }
@@ -3818,6 +3881,11 @@ void U3Misc::CheckAllDead() // $71B4
 	bool alive = false;
 	char byte;
 
+	if (m_checkDead)
+	{
+		return;
+	}
+
 	for (byte = 0; byte < 4; byte++)
 	{
 		if (CheckAlive(byte) == true)
@@ -3829,6 +3897,7 @@ void U3Misc::CheckAllDead() // $71B4
 
 	if (!alive)
 	{
+		m_checkDead = true;
 		m_wx = 25;
 		m_wy = 23;
 		m_scrollArea.blockPrompt(true);
@@ -3871,7 +3940,12 @@ void U3Misc::HandleDeadResponse()
 
 void U3Misc::HandleDeadResponse1()
 {
-	m_resources.m_inverses.resurrect = true;
+	m_resources.m_inverses.color.r = 255;
+	m_resources.m_inverses.color.g = 0;
+	m_resources.m_inverses.color.b = 0;
+	m_resources.m_inverses.color.a = 128;
+	m_resources.m_inverses.fill = true;
+	m_resources.m_inverses.elapsedTileTime = 0;
 	m_resources.m_inverses.inverseTileTime = 5000;
 	m_resources.m_inverses.func = std::bind(&U3Misc::ResurrectCallback, this);
 }
@@ -3913,6 +3987,7 @@ void U3Misc::ResurrectCallback()
 	m_zp[0xE4] = m_ypos;
 	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea.blockPrompt(false);
+	m_checkDead = false;
 }
 
 void U3Misc::SafeExodus(void)
@@ -4007,9 +4082,79 @@ void U3Misc::OtherCallback1()
 		}
 		return;
 	}
+	else if (0 == m_input.compare("SEARCH"))
+	{
+		unsigned char bits[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
+
+		if (GetXYVal(m_xpos, m_ypos) != 0xF8)
+		{
+			NotHere();
+			return;
+		}
+		m_Player[m_rosNum][14] = m_Player[m_rosNum][14] | bits[m_xpos & 0x03];
+		m_scrollArea.UPrintMessageRewrapped(244);
+		return;
+	}
 	else if (0 == m_input.compare("SCREAM"))
 	{
 		m_scrollArea.UPrintWin("\nAIEEEEE!\n\n");
+		return;
+	}
+	else if (0 == m_input.compare("INSERT"))
+	{
+		m_scrollArea.UPrintMessage(239);
+		m_inputType = InputType::GetDirection;
+		m_callbackStack.push(std::bind(&U3Misc::InsertCallback, this));
+		return;
+	}
+	else if (0 == m_input.compare("DIG"))
+	{
+		if (m_Party[2] != 0)
+		{
+			NotHere();
+			return;
+		}
+		if ((m_xpos == 0x21 && m_ypos == 0x03) || (m_xpos == 0x13 && m_ypos == 0x2C))
+		{
+			if (m_xpos == 0x21)
+			{
+				m_Player[m_rosNum][63] = 1;
+			}
+			if (m_xpos == 0x13)
+			{
+				m_Player[m_rosNum][47] = 1;
+			}
+			m_scrollArea.UPrintMessage(243);
+			return;
+		}
+		NotHere();
+		return;
+	}
+	else if (0 == m_input.compare("BRIBE")) // Bribe
+	{
+		m_scrollArea.UPrintMessage(239);
+		m_inputType = InputType::GetDirection;
+		m_callbackStack.push(std::bind(&U3Misc::BribeCallback, this));
+		return;
+	}
+	else if (0 == m_input.compare("PRAY"))
+	{
+		if (m_Party[2] != 2)
+		{
+			NoEffect();
+			return;
+		}
+		if (m_Party[3] != m_LocationX[4])
+		{
+			NoEffect();
+			return;
+		}
+		if (m_xpos != 0x30 || m_ypos != 0x30)
+		{
+			NoEffect();
+			return;
+		}
+		m_scrollArea.UPrintMessage(246);
 		return;
 	}
 	else if (0 == m_input.compare("EVOCARE"))
@@ -4027,6 +4172,262 @@ void U3Misc::OtherCallback1()
 		return;
 	}
 	NoEffect();
+}
+
+void U3Misc::InsertCallback()
+{
+	/*if (GetXYVal(m_xs, m_ys) != 0x7C)
+	{
+		NotHere();
+		return;
+	}*/
+	m_scrollArea.UPrintMessage(240);
+	m_inputType = InputType::LetterImmediate;
+	m_callbackStack.push(std::bind(&U3Misc::InsertCallback1, this));
+}
+
+void U3Misc::InsertCallback1()
+{
+	unsigned char bits[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
+	short bytes;
+	short object;
+	m_scrollArea.setInput(false);
+	m_scrollArea.UPrintWin(m_input);
+	m_scrollArea.UPrintWin("\n");
+
+	if (m_input.c_str()[0] == 'L')
+	{
+		object = 0x1E;
+	}
+	else if (m_input.c_str()[0] == 'S')
+	{
+		object = 0x1F;
+	}
+	else if (m_input.c_str()[0] == 'M')
+	{
+		object = 0x20;
+	}
+	else if (m_input.c_str()[0] == 'D')
+	{
+		object = 0x21;
+	}
+	else
+	{
+		What2();
+		return;
+	}
+
+	bytes = bits[object - 0x1E];
+	/*if ((m_Player[m_rosNum][14] & bytes) == 0)
+	{
+		m_scrollArea.UPrintMessage(67);
+		return;
+	}
+
+	if (m_xs != object || object != m_lastCard)
+	{
+		InverseCharDetails(m_rosNum, true);
+		m_resources.m_inverses.func = std::bind(&U3Misc::InsertCallback2, this);
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = 250;
+		return;
+	}*/
+	m_lastCard++;
+	m_gBallTileBackground = 0x3E; // Exodus
+
+	m_scrollArea.blockPrompt(true);
+	m_inputType = InputType::Callback;
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback1, this));
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
+}
+
+void U3Misc::ExodusDieCallback()
+{
+	m_elapsedSleepTime = 0;
+	m_sleepCheckTime = exodus_death_time;
+	PutXYVal(0xF0, m_xs, m_ys);
+	m_inputType = InputType::SleepCallback;
+	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback2, this));
+	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+}
+
+void U3Misc::ExodusDieCallback2()
+{
+	m_elapsedSleepTime = 0;
+	m_sleepCheckTime = exodus_death_time;
+	PutXYVal(0x7C, m_xs, m_ys);
+	m_inputType = InputType::SleepCallback;
+	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+}
+
+
+void U3Misc::ExodusDieCallback1()
+{
+	PutXYVal(0x20, m_xs, m_ys);
+	//exodus_death
+	m_inputType = InputType::Default;
+	
+	/*if (m_lastCard != 0x22)
+	{
+		m_scrollArea.blockPrompt(false);
+		return;
+	}*/
+	m_Party[15] = 1;
+	bool classic;
+	std::string dispString;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (classic)
+	{
+		dispString = m_resources.m_plistMap["Messages"][240];
+	}
+	else
+	{
+		dispString = m_resources.m_plistMap["Messages"][254];
+		dispString = m_scrollArea.RewrapString(dispString);
+	}
+	m_scrollArea.UPrintWin(dispString);
+	int time = m_Party[10] + m_Party[11] * 100 + m_Party[12] * 10000 + m_Party[13] * 1000000;
+	dispString = std::to_string(time);
+	if (!classic)
+	{
+		m_scrollArea.UPrintWin("\n");
+	}
+	m_scrollArea.UPrintWin(dispString);
+	m_scrollArea.UPrintMessage(242);
+
+	m_inputType = InputType::None;
+	m_input_num = 0;
+	
+	m_resources.m_inverses.color.r = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.color.g = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.color.b = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.color.a = 255;
+	m_resources.m_inverses.fill = false;
+	m_resources.m_inverses.additive = true;
+	m_resources.m_inverses.elapsedTileTime = 0;
+	m_resources.m_inverses.inverseTileTime = screen_flicker_time;
+	m_resources.m_inverses.func = std::bind(&U3Misc::ExodusDieCallback3, this);
+}
+
+void U3Misc::ExodusDieCallback3()
+{
+	m_input_num++;
+	m_resources.m_inverses.color.r = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.color.g = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.color.b = m_utilities.getRandom(0, 255);
+	m_resources.m_inverses.elapsedTileTime = 0;
+	if (m_input_num > 6)
+	{
+		m_resources.m_inverses.func = std::bind(&U3Misc::ExodusDieCallback4, this);
+	}
+	else
+	{
+		m_resources.m_inverses.func = std::bind(&U3Misc::ExodusDieCallback3, this);
+		m_resources.m_inverses.additive = true;
+	}
+}
+
+void U3Misc::ExodusDieCallback4()
+{
+	m_resources.m_inverses.additive = false;
+	m_graphics.setForceRedraw();
+	m_graphics.m_curMode = U3GraphicsMode::WinScreen;
+	m_graphics.setFade(false);
+}
+
+void U3Misc::SleepCallback()
+{
+	m_elapsedSleepTime += m_resources.m_delta_time;
+	if (m_elapsedSleepTime < m_sleepCheckTime)
+	{
+		m_inputType = InputType::SleepCallback;
+		return;
+	}
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_elapsedSleepTime = 0;
+	m_inputType = InputType::Callback;
+}
+
+bool U3Misc::HPSubtract(short rosNum, short amount) // $7181
+{
+	int originalHP;
+	int hp;
+	rosNum++;
+	hp = (m_Player[rosNum][26] * 256 + m_Player[rosNum][27]);
+	originalHP = hp;
+	hp -= amount;
+	if (hp < 1)
+	{
+		m_Player[rosNum][26] = 0;
+		m_Player[rosNum][27] = 0;
+		m_Player[rosNum][17] = 'D';
+		bool autosave;
+		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+		if (autosave)
+		{
+			m_Party[3] = m_xpos;
+			m_Party[4] = m_ypos;
+			//PutParty();
+			//PutRoster();
+		}
+		if (originalHP > 0)
+		{
+			if (m_Player[rosNum][24] == 'F')
+			{
+				//PlaySoundFile(CFSTR("DeathFemale"), TRUE);    // was 0xE6, TRUE
+			}
+			else
+			{
+				//PlaySoundFile(CFSTR("DeathMale"), TRUE);    // was 0xE5, TRUE
+			}
+		}
+		return true;
+	}
+	m_Player[rosNum][26] = (unsigned char)(hp / 256);
+	m_Player[rosNum][27] = (unsigned char)(hp - (m_Player[rosNum][26] * 256));
+	return false;
+}
+
+void U3Misc::InsertCallback2()
+{
+	m_Player[m_rosNum][26] = 0;
+	m_Player[m_rosNum][27] = 1;
+	HPSubtract(m_rosNum, 255);
+}
+
+void U3Misc::BribeCallback()
+{
+	short object;
+	short gold;
+
+	object = MonsterHere(m_xs, m_ys);
+	if (object > 127)
+	{
+		NotHere();
+		return;
+	}
+	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
+	if (gold < 100)
+	{
+		m_scrollArea.UPrintMessage(245);
+		return;
+	}
+	gold -= 100;
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+	if (m_Monsters[object] != 0x48) // Guard
+	{
+		NoEffect();
+		return;
+	}
+	PutXYVal(m_Monsters[object + TILEON], m_Monsters[object + XMON], m_Monsters[object + YMON]);
+	m_Monsters[object] = 0;
 }
 
 void U3Misc::Yell(short mode)
@@ -4070,4 +4471,23 @@ void U3Misc::Yell(short mode)
 		return;
 	}
 	m_ypos = oy;
+	ClearTiles();
+}
+
+void U3Misc::ClearTiles()
+{
+	m_scrollArea.blockPrompt(true);
+	m_resources.m_inverses.color.r = 0;
+	m_resources.m_inverses.color.g = 0;
+	m_resources.m_inverses.color.b = 0;
+	m_resources.m_inverses.color.a = 0;
+	m_resources.m_inverses.fill = true;
+	m_resources.m_inverses.elapsedTileTime = 0;
+	m_resources.m_inverses.inverseTileTime = 1000;
+	m_resources.m_inverses.func = std::bind(&U3Misc::EmptyCallback, this);
+}
+
+void U3Misc::EmptyCallback()
+{
+	m_scrollArea.blockPrompt(false);
 }

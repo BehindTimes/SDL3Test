@@ -74,7 +74,8 @@ U3Resources::U3Resources() :
 	m_font_y_offset(0),
 	m_fullUpdate(true),
 	m_updateWind(false),
-	m_alertReturn(0)
+	m_alertReturn(0),
+	m_delta_time(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -2530,6 +2531,7 @@ void U3Resources::ShowMonsters()
 
 void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 {
+	m_delta_time = deltaTime;
 	if (!wasMove)
 	{
 		m_elapsedWindTime += deltaTime;
@@ -3071,9 +3073,13 @@ void U3Resources::DrawPrompt()
 void U3Resources::DrawInverses(Uint64 delta_time)
 {
 	SDL_FRect myRect;
+	bool incrementTime = false;
 
 	SDL_BlendMode blendmode_sub = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_SUBTRACT,
 		SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_SUBTRACT);
+
+	SDL_BlendMode blendmode_add = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD,
+		SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
 
 	for (int index = 0; index < 4; ++index)
 	{
@@ -3107,6 +3113,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 			SDL_RenderFillRect(m_renderer, &myRect);
 			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 			SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+			incrementTime = true;
 		}
 	}
 	if (m_inverses.tiles)
@@ -3122,7 +3129,10 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
-
+		incrementTime = true;
+	}
+	if (incrementTime)
+	{
 		m_inverses.elapsedTileTime += delta_time;
 		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
 		{
@@ -3136,7 +3146,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 			}
 		}
 	}
-	if (m_inverses.resurrect)
+	if (m_inverses.fill)
 	{
 		m_isInversed = true;
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
@@ -3145,7 +3155,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		myRect.w = (float)m_blockSize * 22;
 		myRect.h = (float)m_blockSize * 22;
 
-		SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 128);
+		SDL_SetRenderDrawColor(m_renderer, m_inverses.color.r, m_inverses.color.g, m_inverses.color.b, m_inverses.color.a);
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
@@ -3153,7 +3163,34 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		m_inverses.elapsedTileTime += delta_time;
 		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
 		{
-			m_inverses.resurrect = false;
+			m_inverses.fill = false;
+			m_isInversed = false;
+			if (m_inverses.func)
+			{
+				auto tempfun = m_inverses.func;
+				m_inverses.func = nullptr;
+				tempfun();
+			}
+		}
+	}
+	else if (m_inverses.additive)
+	{
+		m_isInversed = true;
+		SDL_SetRenderDrawBlendMode(m_renderer, blendmode_add);
+		myRect.x = (float)(1 * m_blockSize);
+		myRect.y = (float)(1 * m_blockSize);
+		myRect.w = (float)m_blockSize * 22;
+		myRect.h = (float)m_blockSize * 22;
+
+		SDL_SetRenderDrawColor(m_renderer, m_inverses.color.r, m_inverses.color.g, m_inverses.color.b, m_inverses.color.a);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+		m_inverses.elapsedTileTime += delta_time;
+		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
+		{
+			m_inverses.fill = false;
 			m_isInversed = false;
 			if (m_inverses.func)
 			{

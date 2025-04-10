@@ -27,6 +27,7 @@ struct SosariaHandle
 enum class InputType
 {
 	Default,
+	None,
 	GetDirection,
 	Transact,
 	InputText,
@@ -35,8 +36,10 @@ enum class InputType
 	BuySell,
 	Restricted,
 	Callback,
+	SleepCallback,
 	GuildVendor,
-	NumImmediate
+	NumImmediate,
+	LetterImmediate,
 };
 
 class U3Misc
@@ -64,7 +67,7 @@ public:
 	bool ProcessAnyEvent(SDL_Event event);
 	void InverseTiles(bool value);
 	void InverseCharDetails(short num, bool value);
-	void HandleCallback();
+	void HandleCallback(bool sleeping);
 	void OtherCommand(short yell);
 	void Yell(short mode);
 	void SafeExodus();
@@ -128,6 +131,7 @@ public:
 	InputType m_inputType;
 	int m_wx;
 	int m_wy;
+	bool m_checkDead = false;
 
 private:
 	void Attack();
@@ -170,7 +174,9 @@ private:
 	void PushSosaria();
 	void HandleAnyKey();
 	void FinalizeHealingCallback();
+	void ClearTiles();
 	
+	void HandleLetterImmediate(SDL_Keycode key);
 	void HandleNumImmediate(SDL_Keycode key);
 	void HandleInputGuild(SDL_Keycode key);
 	void HandleInputRestricted(SDL_Keycode key);
@@ -248,12 +254,27 @@ private:
 	void ResurrectCallback();
 	void OtherCallback();
 	void OtherCallback1();
+	void EmptyCallback();
+	void BribeCallback();
+	void InsertCallback();
+	void InsertCallback1();
+	void InsertCallback2();
+	bool HPSubtract(short rosNum, short amount);
+	void ExodusDieCallback();
+	void ExodusDieCallback1();
+	void ExodusDieCallback2();
+	void ExodusDieCallback3();
+	void ExodusDieCallback4();
+	void SleepCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view BinLoc = "Bin";
 	static constexpr std::string_view DoorString = "Door";
 	static constexpr std::string_view DioramaString = "Diorama\n";
+
+	static const Uint64 exodus_death_time = 50;
+	static const Uint64 screen_flicker_time = 200;
 
 	int m_xs;
 	int m_ys;
@@ -264,6 +285,7 @@ private:
 	short m_opnum2;
 	short m_restrictedStart;
 	short m_gTorch;
+	short m_lastCard;
 
 	short m_storedir;
 	short m_rosNum;
@@ -278,5 +300,7 @@ private:
 	int m_maxInputLength;
 	std::queue<int> m_weaponsList;
 	bool m_YellStat;
+	Uint64 m_elapsedSleepTime;
+	Uint64 m_sleepCheckTime;
 };
 

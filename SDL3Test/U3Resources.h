@@ -54,17 +54,24 @@ struct InverseStruct
 		char_details[1] = false;
 		char_details[2] = false;
 		char_details[3] = false;
-		resurrect = false;
+		fill = false;
+		additive = false;
 		func = nullptr;
+		color.a = 255;
+		color.r = 255;
+		color.g = 255;
+		color.b = 255;
 	}
 
 	bool character_num[4];
 	bool char_details[4];
 	bool tiles;
-	bool resurrect;
+	bool fill;
+	bool additive;
 	Uint64 inverseTileTime;
 	Uint64 elapsedTileTime;
 	std::function<void()> func;
+	SDL_Color color;
 };
 
 class U3Resources
@@ -142,7 +149,23 @@ public:
 	TTF_Font* m_font_9; // 9 point font
 	TTF_Font* m_font_11; // 11 point font
 	TTF_Font* m_font_12; // 12 point font
-	
+
+	Uint64 m_delta_time;
+	float m_font_y_offset;
+
+	static constexpr std::string_view WinText[10] = {
+		"   And so it came to",
+		"pass  that  on  this",
+		"day EXODUS,hell-born",
+		"incarnate  of  evil",
+		"was vanquished  from",
+		"SOSARIA.   What  now",
+		"lies  ahead  in  the",
+		"ULTIMA saga can only",
+		"be pure speculation!",
+		"Onward to ULTIMA IV!"
+	};
+
 private:
 	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
@@ -155,14 +178,14 @@ private:
 	void loadButtons();
 	void loadDemo();
 	bool loadPLists();
-	
+
 	void HideMonsters();
 	void ShowMonsters();
-	
+
 	void UPrint(std::string gString, char x, char y, bool autoadjust = false);
-	
+
 	void drawImage(SDL_Texture* texture, float x, float y, float width, float height);
-	
+
 	void processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
@@ -184,6 +207,7 @@ private:
 
 	static constexpr std::string_view LevelStr = "Level ";
 	static constexpr std::string_view FoodStr = "Food: ";
+
 
 
 	static constexpr Uint64 DelayScroll = 2000;
@@ -214,7 +238,7 @@ private:
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
 	std::vector< short> m_currentButtons;
-	
+
 	int m_exodusWidth;
 	int m_exodusHeight;
 	int m_ultimaLogoWidth;
@@ -222,11 +246,9 @@ private:
 	int m_portraitHeight;
 	int m_portraitWidth;
 	int m_blockSize;
-	
-	float m_font_y_offset;
 
 	std::vector<unsigned char> m_demoData;
-	
+
 	unsigned char m_demoBgndTiles[114];
 	int m_demoptr;
 	int m_demoDelay;

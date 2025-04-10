@@ -541,9 +541,12 @@ std::string U3ScrollArea::RewrapString(std::string str)
 void U3ScrollArea::setInput(bool hasInput)
 {
 	// append the input string to the last string for scrolling
-	if (!hasInput && m_hasInput)
+	if (!hasInput)
 	{
-		m_messages.back().second += m_input;
+		if (m_hasInput)
+		{
+			m_messages.back().second += m_input;
+		}
 		m_input.clear();
 		m_cursorPos = 0;
 	}

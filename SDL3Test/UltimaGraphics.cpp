@@ -619,15 +619,108 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     case U3GraphicsMode::MiniMap:
         renderMiniMap(event, deltaTime, wasMove);
         break;
+    case U3GraphicsMode::WinScreen:
+        renderWinScreen(event, deltaTime, wasMove, m_fading);
+        break;
     default:
         renderGameMap(event, deltaTime, wasMove);
         break;
     }
 }
 
+void U3Graphics::renderWinScreen()
+{
+    SDL_SetRenderTarget(m_resources.m_renderer, m_texMap);
+    SDL_RenderClear(m_resources.m_renderer);
+    SDL_Color sdl_text_color = { 255, 255, 255 };
+
+    float x = m_blockSize * 11.0f;
+    
+    
+    for (int index = 0; index < 10; ++index)
+    {
+        float y = m_blockSize * 2.0f * (index + 1) - m_resources.m_font_y_offset;
+        std::string strDisplay = std::string(m_resources.WinText[index]);
+        m_resources.renderDisplayString(m_resources.m_font, strDisplay, (int)x, (int)y, sdl_text_color, 2, false);
+    }
+
+    SDL_SetRenderTarget(m_resources.m_renderer, NULL);
+}
+
+void U3Graphics::DrawWinScreen(float ratio)
+{
+    SDL_FRect theRect;
+
+    if (m_forceRedraw)
+    {
+        renderWinScreen();
+    }
+
+    if (!m_texMap)
+    {
+        return;
+    }
+
+    theRect.x = (float)m_blockSize;
+    theRect.y = (float)m_blockSize;
+    theRect.w = (float)m_blockSize * 22;
+    theRect.h = (float)m_blockSize * 22;
+    m_resources.adjustRect(theRect);
+    SDL_SetTextureAlphaMod(m_texMap, (int)(255 * ratio));
+    SDL_RenderTexture(m_resources.m_renderer, m_texMap, NULL, &theRect);
+}
+
+
+void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMove, bool fade)
+{
+    DrawFrame(1);
+    m_resources.ShowChars(true);
+    m_scrollArea.render(deltaTime);
+    m_resources.DrawWind();
+    m_blinkElapsed += deltaTime;
+   
+    if (m_blinkElapsed > WinFade)
+    {
+        m_blinkElapsed = WinFade;
+    }
+
+    bool returnToGame = m_misc.ProcessAnyEvent(event);
+
+    if (returnToGame)
+    {
+        if (m_blinkElapsed >= WinFade)
+        {
+            if (!m_fading)
+            {
+                m_fading = true;
+                m_blinkElapsed = 0;
+            }
+            else
+            {
+                m_forceRedraw = true;
+                m_curMode = U3GraphicsMode::Map;
+                m_scrollArea.blockPrompt(false);
+                m_scrollArea.UPrintWin("\n");
+                m_misc.m_inputType = InputType::Default;
+                m_misc.SafeExodus();
+            }
+        }
+        else
+        {
+            m_blinkElapsed = WinFade;
+        }
+    }
+
+    float ratio = (float)m_blinkElapsed / (float)WinFade;
+    if (m_fading)
+    {
+        ratio = 1.0f - ratio;
+    }
+    DrawWinScreen(ratio);
+}
+
 void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 {
-    m_scrollArea.forceRedraw();
     DrawFrame(1);
     DrawMiniMap();
     m_resources.ShowChars(true);
@@ -667,11 +760,11 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     {
         if (!m_staydead)
         {
-            if (m_misc.m_inputType == InputType::Callback)
+            if (m_misc.m_inputType == InputType::Callback || m_misc.m_inputType == InputType::SleepCallback)
             {
                 if (!m_scrollArea.isUpdating())
                 {
-                    m_misc.HandleCallback();
+                    m_misc.HandleCallback(m_misc.m_inputType == InputType::SleepCallback);
                 }
             }
             else

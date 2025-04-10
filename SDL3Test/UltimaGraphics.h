@@ -13,7 +13,8 @@ enum class U3GraphicsMode
 	Map,
 	MiniMap,
 	PauseScreen,
-	BlackScreen
+	BlackScreen,
+	WinScreen
 };
 
 class U3Graphics
@@ -43,10 +44,10 @@ public:
 	{
 		m_forceRedraw = true;
 	}
-	void resetBlink()
+	void setFade(bool fade)
 	{
 		m_blinkElapsed = 0;
-		m_fading = true;
+		m_fading = fade;
 	}
 	
 	void render(SDL_Event event, Uint64 deltaTime, bool& wasMove);
@@ -55,6 +56,7 @@ public:
 	unsigned char m_maskArray[128];
 	U3GraphicsMode m_curMode;
 	U3GraphicsMode m_queuedMode;
+	Uint64 m_winElapsed;
 
 	bool m_staydead;
 
@@ -63,8 +65,12 @@ private:
 	void DrawMoonGateStuff();
 	void renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
+	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMove, bool fade);
+	void DrawWinScreen(float ratio);
+	void renderWinScreen();
 
 	static constexpr Uint64 DelayScroll = 700;
+	static constexpr Uint64 WinFade = 300;
 	bool m_fading;
 
 	bool m_classic;

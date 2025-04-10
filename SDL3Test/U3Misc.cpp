@@ -49,7 +49,8 @@ U3Misc::U3Misc() :
 	m_restrictedStart(0),
 	m_gTorch(0),
 	m_wx(0),
-	m_wy(0)
+	m_wy(0),
+	m_YellStat(false)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -86,6 +87,83 @@ U3Misc::U3Misc() :
 U3Misc::~U3Misc()
 {
 	m_saved_map.reset();
+}
+
+void U3Misc::LetterCommand(SDL_Keycode key)
+{
+	switch (key)
+	{
+	case SDLK_A:
+		Attack();
+		break;
+	case SDLK_B:
+		Board();
+		break;
+	case SDLK_C:
+		break;
+	case SDLK_D:
+		Descend();
+		break;
+	case SDLK_E:
+		Enter();
+		break;
+	case SDLK_F:
+		Fire();
+		break;
+	case SDLK_G:
+		break;
+	case SDLK_H:
+		break;
+	case SDLK_I:
+		Ignite();
+		break;
+	case SDLK_J:
+		JoinGold();
+		break;
+	case SDLK_K:
+		Klimb();
+		break;
+	case SDLK_L:
+		Look();
+		break;
+	case SDLK_M:
+		break;
+	case SDLK_N:
+		break;
+	case SDLK_O:
+		OtherCommand(0);
+		break;
+	case SDLK_P:
+		PeerGem();
+		break;
+	case SDLK_Q:
+		break;
+	case SDLK_R:
+		break;
+	case SDLK_S:
+		Steal();
+		break;
+	case SDLK_T:
+		Transact();
+		break;
+	case SDLK_U:
+		Unlock();
+		break;
+	case SDLK_V:
+		break;
+	case SDLK_W:
+		break;
+	case SDLK_X:
+		Exit();
+		break;
+	case SDLK_Y:
+		Yell(0);
+		break;
+	case SDLK_Z:
+		break;
+	default:
+		break;
+	}
 }
 
 void U3Misc::OpenRstr()
@@ -626,7 +704,7 @@ void U3Misc::PutXYTile(short value, short x, short y)
 	m_resources.m_TileArray[y * 11 + x] = (unsigned char)value;
 }
 
-bool U3Misc::CheckAlive(short member) /* $75BA */
+bool U3Misc::CheckAlive(short member) // $75BA
 {
 	short rosNum;
 	rosNum = m_Party[member + 6];
@@ -948,81 +1026,6 @@ void U3Misc::NoGo()
 	m_scrollArea.UPrintMessage(116);
 }
 
-void U3Misc::LetterCommand(SDL_Keycode key)
-{
-	switch (key)
-	{
-	case SDLK_A:
-		Attack();
-		break;
-	case SDLK_B:
-		Board();
-		break;
-	case SDLK_C:
-		break;
-	case SDLK_D:
-		Descend();
-		break;
-	case SDLK_E:
-		Enter();
-		break;
-	case SDLK_F:
-		Fire();
-		break;
-	case SDLK_G:
-		break;
-	case SDLK_H:
-		break;
-	case SDLK_I:
-		Ignite();
-		break;
-	case SDLK_J:
-		JoinGold();
-		break;
-	case SDLK_K:
-		Klimb();
-		break;
-	case SDLK_L:
-		Look();
-		break;
-	case SDLK_M:
-		break;
-	case SDLK_N:
-		break;
-	case SDLK_O:
-		break;
-	case SDLK_P:
-		PeerGem();
-		break;
-	case SDLK_Q:
-		break;
-	case SDLK_R:
-		break;
-	case SDLK_S:
-		Steal();
-		break;
-	case SDLK_T:
-		Transact();
-		break;
-	case SDLK_U:
-		Unlock();
-		break;
-	case SDLK_V:
-		break;
-	case SDLK_W:
-		break;
-	case SDLK_X:
-		Exit();
-		break;
-	case SDLK_Y:
-		break;
-	case SDLK_Z:
-		break;
-	default:
-		break;
-	}
-}
-
 void U3Misc::HandleTransactPress(SDL_Keycode key)
 {
 	m_input_num = -1;
@@ -1342,33 +1345,54 @@ void U3Misc::HandleNumImmediate(SDL_Keycode key)
 	}
 }
 
-void U3Misc::HandleInputText(SDL_Keycode key)
+void U3Misc::HandleInputText(SDL_KeyboardEvent key)
 {
 	bool handled = false;
-	if (key >= SDLK_A && key <= SDLK_Z)
+	auto display_key = SDL_GetKeyFromScancode(key.scancode, key.mod, false);
+	if (display_key >= SDLK_0 && display_key <= SDLK_9)
 	{
-		if (!m_numOnly)
-		{
-			const char* value = SDL_GetKeyName(key);
-			if (m_maxInputLength < m_input.size())
-			{
-				m_input += value;
-				handled = true;
-			}
-		}
-	}
-	else if (key >= SDLK_0 && key <= SDLK_9)
-	{
-		const char* value = SDL_GetKeyName(key);
+		const char* value = SDL_GetKeyName(key.key);
 		if (m_maxInputLength > m_input.size())
 		{
 			m_input += value;
 			handled = true;
 		}
 	}
+	else if (key.key >= SDLK_A && key.key <= SDLK_Z)
+	{
+		if (!m_numOnly)
+		{
+			const char* value = SDL_GetKeyName(key.key);
+			if (m_maxInputLength > m_input.size())
+			{
+				m_input += value;
+				handled = true;
+			}
+		}
+	}
+	else if (display_key > SDLK_SPACE && display_key <= SDLK_TILDE)
+	{
+		if (!m_numOnly)
+		{
+			if (display_key == SDLK_SPACE)
+			{
+				m_input += ' ';
+				handled = true;
+			}
+			else
+			{
+				const char* value = SDL_GetKeyName(display_key);
+				if (m_maxInputLength > m_input.size())
+				{
+					m_input += value;
+					handled = true;
+				}
+			}
+		}
+	}
 	else
 	{
-		switch (key)
+		switch (key.key)
 		{
 		case SDLK_BACKSPACE:
 			if (m_input.size() > 0)
@@ -1472,33 +1496,33 @@ void U3Misc::HandleCallback()
 	}
 }
 
-bool U3Misc::HandleKeyPress(SDL_Keycode key)
+bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 {
 	switch (m_inputType)
 	{
 	case InputType::NumImmediate:
-		HandleNumImmediate(key);
+		HandleNumImmediate(key.key);
 		break;
 	case InputType::GuildVendor:
-		HandleInputGuild(key);
+		HandleInputGuild(key.key);
 		break;
 	case InputType::Restricted:
-		HandleInputRestricted(key);
+		HandleInputRestricted(key.key);
 		break;
 	case InputType::BuySell:
-		HandleInputBuySell(key);
+		HandleInputBuySell(key.key);
 		break;
 	case InputType::YesNo:
-		HandleInputYesNo(key);
+		HandleInputYesNo(key.key);
 		break;
 	case InputType::InputText:
 		HandleInputText(key);
 		break;
 	case InputType::Transact:
-		HandleTransactPress(key);
+		HandleTransactPress(key.key);
 		break;
 	case InputType::GetDirection:
-		HandleDircetionKeyPress(key);
+		HandleDircetionKeyPress(key.key);
 		break;
 	case InputType::AnyKey:
 		HandleAnyKey();
@@ -1507,7 +1531,7 @@ bool U3Misc::HandleKeyPress(SDL_Keycode key)
 		HandleCallback();
 		break;
 	default:
-		HandleDefaultKeyPress(key);
+		HandleDefaultKeyPress(key.key);
 		return true;
 	}
 	return false;
@@ -1543,7 +1567,7 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 	case SDL_EVENT_KEY_DOWN:
 		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
 		{
-			retVal = HandleKeyPress(event.key.key);
+			retVal = HandleKeyPress(event.key);
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -1582,6 +1606,11 @@ void U3Misc::What2() // $5279
 void U3Misc::NotHere() // $5288
 {
 	m_scrollArea.UPrintMessage(108);
+}
+
+void U3Misc::NoEffect()
+{
+	m_scrollArea.UPrintMessage(248);
 }
 
 void U3Misc::Pass()
@@ -1709,6 +1738,7 @@ void U3Misc::Enter()
 	}
 	if (m_Party[15] == 1)
 	{
+		SafeExodus();
 	}
 }
 
@@ -2666,6 +2696,7 @@ void U3Misc::setInputTypeNum(std::function<void()> func, int inputLength)
 	m_scrollArea.setInput(true);
 	m_inputType = InputType::InputText;
 	m_maxInputLength = inputLength;
+	m_input.clear();
 	m_callbackStack.push(std::bind(&U3Misc::InputNumCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::InputTextCallback, this));
 }
@@ -3601,7 +3632,7 @@ void U3Misc::Ignite()
 void U3Misc::IgniteCallback()
 {
 	short rosNum;
-	if (m_input_num < 1 || m_input_num > 4)
+	if (m_input_num < 0 || m_input_num > 3)
 	{
 		return;
 	}
@@ -3624,7 +3655,7 @@ void U3Misc::JoinGold()
 
 void U3Misc::JoinGoldCallback()
 {
-	if (m_input_num < 1 || m_input_num > 4)
+	if (m_input_num < 0 || m_input_num > 3)
 	{
 		m_scrollArea.UPrintWin("\n");
 		m_scrollArea.UPrintMessage(41);
@@ -3693,7 +3724,7 @@ void U3Misc::PeerGemCallback()
 {
 	short rosnum;
 
-	if (m_input_num > 4 || m_input_num < 0 || m_Party[6 + m_input_num] == 0)
+	if (m_input_num > 3 || m_input_num < 0 || m_Party[6 + m_input_num] == 0)
 	{
 		m_scrollArea.UPrintWin("\n\n");
 		return;
@@ -3754,7 +3785,7 @@ void U3Misc::UnlockKeyCallback()
 		m_scrollArea.UPrintWin("\n");
 		return;
 	}
-	if (m_input_num > 4 || m_Party[6 + m_input_num] == 0)
+	if (m_input_num > 3 || m_Party[6 + m_input_num] == 0)
 	{
 		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
 		m_scrollArea.UPrintWin(dispString);
@@ -3784,7 +3815,7 @@ void U3Misc::UnlockKeyCallback()
 
 void U3Misc::CheckAllDead() // $71B4
 {
-	bool alive;
+	bool alive = false;
 	char byte;
 
 	for (byte = 0; byte < 4; byte++)
@@ -3842,8 +3873,6 @@ void U3Misc::HandleDeadResponse1()
 {
 	m_resources.m_inverses.resurrect = true;
 	m_resources.m_inverses.inverseTileTime = 5000;
-	//m_scrollArea.blockPrompt(false);
-	//m_scrollArea.UPrintWin("");
 	m_resources.m_inverses.func = std::bind(&U3Misc::ResurrectCallback, this);
 }
 
@@ -3884,4 +3913,161 @@ void U3Misc::ResurrectCallback()
 	m_zp[0xE4] = m_ypos;
 	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea.blockPrompt(false);
+}
+
+void U3Misc::SafeExodus(void)
+{
+	unsigned char x, y;
+
+	for (x = 0; x < 0x20; x++)
+	{
+		if (m_Monsters[x + HPMON] > 0)
+		{
+			PutXYVal(m_Monsters[x + TILEON], m_Monsters[x + XMON], m_Monsters[x + YMON]);
+			m_Monsters[x + HPMON] = 0;
+			m_Monsters[x] = 0;
+		}
+	}
+	for (y = 1; y < 12; y++)
+	{
+		for (x = 0x1E; x < 0x22; x++)
+		{
+			PutXYVal(0x20, x, y);
+		}
+	}
+}
+
+void U3Misc::OtherCommand(short yell)
+{
+	if (yell == 0)
+	{
+		m_YellStat = true;
+		m_scrollArea.UPrintMessage(236);
+	}
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::OtherCallback, this));
+}
+
+void U3Misc::OtherCallback()
+{
+	m_rosNum = m_input_num;
+	std::string strRosNum;
+	if (m_rosNum >= 0)
+	{
+		strRosNum = std::to_string(m_rosNum + 1) + std::string("\n");
+	}
+	else
+	{
+		strRosNum = std::string("\n");
+	}
+	m_scrollArea.UPrintWin(strRosNum);
+
+	if (m_input_num < 0 || m_input_num > 3)
+	{
+		return;
+	}
+	if (m_Party[6 + m_input_num] == 0)
+	{
+		m_scrollArea.UPrintMessage(41);
+	}
+	if (CheckAlive(m_rosNum) == false)
+	{
+		m_scrollArea.UPrintMessage(126);
+		return;
+	}
+	m_scrollArea.UPrintMessage(238);
+	m_scrollArea.setInput(true);
+	m_inputType = InputType::InputText;
+	m_maxInputLength = 8;
+	m_numOnly = false;
+	m_input.clear();
+	m_callbackStack.push(std::bind(&U3Misc::OtherCallback1, this));
+}
+
+void U3Misc::OtherCallback1()
+{
+	short chnum;
+
+	m_inputType = InputType::Default;
+	m_scrollArea.setInput(false);
+	m_scrollArea.UPrintWin("\n");
+	if (0 == m_input.compare("PAXUM"))
+	{
+		m_scrollArea.UPrintMessage(254);
+		for (chnum = 0; chnum < 32; chnum++)
+		{
+			if (m_Monsters[chnum] && m_Party[2] != 0)
+			{
+				if (m_Monsters[chnum + XMON] > m_xpos - 6 && m_Monsters[chnum + XMON] < m_xpos + 6 && m_Monsters[chnum + YMON] > m_ypos - 6 &&
+					m_Monsters[chnum + YMON] < m_ypos + 6 && m_Monsters[chnum + HPMON] == 0xC0)
+				{
+					m_Monsters[chnum + HPMON] = 0x40;
+				}
+			}
+		}
+		return;
+	}
+	else if (0 == m_input.compare("SCREAM"))
+	{
+		m_scrollArea.UPrintWin("\nAIEEEEE!\n\n");
+		return;
+	}
+	else if (0 == m_input.compare("EVOCARE"))
+	{
+		Yell(1 + m_rosNum);
+		return;
+	}
+	else if (0 == m_input.compare("PISSOFF"))
+	{
+		m_scrollArea.UPrintMessage(247);
+		for (chnum = 0; chnum < 32; chnum++)
+		{
+			m_Monsters[chnum + HPMON] = 0xC0;
+		}
+		return;
+	}
+	NoEffect();
+}
+
+void U3Misc::Yell(short mode)
+{
+	short chnum;
+	short oy;
+	short rosNum;
+
+	if (mode == 0)
+	{
+		m_YellStat = false;
+		m_scrollArea.UPrintMessage(104);
+		OtherCommand(1);
+		return;
+	}
+	if (!m_YellStat)
+	{
+		NoEffect();
+		return;
+	}
+
+	chnum = mode - 1;
+	rosNum = m_Party[6 + chnum];
+	if ((m_Player[rosNum][14] & 0x40) == 0)
+	{
+		NoEffect();
+		return;
+	}
+	oy = m_ypos;
+	if (GetXYVal(m_xpos, m_ypos - 1) == 236)
+	{
+		oy -= 3;
+	}
+	if (GetXYVal(m_xpos, m_ypos + 1) == 232)
+	{
+		oy += 3;
+	}
+	if (m_ypos == oy)
+	{
+		NoEffect();
+		return;
+	}
+	m_ypos = oy;
 }

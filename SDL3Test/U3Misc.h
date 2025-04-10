@@ -65,6 +65,9 @@ public:
 	void InverseTiles(bool value);
 	void InverseCharDetails(short num, bool value);
 	void HandleCallback();
+	void OtherCommand(short yell);
+	void Yell(short mode);
+	void SafeExodus();
 
 	void North();
 	void South();
@@ -143,7 +146,7 @@ private:
 	void Transact();
 	void Unlock();
 
-	bool HandleKeyPress(SDL_Keycode key);
+	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value);
 	bool ValidDir(unsigned char value);
@@ -158,6 +161,7 @@ private:
 	void What();
 	void What2();
 	void NotHere();
+	void NoEffect();
 	void Routine6E6B();
 	void Routine6E35();
 	void IncMoves();
@@ -172,7 +176,7 @@ private:
 	void HandleInputRestricted(SDL_Keycode key);
 	void HandleInputYesNo(SDL_Keycode key);
 	void HandleInputBuySell(SDL_Keycode key);
-	void HandleInputText(SDL_Keycode key);
+	void HandleInputText(SDL_KeyboardEvent key);
 	bool HandleDefaultKeyPress(SDL_Keycode key);
 	void HandleDircetionKeyPress(SDL_Keycode key);
 	void HandleTransactPress(SDL_Keycode key);
@@ -242,6 +246,8 @@ private:
 	void HandleDeadResponse();
 	void HandleDeadResponse1();
 	void ResurrectCallback();
+	void OtherCallback();
+	void OtherCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -271,5 +277,6 @@ private:
 	int m_input_num;
 	int m_maxInputLength;
 	std::queue<int> m_weaponsList;
+	bool m_YellStat;
 };
 

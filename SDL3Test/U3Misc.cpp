@@ -5,6 +5,7 @@
 #include "UltimaSpellCombat.h"
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
+#include "UltimaSpellCombat.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -13,6 +14,7 @@ extern U3Graphics m_graphics;
 extern U3ScrollArea m_scrollArea;
 extern UltimaSpellCombat m_spellCombat;
 extern U3Utilities m_utilities;
+extern UltimaSpellCombat m_spellCombat;
 
 U3Misc::U3Misc() :
 	m_WhirlX(0),
@@ -84,7 +86,7 @@ U3Misc::U3Misc() :
 	memset(m_Talk, 0, sizeof(unsigned char) * 256);
 	memset(m_Dungeon, 0, sizeof(unsigned char) * 2048);
 
-	memset(careerTable, 0, sizeof(unsigned char) * 12);
+	memset(m_careerTable, 0, sizeof(unsigned char) * 12);
 	memset(m_Party, 0, sizeof(unsigned char) * 64);
 }
 
@@ -3810,7 +3812,119 @@ void U3Misc::PeerGemCallback()
 
 void U3Misc::Steal()
 {
+	m_scrollArea.UPrintMessage(84);
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::StealCallback, this));
 }
+
+void U3Misc::StealFail()
+{
+	int rngVal = m_utilities.getRandom(0, 255);
+	if ((rngVal & 0x03) != 0)
+	{
+		m_scrollArea.UPrintMessage(86);
+		return;
+	}
+	for (short byte = 63; byte >= 0; byte--)
+	{
+		if (m_Monsters[byte] == 0x48)
+		{
+			m_Monsters[byte + HPMON] = 0xC0;
+		}
+	}
+	m_scrollArea.UPrintMessage(87);
+}
+
+void U3Misc::StealCallback()
+{
+	if (m_input_num < 0 || m_input_num > 3)
+	{
+		m_scrollArea.UPrintWin("\n");
+		return;
+	}
+	std::string strDisp = std::to_string(m_input_num + 1);
+	strDisp += '\n';
+	m_scrollArea.UPrintWin(strDisp);
+
+	m_inputType = InputType::GetDirection;
+	m_callbackStack.push(std::bind(&U3Misc::StealCallback1, this));
+
+	m_rosNum = m_input_num;
+
+	m_scrollArea.UPrintMessage(85);
+}
+
+void U3Misc::StealCallback1()
+{
+	short byte = 0;
+
+	if (m_Party[6 + m_rosNum] == 0)
+	{
+		m_scrollArea.UPrintMessage(41);
+		return;
+	}
+	if (CheckAlive(m_rosNum) == false)
+	{
+		m_spellCombat.Incap();
+		return;
+	}
+
+	if (StealDisarmFail(m_rosNum))
+	{
+		StealFail();
+	}
+	else
+	{
+		byte = GetXYVal(m_xs, m_ys);
+		if (byte < 0x94 || byte > 0xE4)
+		{
+			StealFail();
+			return;
+		}
+		m_xs = m_xs + m_dx + m_dx;
+		m_ys = m_ys + m_dy + m_dy;
+		byte = GetXYVal(m_xs, m_ys);
+		if (byte != 0x24)
+		{
+			StealFail();
+			return;
+		}
+		PutXYVal(0x20, m_xs, m_ys);
+		//GetChest(2, chnum);
+	}
+}
+
+bool U3Misc::StealDisarmFail(short rosNum) // $75CF - result true = failed
+{
+	short classType, factor;
+	bool result;
+	factor = m_Player[rosNum][19];
+	classType = m_Player[rosNum][23];
+	if (classType == m_careerTable[3])
+	{
+		factor += 0x80;    // thief
+	}
+	// Barbarian, Illusionist, Ranger
+	if (classType == m_careerTable[5] || classType == m_careerTable[7] || classType == m_careerTable[10])
+	{
+		factor += 0x40;
+	}
+
+	// Alchemists now get steal&disarm bonus also. Apple II version does not.
+	if (classType == m_careerTable[9])
+	{
+		factor += 0x40;
+	}
+
+	result = false;
+	int rngVal = m_utilities.getRandom(0, 255);
+	if (rngVal > factor)
+	{
+		result = true;
+	}
+	return result;
+}
+
 
 void U3Misc::Unlock()
 {
@@ -4218,7 +4332,7 @@ void U3Misc::InsertCallback1()
 	}
 
 	bytes = bits[object - 0x1E];
-	/*if ((m_Player[m_rosNum][14] & bytes) == 0)
+	if ((m_Player[m_rosNum][14] & bytes) == 0)
 	{
 		m_scrollArea.UPrintMessage(67);
 		return;
@@ -4231,7 +4345,7 @@ void U3Misc::InsertCallback1()
 		m_resources.m_inverses.elapsedTileTime = 0;
 		m_resources.m_inverses.inverseTileTime = 250;
 		return;
-	}*/
+	}
 	m_lastCard++;
 	m_gBallTileBackground = 0x3E; // Exodus
 
@@ -4338,6 +4452,58 @@ void U3Misc::ExodusDieCallback4()
 	m_graphics.setFade(false);
 }
 
+void U3Misc::BombTrap() // $5C63
+{
+	m_inputType = InputType::None;
+	m_input_num = 0;
+
+	if (0 < m_Party[1])
+	{
+		if (CheckAlive(0))
+		{
+			InverseCharDetails(0, true);
+			m_resources.m_inverses.func = std::bind(&U3Misc::BombTrapCallback, this);
+			m_resources.m_inverses.elapsedTileTime = 0;
+			m_resources.m_inverses.inverseTileTime = damage_time;
+		}
+		else
+		{
+			BombTrapCallback();
+		}
+	}
+}
+
+void U3Misc::BombTrapCallback()
+{
+	if (CheckAlive(m_input_num))
+	{
+		int val = m_utilities.getRandom(0, 255);
+		HPSubtract(m_Party[6 + m_input_num], val & 0x77);
+		HPSubtract(m_Party[6 + m_input_num], (m_zp[0x13] + 1) * 8);
+	}
+
+	m_input_num++;
+	if (m_input_num < m_Party[1])
+	{
+		if (CheckAlive(m_input_num))
+		{
+			InverseCharDetails(m_input_num, true);
+			m_resources.m_inverses.func = std::bind(&U3Misc::BombTrapCallback, this);
+			m_resources.m_inverses.elapsedTileTime = 0;
+			m_resources.m_inverses.inverseTileTime = damage_time;
+		}
+		else
+		{
+			BombTrapCallback();
+		}
+	}
+	else
+	{
+		m_inputType = InputType::Default;
+	}
+}
+
+
 void U3Misc::SleepCallback()
 {
 	m_elapsedSleepTime += m_resources.m_delta_time;
@@ -4358,7 +4524,6 @@ bool U3Misc::HPSubtract(short rosNum, short amount) // $7181
 {
 	int originalHP;
 	int hp;
-	rosNum++;
 	hp = (m_Player[rosNum][26] * 256 + m_Player[rosNum][27]);
 	originalHP = hp;
 	hp -= amount;
@@ -4396,9 +4561,9 @@ bool U3Misc::HPSubtract(short rosNum, short amount) // $7181
 
 void U3Misc::InsertCallback2()
 {
-	m_Player[m_rosNum][26] = 0;
-	m_Player[m_rosNum][27] = 1;
-	HPSubtract(m_rosNum, 255);
+	m_Player[m_rosNum + 1][26] = 0;
+	m_Player[m_rosNum + 1][27] = 1;
+	HPSubtract(m_rosNum + 1, 255);
 }
 
 void U3Misc::BribeCallback()

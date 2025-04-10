@@ -124,7 +124,6 @@ public:
 	char m_gMonVarType;
 	short m_gMonType;
 	bool m_gResurrect;
-	unsigned char careerTable[12];
 	char m_WindDir;
 	short m_zp[255];
 	short m_gMoonDisp[2];
@@ -266,6 +265,12 @@ private:
 	void ExodusDieCallback3();
 	void ExodusDieCallback4();
 	void SleepCallback();
+	void BombTrap();
+	void BombTrapCallback();
+	void StealCallback();
+	void StealCallback1();
+	bool StealDisarmFail(short rosNum);
+	void StealFail();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -273,6 +278,7 @@ private:
 	static constexpr std::string_view DoorString = "Door";
 	static constexpr std::string_view DioramaString = "Diorama\n";
 
+	static const Uint64 damage_time = 50;
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
 

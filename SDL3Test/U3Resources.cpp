@@ -73,7 +73,8 @@ U3Resources::U3Resources() :
 	m_isInversed(false),
 	m_font_y_offset(0),
 	m_fullUpdate(true),
-	m_updateWind(false)
+	m_updateWind(false),
+	m_alertReturn(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -318,7 +319,7 @@ void U3Resources::loadDemo()
 	m_demoBgndTiles[62] = 0;    // ship should be water.
 }
 
-void U3Resources::SetButtonCallback(short button, std::function<void()> func)
+void U3Resources::SetButtonCallback(short button, std::function<void(int)> func)
 {
 	if (m_buttons.size() > button && button >= 0)
 	{
@@ -2174,6 +2175,7 @@ bool U3Resources::HasAlert(SDL_Event& event)
 	m_AlertDlg->display();
 	if (m_cleanupAlert)
 	{
+		m_alertReturn = m_AlertDlg->ReturnValue();
 		m_AlertDlg.reset();
 		m_cleanupAlert = false;
 	}
@@ -3125,6 +3127,33 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
 		{
 			m_misc.InverseTiles(false);
+			m_isInversed = false;
+			if (m_inverses.func)
+			{
+				auto tempfun = m_inverses.func;
+				m_inverses.func = nullptr;
+				tempfun();
+			}
+		}
+	}
+	if (m_inverses.resurrect)
+	{
+		m_isInversed = true;
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+		myRect.x = (float)(1 * m_blockSize);
+		myRect.y = (float)(1 * m_blockSize);
+		myRect.w = (float)m_blockSize * 22;
+		myRect.h = (float)m_blockSize * 22;
+
+		SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 128);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+		m_inverses.elapsedTileTime += delta_time;
+		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
+		{
+			m_inverses.resurrect = false;
 			m_isInversed = false;
 			if (m_inverses.func)
 			{

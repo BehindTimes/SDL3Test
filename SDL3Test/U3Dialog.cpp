@@ -32,17 +32,19 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	m_titleY(0),
 	m_messageX(0),
 	m_messageY(0),
-	m_icon(nullptr)
+	m_icon(nullptr),
+	m_callback(callback),
+	m_retVal(0)
 {
 	createFont();
 	if (type == DialogType::Alert)
 	{
 		loadString();
-		createButton(callback);
+		createButton(std::bind(&U3Dialog::finishedCallback, this, std::placeholders::_1));
 	}
 	else if (type == DialogType::DITL)
 	{
-		loadDitl();
+		loadDitl(std::bind(&U3Dialog::finishedCallback, this, std::placeholders::_1));
 		//createButton(callback);
 	}
 	calculateRects();
@@ -70,6 +72,15 @@ U3Dialog::~U3Dialog()
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+	}
+}
+
+void U3Dialog::finishedCallback(int button)
+{
+	m_retVal = button;
+	if (m_callback)
+	{
+		m_callback();
 	}
 }
 
@@ -188,7 +199,7 @@ void U3Dialog::changeBlockSize(int blockSize)
 	calculateRects();
 }
 
-void U3Dialog::createButton(std::function<void()> callback)
+void U3Dialog::createButton(std::function<void(int)> callback)
 {
 	short butLeft = 100;
 	short butRight = 153;
@@ -241,7 +252,7 @@ void U3Dialog::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-void U3Dialog::loadDitl()
+void U3Dialog::loadDitl(std::function<void(int)> callback)
 {
 	std::filesystem::path currentPathMessage = std::filesystem::current_path();
 	currentPathMessage /= ResourceLoc;
@@ -287,6 +298,8 @@ void U3Dialog::loadDitl()
 	int mode = 0;
 
 	m_strMessage.clear();
+
+	int curId = 0;
 
 	for (auto& curToken : tokens)
 	{
@@ -334,8 +347,10 @@ void U3Dialog::loadDitl()
 					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
 					//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
 
+					curId++;
 					m_vecButtons.emplace_back(std::make_unique<U3Button>());
 					m_vecButtons.back()->CreateTextButton(m_renderer, m_engine_surface, m_resources.m_font, strText);
+					m_vecButtons.back()->SetButtonCallback(callback, curId);
 				}
 			}
 			else if (mode == 2)

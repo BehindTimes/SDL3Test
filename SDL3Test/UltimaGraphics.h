@@ -56,6 +56,8 @@ public:
 	U3GraphicsMode m_curMode;
 	U3GraphicsMode m_queuedMode;
 
+	bool m_staydead;
+
 private:
 	void renderMiniMap();
 	void DrawMoonGateStuff();

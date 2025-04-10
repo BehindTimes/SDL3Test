@@ -54,12 +54,14 @@ struct InverseStruct
 		char_details[1] = false;
 		char_details[2] = false;
 		char_details[3] = false;
+		resurrect = false;
 		func = nullptr;
 	}
 
 	bool character_num[4];
 	bool char_details[4];
 	bool tiles;
+	bool resurrect;
 	Uint64 inverseTileTime;
 	Uint64 elapsedTileTime;
 	std::function<void()> func;
@@ -96,7 +98,7 @@ public:
 	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
-	void SetButtonCallback(short button, std::function<void()> func);
+	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);
 	void DrawOrganizePartyRect();
 	void DrawDemo(Uint64 curTick);
@@ -124,6 +126,10 @@ public:
 	int getTextWidth(std::string str);
 	bool isInversed() { return m_isInversed; }
 	int GetRealTile(int tilenum);
+	int AlertReturn()
+	{
+		return m_alertReturn;
+	}
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -244,5 +250,6 @@ private:
 	bool m_isInversed;
 	bool m_fullUpdate;
 	bool m_updateWind;
+	int m_alertReturn;
 };
 

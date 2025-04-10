@@ -164,31 +164,31 @@ void MainLoop()
     }
 }
 
-void returnToView()
+void returnToView([[maybe_unused]]int button)
 {
     changeMode = true;
     newMode = GameMode::Demo;
 }
 
-void organizeParty()
+void organizeParty([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::Organize;
 }
 
-void changeOptions()
+void changeOptions([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::Options;
 }
 
-void journeyOnward()
+void journeyOnward([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::JourneyOnward;
 }
 
-void backToMenu()
+void backToMenu([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::MainMenu;

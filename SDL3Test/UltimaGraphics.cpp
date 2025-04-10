@@ -25,7 +25,8 @@ U3Graphics::U3Graphics() :
     m_blockSize(0),
     m_forceRedraw(true),
     m_fading(true),
-    m_blinkElapsed(0)
+    m_blinkElapsed(0),
+    m_staydead(false)
 {
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
     memset(m_maskArray, 0, sizeof(unsigned char) * 128);
@@ -664,25 +665,31 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     bool alertValid = m_resources.HasAlert(event);
     if (!alertValid)
     {
-        if (m_misc.m_inputType == InputType::Callback)
+        if (!m_staydead)
         {
-            m_misc.HandleCallback();
-        }
-        else
-        {
-            if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
+            if (m_misc.m_inputType == InputType::Callback)
             {
-                wasMove = m_misc.ProcessEvent(event);
-                if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+                if (!m_scrollArea.isUpdating())
                 {
-                    m_curMode = m_queuedMode;
-                    m_queuedMode = U3GraphicsMode::None;
+                    m_misc.HandleCallback();
                 }
             }
-
-            if (m_scrollArea.isPrompt())
+            else
             {
-                m_resources.DrawPrompt();
+                if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
+                {
+                    wasMove = m_misc.ProcessEvent(event);
+                    if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+                    {
+                        m_curMode = m_queuedMode;
+                        m_queuedMode = U3GraphicsMode::None;
+                    }
+                }
+
+                if (m_scrollArea.isPrompt())
+                {
+                    m_resources.DrawPrompt();
+                }
             }
         }
     }

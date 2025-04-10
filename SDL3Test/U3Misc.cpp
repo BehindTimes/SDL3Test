@@ -3700,12 +3700,12 @@ void U3Misc::PeerGemCallback()
 	}
 	rosnum = m_Party[6 + m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
-	/*if (m_Player[rosnum][37] < 1)
+	if (m_Player[rosnum][37] < 1)
 	{
 		m_scrollArea.UPrintWin(strRosNum);
 		m_scrollArea.UPrintMessage(67);
 	}
-	else*/
+	else
 	{
 		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintWin(strRosNum);
@@ -3782,7 +3782,6 @@ void U3Misc::UnlockKeyCallback()
 	}
 }
 
-bool stayingalive = false;
 void U3Misc::CheckAllDead() // $71B4
 {
 	bool alive;
@@ -3793,14 +3792,15 @@ void U3Misc::CheckAllDead() // $71B4
 		if (CheckAlive(byte) == true)
 		{
 			alive = true;
+			break;
 		}
 	}
-	alive = stayingalive;
-	stayingalive = true;
+
 	if (!alive)
 	{
 		m_wx = 25;
 		m_wy = 23;
+		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintMessage(109);    // ALL PLAYERS OUT!
 		bool autosave;
 		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
@@ -3810,6 +3810,7 @@ void U3Misc::CheckAllDead() // $71B4
 			PutRoster();
 			PutSosaria();*/
 		}
+		
 		m_inputType = InputType::AnyKey;
 		m_callbackStack.push(std::bind(&U3Misc::CheckAllDeadPause, this));
 	}
@@ -3818,4 +3819,69 @@ void U3Misc::CheckAllDead() // $71B4
 void U3Misc::CheckAllDeadPause()
 {
 	m_resources.CreateAlertMessage(416, DialogType::DITL);
+	m_inputType = InputType::Callback;
+	m_callbackStack.push(std::bind(&U3Misc::HandleDeadResponse, this));
+}
+
+void U3Misc::HandleDeadResponse()
+{
+	int resurrectChoice = m_resources.AlertReturn();
+	if (resurrectChoice == 1)
+	{
+		m_scrollArea.UPrintMessage(249);    // Resurrecting!
+		m_inputType = InputType::Callback;
+		m_callbackStack.push(std::bind(&U3Misc::HandleDeadResponse1, this));
+	}
+	else
+	{
+		m_graphics.m_staydead = true;
+	}
+}
+
+void U3Misc::HandleDeadResponse1()
+{
+	m_resources.m_inverses.resurrect = true;
+	m_resources.m_inverses.inverseTileTime = 5000;
+	//m_scrollArea.blockPrompt(false);
+	//m_scrollArea.UPrintWin("");
+	m_resources.m_inverses.func = std::bind(&U3Misc::ResurrectCallback, this);
+}
+
+void U3Misc::ResurrectCallback()
+{
+	char chNum;
+	char byte;
+	m_inputType = InputType::Default;
+
+	for (chNum = 0; chNum < 4; chNum++)
+	{
+		m_rosNum = m_Party[chNum + 6];
+		for (byte = 35; byte < 64; byte++)
+		{
+			m_Player[m_rosNum][byte] = 0;
+		}
+		m_Player[m_rosNum][15] = 0;    // no torches too
+		if (m_Player[m_rosNum][32] < 1)
+		{
+			m_Player[m_rosNum][32] = 1;    // Some food
+		}
+		m_Player[m_rosNum][36] = 150;      // Gold Pieces
+		m_Player[m_rosNum][41] = 1;        // Cloth
+		m_Player[m_rosNum][40] = 1;        //  in use
+		m_Player[m_rosNum][49] = 1;        // Dagger
+		m_Player[m_rosNum][48] = 1;        //  in use
+		m_Player[m_rosNum][17] = 'G';      // Good Health
+		m_Player[m_rosNum][27] = 100;      // Current Hit Points
+		m_Player[m_rosNum][26] = 0;        // Current Hit Points
+	}
+	m_Party[2] = 0;
+	m_Party[0] = 0x7E;
+	m_xpos = 42;
+	m_ypos = 20;
+	m_Party[3] = m_xpos;
+	m_Party[4] = m_ypos;
+	m_zp[0xE3] = m_xpos;
+	m_zp[0xE4] = m_ypos;
+	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
+	m_scrollArea.blockPrompt(false);
 }

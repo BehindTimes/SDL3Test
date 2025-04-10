@@ -563,4 +563,9 @@ void U3ScrollArea::setInputString(std::string strValue)
 void U3ScrollArea::blockPrompt(bool block)
 {
 	m_block = block;
+	if (m_messageQueue.empty() && m_messages.back().second.empty())
+	{
+		m_messages.back().first.prompt = !block;
+		forceRedraw();
+	}
 }

@@ -11,7 +11,8 @@ U3Button::U3Button() :
 	m_callbackFunction(nullptr),
 	m_visible(false),
 	m_forcecapture(false),
-	m_renderRect(0)
+	m_renderRect(0),
+	m_id(0)
 {
 }
 
@@ -224,9 +225,10 @@ void U3Button::setVisible(bool visible)
 	}
 }
 
-void U3Button::SetButtonCallback(std::function<void()> func)
+void U3Button::SetButtonCallback(std::function<void(int)> func, int id)
 {
 	m_callbackFunction = func;
+	m_id = id;
 }
 
 void U3Button::setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY)
@@ -287,7 +289,7 @@ void U3Button::setMouseCapture(int blockSize, int capture, float mouse_x, float 
 	{
 		if (m_callbackFunction)
 		{
-			m_callbackFunction();
+			m_callbackFunction(m_id);
 		}
 	}
 }
@@ -306,7 +308,7 @@ void U3Button::click()
 
 	if (m_callbackFunction)
 	{
-		m_callbackFunction();
+		m_callbackFunction(3);
 	}
 }
 
@@ -359,7 +361,7 @@ void U3Button::setMouseCapture(int capture, float mouse_x, float mouse_y)
 	{
 		if (m_callbackFunction)
 		{
-			m_callbackFunction();
+			m_callbackFunction(m_id);
 		}
 	}
 }

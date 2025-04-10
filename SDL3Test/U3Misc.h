@@ -239,6 +239,9 @@ private:
 	void UnlockKeyCallback();
 	void PeerGemCallback();
 	void CheckAllDeadPause();
+	void HandleDeadResponse();
+	void HandleDeadResponse1();
+	void ResurrectCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

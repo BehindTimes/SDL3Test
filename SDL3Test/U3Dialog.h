@@ -24,18 +24,22 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void HandleEvent(SDL_Event& event);
+	int ReturnValue() { return m_retVal; }
+
+
 private:
 	void RewrapMessage(std::string& strMesssage);
 	void DrawFramePiece(int part, int x, int y);
 	void adjustRect(SDL_FRect& myRect);
 	void loadString();
-	void loadDitl();
+	void loadDitl(std::function<void(int)> callback);
 	bool createFont();
-	void createButton(std::function<void()> callback);
+	void createButton(std::function<void(int)> callback);
 	void createBorder(int x, int y, int numBlocksW, int numBlocksH);
 	TTF_Text* calcDisplayString(TTF_Font* font, std::string curString, int& outWidth, int& outHeight, SDL_Color color);
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 	void calculateRects();
+	void finishedCallback(int button);
 
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view TextLoc = "Text";
@@ -71,5 +75,7 @@ private:
 	std::vector<std::unique_ptr<U3Button>> m_vecButtons;
 	SDL_Texture* m_icon;
 	//std::vector<TTF_Text*> m_textButtons;
+	std::function<void()> m_callback;
+	int m_retVal;
 };
 

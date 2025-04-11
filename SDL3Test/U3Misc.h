@@ -130,7 +130,9 @@ public:
 	InputType m_inputType;
 	int m_wx;
 	int m_wy;
-	bool m_checkDead = false;
+	bool m_checkDead;
+	bool m5BDC;
+	char m_dungeonLevel;
 
 private:
 	void Attack();
@@ -139,6 +141,7 @@ private:
 	void Enter();
 	void Exit();
 	void Fire();
+	void GetChest(short spell, short chnum);
 	void Ignite();
 	void JoinGold();
 	void JoinGold(short chnum);
@@ -271,6 +274,13 @@ private:
 	void StealCallback1();
 	bool StealDisarmFail(short rosNum);
 	void StealFail();
+	void GetChestCallback();
+	void GetChest1(short chnum);
+	void GetChestBooty();
+	void ChestAcidCallback();
+	void ChestPoisonCallback();
+	void ChestGasCallback();
+	void AddItem(short rosNum, short item, short amount);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

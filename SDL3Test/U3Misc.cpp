@@ -56,7 +56,9 @@ U3Misc::U3Misc() :
 	m_lastCard(0),
 	m_checkDead(false),
 	m_elapsedSleepTime(0),
-	m_sleepCheckTime(0)
+	m_sleepCheckTime(0),
+	m5BDC(false),
+	m_dungeonLevel(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -117,6 +119,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Fire();
 		break;
 	case SDLK_G:
+		GetChest(0, 0);
 		break;
 	case SDLK_H:
 		break;
@@ -794,6 +797,7 @@ bool U3Misc::ValidTrans(char value)
 
 bool U3Misc::ValidDir(unsigned char value) // $4702
 {
+	return true;
 	char byte;
 	char byte2;
 	bool GoodPlace = false;
@@ -3890,7 +3894,7 @@ void U3Misc::StealCallback1()
 			return;
 		}
 		PutXYVal(0x20, m_xs, m_ys);
-		//GetChest(2, chnum);
+		GetChest(2, m_rosNum);
 	}
 }
 
@@ -3967,6 +3971,7 @@ void U3Misc::UnlockKeyCallback()
 		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
 		m_scrollArea.UPrintWin(dispString);
 		m_scrollArea.UPrintMessage(41);
+		return;
 	}
 	else
 	{
@@ -4024,7 +4029,7 @@ void U3Misc::CheckAllDead() // $71B4
 			PutRoster();
 			PutSosaria();*/
 		}
-		
+
 		m_inputType = InputType::AnyKey;
 		m_callbackStack.push(std::bind(&U3Misc::CheckAllDeadPause, this));
 	}
@@ -4151,13 +4156,14 @@ void U3Misc::OtherCallback()
 	}
 	m_scrollArea.UPrintWin(strRosNum);
 
-	if (m_input_num < 0 || m_input_num > 3)
+	if (m_rosNum < 0 || m_rosNum > 3)
 	{
 		return;
 	}
-	if (m_Party[6 + m_input_num] == 0)
+	if (m_Party[6 + m_rosNum] == 0)
 	{
 		m_scrollArea.UPrintMessage(41);
+		return;
 	}
 	if (CheckAlive(m_rosNum) == false)
 	{
@@ -4383,7 +4389,7 @@ void U3Misc::ExodusDieCallback1()
 	PutXYVal(0x20, m_xs, m_ys);
 	//exodus_death
 	m_inputType = InputType::Default;
-	
+
 	/*if (m_lastCard != 0x22)
 	{
 		m_scrollArea.blockPrompt(false);
@@ -4414,7 +4420,7 @@ void U3Misc::ExodusDieCallback1()
 
 	m_inputType = InputType::None;
 	m_input_num = 0;
-	
+
 	m_resources.m_inverses.color.r = m_utilities.getRandom(0, 255);
 	m_resources.m_inverses.color.g = m_utilities.getRandom(0, 255);
 	m_resources.m_inverses.color.b = m_utilities.getRandom(0, 255);
@@ -4655,4 +4661,282 @@ void U3Misc::ClearTiles()
 void U3Misc::EmptyCallback()
 {
 	m_scrollArea.blockPrompt(false);
+}
+
+void U3Misc::GetChest(short spell, short chnum)
+{
+	if (spell == 2)
+	{
+		m_rosNum = m_Party[6 + chnum];
+		GetChestBooty();
+		return;
+	}
+	else if (spell == 0)
+	{
+		m5BDC = true;
+		m_scrollArea.UPrintMessage(40);
+		m_inputType = InputType::Transact;
+		m_callbackStack.push(std::bind(&U3Misc::GetChestCallback, this));
+		return;
+	}
+	GetChest1(chnum);
+}
+
+void U3Misc::GetChestCallback()
+{
+	if (m_input_num < 0 || m_input_num > 3)
+	{
+		m_scrollArea.UPrintWin("\n");
+		return;
+	}
+	std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
+	m_scrollArea.UPrintWin(dispString);
+	if (m_Party[6 + m_input_num] == 0)
+	{
+		m_scrollArea.UPrintWin("\n");
+		m_scrollArea.UPrintMessage(41);
+		return;
+	}
+	if (CheckAlive(m_input_num) == false)
+	{
+		m_scrollArea.UPrintMessage(126);
+		return;
+	}
+
+	GetChest1(m_input_num);
+}
+
+void U3Misc::GetChest1(short chnum)
+{
+	char tile;
+	m_rosNum = m_Party[6 + chnum];
+	m_xs = m_xpos;
+	m_ys = m_ypos;
+	if (m_Party[2] != 1) // party not in dungeon
+	{
+		tile = GetXYVal(m_xpos, m_ypos);
+		if ((tile < 0x24) || (tile > 0x27)) // izzit not a chest?
+		{
+			NotHere();
+			return;
+		}
+		tile = (tile & 0x3) * 4;
+		if (tile == 0)
+		{
+			tile = 0x20;
+		}
+		PutXYVal(tile, m_xpos, m_ypos);
+	}
+	else // party in dungeon
+	{
+		if (m_spellCombat.GetXYDng(m_xpos, m_ypos) != 0x40)
+		{
+			NotHere();
+			return;
+		}
+		m_spellCombat.PutXYDng(0, m_xpos, m_ypos);
+	}
+	int rngnum = m_utilities.getRandom(0, 255);
+
+	if ((m5BDC == 0) || rngnum > 127)
+	{
+		GetChestBooty();
+		return;
+	}
+	int rngnum1 = m_utilities.getRandom(0, 255);
+	int rngnum2 = m_utilities.getRandom(0, 255);
+	rngnum = (rngnum1 & rngnum2) & 0x03;
+	switch (rngnum)
+	{
+	case 0:
+		m_scrollArea.UPrintMessage(42);
+		if (StealDisarmFail(m_rosNum) == false)
+		{
+			m_scrollArea.UPrintMessage(46);
+			GetChestBooty();
+			return;
+		}
+		else
+		{
+			m_inputType = InputType::None;
+			InverseCharDetails(chnum, true);
+			m_resources.m_inverses.func = std::bind(&U3Misc::ChestAcidCallback, this);
+			m_resources.m_inverses.elapsedTileTime = 0;
+			m_resources.m_inverses.inverseTileTime = damage_time;
+			return;
+		}
+		break;
+	case 1:
+		m_scrollArea.UPrintMessage(43);
+		if (StealDisarmFail(m_rosNum) == false)
+		{
+			m_scrollArea.UPrintMessage(46);
+			GetChestBooty();
+			return;
+		}
+		else
+		{
+			m_inputType = InputType::None;
+			InverseCharDetails(chnum, true);
+			m_resources.m_inverses.func = std::bind(&U3Misc::ChestPoisonCallback, this);
+			m_resources.m_inverses.elapsedTileTime = 0;
+			m_resources.m_inverses.inverseTileTime = damage_time;
+			return;
+		}
+		break;
+	case 2:
+		m_scrollArea.UPrintMessage(44);
+		if (StealDisarmFail(m_rosNum) == false)
+		{
+			m_scrollArea.UPrintMessage(46);
+			GetChestBooty();
+			return;
+		}
+		else
+		{
+			BombTrap();
+			return;
+		}
+		break;
+	case 3:
+		m_scrollArea.UPrintMessage(45);
+		if (StealDisarmFail(m_rosNum) == false)
+		{
+			m_scrollArea.UPrintMessage(46);
+			GetChestBooty();
+			return;
+		}
+		else
+		{
+			m_inputType = InputType::None;
+			m_input_num = 0;
+
+			if (CheckAlive(0))
+			{
+				InverseCharDetails(0, true);
+				m_resources.m_inverses.func = std::bind(&U3Misc::ChestGasCallback, this);
+				m_resources.m_inverses.elapsedTileTime = 0;
+				m_resources.m_inverses.inverseTileTime = damage_time;
+				return;
+			}
+			else
+			{
+				ChestGasCallback();
+				return;
+			}
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void U3Misc::ChestGasCallback()
+{
+	m_Player[m_Party[6 + m_input_num]][17] = 'P';
+	m_input_num++;
+
+	if (m_input_num < 4)
+	{
+		if (CheckAlive(m_input_num))
+		{
+			InverseCharDetails(m_input_num, true);
+			m_resources.m_inverses.func = std::bind(&U3Misc::ChestGasCallback, this);
+			m_resources.m_inverses.elapsedTileTime = 0;
+			m_resources.m_inverses.inverseTileTime = damage_time;
+		}
+		else
+		{
+			ChestGasCallback();
+		}
+	}
+	else
+	{
+		GetChestBooty();
+	}
+}
+
+void U3Misc::ChestAcidCallback()
+{
+	int rngNum = m_utilities.getRandom(0, 255);
+	HPSubtract(m_rosNum, rngNum & 0x37);
+	GetChestBooty();
+}
+
+void U3Misc::ChestPoisonCallback()
+{
+	m_Player[m_rosNum][17] = 'P';
+	GetChestBooty();
+}
+
+void U3Misc::GetChestBooty()
+{
+	short gold;
+	short wpn;
+	short arm;
+
+	m_inputType = InputType::Default;
+	std::string dispString = m_resources.m_plistMap["Messages"][46];
+	gold = m_utilities.getRandom(0, 100);
+	if (gold < 30)
+	{
+		gold += 30;
+	}
+	dispString += std::to_string(gold);
+	dispString += '\n';
+	m_scrollArea.UPrintWin(dispString);
+	if (AddGold(m_rosNum, gold, true) == false)
+	{
+		m_scrollArea.UPrintMessage(48);
+	}
+	int rngNum = m_utilities.getRandom(0, 255);
+	if (rngNum > 63)
+	{
+		return;
+	}
+	wpn = m_utilities.getRandom(0, 255);
+	if (wpn < 128)
+	{
+		rngNum = m_utilities.getRandom(0, 255);
+		wpn = (rngNum & wpn) & 0x07;
+		if (wpn != 0)
+		{
+			std::string str1 = m_resources.m_plistMap["Messages"][48];
+			std::string str2 = m_resources.m_plistMap["WeaponsArmour"][wpn];
+
+			str1 += str2;
+			str1 += '\n';
+
+			m_scrollArea.UPrintWin(str1);
+			AddItem(m_rosNum, 48 + wpn, 1);
+			return;
+		}
+	}
+	arm = m_utilities.getRandom(0, 255);
+	if (arm < 128)
+	{
+		rngNum = m_utilities.getRandom(0, 255);
+		arm = (rngNum & arm) & 0x03;
+		if (arm != 0)
+		{
+			std::string str1 = m_resources.m_plistMap["Messages"][49];
+			std::string str2 = m_resources.m_plistMap["WeaponsArmour"][arm + 16];
+
+			str1 += str2;
+			str1 += '\n';
+
+			m_scrollArea.UPrintWin(str1);
+			AddItem(m_rosNum, 48 + arm, 1);
+			return;
+		}
+	}
+}
+
+void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
+{
+	m_Player[rosNum][item] += amount;
+	if (m_Player[rosNum][item] > 99)
+	{
+		m_Player[rosNum][item] = 99;
+	}
 }

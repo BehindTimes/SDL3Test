@@ -671,7 +671,7 @@ void U3Resources::loadImages()
 	int pitch;
 	SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
 	memset(pixels, 0, sizeof(char) * pitch * m_exodusHeight);
-	SDL_UnlockTexture(m_texUltimaLogoFade);
+	SDL_UnlockTexture(m_texExodusFade);
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;

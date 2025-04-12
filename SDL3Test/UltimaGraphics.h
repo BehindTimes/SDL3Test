@@ -14,6 +14,7 @@ enum class U3GraphicsMode
 	None,
 	Map,
 	MiniMap,
+	MiniMapDungeon,
 	PauseScreen,
 	BlackScreen,
 	WinScreen,
@@ -30,7 +31,7 @@ public:
 	void CreateMenuData();
 	void CreateOrganizeData();
 	void DrawFrame(short which);
-	void DrawFramePiece(short which, short x, short y);
+	void DrawFramePiece(short which, short x, short y, bool adjust = true);
 	void DrawFramePieceScroll(short which, short x, short y, int offsetX = 0, int offsetY = 0);
 	void FadeOnExodusUltima(Uint64 curTick);
 	void WriteLordBritish(Uint64 curTick);
@@ -61,7 +62,10 @@ public:
 	bool m_staydead;
 
 private:
+	void renderMiniMapDungeon();
+	void DrawMiniMapDungeon();
 	void renderMiniMap();
+	void renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove);
 	void DrawMoonGateStuff();
 	void renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
@@ -72,6 +76,7 @@ private:
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;
+	static constexpr Uint64 DungeonBlink = 300;
 	bool m_fading;
 
 	bool m_classic;

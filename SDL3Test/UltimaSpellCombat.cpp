@@ -1,9 +1,11 @@
 #include "UltimaSpellCombat.h"
 #include "U3ScrollArea.h"
 #include "U3Misc.h"
+#include "UltimaDungeon.h"
 
 extern U3ScrollArea m_scrollArea;
 extern U3Misc m_misc;
+extern UltimaDungeon m_dungeon;
 
 void UltimaSpellCombat::Incap()
 {
@@ -28,10 +30,10 @@ unsigned char UltimaSpellCombat::GetXYDng(short x, short y)
     {
         x -= 16;
     }
-    return m_misc.m_Dungeon[(m_misc.m_dungeonLevel * 256) + (y * 16) + x];
+    return m_misc.m_Dungeon[(m_dungeon.m_dungeonLevel * 256) + (y * 16) + x];
 }
 
 void UltimaSpellCombat::PutXYDng(unsigned char value, short x, short y) // ??
 {
-    m_misc.m_Dungeon[(m_misc.m_dungeonLevel * 256) + (y * 16) + x] = value;
+    m_misc.m_Dungeon[(m_dungeon.m_dungeonLevel * 256) + (y * 16) + x] = value;
 }

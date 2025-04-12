@@ -145,6 +145,7 @@ public:
 	InverseStruct m_inverses;
 	SDL_Renderer* m_renderer;
 	ModeGraphics* m_currentGraphics;
+	ModeGraphics* m_standardGraphics; // Fills in missing graphics
 
 	TTF_Font* m_font; // block size font
 	TTF_Font* m_font_9; // 9 point font
@@ -221,7 +222,7 @@ private:
 
 	std::map<std::string, ModeGraphics> m_allGraphics;
 	std::vector<std::string> m_modes;
-	ModeGraphics* m_standardGraphics; // Fills in missing graphics
+	
 	std::unique_ptr<U3Dialog> m_AlertDlg;
 
 	size_t m_defaultMode;

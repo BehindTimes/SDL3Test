@@ -59,7 +59,6 @@ U3Misc::U3Misc() :
 	m_elapsedSleepTime(0),
 	m_sleepCheckTime(0),
 	m5BDC(false),
-	m_dungeonLevel(0),
 	m_gameMode(GameStateMode::Map)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
@@ -1857,7 +1856,7 @@ void U3Misc::Enter()
 			dispString = m_resources.m_plistMap["Messages"][32];
 			addString = m_resources.m_plistMap["Messages"][33];
 			newval = 1;
-			m_dungeonLevel = 0;
+			m_dungeon.m_dungeonLevel = 0;
 			m_xpos = 1;
 			m_ypos = 1;
 			m_heading = 1;
@@ -3932,12 +3931,12 @@ void U3Misc::PeerGemCallback()
 	}
 	rosnum = m_Party[6 + m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
-	/*if (m_Player[rosnum][37] < 1)
+	if (m_Player[rosnum][37] < 1)
 	{
 		m_scrollArea.UPrintWin(strRosNum);
 		m_scrollArea.UPrintMessage(67);
 	}
-	else*/
+	else
 	{
 		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintWin(strRosNum);

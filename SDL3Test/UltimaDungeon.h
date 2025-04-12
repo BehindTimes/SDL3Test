@@ -27,6 +27,7 @@ public:
 	void Routine6E6B();
 private:
 	
+	void createDoorPolygons();
 	void RenderDungeon();
 	void DrawDungeonBackGround();
 	short DrawWall(short location);
@@ -39,6 +40,8 @@ private:
 	void Chunk6();
 	void Chunk7();
 	void DrawLadder(short location, short direction);
+	void DrawDoor(short location);
+	void DrawChest(short location);
 
 	void LetterCommand(SDL_Keycode key);
 	void Forward();
@@ -50,7 +53,15 @@ private:
 	void Klimb();
 	void Descend();
 	void InvalCmd();
+	void PeerGem();
+	void PeerGemCallback();
+	void fillDoorPoly(unsigned char* canvas, short minX, short maxX, short minY, short maxY);
+	void createDoorPoly(unsigned char* canvas, short dx1, short dy1, short dx2, short dy2, short dy3, short dy4);
+	void renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2);
+	short getLeftMost(unsigned char* canvas, short startX, short endX);
+	short getRightMost(unsigned char* canvas, short startX, short endX);
 
+	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texDungeonShapes;
 	SDL_Texture* m_texFountain;
 	SDL_Texture* m_texTimeLord;

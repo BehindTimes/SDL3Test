@@ -151,13 +151,31 @@ public:
 	int m_wy;
 	bool m_checkDead;
 	bool m5BDC;
-	char m_dungeonLevel;
 	GameStateMode m_gameMode;
 	short m_heading;
 	int m_xs;
 	int m_ys;
 	int m_dx;
 	int m_dy;
+
+	bool m_numOnly;
+	short m_opnum;
+	short m_opnum2;
+	short m_restrictedStart;
+	short m_gTorch;
+	short m_lastCard;
+
+	short m_storedir;
+	short m_rosNum;
+
+	std::stack<std::function<void()>> m_callbackStack;
+	std::string m_input;
+	int m_input_num;
+	int m_maxInputLength;
+	std::queue<int> m_weaponsList;
+	bool m_YellStat;
+	Uint64 m_elapsedSleepTime;
+	Uint64 m_sleepCheckTime;
 
 private:
 	void Attack();
@@ -310,26 +328,7 @@ private:
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
 
-	bool m_numOnly;
-	short m_opnum;
-	short m_opnum2;
-	short m_restrictedStart;
-	short m_gTorch;
-	short m_lastCard;
-
-	short m_storedir;
-	short m_rosNum;
-
 	int m_transactNum;
 	std::unique_ptr <SosariaHandle> m_saved_map;
-	
-	std::stack<std::function<void()>> m_callbackStack;
-	std::string m_input;
-	int m_input_num;
-	int m_maxInputLength;
-	std::queue<int> m_weaponsList;
-	bool m_YellStat;
-	Uint64 m_elapsedSleepTime;
-	Uint64 m_sleepCheckTime;
 };
 

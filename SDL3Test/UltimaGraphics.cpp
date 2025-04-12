@@ -202,11 +202,11 @@ void U3Graphics::DrawFramePieceScroll(short which, short x, short y, int offsetX
     m_resources.renderUI(which, x, y, false, offsetX, offsetY);
 }
 
-void U3Graphics::DrawFramePiece(short which, short x, short y)
+void U3Graphics::DrawFramePiece(short which, short x, short y, bool adjust)
 {
 	which--;
 
-    m_resources.renderUI(which, x, y);
+    m_resources.renderUI(which, x, y, adjust);
 }
 
 bool fadeExodus = false;
@@ -466,6 +466,92 @@ void U3Graphics::renderMiniMap()
     SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
 }
 
+void U3Graphics::renderMiniMapDungeon()
+{
+    unsigned char chr;
+    unsigned char under = 0;
+    unsigned char value;
+
+    SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
+    SDL_SetRenderTarget(m_resources.m_renderer, m_texMap);
+    SDL_RenderClear(m_resources.m_renderer);
+
+    for (m_misc.m_ys = 0; m_misc.m_ys < 16; m_misc.m_ys++)
+    {
+        for (m_misc.m_xs = 0; m_misc.m_xs < 16; m_misc.m_xs++)
+        {
+            value = m_dungeon.GetXYDng(m_misc.m_xs, m_misc.m_ys);
+            chr = 7;
+            if (value == 0xC0)
+            {
+                chr = 0;
+            }
+            if (value == 0xA0)
+            {
+                chr = 1;
+            }
+            if (value == 0x80)
+            {
+                chr = 2;
+            }
+            if (value == 0x30)
+            {
+                chr = 3;
+            }
+            if (value == 0x20)
+            {
+                chr = 5;
+            }
+            if (value == 0x10)
+            {
+                chr = 4;
+            }
+            if (value == 0x00)
+            {
+                chr = 6;
+            }
+
+            DrawFramePiece(chr + 24, m_misc.m_xs + 3, m_misc.m_ys + 3, false);
+            if (m_misc.m_xs == m_misc.m_xpos && m_misc.m_ys == m_misc.m_ypos)
+            {
+                under = chr;
+            }
+        }
+    }
+
+    SDL_SetRenderTarget(m_resources.m_renderer, NULL);
+    m_forceRedraw = false;
+    SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+}
+
+void U3Graphics::DrawMiniMapDungeon()
+{
+    SDL_FRect theRect;
+
+    if (m_forceRedraw)
+    {
+        m_fading = true;
+        renderMiniMapDungeon();
+    }
+
+    if (!m_texMap)
+    {
+        return;
+    }
+
+    theRect.x = (float)m_blockSize;
+    theRect.y = (float)m_blockSize;
+    theRect.w = (float)m_blockSize * 22;
+    theRect.h = (float)m_blockSize * 22;
+    m_resources.adjustRect(theRect);
+    SDL_RenderTexture(m_resources.m_renderer, m_texMap, NULL, &theRect);
+
+    if (m_fading)
+    {
+        DrawFramePiece(32, m_misc.m_xpos + 4, m_misc.m_ypos + 4);
+    }
+}
+
 void U3Graphics::DrawMiniMap()
 {
     SDL_FRect theRect;
@@ -633,6 +719,9 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     case U3GraphicsMode::MiniMap:
         renderMiniMap(event, deltaTime, wasMove);
         break;
+    case U3GraphicsMode::MiniMapDungeon:
+        renderMiniMapDungeon(event, deltaTime, wasMove);
+        break;
     case U3GraphicsMode::WinScreen:
         renderWinScreen(event, deltaTime, wasMove, m_fading);
         break;
@@ -753,6 +842,29 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     {
         m_forceRedraw = true;
         m_curMode = U3GraphicsMode::Map;
+        m_scrollArea.blockPrompt(false);
+        m_scrollArea.UPrintWin("");
+    }
+}
+
+void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+{
+    DrawFrame(1);
+    DrawMiniMapDungeon();
+    m_resources.ShowChars(true);
+    m_scrollArea.render(deltaTime);
+    m_dungeon.DngInfo();
+    bool returnToGame = m_misc.ProcessAnyEvent(event);
+    m_blinkElapsed += deltaTime;
+    if (m_blinkElapsed > DungeonBlink)
+    {
+        m_blinkElapsed %= DungeonBlink;
+        m_fading = !m_fading;
+    }
+    if (returnToGame)
+    {
+        m_forceRedraw = true;
+        m_curMode = U3GraphicsMode::Dungeon;
         m_scrollArea.blockPrompt(false);
         m_scrollArea.UPrintWin("");
     }

@@ -47,10 +47,23 @@ UltimaDungeon::UltimaDungeon() :
 	m_HeadY[1] = 0;
 	m_HeadY[2] = 1;
 	m_HeadY[3] = 0;
+
+	for (int index = 0; index < 32; ++index)
+	{
+		m_texDungeonDoors[index] = nullptr;
+	}
 }
 
 UltimaDungeon::~UltimaDungeon()
 {
+	for (int index = 0; index < 32; ++index)
+	{
+		if (m_texDungeonDoors[index])
+		{
+			SDL_DestroyTexture(m_texDungeonDoors[index]);
+		}
+	}
+
 	if (m_texDungeonPort)
 	{
 		SDL_DestroyTexture(m_texDungeonPort);
@@ -112,7 +125,7 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		m_misc.OtherCommand(0);
 		break;
 	case SDLK_P:
-		NotDngCmd();
+		PeerGem();
 		break;
 	case SDLK_R:
 		NotDngCmd();
@@ -207,6 +220,206 @@ void UltimaDungeon::loadGraphics()
 	SDL_SetTextureScaleMode(m_texRod, SDL_SCALEMODE_NEAREST);
 
 	m_texDungeonPort = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 600, 512);
+
+	createDoorPolygons();
+}
+
+void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2)
+{
+	int pitch = 2400;
+
+	if (x1 != x2)
+	{
+		if (x2 < x1)
+		{
+			int temp = y1;
+			y1 = y2;
+			y2 = temp;
+
+			temp = x1;
+			x1 = x2;
+			x2 = temp;
+		}
+
+		float d = (float)(y2 - y1) / (float)(x2 - x1);
+		float fy1 = y1;
+		for (int i = x1; i < x2; i++)
+		{
+			if (x1 >= 600 || (int)fy1 >= 512)
+			{
+				x1++;
+				fy1 +=d;
+				continue;
+			}
+
+			canvas[(pitch * (int)fy1) + (x1 * 4) + ((std::endian::native == std::endian::big) ? 3 : 0)] = 0xFF;
+			x1++;
+			fy1 += d;
+		}
+	}
+	else // just draw straight down
+	{
+		if (y2 < y1)
+		{
+			int temp = y1;
+			y1 = y2;
+			y2 = temp;
+		}
+		for (int i = y1; i < y2; i++)
+		{
+			if (y1 >= 512 || x2 >= 600)
+			{
+				break;
+			}
+
+			canvas[(pitch * i) + (x1 * 4) + ((std::endian::native == std::endian::big) ? 3 : 0)] = 0xFF;
+		}
+	}
+}
+
+short UltimaDungeon::getLeftMost(unsigned char* canvas, short startX, short endX)
+{
+	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
+	for (int index = (startX * 4); index < (endX * 4); index += 4)
+	{
+		if (*(canvas + index + endianbyte) != 0)
+		{
+			return index / 4;
+		}
+	}
+	return -1;
+}
+
+short UltimaDungeon::getRightMost(unsigned char* canvas, short startX, short endX)
+{
+	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
+	for (int index = (startX * 4); index >= (endX * 4); index -= 4)
+	{
+		if (*(canvas + index + endianbyte) != 0)
+		{
+			return index / 4;
+		}
+	}
+	return -1;
+}
+
+void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, short minY, short maxY)
+{
+	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
+	int pitch = 2400;
+	int drawMode = 0;
+	if (maxX >= 600)
+	{
+		drawMode = 1; // Just draw right
+	}
+	else if (minX <= 0)
+	{
+		drawMode = 2; // Just draw left
+	}
+	for (int index = minY; index <= maxY; ++index)
+	{
+		if (index >= 512)
+		{
+			break;
+		}
+		if (drawMode == 1)
+		{
+			if (minX < 600)
+			{
+				short startPos = getLeftMost(canvas + (pitch * index), minX, maxX);
+				if (startPos >= 0)
+				{
+					for (int tempIndex = startPos; tempIndex < 600; ++tempIndex)
+					{
+						canvas[(pitch * index) + (tempIndex * 4) + endianbyte] = 0xFF;
+					}
+				}
+			}
+		}
+		else if (drawMode == 2)
+		{
+			short endPos = getRightMost(canvas + (pitch * index), maxX, minX);
+			for (int tempIndex = endPos; tempIndex >= 0; --tempIndex)
+			{
+				canvas[(pitch * index) + (tempIndex * 4) + endianbyte] = 0xFF;
+			}
+		}
+		else
+		{
+			short startPos = getLeftMost(canvas + (pitch * index), minX, maxX);
+			short endPos = getRightMost(canvas + (pitch * index), maxX, minX);
+
+			if (startPos >= 0 && endPos >= 0)
+			{
+				for (int tempIndex = startPos; tempIndex <= endPos; ++tempIndex)
+				{
+					canvas[(pitch * index) + (tempIndex * 4) + endianbyte] = 0xFF;
+				}
+			}
+		}
+	}
+}
+
+void UltimaDungeon::createDoorPoly(unsigned char* canvas, short dx1, short dy1, short dx2, short dy2, short dy3, short dy4)
+{
+	int pitch = 2400;
+	memset(canvas, 0, sizeof(unsigned char) * pitch * 512);
+
+	short maxX = std::max<short>(dx1 * 2, dx2 * 2);
+	short maxY = std::max<short>(dy1 * 2, dy2 * 2);
+	short minX = std::min<short>(dx1 * 2, dx2 * 2);
+	short minY = std::min<short>(dy1 * 2, dy2 * 2);
+
+	short tempMax = std::max<short>(dy3 * 2, dy4 * 2);
+	short tempMin = std::min<short>(dy3 * 2, dy4 * 2);
+
+	maxY = std::max<short>(maxY, tempMax);
+	minY = std::min<short>(maxY, tempMin);
+
+	renderLine(canvas, dx1 * 2, dy1 * 2, dx1 * 2, dy2 * 2);
+	renderLine(canvas, dx1 * 2, dy2 * 2, dx2 * 2, dy3 * 2);
+	renderLine(canvas, dx2 * 2, dy3 * 2, dx2 * 2, dy4 * 2);
+	renderLine(canvas, dx2 * 2, dy4 * 2, dx1 * 2, dy1 * 2);
+
+	fillDoorPoly(canvas, minX, maxX, minY, maxY);
+}
+
+void UltimaDungeon::createDoorPolygons()
+{
+	// 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
+	short dx1[32] = { 74, 0,   300, 0,   114, 300, 20, 88,  212, 280, 36,  79,  135, 221, 264, 24,
+					 87, 118, 182, 213, 276, 40,  87, 114, 143, 186, 213, 260, 118, 136, 164, 182 };
+	short dx2[32] = { 226, 40,  260, 37,  186, 263, 48,  102, 198, 252, 64,  108, 164, 192, 236, 48,
+					 101, 124, 176, 199, 252, 54,  100, 127, 156, 173, 200, 246, 126, 140, 160, 174 };
+
+	short dy1[32] = { 256, 256, 256, 191, 191, 191, 182, 179, 179, 182, 159, 159, 159, 159, 159, 154,
+					 153, 153, 153, 153, 154, 143, 143, 143, 143, 143, 143, 143, 140, 138, 138, 140 };
+	short dy2[32] = { 64,  75,  75,  95,  95,  95,  96,  100, 100, 96,  112, 112, 112, 112, 112, 112,
+					 110, 110, 110, 110, 112, 120, 120, 120, 120, 120, 120, 120, 122, 124, 124, 122 };
+	short dy3[32] = { 64,  92,  92,  95,  95,  95,  102, 106, 106, 102, 112, 112, 112, 112, 112, 116,
+					 114, 115, 115, 114, 116, 120, 120, 120, 120, 120, 120, 120, 124, 126, 126, 124 };
+	short dy4[32] = { 256, 220, 220, 191, 191, 191, 170, 168, 168, 170, 159, 159, 159, 159, 159, 149,
+					 147, 148, 148, 147, 149, 143, 143, 143, 143, 143, 143, 143, 137, 134, 134, 137 };
+
+	std::vector<unsigned char> canvas;
+	canvas.resize(600 * 512 * 4);
+
+	for (int index = 0; index < 32; ++index)
+	{
+		createDoorPoly(canvas.data(), dx1[index], dy1[index], dx2[index], dy2[index], dy3[index], dy4[index]);
+
+		m_texDungeonDoors[index] = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 600, 512);
+
+		SDL_GetTextureProperties(m_texDungeonDoors[index]);
+
+		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+		SDL_SetRenderTarget(m_resources.m_renderer, m_texDungeonDoors[index]);
+		SDL_RenderClear(m_resources.m_renderer);
+		SDL_UpdateTexture(m_texDungeonDoors[index], NULL, canvas.data(), 2400);
+	}
+
+	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+	SDL_SetRenderTarget(m_resources.m_renderer, NULL);
 }
 
 void UltimaDungeon::DungeonStart(short mode)
@@ -520,7 +733,7 @@ unsigned char UltimaDungeon::GetXYDng(short x, short y) // $93DE
 	{
 		x -= 16;
 	}
-	return m_misc.m_Dungeon[(m_misc.m_dungeonLevel * 256) + (y * 16) + x];
+	return m_misc.m_Dungeon[(m_dungeonLevel * 256) + (y * 16) + x];
 }
 
 short UltimaDungeon::DungeonBlock(short location)
@@ -564,7 +777,7 @@ short UltimaDungeon::DungeonBlock(short location)
 		}
 		if ((tile & 0x40) != 0)
 		{
-			//DrawChest(location);
+			DrawChest(location);
 		}
 		return 0;
 	}
@@ -588,7 +801,7 @@ short UltimaDungeon::DrawWall(short location) // $19B4
 	SDL_FRect ToRect;
 	if (location > 31)
 	{
-		//DrawDoor(location - 32);
+		DrawDoor(location - 32);
 		return location;
 	}
 
@@ -609,6 +822,39 @@ short UltimaDungeon::DrawWall(short location) // $19B4
 
 	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 	return location;
+}
+
+void UltimaDungeon::DrawDoor(short location)
+{
+	if (m_texDungeonDoors[location])
+	{
+		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonDoors[location], NULL, NULL);
+	}
+}
+
+void UltimaDungeon::DrawChest(short location) // $1A5A
+{
+	SDL_FRect FromRect;
+	SDL_FRect ToRect;
+	short shape, width;
+	if (location > 20)
+	{
+		return;
+	}
+	shape = 33;
+	m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+	width = (short)(FromRect.w / 2);
+	if (chSide[location] == 1)
+	{
+		FromRect.w -= (width);
+	}
+	if (chSide[location] == 2)
+	{
+		FromRect.x += (width - 1);
+		FromRect.w -= (width);
+	}
+	m_resources.GenerateRect(&ToRect, (chL[location] * 2), (chT[location] * 2), (chR[location] + 1) * 2, (chB[location] + 1) * 2);
+	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 }
 
 void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
@@ -817,23 +1063,70 @@ void UltimaDungeon::Klimb() // $8F37
 		InvalCmd();
 		return;
 	}
-	m_misc.m_dungeonLevel--;
-	if (m_misc.m_dungeonLevel >= 0 && m_misc.m_dungeonLevel < 8)
+	m_dungeonLevel--;
+	if (m_dungeonLevel >= 0 && m_dungeonLevel < 8)
 	{
+		m_forceRedraw = true;
 		DrawDungeon();
 		return;
 	}
 	m_dungeonLevel = 0;
 	m_gExitDungeon = true;
-	m_forceRedraw = true;
 	return;
 }
 
 void UltimaDungeon::Descend() // $8F0C
 {
+	m_scrollArea.UPrintMessage(169);
+	if (GetXYDng(m_misc.m_xpos, m_misc.m_ypos) > 127)
+	{
+		InvalCmd();
+		return;
+	}
+	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x20) == 0)
+	{
+		InvalCmd();
+		return;
+	}
+	m_dungeonLevel++;
+	m_forceRedraw = true;
 }
 
 void UltimaDungeon::InvalCmd() // $8ED8
 {
 	m_scrollArea.UPrintMessage(171);
+}
+
+void UltimaDungeon::PeerGem()
+{
+	m_scrollArea.UPrintMessage(75);
+	m_misc.m_inputType = InputType::Transact;
+	m_graphics.setFade(false);
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::PeerGemCallback, this));
+}
+
+void UltimaDungeon::PeerGemCallback()
+{
+	short rosnum;
+
+	if (m_misc.m_input_num > 3 || m_misc.m_input_num < 0 || m_misc.m_Party[6 + m_misc.m_input_num] == 0)
+	{
+		m_scrollArea.UPrintWin("\n\n");
+		return;
+	}
+	rosnum = m_misc.m_Party[6 + m_misc.m_input_num];
+	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
+	/*if (m_misc.m_Player[rosnum][37] < 1)
+	{
+		m_scrollArea.UPrintWin(strRosNum);
+		m_scrollArea.UPrintMessage(67);
+	}
+	else*/
+	{
+		m_scrollArea.blockPrompt(true);
+		m_scrollArea.UPrintWin(strRosNum);
+		m_misc.m_Player[rosnum][37]--;
+		m_scrollArea.forceRedraw();
+		m_graphics.m_queuedMode = U3GraphicsMode::MiniMapDungeon;
+	}
 }

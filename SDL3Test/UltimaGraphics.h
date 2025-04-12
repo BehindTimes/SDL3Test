@@ -60,8 +60,6 @@ public:
 
 	bool m_staydead;
 
-	SDL_Texture* m_texMap;
-
 private:
 	void renderMiniMap();
 	void DrawMoonGateStuff();
@@ -83,4 +81,5 @@ private:
 	int m_blockSize;
 	bool m_forceRedraw;
 	Uint64 m_blinkElapsed;
+	SDL_Texture* m_texMap;
 };

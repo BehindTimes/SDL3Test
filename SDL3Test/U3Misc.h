@@ -93,6 +93,11 @@ public:
 	void NorthEast();
 	void NorthWest();
 
+	void GetChest(short spell, short chnum);
+	void Ignite();
+	void JoinGold();
+	void JoinGold(short chnum);
+
 	void NoGo();
 
 	unsigned char m_Player[21][65];
@@ -161,10 +166,6 @@ private:
 	void Enter();
 	void Exit();
 	void Fire();
-	void GetChest(short spell, short chnum);
-	void Ignite();
-	void JoinGold();
-	void JoinGold(short chnum);
 	void Look();
 	void Klimb();
 	void PeerGem();

@@ -806,6 +806,11 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 
 void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 {
+    if (m_dungeon.m_gExitDungeon)
+    {
+        m_dungeon.Routine6E6B();
+        return;
+    }
     DrawFrame(1);
     m_resources.ShowChars(true);
     m_dungeon.DrawDungeon();

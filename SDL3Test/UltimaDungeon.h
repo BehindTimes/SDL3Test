@@ -23,8 +23,10 @@ public:
 	bool HandleDefaultKeyPress(SDL_Keycode key);
 
 	unsigned char m_dungeonLevel;
-private:
+	bool m_gExitDungeon;
 	void Routine6E6B();
+private:
+	
 	void RenderDungeon();
 	void DrawDungeonBackGround();
 	short DrawWall(short location);
@@ -38,11 +40,16 @@ private:
 	void Chunk7();
 	void DrawLadder(short location, short direction);
 
+	void LetterCommand(SDL_Keycode key);
 	void Forward();
 	void Retreat();
 	void Left();
 	void Right();
 	void Pass();
+	void NotDngCmd();
+	void Klimb();
+	void Descend();
+	void InvalCmd();
 
 	SDL_Texture* m_texDungeonShapes;
 	SDL_Texture* m_texFountain;

@@ -35,7 +35,8 @@ UltimaDungeon::UltimaDungeon() :
 	m_texRod(nullptr),
 	m_texShrine(nullptr),
 	m_forceRedraw(true),
-	m_texDungeonPort(nullptr)
+	m_texDungeonPort(nullptr),
+	m_gExitDungeon(false)
 {
 	m_HeadX[0] = 0;
 	m_HeadX[1] = 1;
@@ -76,11 +77,66 @@ UltimaDungeon::~UltimaDungeon()
 	}
 }
 
+void UltimaDungeon::LetterCommand(SDL_Keycode key)
+{
+	switch (key)
+	{
+	case SDLK_C:
+		NotDngCmd();
+		break;
+	case SDLK_D:
+		Descend();
+		break;
+	case SDLK_G:
+		m_misc.GetChest(0, 0);
+		break;
+	case SDLK_H:
+		NotDngCmd();
+		break;
+	case SDLK_I:
+		m_misc.Ignite();
+		break;
+	case SDLK_J:
+		m_misc.JoinGold();
+		break;
+	case SDLK_K:
+		Klimb();
+		break;
+	case SDLK_M:
+		NotDngCmd();
+		break;
+	case SDLK_N:
+		NotDngCmd();
+		break;
+	case SDLK_O:
+		m_misc.OtherCommand(0);
+		break;
+	case SDLK_P:
+		NotDngCmd();
+		break;
+	case SDLK_R:
+		NotDngCmd();
+		break;
+	case SDLK_W:
+		NotDngCmd();
+		break;
+	case SDLK_Y:
+		m_misc.Yell(0);
+		break;
+	case SDLK_Z:
+		NotDngCmd();
+		break;
+	default:
+		NotDngCmd();
+		break;
+	}
+}
+
 bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 {
 	if (key >= SDLK_A && key <= SDLK_Z)
 	{
-		//LetterCommand(key);
+		LetterCommand(key);
 	}
 	else
 	{
@@ -155,6 +211,7 @@ void UltimaDungeon::loadGraphics()
 
 void UltimaDungeon::DungeonStart(short mode)
 {
+	m_gExitDungeon = false;
 	m_graphics.m_curMode = U3GraphicsMode::Dungeon;
 	m_misc.m_gameMode = GameStateMode::Dungeon;
 
@@ -184,6 +241,29 @@ void UltimaDungeon::Routine6E6B()
 	m_graphics.m_curMode = U3GraphicsMode::Map;
 	m_misc.m_gameMode = GameStateMode::Map;
 	m_misc.m_Party[2] = 0;    // back to surface
+
+	if (!m_misc.m_checkDead)
+	{
+		m_scrollArea.UPrintMessage(182);
+	}
+
+	m_misc.m_Party[3] = m_misc.m_xpos;
+	m_misc.m_Party[4] = m_misc.m_ypos;
+
+	bool autosave;
+	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+
+	if (autosave)
+	{
+		m_misc.GetSosaria();
+		m_misc.PutRoster();
+		m_misc.PutParty();
+		m_misc.PutSosaria();
+	}
+	else
+	{
+		m_misc.PullSosaria();
+	}
 }
 
 void UltimaDungeon::DngInfo()
@@ -411,7 +491,7 @@ void UltimaDungeon::Chunk1()
 
 void UltimaDungeon::RenderDungeon()
 {
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
 	SDL_SetRenderTarget(m_resources.m_renderer, m_texDungeonPort);
 	SDL_RenderClear(m_resources.m_renderer);
 
@@ -722,4 +802,38 @@ void UltimaDungeon::Right()
 void UltimaDungeon::Pass()
 {
 	m_scrollArea.UPrintMessage(23);
+}
+
+void UltimaDungeon::NotDngCmd() // $8EF1
+{
+	m_scrollArea.UPrintMessage(172);
+}
+
+void UltimaDungeon::Klimb() // $8F37
+{
+	m_scrollArea.UPrintMessage(170);
+	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x10) == 0)
+	{
+		InvalCmd();
+		return;
+	}
+	m_misc.m_dungeonLevel--;
+	if (m_misc.m_dungeonLevel >= 0 && m_misc.m_dungeonLevel < 8)
+	{
+		DrawDungeon();
+		return;
+	}
+	m_dungeonLevel = 0;
+	m_gExitDungeon = true;
+	m_forceRedraw = true;
+	return;
+}
+
+void UltimaDungeon::Descend() // $8F0C
+{
+}
+
+void UltimaDungeon::InvalCmd() // $8ED8
+{
+	m_scrollArea.UPrintMessage(171);
 }

@@ -75,3 +75,12 @@ void U3Utilities::trim(std::string& str)
 		return !std::isspace(ch);
 	}));
 }
+
+// SDL was having issues opening up files
+std::string U3Utilities::PathToSDLString(std::filesystem::path input)
+{
+	std::u8string temp = input.u8string();
+	std::string strRet(temp.cbegin(), temp.cend());
+
+	return strRet;
+}

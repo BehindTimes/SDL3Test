@@ -1,4 +1,3 @@
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_rect.h>
 #include <iostream>
 
@@ -7,6 +6,7 @@
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
 #include "U3ScrollArea.h"
+#include "UltimaDungeon.h"
 
 extern short blkSiz;
 
@@ -14,6 +14,7 @@ extern SDL_Renderer* renderer;
 extern U3Resources m_resources;
 extern U3Misc m_misc;
 extern U3ScrollArea m_scrollArea;
+extern UltimaDungeon m_dungeon;
 
 U3Graphics::U3Graphics() :
     m_classic(false),
@@ -26,7 +27,8 @@ U3Graphics::U3Graphics() :
     m_forceRedraw(true),
     m_fading(true),
     m_blinkElapsed(0),
-    m_staydead(false)
+    m_staydead(false),
+    m_winElapsed(0)
 {
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
     memset(m_maskArray, 0, sizeof(unsigned char) * 128);
@@ -39,6 +41,12 @@ U3Graphics::~U3Graphics()
         SDL_DestroyTexture(m_texMap);
         m_texMap = nullptr;
     }
+}
+
+void U3Graphics::setForceRedraw()
+{
+    m_forceRedraw = true;
+    m_dungeon.setForceRedraw();
 }
 
 void U3Graphics::setBlockSize(int blockSize)
@@ -139,13 +147,16 @@ void U3Graphics::DrawFrame(short which)
             str = std::to_string(x + 1);
             m_resources.CenterMessage(str, 31, 32, x * 4);
         }
-        bool hasWind;
-        m_resources.GetPreference(U3PreferencesType::Include_Wind, hasWind);
-        /*if(hasWind)
+        if (m_misc.m_gameMode == GameStateMode::Map)
         {
-            m_resources.DoWind();
-        }*/
-        DrawMoonGateStuff();
+            bool hasWind;
+            m_resources.GetPreference(U3PreferencesType::Include_Wind, hasWind);
+            DrawMoonGateStuff();
+        }
+        if (m_misc.m_gameMode == GameStateMode::Dungeon)
+        {
+            m_dungeon.DngInfo();
+        }
     }
 	if ((which == 2) || (which == 3))
 	{
@@ -616,14 +627,19 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 {
     switch (m_curMode)
     {
+    case U3GraphicsMode::Map:
+        renderGameMap(event, deltaTime, wasMove);
+        break;
     case U3GraphicsMode::MiniMap:
         renderMiniMap(event, deltaTime, wasMove);
         break;
     case U3GraphicsMode::WinScreen:
         renderWinScreen(event, deltaTime, wasMove, m_fading);
         break;
+    case U3GraphicsMode::Dungeon:
+        renderDungeon(event, deltaTime, wasMove);
+        break;
     default:
-        renderGameMap(event, deltaTime, wasMove);
         break;
     }
 }
@@ -786,4 +802,15 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
             }
         }
     }
+}
+
+void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+{
+    DrawFrame(1);
+    m_resources.ShowChars(true);
+    m_dungeon.DrawDungeon();
+    m_misc.CheckAllDead();
+
+    m_scrollArea.render(deltaTime);
+    m_resources.DrawInverses(deltaTime);
 }

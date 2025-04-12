@@ -24,6 +24,12 @@ struct SosariaHandle
 	unsigned char WhirlDY;
 };
 
+enum class GameStateMode
+{
+	Map,
+	Dungeon
+};
+
 enum class InputType
 {
 	Default,
@@ -53,7 +59,11 @@ public:
 	void GetMiscStuff(bool defaultData);
 	bool GetRoster();
 	bool GetParty();
-	void GetSosaria();
+	bool GetSosaria();
+	bool PutRoster();
+	bool PutParty();
+	bool PutSosaria();
+
 	unsigned char GetXYTile(short x, short y);
 	unsigned char GetXYVal(int x, int y);
 	void PutXYVal(unsigned char value, unsigned char x, unsigned char y);
@@ -71,6 +81,8 @@ public:
 	void OtherCommand(short yell);
 	void Yell(short mode);
 	void SafeExodus();
+	void PullSosaria();
+	void PushSosaria();
 
 	void North();
 	void South();
@@ -133,6 +145,12 @@ public:
 	bool m_checkDead;
 	bool m5BDC;
 	char m_dungeonLevel;
+	GameStateMode m_gameMode;
+	short m_heading;
+	int m_xs;
+	int m_ys;
+	int m_dx;
+	int m_dy;
 
 private:
 	void Attack();
@@ -172,8 +190,6 @@ private:
 	void Routine6E35();
 	void IncMoves();
 	void FinishAll();
-	void PullSosaria();
-	void PushSosaria();
 	void HandleAnyKey();
 	void FinalizeHealingCallback();
 	void ClearTiles();
@@ -292,10 +308,6 @@ private:
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
 
-	int m_xs;
-	int m_ys;
-	int m_dx;
-	int m_dy;
 	bool m_numOnly;
 	short m_opnum;
 	short m_opnum2;
@@ -306,7 +318,6 @@ private:
 	short m_storedir;
 	short m_rosNum;
 
-	short m_heading;
 	int m_transactNum;
 	std::unique_ptr <SosariaHandle> m_saved_map;
 	

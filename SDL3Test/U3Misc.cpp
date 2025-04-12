@@ -5,7 +5,7 @@
 #include "UltimaSpellCombat.h"
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
-#include "UltimaSpellCombat.h"
+#include "UltimaDungeon.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -15,6 +15,7 @@ extern U3ScrollArea m_scrollArea;
 extern UltimaSpellCombat m_spellCombat;
 extern U3Utilities m_utilities;
 extern UltimaSpellCombat m_spellCombat;
+extern UltimaDungeon m_dungeon;
 
 U3Misc::U3Misc() :
 	m_WhirlX(0),
@@ -58,7 +59,8 @@ U3Misc::U3Misc() :
 	m_elapsedSleepTime(0),
 	m_sleepCheckTime(0),
 	m5BDC(false),
-	m_dungeonLevel(0)
+	m_dungeonLevel(0),
+	m_gameMode(GameStateMode::Map)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -234,14 +236,24 @@ void U3Misc::OpenRstr()
 		{
 			std::filesystem::path monsterFile = currentPath / orig_files[0];
 			dummy.resize(256);
-			SDL_IOStream* file = SDL_IOFromFile(monsterFile.string().c_str(), "wb");
+			std::string strTemp = m_utilities.PathToSDLString(monsterFile);
+			if (strTemp.empty())
+			{
+				return;
+			}
+			SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
 			SDL_WriteIO(file, dummy.data(), dummy.size());
 			SDL_CloseIO(file);
 			dummy.clear();
 			dummy.resize(32);
 			memset(dummy.data(), 1, sizeof(char) * 8);
 			std::filesystem::path preferencesFile = currentPath / orig_files[1];
-			file = SDL_IOFromFile(preferencesFile.string().c_str(), "wb");
+			strTemp = m_utilities.PathToSDLString(preferencesFile);
+			if (strTemp.empty())
+			{
+				return;
+			}
+			file = SDL_IOFromFile(strTemp.c_str(), "wb");
 			SDL_WriteIO(file, dummy.data(), dummy.size());
 			SDL_CloseIO(file);
 			for (int index = 2; index < orig_files.size(); index += 2)
@@ -315,7 +327,12 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	memset(m_Experience, 0, sizeof(char) * 17);
 
 	dummy.resize(file_size);
-	SDL_IOStream* file = SDL_IOFromFile(moongateFile.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(moongateFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 
@@ -327,7 +344,12 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 	file_size = std::filesystem::file_size(typeFile);
 	dummy.resize(file_size);
-	file = SDL_IOFromFile(typeFile.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(typeFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 	if (dummy.size() < 12)
@@ -337,7 +359,12 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 	file_size = std::filesystem::file_size(weaponFile);
 	dummy.resize(file_size);
-	file = SDL_IOFromFile(weaponFile.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(weaponFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 	if (dummy.size() < 12)
@@ -347,7 +374,12 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 	file_size = std::filesystem::file_size(armourFile);
 	dummy.resize(file_size);
-	file = SDL_IOFromFile(armourFile.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(armourFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 	if (dummy.size() < 12)
@@ -357,7 +389,12 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 	file_size = std::filesystem::file_size(locationFile);
 	dummy.resize(file_size);
-	file = SDL_IOFromFile(locationFile.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(locationFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 
@@ -369,13 +406,66 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 	file_size = std::filesystem::file_size(experienceFile);
 	dummy.resize(file_size);
-	file = SDL_IOFromFile(experienceFile.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(experienceFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	SDL_ReadIO(file, dummy.data(), dummy.size());
 	SDL_CloseIO(file);
 	if (dummy.size() < 17)
 	{
 		memcpy(m_Experience, dummy.data(), 12);
 	}
+}
+
+bool U3Misc::PutRoster()
+{
+	std::filesystem::path rosterPath = std::filesystem::current_path();
+	rosterPath /= ResourceLoc;
+	rosterPath /= SaveLoc;
+	rosterPath /= std::string("Roster1.ult");
+
+	short player;
+	const size_t roster_size = 1280;
+	std::uintmax_t file_size = std::filesystem::file_size(rosterPath);
+
+	std::string strTemp = m_utilities.PathToSDLString(rosterPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return false;
+	}
+	std::vector<unsigned char> data;
+	data.resize(roster_size);
+	for (player = 0; player < 20; player++)
+	{
+		/*for (byte = 0; byte < 64; byte++)
+		{
+			data[((player) * 64) + byte] = m_Player[player + 1][byte];
+		}*/
+		SDL_WriteIO(file, m_Player[player + 1], 64);
+	}
+
+	
+	SDL_CloseIO(file);
+
+	return true;
+}
+
+bool U3Misc::PutParty()
+{
+	return true;
+}
+
+bool U3Misc::PutSosaria()
+{
+	return true;
 }
 
 bool U3Misc::GetRoster()
@@ -394,7 +484,12 @@ bool U3Misc::GetRoster()
 	{
 		return false;
 	}
-	SDL_IOStream* file = SDL_IOFromFile(rosterPath.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(rosterPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	if (!file)
 	{
 		return false;
@@ -427,7 +522,12 @@ bool U3Misc::GetParty()
 	{
 		return false;
 	}
-	SDL_IOStream* file = SDL_IOFromFile(partyPath.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(partyPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	if (!file)
 	{
 		return false;
@@ -441,10 +541,11 @@ bool U3Misc::GetParty()
 	return true;
 }
 
-void U3Misc::GetSosaria()
+bool U3Misc::GetSosaria()
 {
 	LoadUltimaMap(19);
 	BlockExodus();
+	return true;
 }
 
 void U3Misc::BlockExodus()
@@ -563,7 +664,12 @@ void U3Misc::LoadUltimaMap(int map)
 		std::uintmax_t file_size = std::filesystem::file_size(currentPath);
 		map_data.resize(file_size);
 
-		SDL_IOStream* file = SDL_IOFromFile(currentPath.string().c_str(), "rb");
+		std::string strTemp = m_utilities.PathToSDLString(currentPath);
+		if (strTemp.empty())
+		{
+			return;
+		}
+		SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 		if (!file)
 		{
 			return;
@@ -584,7 +690,12 @@ void U3Misc::LoadUltimaMap(int map)
 			if (map == 19 && file_size == 4100)
 			{
 				map_data.insert(map_data.begin(), 64);
-				SDL_IOStream* file = SDL_IOFromFile(currentPath.string().c_str(), "wb");
+				strTemp = m_utilities.PathToSDLString(currentPath);
+				if (strTemp.empty())
+				{
+					return;
+				}
+				SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
 				SDL_WriteIO(file, map_data.data(), map_data.size());
 				SDL_CloseIO(file);
 			}
@@ -606,7 +717,12 @@ void U3Misc::LoadUltimaMap(int map)
 			if (file_size == 256)
 			{
 				monster_data.resize(file_size);
-				SDL_IOStream* file = SDL_IOFromFile(monsterPath.string().c_str(), "rb");
+				strTemp = m_utilities.PathToSDLString(talkPath);
+				if (strTemp.empty())
+				{
+					return;
+				}
+				SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 				SDL_ReadIO(file, monster_data.data(), file_size);
 				SDL_CloseIO(file);
 
@@ -638,7 +754,12 @@ void U3Misc::LoadUltimaMap(int map)
 			}
 			talk_data.resize(file_size);
 
-			SDL_IOStream* file = SDL_IOFromFile(talkPath.string().c_str(), "rb");
+			strTemp = m_utilities.PathToSDLString(talkPath);
+			if (strTemp.empty())
+			{
+				return;
+			}
+			SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 			if (!file)
 			{
 				return;
@@ -1740,6 +1861,7 @@ void U3Misc::Enter()
 			m_xpos = 1;
 			m_ypos = 32;
 			m_heading = 2;
+			m_dungeon.m_dungeonLevel = 0;
 			break;
 		case 0x0E: // Castle
 			dispString = m_resources.m_plistMap["Messages"][32];
@@ -1775,7 +1897,9 @@ void U3Misc::Enter()
 	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
 	{
-		PushSosaria();
+		PutRoster();
+		PutParty();
+		PutSosaria();
 	}
 	else
 	{
@@ -1794,6 +1918,7 @@ void U3Misc::Enter()
 
 	if (m_Party[2] == 1) // Dungeon
 	{
+		m_dungeon.DungeonStart(0);
 		return;
 	}
 	if (m_Party[2] == 2) // Town
@@ -4025,9 +4150,9 @@ void U3Misc::CheckAllDead() // $71B4
 		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
 		if (autosave)
 		{
-			/*PutParty();
+			PutParty();
 			PutRoster();
-			PutSosaria();*/
+			PutSosaria();
 		}
 
 		m_inputType = InputType::AnyKey;
@@ -4107,6 +4232,8 @@ void U3Misc::ResurrectCallback()
 	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea.blockPrompt(false);
 	m_checkDead = false;
+	//m_graphics.m_curMode = U3GraphicsMode::Map;
+	//m_gameMode = GameStateMode::Map;
 }
 
 void U3Misc::SafeExodus(void)

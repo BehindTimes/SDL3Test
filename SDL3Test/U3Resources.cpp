@@ -9,6 +9,7 @@
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
+#include "UltimaDungeon.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -17,6 +18,7 @@ extern TTF_TextEngine* engine_surface;
 extern U3Misc m_misc;
 extern U3Graphics m_graphics;
 extern U3ScrollArea m_scrollArea;
+extern UltimaDungeon m_dungeon;
 extern U3Utilities m_utilities;
 
 constexpr int FONT_NUM_X = 96;
@@ -302,7 +304,12 @@ void U3Resources::loadDemo()
 	currentPath /= BinLoc;
 	currentPath /= "MainResources.rsrc_DEMO_400_WhereWhatHow.bin";
 
-	SDL_IOStream* file = SDL_IOFromFile(currentPath.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(currentPath);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	if (!file)
 	{
 		return;
@@ -696,7 +703,7 @@ void U3Resources::loadImages()
 	currentPath /= "Credits.png";
 
 	m_texCredits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
-
+	m_dungeon.loadGraphics();
 }
 
 void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
@@ -1298,7 +1305,12 @@ void U3Resources::loadSignatureData()
 	currentPath /= BinLoc;
 	currentPath /= "MainResources.rsrc_SGNT_400_Signature Data.bin";
 
-	SDL_IOStream* file = SDL_IOFromFile(currentPath.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(currentPath);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	if (!file)
 	{
 		return;

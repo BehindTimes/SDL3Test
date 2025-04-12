@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL3/SDL.h>
+
 enum class IntroEnum
 {
 	PRE_FIGHT,
@@ -14,7 +16,8 @@ enum class U3GraphicsMode
 	MiniMap,
 	PauseScreen,
 	BlackScreen,
-	WinScreen
+	WinScreen,
+	Dungeon
 };
 
 class U3Graphics
@@ -40,10 +43,7 @@ public:
 	short MapConstrain(short value);
 	void ChangeClassic();
 	void setBlockSize(int blockSize);
-	void setForceRedraw()
-	{
-		m_forceRedraw = true;
-	}
+	void setForceRedraw();
 	void setFade(bool fade)
 	{
 		m_blinkElapsed = 0;
@@ -60,6 +60,8 @@ public:
 
 	bool m_staydead;
 
+	SDL_Texture* m_texMap;
+
 private:
 	void renderMiniMap();
 	void DrawMoonGateStuff();
@@ -68,6 +70,7 @@ private:
 	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMove, bool fade);
 	void DrawWinScreen(float ratio);
 	void renderWinScreen();
+	void renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove);
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;
@@ -76,7 +79,7 @@ private:
 	bool m_classic;
 	Uint64 m_startTickCount;
 	Uint64 m_fadeTime;
-	SDL_Texture* m_texMap;
+	
 	int m_blockSize;
 	bool m_forceRedraw;
 	Uint64 m_blinkElapsed;

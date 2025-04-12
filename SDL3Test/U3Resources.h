@@ -166,6 +166,8 @@ public:
 		"Onward to ULTIMA IV!"
 	};
 
+	int m_blockSize;
+
 private:
 	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
@@ -245,7 +247,6 @@ private:
 	int m_ultimaLogoHeight;
 	int m_portraitHeight;
 	int m_portraitWidth;
-	int m_blockSize;
 
 	std::vector<unsigned char> m_demoData;
 

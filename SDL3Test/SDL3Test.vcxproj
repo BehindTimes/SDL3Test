@@ -148,6 +148,7 @@
     <ClCompile Include="U3Resources.cpp" />
     <ClCompile Include="U3ScrollArea.cpp" />
     <ClCompile Include="U3Utilities.cpp" />
+    <ClCompile Include="UltimaDungeon.cpp" />
     <ClCompile Include="UltimaGraphics.cpp" />
     <ClCompile Include="UltimaIncludes.cpp" />
     <ClCompile Include="UltimaMacIF.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="U3ScrollArea.h" />
     <ClInclude Include="U3Theme.h" />
     <ClInclude Include="U3Utilities.h" />
+    <ClInclude Include="UltimaDungeon.h" />
     <ClInclude Include="UltimaGraphics.h" />
     <ClInclude Include="UltimaIncludes.h" />
     <ClInclude Include="UltimaMacIF.h" />

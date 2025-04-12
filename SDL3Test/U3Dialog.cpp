@@ -265,7 +265,12 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 	}
 
 	std::uintmax_t file_size = std::filesystem::file_size(currentPathMessage);
-	SDL_IOStream* file = SDL_IOFromFile(currentPathMessage.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 
 	if (!file)
 	{
@@ -279,7 +284,12 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 	fileTitleData.emplace_back(0);
 
 	file_size = std::filesystem::file_size(currentPathMessage);
-	file = SDL_IOFromFile(currentPathMessage.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 
 	if (!file)
 	{
@@ -478,7 +488,12 @@ void U3Dialog::loadString()
 	}
 
 	std::uintmax_t file_size = std::filesystem::file_size(currentPathTitle);
-	SDL_IOStream* file = SDL_IOFromFile(currentPathTitle.string().c_str(), "rb");
+	std::string strTemp = m_utilities.PathToSDLString(currentPathTitle);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 
 	if (!file)
 	{
@@ -492,7 +507,12 @@ void U3Dialog::loadString()
 	fileTitleData.emplace_back(0);
 
 	file_size = std::filesystem::file_size(currentPathMessage);
-	file = SDL_IOFromFile(currentPathMessage.string().c_str(), "rb");
+	strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "rb");
 
 	if (!file)
 	{

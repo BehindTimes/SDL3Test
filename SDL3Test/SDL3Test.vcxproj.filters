@@ -51,6 +51,9 @@
     <ClCompile Include="UltimaSpellCombat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UltimaDungeon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UltimaMain.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UltimaSpellCombat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UltimaDungeon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

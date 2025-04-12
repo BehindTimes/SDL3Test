@@ -12,6 +12,7 @@
 #include "UltimaSpellCombat.h"
 #include "U3ScrollArea.h"
 #include "U3Utilities.h"
+#include "UltimaDungeon.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -32,6 +33,7 @@ U3Graphics m_graphics;
 U3ScrollArea m_scrollArea;
 U3Utilities m_utilities;
 UltimaSpellCombat m_spellCombat;
+UltimaDungeon m_dungeon;
 
 void DoSplashScreen();
 void MainLoop();

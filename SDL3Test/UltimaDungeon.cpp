@@ -1,9 +1,11 @@
+#include <SDL_image.h>
 #include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
 #include "U3Misc.h"
 #include "U3Resources.h"
-#include <SDL_image.h>
+#include "U3ScrollArea.h"
 
+extern U3ScrollArea m_scrollArea;
 extern U3Graphics m_graphics;
 extern U3Misc m_misc;
 extern U3Resources m_resources;
@@ -35,6 +37,15 @@ UltimaDungeon::UltimaDungeon() :
 	m_forceRedraw(true),
 	m_texDungeonPort(nullptr)
 {
+	m_HeadX[0] = 0;
+	m_HeadX[1] = 1;
+	m_HeadX[2] = 0;
+	m_HeadX[3] = -1;
+
+	m_HeadY[0] = -1;
+	m_HeadY[1] = 0;
+	m_HeadY[2] = 1;
+	m_HeadY[3] = 0;
 }
 
 UltimaDungeon::~UltimaDungeon()
@@ -63,6 +74,38 @@ UltimaDungeon::~UltimaDungeon()
 	{
 		SDL_DestroyTexture(m_texShrine);
 	}
+}
+
+bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
+{
+	if (key >= SDLK_A && key <= SDLK_Z)
+	{
+		//LetterCommand(key);
+	}
+	else
+	{
+		switch (key)
+		{
+		case SDLK_UP:
+			Forward();
+			break;
+		case SDLK_DOWN:
+			Retreat();
+			break;
+		case SDLK_LEFT:
+			Left();
+			break;
+		case SDLK_RIGHT:
+			Right();
+			break;
+		case SDLK_SPACE:
+			Pass();
+			break;
+		default:
+			break;
+		}
+	}
+	return true;
 }
 
 void UltimaDungeon::loadGraphics()
@@ -433,11 +476,11 @@ short UltimaDungeon::DungeonBlock(short location)
 	{
 		if ((tile & 0x10) != 0)
 		{
-			//DrawLadder(location, 0);
+			DrawLadder(location, 0);
 		}
 		if ((tile & 0x20) != 0)
 		{
-			//DrawLadder(location, 1);
+			DrawLadder(location, 1);
 		}
 		if ((tile & 0x40) != 0)
 		{
@@ -485,8 +528,77 @@ short UltimaDungeon::DrawWall(short location) // $19B4
 	FromRect.h -= FromRect.y;
 
 	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
-	//CopyBits(LWPortCopyBits(nDngShapes), LWPortCopyBits(dungPort), &FromRect, &ToRect, srcCopy, nil);
 	return location;
+}
+
+void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
+{
+	SDL_FRect FromRect;
+	SDL_FRect ToRect;
+
+	short lleft, ltop, lright, lbottom, swap, side;
+	short width, height, base, rung, half, shape;
+	if (location > 20)
+	{
+		return;
+	}
+	lleft = (chL[location] * 2);
+	ltop = (chT[location] * 2);
+	lright = (chR[location] * 2);
+	lbottom = (chB[location] * 2);
+	ltop = (short)(lbottom - ((lbottom - ltop) * 1.5f));
+	base = lbottom;
+	if (direction == 0)
+	{
+		swap = 512 - lbottom;
+		lbottom = 512 - ltop;
+		ltop = swap;
+		base = ltop;
+	}
+	side = chSide[location];
+	height = (short)(((lbottom - ltop) * 1.25f) - (lbottom - ltop)) / 2;
+	width = (lbottom - ltop) / 12;
+	rung = (((lbottom - ltop) / 2) + ltop) - (width / 2);
+	half = lleft + ((lright - lleft) / 2);
+	if (side == 1)
+	{
+		half = lright;
+	}
+	if (side == 2)
+	{
+		half = lleft;
+	}
+	FromRect.x = (float)(lleft - width - 2);
+	FromRect.y = (float)(base - height);
+	FromRect.w = (float)((lright + width + 2) - (lleft - width - 2));
+	FromRect.h = (float)(2 * height);
+	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_resources.m_renderer, &FromRect);
+
+	if (side == 0 || side == 1)
+	{
+		shape = 35;
+		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources.GenerateRect(&ToRect, lleft, ltop, lleft + width, lbottom);
+		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		shape = 34;
+		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources.GenerateRect(&ToRect, lleft, rung, half + 1, rung + width);
+		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+	}
+	if (side == 0 || side == 2)
+	{
+		shape = 35;
+		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources.GenerateRect(&ToRect, lright - width, ltop, lright, lbottom);
+		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		shape = 34;
+		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources.GenerateRect(&ToRect, half, rung, lright, rung + width);
+		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+	}
+
+	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
 }
 
 void UltimaDungeon::DrawDungeonBackGround()
@@ -523,4 +635,91 @@ void UltimaDungeon::DrawDungeon()
 
 	m_resources.adjustRect(theRect);
 	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonPort, NULL, &theRect);
+}
+
+void UltimaDungeon::Forward()
+{
+	m_scrollArea.UPrintMessage(165);
+	m_misc.m_xs = m_HeadX[m_misc.m_heading] + m_misc.m_xpos & 0x0F;
+	if (m_misc.m_xs < 0)
+	{
+		m_misc.m_xs += 16;
+	}
+	m_misc.m_ys = m_HeadY[m_misc.m_heading] + m_misc.m_ypos & 0x0F;
+	if (m_misc.m_ys < 0)
+	{
+		m_misc.m_ys += 16;
+	}
+	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
+	{
+		m_misc.NoGo();
+		return;
+	}
+	m_misc.m_xpos = m_misc.m_xs;
+	m_misc.m_ypos = m_misc.m_ys;
+	m_forceRedraw = true;
+}
+
+void UltimaDungeon::Retreat()
+{
+	m_scrollArea.UPrintMessage(166);
+	m_misc.m_xs = m_HeadX[(m_misc.m_heading + 2) & 3] + m_misc.m_xpos & 0x0F;
+	if (m_misc.m_xs < 0)
+	{
+		m_misc.m_xs += 16;
+	}
+	m_misc.m_ys = m_HeadY[(m_misc.m_heading + 2) & 3] + m_misc.m_ypos & 0x0F;
+	if (m_misc.m_ys < 0)
+	{
+		m_misc.m_ys += 16;
+	}
+	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
+	{
+		m_misc.NoGo();
+		return;
+	}
+	m_misc.m_xpos = m_misc.m_xs;
+	m_misc.m_ypos = m_misc.m_ys;
+	m_forceRedraw = true;
+}
+
+void UltimaDungeon::Left()
+{
+	m_scrollArea.UPrintMessage(168);
+	m_misc.m_xs = m_misc.m_xpos;
+	m_misc.m_ys = m_misc.m_ypos;
+	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
+	{
+		m_misc.NoGo();
+		return;
+	}
+	m_misc.m_heading--;
+	if (m_misc.m_heading < 0)
+	{
+		m_misc.m_heading += 4;
+	}
+	m_forceRedraw = true;
+}
+
+void UltimaDungeon::Right()
+{
+	m_scrollArea.UPrintMessage(167);
+	m_misc.m_xs = m_misc.m_xpos;
+	m_misc.m_ys = m_misc.m_ypos;
+	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
+	{
+		m_misc.NoGo();
+		return;
+	}
+	m_misc.m_heading++;
+	if (m_misc.m_heading > 3)
+	{
+		m_misc.m_heading -= 4;
+	}
+	m_forceRedraw = true;
+}
+
+void UltimaDungeon::Pass()
+{
+	m_scrollArea.UPrintMessage(23);
 }

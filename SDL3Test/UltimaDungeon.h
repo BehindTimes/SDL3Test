@@ -20,6 +20,7 @@ public:
 		m_forceRedraw = true;
 	}
 	unsigned char GetXYDng(short x, short y);
+	bool HandleDefaultKeyPress(SDL_Keycode key);
 
 	unsigned char m_dungeonLevel;
 private:
@@ -35,6 +36,13 @@ private:
 	void Chunk5();
 	void Chunk6();
 	void Chunk7();
+	void DrawLadder(short location, short direction);
+
+	void Forward();
+	void Retreat();
+	void Left();
+	void Right();
+	void Pass();
 
 	SDL_Texture* m_texDungeonShapes;
 	SDL_Texture* m_texFountain;
@@ -52,5 +60,7 @@ private:
 	static constexpr std::string_view SaveLoc = "Save";
 
 	bool m_forceRedraw;
+	char m_HeadX[4];
+	char m_HeadY[4];
 };
 

@@ -93,6 +93,8 @@ public:
 	void NorthEast();
 	void NorthWest();
 
+	void NoGo();
+
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
 
@@ -174,7 +176,6 @@ private:
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value);
 	bool ValidDir(unsigned char value);
-	void NoGo();
 	
 	void Pass();
 	

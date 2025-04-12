@@ -1720,7 +1720,14 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 		HandleCallback(true);
 		break;
 	default:
-		HandleDefaultKeyPress(key.key);
+		if (m_gameMode == GameStateMode::Map)
+		{
+			HandleDefaultKeyPress(key.key);
+		}
+		else if (m_gameMode == GameStateMode::Dungeon)
+		{
+			m_dungeon.HandleDefaultKeyPress(key.key);
+		}
 		return true;
 	}
 	return false;

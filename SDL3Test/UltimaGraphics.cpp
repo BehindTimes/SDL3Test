@@ -813,4 +813,36 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 
     m_scrollArea.render(deltaTime);
     m_resources.DrawInverses(deltaTime);
+
+    bool alertValid = m_resources.HasAlert(event);
+    if (!alertValid)
+    {
+        if (!m_staydead)
+        {
+            if (m_misc.m_inputType == InputType::Callback || m_misc.m_inputType == InputType::SleepCallback)
+            {
+                if (!m_scrollArea.isUpdating())
+                {
+                    m_misc.HandleCallback(m_misc.m_inputType == InputType::SleepCallback);
+                }
+            }
+            else
+            {
+                if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
+                {
+                    wasMove = m_misc.ProcessEvent(event);
+                    if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+                    {
+                        m_curMode = m_queuedMode;
+                        m_queuedMode = U3GraphicsMode::None;
+                    }
+                }
+
+                if (m_scrollArea.isPrompt())
+                {
+                    m_resources.DrawPrompt();
+                }
+            }
+        }
+    }
 }

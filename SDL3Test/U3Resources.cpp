@@ -3213,3 +3213,12 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		}
 	}
 }
+
+// A helper function to change Mac Rects to SDL_FRect
+void U3Resources::GenerateRect(SDL_FRect* FromRect, int left, int top, int right, int bottom)
+{
+	FromRect->x = (float)left;
+	FromRect->y = (float)top;
+	FromRect->w = (float)right - left;
+	FromRect->h = (float)bottom - top;
+}

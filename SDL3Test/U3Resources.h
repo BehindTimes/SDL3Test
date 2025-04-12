@@ -137,6 +137,7 @@ public:
 	{
 		return m_alertReturn;
 	}
+	void GenerateRect(SDL_FRect* FromRect, int left, int top, int right, int bottom);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;

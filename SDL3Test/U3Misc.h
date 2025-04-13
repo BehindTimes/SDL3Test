@@ -176,6 +176,7 @@ public:
 	bool m_YellStat;
 	Uint64 m_elapsedSleepTime;
 	Uint64 m_sleepCheckTime;
+	short m_map_id;
 
 private:
 	void Attack();

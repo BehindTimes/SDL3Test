@@ -277,12 +277,13 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	{
 		return false;
 	}
-	loadGraphics();
-	loadImages();
 	if (!loadPLists())
 	{
 		return false;
 	}
+	loadGraphics();
+	loadImages();
+	
 	loadButtons();
 	loadDemo();
 	m_misc.OpenRstr();

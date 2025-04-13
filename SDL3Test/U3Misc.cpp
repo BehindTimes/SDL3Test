@@ -59,7 +59,8 @@ U3Misc::U3Misc() :
 	m_elapsedSleepTime(0),
 	m_sleepCheckTime(0),
 	m5BDC(false),
-	m_gameMode(GameStateMode::Map)
+	m_gameMode(GameStateMode::Map),
+	m_map_id(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -628,6 +629,7 @@ void U3Misc::LoadUltimaMap(int map)
 	{
 		return;
 	}
+	m_map_id = map;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	std::filesystem::path monsterPath = std::filesystem::current_path();
@@ -3844,6 +3846,7 @@ void U3Misc::IgniteCallback()
 	}
 	m_Player[rosNum][15]--;
 	m_gTorch = 255;
+	m_dungeon.setForceRedraw();
 }
 
 void U3Misc::JoinGold()
@@ -4929,6 +4932,7 @@ void U3Misc::GetChest1(short chnum)
 		else
 		{
 			BombTrap();
+			m_dungeon.setForceRedraw();
 			return;
 		}
 		break;
@@ -5005,6 +5009,7 @@ void U3Misc::ChestPoisonCallback()
 
 void U3Misc::GetChestBooty()
 {
+	m_dungeon.setForceRedraw();
 	short gold;
 	short wpn;
 	short arm;

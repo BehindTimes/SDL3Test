@@ -36,7 +36,8 @@ UltimaDungeon::UltimaDungeon() :
 	m_texShrine(nullptr),
 	m_forceRedraw(true),
 	m_texDungeonPort(nullptr),
-	m_gExitDungeon(false)
+	m_gExitDungeon(false),
+	m_dimDungeon(false)
 {
 	m_HeadX[0] = 0;
 	m_HeadX[1] = 1;
@@ -52,6 +53,10 @@ UltimaDungeon::UltimaDungeon() :
 	{
 		m_texDungeonDoors[index] = nullptr;
 	}
+	for (int index = 0; index < 21; ++index)
+	{
+		m_texSecrets[index] = nullptr;
+	}
 }
 
 UltimaDungeon::~UltimaDungeon()
@@ -61,6 +66,13 @@ UltimaDungeon::~UltimaDungeon()
 		if (m_texDungeonDoors[index])
 		{
 			SDL_DestroyTexture(m_texDungeonDoors[index]);
+		}
+	}
+	for (int index = 0; index < 21; ++index)
+	{
+		if (m_texSecrets[index])
+		{
+			SDL_DestroyTexture(m_texSecrets[index]);
 		}
 	}
 
@@ -222,6 +234,7 @@ void UltimaDungeon::loadGraphics()
 	m_texDungeonPort = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 600, 512);
 
 	createDoorPolygons();
+	createTextureSecrets();
 }
 
 void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2)
@@ -412,14 +425,8 @@ void UltimaDungeon::createDoorPolygons()
 
 		SDL_GetTextureProperties(m_texDungeonDoors[index]);
 
-		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
-		SDL_SetRenderTarget(m_resources.m_renderer, m_texDungeonDoors[index]);
-		SDL_RenderClear(m_resources.m_renderer);
 		SDL_UpdateTexture(m_texDungeonDoors[index], NULL, canvas.data(), 2400);
 	}
-
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
-	SDL_SetRenderTarget(m_resources.m_renderer, NULL);
 }
 
 void UltimaDungeon::DungeonStart(short mode)
@@ -710,6 +717,16 @@ void UltimaDungeon::RenderDungeon()
 
 	DrawDungeonBackGround();
 	Chunk1();
+
+	DrawSecretMessage();
+
+	if (m_dimDungeon)
+	{
+		SDL_SetRenderDrawBlendMode(m_resources.m_renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 128);
+		SDL_RenderFillRect(m_resources.m_renderer, NULL);
+		SDL_SetRenderDrawBlendMode(m_resources.m_renderer, SDL_BLENDMODE_NONE);
+	}
 
 	SDL_SetRenderTarget(m_resources.m_renderer, NULL);
 	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
@@ -1128,5 +1145,112 @@ void UltimaDungeon::PeerGemCallback()
 		m_misc.m_Player[rosnum][37]--;
 		m_scrollArea.forceRedraw();
 		m_graphics.m_queuedMode = U3GraphicsMode::MiniMapDungeon;
+	}
+}
+
+void UltimaDungeon::DrawSecretMessage()
+{
+	if (m_dungeonLevel == 6 && m_misc.m_xpos == 1 && m_misc.m_ypos == 1 && m_misc.m_heading == 3)
+	{
+		ShowSecret((m_misc.m_map_id - 12) * 3 + 0);
+	}
+	if (m_dungeonLevel == 6 && m_misc.m_xpos == 1 && m_misc.m_ypos == 15 && m_misc.m_heading == 2)
+	{
+		ShowSecret((m_misc.m_map_id - 12) * 3 + 1);
+	}
+	if (m_dungeonLevel == 7 && m_misc.m_xpos == 15 && m_misc.m_ypos == 15 && m_misc.m_heading == 1)
+	{
+		ShowSecret((m_misc.m_map_id - 12) * 3 + 2);
+	}
+}
+
+bool UltimaDungeon::ShowSecret(short which)
+{
+	if (which >= 0 && which < 21)
+	{
+		SDL_Texture* tex = m_texSecrets[which];
+		if (tex != nullptr)
+		{
+			SDL_FRect frameRect;
+			SDL_FPoint size;
+			SDL_GetTextureSize(tex, &size.x, &size.y);
+			frameRect.w = size.x;
+			frameRect.h = size.y;
+			frameRect.x = 300 - (frameRect.w / 2);
+			frameRect.y = 282 - (frameRect.h / 2);
+			SDL_RenderTexture(m_resources.m_renderer, tex, NULL, &frameRect);
+		}
+	}
+	return true;
+}
+
+void UltimaDungeon::createOutlineText(std::string dispString, int texId)
+{
+	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
+
+	SDL_Color sdl_text_color1 = { 255, 255, 255, 255 };
+	SDL_Surface* surf = TTF_RenderText_Solid(m_resources.m_font, dispString.c_str(), dispString.size(), sdl_text_color1);
+	m_texSecrets[texId] = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, surf->w, surf->h);
+	SDL_SetTextureScaleMode(m_texSecrets[texId], SDL_SCALEMODE_NEAREST);
+	std::vector<unsigned char> canvas;
+	canvas.resize(surf->w * surf->h * 4);
+	std::fill(canvas.begin(), canvas.end(), 0);
+	char* pixels = (char*)surf->pixels;
+	// Worry about this later.  For right now, just assuming it's index8
+	for (int indexY = 0; indexY < surf->h; indexY++)
+	{
+		char* start = pixels + (indexY * surf->pitch);
+		for (int indexX = 0; indexX < surf->w; ++indexX)
+		{
+			if (*(start + indexX) != 0)
+			{
+				if (indexX == 0)
+				{
+				}
+				else if (indexX - 1 == surf->w)
+				{
+				}
+				else
+				{
+					if (*(start + (indexX - 1)) == 0)
+					{
+						canvas[indexY * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+					}
+					else if (*(start + (indexX + 1)) == 0)
+					{
+						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 0] = 0x80;
+						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 1] = 0x80;
+						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 2] = 0x80;
+						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 3] = 0x80;
+					}
+					if (indexY < surf->h - 1)
+					{
+						if (*((start + surf->pitch) + indexX) == 0)
+						{
+							canvas[(indexY + 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+						}
+					}
+					else if (indexY > 0)
+					{
+						if (*((start - surf->pitch) + indexX) == 0)
+						{
+							canvas[(indexY - 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+						}
+					}
+				}
+			}
+		}
+	}
+	SDL_UpdateTexture(m_texSecrets[texId], NULL, canvas.data(), surf->w * 4);
+	SDL_DestroySurface(surf);
+}
+
+void UltimaDungeon::createTextureSecrets()
+{
+	for (int index = 0; index < 21; ++index)
+	{
+		std::string dispString = m_resources.m_plistMap["Messages"][index];
+		dispString.erase(std::remove(dispString.begin(), dispString.end(), '\n'), dispString.cend());
+		createOutlineText(dispString, index);
 	}
 }

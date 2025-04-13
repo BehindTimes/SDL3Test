@@ -60,8 +60,13 @@ private:
 	void renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2);
 	short getLeftMost(unsigned char* canvas, short startX, short endX);
 	short getRightMost(unsigned char* canvas, short startX, short endX);
+	void DrawSecretMessage();
+	bool ShowSecret(short which);
+	void createTextureSecrets();
+	void createOutlineText(std::string dispString, int texId);
 
 	SDL_Texture* m_texDungeonDoors[32];
+	SDL_Texture* m_texSecrets[21];
 	SDL_Texture* m_texDungeonShapes;
 	SDL_Texture* m_texFountain;
 	SDL_Texture* m_texTimeLord;
@@ -80,5 +85,6 @@ private:
 	bool m_forceRedraw;
 	char m_HeadX[4];
 	char m_HeadY[4];
+	bool m_dimDungeon;
 };
 

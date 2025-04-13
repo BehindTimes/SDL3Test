@@ -97,8 +97,12 @@ public:
 	void Ignite();
 	void JoinGold();
 	void JoinGold(short chnum);
+	void Speak(short perNum, short shnum);
+	bool StealDisarmFail(short rosNum);
 
 	void NoGo();
+	void BombTrap();
+	void BombTrapCallback();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -228,7 +232,7 @@ private:
 	void PrintMonster(short which, bool plural, char variant);
 	void PrintTile(short tile, bool plural);
 	void InverseChnum(char which, bool value);
-	void Speak(short perNum, short shnum);
+	
 	void Shop(short shopNum, short chnum);
 	void tavernCallback();
 	void grocerCallback();
@@ -305,11 +309,10 @@ private:
 	void ExodusDieCallback3();
 	void ExodusDieCallback4();
 	void SleepCallback();
-	void BombTrap();
-	void BombTrapCallback();
+	
 	void StealCallback();
 	void StealCallback1();
-	bool StealDisarmFail(short rosNum);
+	
 	void StealFail();
 	void GetChestCallback();
 	void GetChest1(short chnum);

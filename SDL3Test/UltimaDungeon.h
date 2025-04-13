@@ -25,6 +25,8 @@ public:
 	unsigned char m_dungeonLevel;
 	bool m_gExitDungeon;
 	void Routine6E6B();
+	void dungeonmech();
+	
 private:
 	
 	void createDoorPolygons();
@@ -64,6 +66,7 @@ private:
 	bool ShowSecret(short which);
 	void createTextureSecrets();
 	void createOutlineText(std::string dispString, int texId);
+	void dngnotcombat(short value);
 
 	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texSecrets[21];

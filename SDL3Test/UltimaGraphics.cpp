@@ -948,6 +948,10 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
                 if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
                 {
                     wasMove = m_misc.ProcessEvent(event);
+                    if (wasMove)
+                    {
+                        m_dungeon.dungeonmech();
+                    }
                     if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
                     {
                         m_curMode = m_queuedMode;

@@ -4,11 +4,15 @@
 #include "U3Misc.h"
 #include "U3Resources.h"
 #include "U3ScrollArea.h"
+#include "UltimaSpellCombat.h"
+#include "U3Utilities.h"
 
 extern U3ScrollArea m_scrollArea;
 extern U3Graphics m_graphics;
 extern U3Misc m_misc;
 extern U3Resources m_resources;
+extern UltimaSpellCombat m_spellCombat;
+extern U3Utilities m_utilities;
 
 /*                           0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31 */
 const short     dOfX[37] = { 600,   0,   0,1200,1200,1200, 300,   0,   0, 300,1200,1200,1200,1200,1200, 300, 300,   0,   0, 300, 300,1200,1200,1200,1200,1200,1200,1200, 300,   0,   0, 300 };
@@ -1254,3 +1258,75 @@ void UltimaDungeon::createTextureSecrets()
 		createOutlineText(dispString, index);
 	}
 }
+
+void UltimaDungeon::dungeonmech()
+{
+	m_misc.m_wx = 0x18;
+	m_misc.m_wy = 0x17;
+	m_misc.m_xs = m_misc.m_xpos;
+	m_misc.m_ys = m_misc.m_ypos;
+	short value = GetXYDng(m_misc.m_xs, m_misc.m_ys);
+	if (value != 0)
+	{
+		dngnotcombat(value);
+	}
+	m_forceRedraw = true;
+}
+
+void UltimaDungeon::dngnotcombat(short value)
+{
+	switch (value)
+	{
+	case 1: // $9076 time lord
+		break;
+	case 2: // $9174 fountain
+		break;
+	case 3: // $92C1 strange wind
+		m_scrollArea.UPrintMessage(158);
+		m_misc.m_gTorch = 0;
+		break;
+	case 4: // $9135 trap
+		m_spellCombat.PutXYDng(0, m_misc.m_xs, m_misc.m_ys);
+		m_scrollArea.UPrintMessage(159);
+		if (m_misc.StealDisarmFail(m_misc.m_Party[6]))
+		{
+			m_scrollArea.UPrintMessage(160);
+			return;
+		}
+		m_misc.BombTrap();
+		break;
+	case 5: // $931C brand
+		break;
+	case 6: // $92DA gremlins
+	{
+		m_spellCombat.PutXYDng(0, m_misc.m_xs, m_misc.m_ys);
+		int rngNum = m_utilities.getRandom(0, m_misc.m_Party[1] - 1);
+		if (m_misc.CheckAlive(rngNum))
+		{
+			short rosNum = m_misc.m_Party[6 + rngNum];
+			if (m_misc.m_Player[rosNum][32] < 1)
+			{
+				m_misc.m_Player[rosNum][32] = 0;
+			}
+			else
+			{
+				m_misc.m_Player[rosNum][32]--;
+			}
+			m_scrollArea.UPrintMessage(163);
+		}
+		else
+		{
+			return;
+		}
+	}
+		break;
+	case 8: // $9053 writing
+		m_scrollArea.UPrintMessage(164);
+		m_misc.Speak(m_dungeonLevel + 1, 23);
+		m_scrollArea.UPrintWin("\n");
+		break;
+	default:
+		break;
+	}
+}
+

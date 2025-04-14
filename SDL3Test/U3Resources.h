@@ -138,6 +138,7 @@ public:
 		return m_alertReturn;
 	}
 	void GenerateRect(SDL_FRect* FromRect, int left, int top, int right, int bottom);
+	void ImageDisplay();
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -169,6 +170,7 @@ public:
 	};
 
 	int m_blockSize;
+	int m_overrideImage;
 
 private:
 	void LoadResource(std::string strFile);
@@ -237,6 +239,12 @@ private:
 	SDL_Texture* m_texCredits;
 	SDL_Texture* m_texStats;
 	SDL_Texture* m_texPortraits;
+
+	SDL_Texture* m_texSosariaMap;
+	SDL_Texture* m_texFountain;
+	SDL_Texture* m_texRod;
+	SDL_Texture* m_texShrine;
+	SDL_Texture* m_texTimeLord;
 
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;

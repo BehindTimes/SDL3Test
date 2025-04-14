@@ -103,6 +103,9 @@ public:
 	void NoGo();
 	void BombTrap();
 	void BombTrapCallback();
+	void PutMiscStuff();
+	void ResetSosaria();
+	bool HPSubtract(short rosNum, short amount);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -112,6 +115,9 @@ public:
 	std::vector<unsigned char> m_map;
 	int m_xpos;
 	int m_ypos;
+
+	int m_oy;
+	int m_ox;
 
 	short m_stx;
 	short m_sty;
@@ -181,6 +187,8 @@ public:
 	Uint64 m_elapsedSleepTime;
 	Uint64 m_sleepCheckTime;
 	short m_map_id;
+
+	static const Uint64 damage_time = 50;
 
 private:
 	void Attack();
@@ -302,7 +310,7 @@ private:
 	void InsertCallback();
 	void InsertCallback1();
 	void InsertCallback2();
-	bool HPSubtract(short rosNum, short amount);
+	
 	void ExodusDieCallback();
 	void ExodusDieCallback1();
 	void ExodusDieCallback2();
@@ -328,7 +336,6 @@ private:
 	static constexpr std::string_view DoorString = "Door";
 	static constexpr std::string_view DioramaString = "Diorama\n";
 
-	static const Uint64 damage_time = 50;
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
 

@@ -77,7 +77,13 @@ U3Resources::U3Resources() :
 	m_fullUpdate(true),
 	m_updateWind(false),
 	m_alertReturn(0),
-	m_delta_time(0)
+	m_delta_time(0),
+	m_texSosariaMap(nullptr),
+	m_texFountain(nullptr),
+	m_texRod(nullptr),
+	m_texShrine(nullptr),
+	m_texTimeLord(nullptr),
+	m_overrideImage(-1)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -120,6 +126,31 @@ U3Resources::~U3Resources()
 		{
 			SDL_DestroyTexture(curTex);
 		}
+	}
+
+	if (m_texSosariaMap)
+	{
+		SDL_DestroyTexture(m_texSosariaMap);
+	}
+
+	if (m_texFountain)
+	{
+		SDL_DestroyTexture(m_texFountain);
+	}
+
+	if (m_texRod)
+	{
+		SDL_DestroyTexture(m_texRod);
+	}
+
+	if (m_texShrine)
+	{
+		SDL_DestroyTexture(m_texShrine);
+	}
+
+	if (m_texTimeLord)
+	{
+		SDL_DestroyTexture(m_texTimeLord);
 	}
 
 	if (m_texStalagtites)
@@ -705,6 +736,40 @@ void U3Resources::loadImages()
 
 	m_texCredits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 	m_dungeon.loadGraphics();
+
+	//////////////////////////////////////////////////
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "SosariaMap.jpg";
+	m_texSosariaMap = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "Fountain.jpg";
+	m_texFountain = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "Rod.jpg";
+	m_texRod = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "Shrine.jpg";
+	m_texShrine = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "TimeLord.jpg";
+	m_texTimeLord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	m_dungeon.loadGraphics();
 }
 
 void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
@@ -909,16 +974,6 @@ void U3Resources::loadGraphics()
 				SDL_GetTextureSize(*curTexture, &size.x, &size.y);
 				*xSize = size.x / numX;
 				*ySize = size.y / numY;
-
-				/*if (copyTexture) // A backup texture, so we can render on the original
-				{
-					*copyTexture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)size.x, (int)size.y);
-					SDL_SetRenderTarget(m_renderer, *copyTexture);
-					SDL_RenderTexture(m_renderer, *curTexture, NULL, NULL);
-					SDL_SetRenderTarget(m_renderer, NULL);
-
-					SDL_SetTextureScaleMode(*copyTexture, SDL_SCALEMODE_NEAREST);
-				}*/
 			}
 		}
 	}
@@ -3222,4 +3277,48 @@ void U3Resources::GenerateRect(SDL_FRect* FromRect, int left, int top, int right
 	FromRect->y = (float)top;
 	FromRect->w = (float)right - left;
 	FromRect->h = (float)bottom - top;
+}
+
+void U3Resources::ImageDisplay()
+{
+	SDL_Texture* curTexture = nullptr;
+	switch (m_overrideImage)
+	{
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		curTexture = m_texSosariaMap;
+		break;
+	case 5:
+		curTexture = m_texFountain;
+		break;
+	case 6:
+		curTexture = m_texRod;
+		break;
+	case 7:
+		curTexture = m_texShrine;
+		break;
+	case 8:
+		curTexture = m_texTimeLord;
+		break;
+	default:
+		m_overrideImage = -1;
+		break;
+	}
+	if (curTexture != nullptr)
+	{
+		SDL_FRect myRect;
+		myRect.x = (float)(1 * m_blockSize);
+		myRect.y = (float)(1 * m_blockSize);
+		myRect.w = (float)m_blockSize * 22;
+		myRect.h = (float)m_blockSize * 22;
+
+		adjustRect(myRect);
+
+		SDL_RenderTexture(m_renderer, curTexture, NULL, &myRect);
+	}
 }

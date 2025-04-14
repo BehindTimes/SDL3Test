@@ -1088,7 +1088,6 @@ void UltimaDungeon::Klimb() // $8F37
 	if (m_dungeonLevel >= 0 && m_dungeonLevel < 8)
 	{
 		m_forceRedraw = true;
-		DrawDungeon();
 		return;
 	}
 	m_dungeonLevel = 0;
@@ -1278,8 +1277,11 @@ void UltimaDungeon::dngnotcombat(short value)
 	switch (value)
 	{
 	case 1: // $9076 time lord
+		m_resources.m_overrideImage = 8;
 		break;
 	case 2: // $9174 fountain
+		m_resources.m_overrideImage = 5;
+		foundFountain();
 		break;
 	case 3: // $92C1 strange wind
 		m_scrollArea.UPrintMessage(158);
@@ -1296,6 +1298,12 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_misc.BombTrap();
 		break;
 	case 5: // $931C brand
+		m_resources.m_overrideImage = 6;
+		m_misc.m_wx = 0x18;
+		m_misc.m_wy = 0x17;
+		m_scrollArea.UPrintMessage(161);
+		m_misc.m_inputType = InputType::Transact;
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback, this));
 		break;
 	case 6: // $92DA gremlins
 	{
@@ -1330,3 +1338,109 @@ void UltimaDungeon::dngnotcombat(short value)
 	}
 }
 
+void UltimaDungeon::foundFountain()
+{
+	m_misc.m_wx = 0x18;
+	m_misc.m_wy = 0x17;
+	m_scrollArea.UPrintMessage(152);
+	m_misc.m_inputType = InputType::Transact;
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::FountainCallback, this));
+}
+
+void UltimaDungeon::FountainCallback()
+{
+	short chNum = m_misc.m_input_num;
+	std::string dispString = std::to_string(chNum) + std::string("\n");
+	m_scrollArea.UPrintWin(dispString);
+	if (chNum < 0 || chNum > 3)
+	{
+		m_resources.m_overrideImage = -1;
+		return;
+	}
+	if (m_misc.m_Party[6 + chNum] == 0)
+	{
+		m_resources.m_overrideImage = -1;
+		m_scrollArea.UPrintMessage(41);
+		return;
+	}
+	if (m_misc.CheckAlive(chNum) == false)
+	{
+		m_resources.m_overrideImage = -1;
+		m_scrollArea.UPrintMessage(126);
+		return;
+	}
+	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
+	switch (m_misc.m_xpos & 0x03)
+	{
+	case 0: // Poison fountain
+		m_scrollArea.UPrintMessage(154);
+		m_misc.InverseCharDetails(chNum, true);
+		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+		break;
+	case 1: // Heal fountain
+		m_misc.m_Player[m_misc.m_rosNum][26] = m_misc.m_Player[m_misc.m_rosNum][28];
+		m_misc.m_Player[m_misc.m_rosNum][27] = m_misc.m_Player[m_misc.m_rosNum][29];
+		m_scrollArea.UPrintMessage(155);
+		foundFountain();
+		break;
+	case 2: // Damage fountain
+		m_scrollArea.UPrintMessage(156);
+		m_misc.HPSubtract(m_misc.m_rosNum, 25);
+		m_misc.InverseCharDetails(chNum, true);
+		m_resources.m_inverses.tiles = true;
+		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+		break;
+	case 3:
+		// Cure poison fountain
+		m_scrollArea.UPrintMessage(157);
+		if (m_misc.m_Player[m_misc.m_rosNum][17] == 'P')
+		{
+			m_misc.m_Player[m_misc.m_rosNum][17] = 'G';
+		}
+		foundFountain();
+		break;
+	default:
+		m_resources.m_overrideImage = -1;
+		break;
+	}
+}
+
+void UltimaDungeon::MarkCallback()
+{
+	unsigned char bits[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
+	short chNum = m_misc.m_input_num;
+	std::string dispString = std::to_string(chNum) + std::string("\n");
+	m_scrollArea.UPrintWin(dispString);
+	m_resources.m_overrideImage = -1;
+	if (chNum < 0 || chNum > 3)
+	{
+		return;
+	}
+	if (m_misc.m_Party[6 + chNum] == 0)
+	{
+		m_scrollArea.UPrintMessage(41);
+		return;
+	}
+	if (m_misc.CheckAlive(chNum) == false)
+	{
+		m_scrollArea.UPrintMessage(126);
+		return;
+	}
+	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
+	m_misc.m_Player[chNum][14] = m_misc.m_Player[chNum][14] | bits[(m_misc.m_xpos & 3) + 4];
+
+	m_misc.InverseCharDetails(chNum, true);
+	m_resources.m_inverses.func = std::bind(&UltimaDungeon::MarkCallback2, this);
+	m_resources.m_inverses.elapsedTileTime = 0;
+	m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+}
+
+void UltimaDungeon::MarkCallback2()
+{
+	m_misc.HPSubtract(m_misc.m_rosNum, 50);
+	m_scrollArea.UPrintMessage(162);
+}

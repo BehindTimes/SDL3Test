@@ -41,6 +41,8 @@ U3Misc::U3Misc() :
 	m_ys(0),
 	m_dx(0),
 	m_dy(0),
+	m_ox(0),
+	m_oy(0),
 	m_transactNum(0),
 	m_storedir(0),
 	m_rosNum(0),
@@ -4156,6 +4158,19 @@ void U3Misc::CheckAllDead() // $71B4
 		m_wy = 23;
 		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintMessage(109);    // ALL PLAYERS OUT!
+
+		m_resources.m_inverses.func = nullptr;
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = 0;
+		m_resources.m_inverses.tiles = false;
+		m_resources.m_inverses.additive = false;
+		m_resources.m_inverses.fill = false;
+		for (int index = 0; index < 4; ++index)
+		{
+			m_resources.m_inverses.char_details[index] = false;
+			m_resources.m_inverses.character_num[index] = false;
+		}
+
 		bool autosave;
 		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
 		if (autosave)
@@ -4204,6 +4219,14 @@ void U3Misc::HandleDeadResponse1()
 	m_resources.m_inverses.func = std::bind(&U3Misc::ResurrectCallback, this);
 }
 
+void U3Misc::PutMiscStuff()
+{
+}
+
+void U3Misc::ResetSosaria()
+{
+}
+
 void U3Misc::ResurrectCallback()
 {
 	char chNum;
@@ -4239,6 +4262,17 @@ void U3Misc::ResurrectCallback()
 	m_Party[4] = m_ypos;
 	m_zp[0xE3] = m_xpos;
 	m_zp[0xE4] = m_ypos;
+
+	/*PutParty();
+	PutRoster();
+	ResetSosaria();
+	GetMiscStuff(0);
+	PutMiscStuff();*/
+	GetSosaria();
+
+	m_ox = m_xpos - 1;
+	m_oy = m_ypos - 1;
+
 	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea.blockPrompt(false);
 	m_checkDead = false;

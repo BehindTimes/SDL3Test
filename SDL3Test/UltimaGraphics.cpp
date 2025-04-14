@@ -873,15 +873,20 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& w
 void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 {
     DrawFrame(1);
-    DrawMap(m_misc.m_xpos, m_misc.m_ypos);
-    m_resources.ShowChars(true);
-    m_misc.CheckAllDead();
-
-    m_scrollArea.render(deltaTime);
-
+    if (m_resources.m_overrideImage >= 0)
+    {
+        m_resources.ImageDisplay();
+        m_resources.DrawInverses(deltaTime);
+    }
+    else
+    {
+        m_misc.CheckAllDead();
+        DrawMap(m_misc.m_xpos, m_misc.m_ypos);
+        m_resources.ShowChars(true);
+        m_resources.DrawInverses(deltaTime);
+    }
     m_resources.DrawWind();
-
-    m_resources.DrawInverses(deltaTime);
+    m_scrollArea.render(deltaTime);
 
     bool alertValid = m_resources.HasAlert(event);
     if (!alertValid)
@@ -925,11 +930,20 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     }
     DrawFrame(1);
     m_resources.ShowChars(true);
-    m_dungeon.DrawDungeon();
     m_misc.CheckAllDead();
 
+    if (m_resources.m_overrideImage >= 0)
+    {
+        m_resources.ImageDisplay();
+        m_resources.DrawInverses(deltaTime);
+    }
+    else
+    {
+        m_dungeon.DrawDungeon();
+        m_resources.DrawInverses(deltaTime);
+    }
+
     m_scrollArea.render(deltaTime);
-    m_resources.DrawInverses(deltaTime);
 
     bool alertValid = m_resources.HasAlert(event);
     if (!alertValid)

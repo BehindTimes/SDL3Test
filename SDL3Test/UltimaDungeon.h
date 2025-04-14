@@ -67,6 +67,10 @@ private:
 	void createTextureSecrets();
 	void createOutlineText(std::string dispString, int texId);
 	void dngnotcombat(short value);
+	void MarkCallback();
+	void MarkCallback2();
+	void foundFountain();
+	void FountainCallback();
 
 	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texSecrets[21];

@@ -116,7 +116,8 @@ public:
 	void DemoUpdate(Uint64 curTick);
 	bool CheckJourneyOnward();
 	void CreateAlertMessage(int message, DialogType type = DialogType::Alert);
-	bool HasAlert(SDL_Event& event);
+	bool HandleAlert(SDL_Event& event);
+	bool HasAlert();
 	void DrawTiles();
 	void DrawMasked(unsigned short shape, unsigned short x, unsigned short y);
 	void ShowChars(bool force);
@@ -180,6 +181,8 @@ public:
 	int m_blockSize;
 	int m_overrideImage;
 	bool m_newMove;
+	Uint64 m_elapsedMoveTime;
+	bool m_wasMove;
 
 private:
 	void LoadResource(std::string strFile);
@@ -279,7 +282,6 @@ private:
 	Uint64 m_elapsedTimeFlag;
 	Uint64 m_elapsedTimeAnimate;
 	Uint64 m_elapsedWindTime;
-	Uint64 m_elapsedMoveTime;
 
 	short m_animFlag[4];
 	short m_twiddleFlag[4];
@@ -294,5 +296,6 @@ private:
 	bool m_fullUpdate;
 	bool m_updateWind;
 	int m_alertReturn;
+	
 };
 

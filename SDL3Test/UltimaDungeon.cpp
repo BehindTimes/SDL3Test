@@ -439,6 +439,12 @@ void UltimaDungeon::DungeonStart(short mode)
 	m_graphics.m_curMode = U3GraphicsMode::Dungeon;
 	m_misc.m_gameMode = GameStateMode::Dungeon;
 
+	if (mode == 1)
+	{
+		dungeonmech();
+		return;
+	}
+
 	m_misc.m_wx = 0x18;
 	m_misc.m_wy = 0x17;
 
@@ -1448,6 +1454,7 @@ void UltimaDungeon::MarkCallback()
 	m_misc.InverseCharDetails(chNum, true);
 	m_resources.m_inverses.func = std::bind(&UltimaDungeon::MarkCallback2, this);
 	m_resources.m_inverses.elapsedTileTime = 0;
+	m_resources.setInversed(true);
 	m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
 }
 

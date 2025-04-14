@@ -611,7 +611,7 @@ void JourneyOnward()
         else
         {
             m_resources.CenterMessage(2, 21);
-            bool alertValid = m_resources.HasAlert(event);
+            bool alertValid = m_resources.HandleAlert(event);
             if (!alertValid)
             {
                 gInterrupt = true;
@@ -638,6 +638,18 @@ void JourneyOnward()
 
 void Game()
 {
+    /*m_misc.m_Player[1][34] = 0;
+    m_misc.m_Player[2][34] = 0;
+    m_misc.m_Player[3][34] = 0;
+    m_misc.m_Player[4][34] = 0;
+    m_misc.m_Player[1][33] = 0;
+    m_misc.m_Player[2][33] = 0;
+    m_misc.m_Player[3][33] = 0;
+    m_misc.m_Player[4][33] = 0;
+    m_misc.m_Player[1][32] = 0;
+    m_misc.m_Player[2][32] = 0;
+    m_misc.m_Player[3][32] = 0;
+    m_misc.m_Player[4][32] = 0;*/
     //m_misc.m_xpos = 10;
     //m_misc.m_ypos = 10;
     bool quit = false;

@@ -110,6 +110,9 @@ public:
 	bool HPSubtract(short rosNum, short amount);
 	void Pass();
 	void Routine6E35();
+	void AgeChars();
+	void FinishTurnCallback();
+	void AgeCallback();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -181,6 +184,7 @@ public:
 
 	short m_storedir;
 	short m_rosNum;
+	short m_chNum;
 
 	std::stack<std::function<void()>> m_callbackStack;
 	std::string m_input;
@@ -307,7 +311,7 @@ private:
 	void ResurrectCallback();
 	void OtherCallback();
 	void OtherCallback1();
-	void EmptyCallback();
+	void NoOpCallback();
 	void BribeCallback();
 	void InsertCallback();
 	void InsertCallback1();
@@ -331,6 +335,11 @@ private:
 	void ChestPoisonCallback();
 	void ChestGasCallback();
 	void AddItem(short rosNum, short item, short amount);
+	void FinishEatFood();
+	void EatFood(short member, short amount, std::function<void()> callback);
+	void EatFoodCallback();
+	void HPAdd(short member, short amount);
+	void EndTurnCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -342,6 +351,7 @@ private:
 	static const Uint64 screen_flicker_time = 200;
 
 	int m_transactNum;
+	long m_gTime[2];
 	std::unique_ptr <SosariaHandle> m_saved_map;
 };
 

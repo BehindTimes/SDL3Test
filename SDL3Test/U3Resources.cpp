@@ -85,7 +85,8 @@ U3Resources::U3Resources() :
 	m_texTimeLord(nullptr),
 	m_overrideImage(-1),
 	m_elapsedMoveTime(0),
-	m_newMove(false)
+	m_newMove(false),
+	m_wasMove(false)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -322,7 +323,7 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	}
 	loadGraphics();
 	loadImages();
-	
+
 	loadButtons();
 	loadDemo();
 	m_misc.OpenRstr();
@@ -705,7 +706,7 @@ void U3Resources::loadImages()
 	m_portraitWidth = (int)w / NUM_PORTRAITS;
 	m_portraitHeight = (int)h;
 	SDL_SetTextureScaleMode(m_texPortraits, SDL_SCALEMODE_NEAREST);
-	
+
 	m_texExodusFade = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_exodusWidth, m_exodusHeight);
 	unsigned char* pixels = NULL;
 	int pitch;
@@ -1071,7 +1072,7 @@ int U3Resources::renderString(std::string curString, int x, int y, bool autoadju
 			}
 			if (curString.size() != 16) // right adjust
 			{
-				
+
 				renderString(strDisplayString, (int)(curString.size() - strDisplayString.size()), y, autoadjust, offsetX, offsetY);
 			}
 			else
@@ -1438,7 +1439,7 @@ void U3Resources::DrawMoongates()
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
-		std::string strX = std::string("(") +  std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
+		std::string strX = std::string("(") + std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
 		std::string strY = std::string("(") + std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
 
 		m_graphics.DrawFramePiece(32 + m_misc.m_gMoonDisp[0], 8, 0);
@@ -1503,9 +1504,9 @@ void U3Resources::DoWind()
 		return;
 	}
 	m_updateWind = false;
-	
+
 	int newDir = m_misc.m_WindDir;
-	
+
 
 	while (newDir == m_misc.m_WindDir)
 	{
@@ -1641,7 +1642,7 @@ void U3Resources::CenterMessage(std::string message, short xStart, short xEnd, s
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
 	SDL_RenderFillRect(m_renderer, &myRect);
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
-	
+
 	renderString(message, xStart, y);
 }
 
@@ -2242,7 +2243,7 @@ bool U3Resources::CheckJourneyOnward()
 	return true;
 }
 
-bool U3Resources::HasAlert(SDL_Event& event)
+bool U3Resources::HandleAlert(SDL_Event& event)
 {
 	if (!m_AlertDlg.get())
 	{
@@ -2256,6 +2257,12 @@ bool U3Resources::HasAlert(SDL_Event& event)
 		m_AlertDlg.reset();
 		m_cleanupAlert = false;
 	}
+	return m_AlertDlg.get();
+}
+
+bool U3Resources::U3Resources::HasAlert()
+{
+
 	return m_AlertDlg.get();
 }
 
@@ -2305,7 +2312,7 @@ void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned sh
 	ToRect.y = (float)(y * shapSize);
 	ToRect.w = (float)(shapSize);
 	ToRect.h = (float)(shapSize);
-	
+
 	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &ToRect);
 }
 
@@ -2317,7 +2324,7 @@ void U3Resources::DrawTiles()
 	SDL_FRect myRect;
 	SDL_FRect offRect;
 
-	
+
 	SDL_SetRenderTarget(m_renderer, m_texDisplay);
 
 	HideMonsters();
@@ -2347,7 +2354,7 @@ void U3Resources::DrawTiles()
 			}
 			offRect = shapeRect;
 			offset++;
-			
+
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
 		}
 	}
@@ -2607,28 +2614,11 @@ void U3Resources::ShowMonsters()
 
 void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 {
+	if (wasMove)
+	{
+		m_wasMove = true;
+	}
 	m_delta_time = deltaTime;
-	if (!wasMove)
-	{
-		m_elapsedWindTime += deltaTime;
-
-		if (m_elapsedWindTime > DelayWind)
-		{
-			m_updateWind = true;
-			m_elapsedWindTime %= DelayWind;
-		}
-	}
-	else
-	{
-		if (m_elapsedWindTime > DelayAnimate)
-		{
-			m_elapsedWindTime -= DelayAnimate;
-		}
-		else
-		{
-			m_elapsedWindTime = 0;
-		}
-	}
 
 	m_elapsedTimeDemo += deltaTime;
 	m_elapsedTimeFlag += deltaTime;
@@ -2646,7 +2636,6 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 	m_curTickDemo += deltaTime;
 
 	m_elapsedTimeScroll += deltaTime;
-
 	m_elapsedTimeScroll %= DelayScroll;
 	m_curTickScroll = m_elapsedTimeScroll;
 
@@ -2655,27 +2644,37 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 	TwiddleFlags();
 	DoWind();
 
-	if (wasMove)
-	{
-		m_elapsedMoveTime = 0;
-		m_newMove = true;
-		m_misc.Routine6E35();
-	}
-	else
+	if (!m_scrollArea.isUpdating() && !m_misc.m_checkDead && m_misc.m_inputType == InputType::Default)
 	{
 		if (!isInversed())
 		{
-			m_elapsedMoveTime += m_delta_time;
-			if (m_elapsedMoveTime > MoveTime)
+			m_elapsedWindTime += deltaTime;
+			if (m_elapsedWindTime > DelayWind)
 			{
-				m_newMove = true;
-				m_elapsedMoveTime %= m_delta_time;
-				m_misc.Pass();
-				m_misc.Routine6E35();
+				m_updateWind = true;
+				m_elapsedWindTime %= DelayWind;
 			}
-			else
+		}
+
+		if (m_wasMove)
+		{
+			m_wasMove = false;
+			m_elapsedMoveTime = 0;
+			m_misc.Routine6E35();
+
+			m_elapsedWindTime += deltaTime;			
+		}
+		else
+		{
+			if (!isInversed())
 			{
-				m_newMove = false;
+				m_elapsedMoveTime += m_delta_time;
+				if (m_elapsedMoveTime > MoveTime)
+				{
+					m_elapsedMoveTime %= m_delta_time;
+					m_misc.Pass();
+					m_misc.Routine6E35();
+				}
 			}
 		}
 	}
@@ -2873,7 +2872,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 		tempstr += m_misc.m_Player[ros][22];
 		tempstr += m_misc.m_Player[ros][23];
 		renderString(tempstr, 1 + showPortraitVal, 1, false);
-		
+
 		if (!classic) // draw bars & such
 		{
 			float textPos = (m_blockSize * 5.0f) + (m_blockSize * 2.25f);
@@ -2896,7 +2895,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			// Paint bar
 			SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
 			SDL_RenderFillRect(m_renderer, &barRect);
-			
+
 			float tempRight = (num * scale);
 			if (tempRight > 1)
 			{
@@ -2964,7 +2963,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			{
 				num = maxnum;
 			}
-			
+
 			// Paint bar
 			bar_color.r = 128;
 			bar_color.g = 128;
@@ -3121,7 +3120,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			std::string strFood(FoodStr);
 			strFood += std::to_string(num);
 			renderDisplayString(m_font_9, strFood, (int)textPos, (int)(m_blockSize * 3), sdl_text_color, 6, false);
-			
+
 		}
 		else // the old fashioned way
 		{

@@ -882,6 +882,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     {
         if (m_resources.m_newMove)
         {
+            m_resources.m_newMove = false;
             m_misc.CheckAllDead();
         }
         DrawMap(m_misc.m_xpos, m_misc.m_ypos);
@@ -891,7 +892,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     m_resources.DrawWind();
     m_scrollArea.render(deltaTime);
 
-    bool alertValid = m_resources.HasAlert(event);
+    bool alertValid = m_resources.HandleAlert(event);
     if (!alertValid)
     {
         if (!m_staydead)
@@ -938,6 +939,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     {
         if (m_resources.m_newMove)
         {
+            m_resources.m_newMove = false;
             m_misc.CheckAllDead();
         }
     }
@@ -955,7 +957,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
 
     m_scrollArea.render(deltaTime);
 
-    bool alertValid = m_resources.HasAlert(event);
+    bool alertValid = m_resources.HandleAlert(event);
     if (!alertValid)
     {
         if (!m_staydead)

@@ -62,7 +62,8 @@ U3Misc::U3Misc() :
 	m_sleepCheckTime(0),
 	m5BDC(false),
 	m_gameMode(GameStateMode::Map),
-	m_map_id(0)
+	m_map_id(0),
+	m_chNum(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -94,6 +95,7 @@ U3Misc::U3Misc() :
 
 	memset(m_careerTable, 0, sizeof(unsigned char) * 12);
 	memset(m_Party, 0, sizeof(unsigned char) * 64);
+	memset(m_gTime, 0, sizeof(long) * 2);
 }
 
 U3Misc::~U3Misc()
@@ -1994,6 +1996,10 @@ void U3Misc::Routine6E6B()
 
 void U3Misc::Routine6E35()
 {
+	if (m_resources.HasAlert())
+	{
+		return;
+	}
 	short temp;
 	IncMoves();
 
@@ -2001,7 +2007,8 @@ void U3Misc::Routine6E35()
 	if (m_Party[2] == 1)
 	{
 		//DrawDungeon();
-		//DungeonStart(1);
+		m_gameMode = GameStateMode::Dungeon;
+		m_dungeon.DungeonStart(1);
 		return;
 	}
 	// if $E2=#$80 (combat?), see $6E5C.  Apparently unneccessary
@@ -2013,7 +2020,7 @@ void U3Misc::Routine6E35()
 			Routine6E6B();
 		}
 	}
-	//AgeChars();
+	AgeChars();
 	//ShowChars(false);
 	temp = GetXYVal(m_xpos, m_ypos);
 	/*if (temp == 136)
@@ -2413,6 +2420,7 @@ void U3Misc::InverseTiles(bool value)
 	m_resources.m_inverses.tiles = value;
 	m_resources.m_inverses.inverseTileTime = 1000;
 	m_resources.m_inverses.elapsedTileTime = 0;
+	m_resources.setInversed(true);
 	if (!value)
 	{
 		m_resources.m_inverses.char_details[0] = false;
@@ -4151,6 +4159,8 @@ void U3Misc::CheckAllDead() // $71B4
 
 	if (!alive)
 	{
+		m_resources.m_wasMove = false;
+		m_resources.m_elapsedMoveTime = 0;
 		m_checkDead = true;
 		m_wx = 25;
 		m_wy = 23;
@@ -4212,6 +4222,7 @@ void U3Misc::HandleDeadResponse()
 
 void U3Misc::HandleDeadResponse1()
 {
+	m_resources.setInversed(true);
 	m_resources.m_inverses.color.r = 255;
 	m_resources.m_inverses.color.g = 0;
 	m_resources.m_inverses.color.b = 0;
@@ -4219,6 +4230,7 @@ void U3Misc::HandleDeadResponse1()
 	m_resources.m_inverses.fill = true;
 	m_resources.m_inverses.elapsedTileTime = 0;
 	m_resources.m_inverses.inverseTileTime = 5000;
+	m_resources.setInversed(true);
 	m_resources.m_inverses.func = std::bind(&U3Misc::ResurrectCallback, this);
 }
 
@@ -4279,6 +4291,7 @@ void U3Misc::ResurrectCallback()
 	m_scrollArea.UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea.blockPrompt(false);
 	m_checkDead = false;
+	m_resources.m_elapsedMoveTime = 0;
 	//m_graphics.m_curMode = U3GraphicsMode::Map;
 	//m_gameMode = GameStateMode::Map;
 }
@@ -4524,6 +4537,7 @@ void U3Misc::InsertCallback1()
 		m_resources.m_inverses.func = std::bind(&U3Misc::InsertCallback2, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
 		m_resources.m_inverses.inverseTileTime = 250;
+		m_resources.setInversed(true);
 		return;
 	}
 	m_lastCard++;
@@ -4603,6 +4617,7 @@ void U3Misc::ExodusDieCallback1()
 	m_resources.m_inverses.additive = true;
 	m_resources.m_inverses.elapsedTileTime = 0;
 	m_resources.m_inverses.inverseTileTime = screen_flicker_time;
+	m_resources.setInversed(true);
 	m_resources.m_inverses.func = std::bind(&U3Misc::ExodusDieCallback3, this);
 }
 
@@ -4645,6 +4660,7 @@ void U3Misc::BombTrap() // $5C63
 			m_resources.m_inverses.func = std::bind(&U3Misc::BombTrapCallback, this);
 			m_resources.m_inverses.elapsedTileTime = 0;
 			m_resources.m_inverses.inverseTileTime = damage_time;
+			m_resources.setInversed(true);
 		}
 		else
 		{
@@ -4671,6 +4687,7 @@ void U3Misc::BombTrapCallback()
 			m_resources.m_inverses.func = std::bind(&U3Misc::BombTrapCallback, this);
 			m_resources.m_inverses.elapsedTileTime = 0;
 			m_resources.m_inverses.inverseTileTime = damage_time;
+			m_resources.setInversed(true);
 		}
 		else
 		{
@@ -4829,10 +4846,11 @@ void U3Misc::ClearTiles()
 	m_resources.m_inverses.fill = true;
 	m_resources.m_inverses.elapsedTileTime = 0;
 	m_resources.m_inverses.inverseTileTime = 1000;
-	m_resources.m_inverses.func = std::bind(&U3Misc::EmptyCallback, this);
+	m_resources.m_inverses.func = std::bind(&U3Misc::NoOpCallback, this);
+	m_resources.setInversed(true);
 }
 
-void U3Misc::EmptyCallback()
+void U3Misc::NoOpCallback()
 {
 	m_scrollArea.blockPrompt(false);
 }
@@ -4937,6 +4955,7 @@ void U3Misc::GetChest1(short chnum)
 			m_resources.m_inverses.func = std::bind(&U3Misc::ChestAcidCallback, this);
 			m_resources.m_inverses.elapsedTileTime = 0;
 			m_resources.m_inverses.inverseTileTime = damage_time;
+			m_resources.setInversed(true);
 			return;
 		}
 		break;
@@ -4955,6 +4974,7 @@ void U3Misc::GetChest1(short chnum)
 			m_resources.m_inverses.func = std::bind(&U3Misc::ChestPoisonCallback, this);
 			m_resources.m_inverses.elapsedTileTime = 0;
 			m_resources.m_inverses.inverseTileTime = damage_time;
+			m_resources.setInversed(true);
 			return;
 		}
 		break;
@@ -4992,6 +5012,7 @@ void U3Misc::GetChest1(short chnum)
 				m_resources.m_inverses.func = std::bind(&U3Misc::ChestGasCallback, this);
 				m_resources.m_inverses.elapsedTileTime = 0;
 				m_resources.m_inverses.inverseTileTime = damage_time;
+				m_resources.setInversed(true);
 				return;
 			}
 			else
@@ -5019,6 +5040,7 @@ void U3Misc::ChestGasCallback()
 			m_resources.m_inverses.func = std::bind(&U3Misc::ChestGasCallback, this);
 			m_resources.m_inverses.elapsedTileTime = 0;
 			m_resources.m_inverses.inverseTileTime = damage_time;
+			m_resources.setInversed(true);
 		}
 		else
 		{
@@ -5122,4 +5144,178 @@ void U3Misc::DelayGame(Uint64 delay_time, std::function<void()> callback)
 	m_inputType = InputType::SleepCallback;
 	m_callbackStack.push(callback);
 	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+}
+
+void U3Misc::AgeChars() // $7470
+{
+	if (m_Party[2] > 0)
+	{
+		m_gTime[0]--;
+		if (m_gTime[0] > 0)
+		{
+			return;
+		}
+		m_gTime[0] = 4;
+	}
+	m_gTime[1]--;
+	if (m_gTime[1] < 0)
+	{
+		m_gTime[1] = 9;
+	}
+	m_chNum = 3;
+	m_scrollArea.blockPrompt(true);
+	m_inputType = InputType::Callback;
+	m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
+}
+
+void U3Misc::EndTurnCallback()
+{
+	m_scrollArea.blockPrompt(false);
+	m_resources.m_newMove = true;
+}
+
+void U3Misc::AgeCallback()
+{
+	int rosNum;
+	int temp;
+	char cType;
+
+	rosNum = m_Party[m_chNum + 6];
+	cType = m_Player[rosNum][23];
+
+	// Wizard, full Int
+	if (cType == m_careerTable[2])
+	{
+		if (m_Player[rosNum][25] < m_Player[rosNum][20])
+		{
+			m_Player[rosNum][25]++;
+		}
+	}
+
+	// Cleric, full Wis
+	if (cType == m_careerTable[1])
+	{
+		if (m_Player[rosNum][25] < m_Player[rosNum][21])
+		{
+			m_Player[rosNum][25]++;
+		}
+	}
+
+	// Lark Druid Alchemist, half Int
+	if ((cType == m_careerTable[6]) || (cType == m_careerTable[8]) || (cType == m_careerTable[9]))
+	{
+		if (m_Player[rosNum][25] < (m_Player[rosNum][20] / 2))
+		{
+			m_Player[rosNum][25]++;
+		}
+	}
+
+	// Paladin Illusionist Druid, half Wis
+	if ((cType == m_careerTable[4]) || (cType == m_careerTable[7]) || (cType == m_careerTable[8]))
+	{
+		if (m_Player[rosNum][25] < (m_Player[rosNum][21] / 2))
+		{
+			m_Player[rosNum][25]++;
+		}
+	}
+
+	// Ranger lesser of half Wis or half Int
+	if (cType == m_careerTable[10])
+	{
+		temp = m_Player[rosNum][25];
+		if ((temp < (m_Player[rosNum][20] / 2)) && (temp < (m_Player[rosNum][21] / 2)))
+		{
+			m_Player[rosNum][25]++;
+		}
+	}
+	temp = m_Player[rosNum][17];
+	if ((temp == 'D') || (temp == 'A') || (temp == 0))
+	{
+	}
+	else
+	{
+		EatFood(m_chNum, 10, std::bind(&U3Misc::FinishEatFood, this));
+	}
+}
+
+void U3Misc::FinishEatFood()
+{
+	if (m_Player[m_rosNum][17] == 'P')
+	{
+		HPSubtract(m_rosNum, 1);
+		InverseCharDetails(m_chNum, true);
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = damage_time;
+		m_resources.setInversed(true);
+		m_resources.m_inverses.func = std::bind(&U3Misc::FinishTurnCallback, this);
+		m_scrollArea.UPrintMessage(183);
+		return;
+	}
+	
+	FinishTurnCallback();
+}
+
+void U3Misc::FinishTurnCallback()
+{
+	if (m_gTime[1] == 0)
+	{
+		HPAdd(m_rosNum, 1);
+	}
+	m_inputType = InputType::Callback;
+	m_chNum--;
+}
+
+void U3Misc::EatFood(short member, short amount, std::function<void()> callback) // member = 0-3 $761D
+{
+	short rosNum;
+	rosNum = m_Party[6 + member];
+	m_rosNum = rosNum;
+	m_Player[rosNum][34] -= amount;
+	if (m_Player[rosNum][34] > 127)
+	{
+		m_Player[rosNum][34] -= 157;
+		m_Player[rosNum][33] -= 1;
+		if (m_Player[rosNum][33] > 127)
+		{
+			m_Player[rosNum][33] -= 157;
+			m_Player[rosNum][32] -= 1;
+			if (m_Player[rosNum][32] > 127)
+			{
+				m_Player[rosNum][32] = m_Player[rosNum][33] = m_Player[rosNum][34] = 0;
+				m_scrollArea.UPrintMessage(184);
+
+				m_resources.setInversed(true);
+				InverseCharDetails(member, true);
+				m_resources.m_inverses.elapsedTileTime = 0;
+				m_resources.m_inverses.inverseTileTime = damage_time;
+				m_resources.m_inverses.func = std::bind(&U3Misc::EatFoodCallback, this);
+				return;
+			}
+		}
+	}
+	FinishEatFood();
+}
+
+void U3Misc::EatFoodCallback()
+{
+	HPSubtract(m_rosNum, 5);
+	FinishEatFood();
+}
+
+void U3Misc::HPAdd(short member, short amount)
+{
+	long hp, maxhp;
+	hp = (m_Player[member][26] * 256 + m_Player[member][27]);
+	maxhp = (m_Player[member][28] * 256 + m_Player[member][29]);
+	hp += amount;
+	if (hp > maxhp)
+	{
+		hp = maxhp;
+	}
+	m_Player[member][26] = (unsigned char)(hp / 256);
+	m_Player[member][27] = (unsigned char)(hp - (m_Player[member][26] * 256));
 }

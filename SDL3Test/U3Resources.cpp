@@ -83,7 +83,9 @@ U3Resources::U3Resources() :
 	m_texRod(nullptr),
 	m_texShrine(nullptr),
 	m_texTimeLord(nullptr),
-	m_overrideImage(-1)
+	m_overrideImage(-1),
+	m_elapsedMoveTime(0),
+	m_newMove(false)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -260,6 +262,9 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value)
 	case U3PreferencesType::Classic_Appearance:
 		value = m_preferences.classic_appearance;
 		break;
+	case U3PreferencesType::Sound_Inactive:
+		value = m_preferences.sound_inactive;
+		break;
 	default:
 		break;
 	}
@@ -280,6 +285,9 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 		break;
 	case U3PreferencesType::Classic_Appearance:
 		m_preferences.classic_appearance = value;
+		break;
+	case U3PreferencesType::Sound_Inactive:
+		m_preferences.sound_inactive = value;
 		break;
 	default:
 		break;
@@ -2646,6 +2654,31 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 	AnimateTiles();
 	TwiddleFlags();
 	DoWind();
+
+	if (wasMove)
+	{
+		m_elapsedMoveTime = 0;
+		m_newMove = true;
+		m_misc.Routine6E35();
+	}
+	else
+	{
+		if (!isInversed())
+		{
+			m_elapsedMoveTime += m_delta_time;
+			if (m_elapsedMoveTime > MoveTime)
+			{
+				m_newMove = true;
+				m_elapsedMoveTime %= m_delta_time;
+				m_misc.Pass();
+				m_misc.Routine6E35();
+			}
+			else
+			{
+				m_newMove = false;
+			}
+		}
+	}
 
 	m_fullUpdate = false;
 }

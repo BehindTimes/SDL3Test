@@ -17,6 +17,7 @@ enum class U3PreferencesType
 	Allow_Diagonal,
 	Classic_Appearance,
 	Include_Wind,
+	Sound_Inactive
 };
 
 struct U3Preferences
@@ -29,6 +30,7 @@ struct U3Preferences
 		full_screen = false;
 		mode = 0;
 		allow_diagonal = false;
+		sound_inactive = false;
 	}
 
 	bool auto_save;
@@ -37,6 +39,7 @@ struct U3Preferences
 	bool full_screen;
 	int mode;
 	bool allow_diagonal;
+	bool sound_inactive;
 };
 
 struct InverseStruct
@@ -143,6 +146,7 @@ public:
 	}
 	void GenerateRect(SDL_FRect* FromRect, int left, int top, int right, int bottom);
 	void ImageDisplay();
+	void SwapShape(short shape);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -175,6 +179,7 @@ public:
 
 	int m_blockSize;
 	int m_overrideImage;
+	bool m_newMove;
 
 private:
 	void LoadResource(std::string strFile);
@@ -201,7 +206,7 @@ private:
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
 	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
 	void ScrollShape(int tilenum, float offset);
-	void SwapShape(short shape);
+	
 	void AlertCallback();
 	SDL_FRect GetTileRectForIndex(short index);
 	void DrawPortrait(char charNum);
@@ -219,7 +224,7 @@ private:
 	static constexpr std::string_view FoodStr = "Food: ";
 
 
-
+	static constexpr Uint64 MoveTime = 6000;
 	static constexpr Uint64 DelayScroll = 2000;
 	static constexpr Uint64 DelayDemo = 250;
 	static constexpr Uint64 DelayFlags = 80;
@@ -274,6 +279,7 @@ private:
 	Uint64 m_elapsedTimeFlag;
 	Uint64 m_elapsedTimeAnimate;
 	Uint64 m_elapsedWindTime;
+	Uint64 m_elapsedMoveTime;
 
 	short m_animFlag[4];
 	short m_twiddleFlag[4];

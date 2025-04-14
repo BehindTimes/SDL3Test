@@ -880,7 +880,10 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     }
     else
     {
-        m_misc.CheckAllDead();
+        if (m_resources.m_newMove)
+        {
+            m_misc.CheckAllDead();
+        }
         DrawMap(m_misc.m_xpos, m_misc.m_ypos);
         m_resources.ShowChars(true);
         m_resources.DrawInverses(deltaTime);
@@ -933,7 +936,10 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     m_resources.ShowChars(true);
     if (!m_resources.isInversed())
     {
-        m_misc.CheckAllDead();
+        if (m_resources.m_newMove)
+        {
+            m_misc.CheckAllDead();
+        }
     }
 
     if (m_resources.m_overrideImage >= 0)

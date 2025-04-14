@@ -1221,8 +1221,6 @@ bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 		default:
 			break;
 		}
-
-		Routine6E35();
 	}
 	return true;
 }
@@ -5117,4 +5115,11 @@ void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
 	{
 		m_Player[rosNum][item] = 99;
 	}
+}
+
+void U3Misc::DelayGame(Uint64 delay_time, std::function<void()> callback)
+{
+	m_inputType = InputType::SleepCallback;
+	m_callbackStack.push(callback);
+	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
 }

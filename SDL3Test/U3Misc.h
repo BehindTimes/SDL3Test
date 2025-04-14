@@ -84,6 +84,8 @@ public:
 	void PullSosaria();
 	void PushSosaria();
 
+	void DelayGame(Uint64 delay_time, std::function<void()> callback);
+
 	void North();
 	void South();
 	void East();
@@ -106,6 +108,8 @@ public:
 	void PutMiscStuff();
 	void ResetSosaria();
 	bool HPSubtract(short rosNum, short amount);
+	void Pass();
+	void Routine6E35();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -208,9 +212,7 @@ private:
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value);
 	bool ValidDir(unsigned char value);
-	
-	void Pass();
-	
+
 	void LookCallback();
 	
 	void TransactCallback();
@@ -220,7 +222,7 @@ private:
 	void NotHere();
 	void NoEffect();
 	void Routine6E6B();
-	void Routine6E35();
+	
 	void IncMoves();
 	void FinishAll();
 	void HandleAnyKey();

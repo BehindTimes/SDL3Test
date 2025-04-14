@@ -1278,6 +1278,9 @@ void UltimaDungeon::dngnotcombat(short value)
 	{
 	case 1: // $9076 time lord
 		m_resources.m_overrideImage = 8;
+		m_scrollArea.UPrintMessage(151);
+		m_misc.m_inputType = InputType::AnyKey;
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::TimeLordCallback, this));
 		break;
 	case 2: // $9174 fountain
 		m_resources.m_overrideImage = 5;
@@ -1338,6 +1341,12 @@ void UltimaDungeon::dngnotcombat(short value)
 	}
 }
 
+void UltimaDungeon::TimeLordCallback()
+{
+	m_resources.m_overrideImage = -1;
+	m_scrollArea.UPrintWin("\n");
+}
+
 void UltimaDungeon::foundFountain()
 {
 	m_misc.m_wx = 0x18;
@@ -1374,9 +1383,11 @@ void UltimaDungeon::FountainCallback()
 	{
 	case 0: // Poison fountain
 		m_scrollArea.UPrintMessage(154);
+		m_misc.m_Player[m_misc.m_rosNum][17] = 'P';
 		m_misc.InverseCharDetails(chNum, true);
 		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.setInversed(true);
 		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
 		break;
 	case 1: // Heal fountain
@@ -1392,6 +1403,7 @@ void UltimaDungeon::FountainCallback()
 		m_resources.m_inverses.tiles = true;
 		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.setInversed(true);
 		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
 		break;
 	case 3:

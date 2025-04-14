@@ -929,8 +929,12 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
         return;
     }
     DrawFrame(1);
+    
     m_resources.ShowChars(true);
-    m_misc.CheckAllDead();
+    if (!m_resources.isInversed())
+    {
+        m_misc.CheckAllDead();
+    }
 
     if (m_resources.m_overrideImage >= 0)
     {

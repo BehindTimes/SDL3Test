@@ -71,6 +71,7 @@ private:
 	void MarkCallback2();
 	void foundFountain();
 	void FountainCallback();
+	void TimeLordCallback();
 
 	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texSecrets[21];

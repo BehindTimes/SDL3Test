@@ -1775,7 +1775,7 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		if (m_inputType == InputType::AnyKey)
 		{
 			HandleAnyKey();
-			retVal = true;
+			//retVal = true;
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -4158,6 +4158,7 @@ void U3Misc::CheckAllDead() // $71B4
 		m_wy = 23;
 		m_scrollArea.blockPrompt(true);
 		m_scrollArea.UPrintMessage(109);    // ALL PLAYERS OUT!
+		m_resources.m_overrideImage = -1;
 
 		m_resources.m_inverses.func = nullptr;
 		m_resources.m_inverses.elapsedTileTime = 0;
@@ -4181,6 +4182,10 @@ void U3Misc::CheckAllDead() // $71B4
 		}
 
 		m_inputType = InputType::AnyKey;
+		while (m_callbackStack.size() > 0)
+		{
+			m_callbackStack.pop();
+		}
 		m_callbackStack.push(std::bind(&U3Misc::CheckAllDeadPause, this));
 	}
 }

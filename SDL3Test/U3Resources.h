@@ -132,6 +132,10 @@ public:
 	void adjustRect(SDL_FRect& myRect);
 	int getTextWidth(std::string str);
 	bool isInversed() { return m_isInversed; }
+	void setInversed(bool isInversed)
+	{
+		m_isInversed = isInversed;
+	}
 	int GetRealTile(int tilenum);
 	int AlertReturn()
 	{

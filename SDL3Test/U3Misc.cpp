@@ -2057,7 +2057,6 @@ void U3Misc::Routine6E35()
 		}
 	}
 	*/
-	FinishAll();
 }
 
 void U3Misc::FinishAll() // $79DD

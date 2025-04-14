@@ -113,6 +113,7 @@ public:
 	void AgeChars();
 	void FinishTurnCallback();
 	void AgeCallback();
+	void FinishAll();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -228,7 +229,7 @@ private:
 	void Routine6E6B();
 	
 	void IncMoves();
-	void FinishAll();
+	
 	void HandleAnyKey();
 	void FinalizeHealingCallback();
 	void ClearTiles();

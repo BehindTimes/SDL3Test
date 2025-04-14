@@ -2617,6 +2617,7 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 	if (wasMove)
 	{
 		m_wasMove = true;
+		m_misc.FinishAll();
 	}
 	m_delta_time = deltaTime;
 
@@ -2674,6 +2675,7 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 					m_elapsedMoveTime %= m_delta_time;
 					m_misc.Pass();
 					m_misc.Routine6E35();
+					m_misc.FinishAll();
 				}
 			}
 		}

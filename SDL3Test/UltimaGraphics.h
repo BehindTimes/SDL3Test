@@ -51,7 +51,7 @@ public:
 		m_fading = fade;
 	}
 	
-	void render(SDL_Event event, Uint64 deltaTime, bool& wasMove);
+	void render(SDL_Event event, Uint64 deltaTime);
 
 	unsigned char m_maskRestoreArray[128];
 	unsigned char m_maskArray[128];
@@ -65,14 +65,14 @@ private:
 	void renderMiniMapDungeon();
 	void DrawMiniMapDungeon();
 	void renderMiniMap();
-	void renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove);
+	void renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime);
 	void DrawMoonGateStuff();
-	void renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
-	void renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove);
-	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMove, bool fade);
+	void renderGameMap(SDL_Event event, Uint64 deltaTime);
+	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
+	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade);
 	void DrawWinScreen(float ratio);
 	void renderWinScreen();
-	void renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove);
+	void renderDungeon(SDL_Event event, Uint64 deltaTime);
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;

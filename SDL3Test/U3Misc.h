@@ -41,7 +41,6 @@ enum class InputType
 	AnyKey,
 	BuySell,
 	Restricted,
-	Callback,
 	SleepCallback,
 	GuildVendor,
 	NumImmediate,
@@ -84,7 +83,7 @@ public:
 	void PullSosaria();
 	void PushSosaria();
 
-	void DelayGame(Uint64 delay_time, std::function<void()> callback);
+	void DelayGame(Uint64 delay_time, std::function<bool()> callback);
 
 	void North();
 	void South();
@@ -104,16 +103,21 @@ public:
 
 	void NoGo();
 	void BombTrap();
-	void BombTrapCallback();
+	bool BombTrapCallback();
 	void PutMiscStuff();
 	void ResetSosaria();
 	bool HPSubtract(short rosNum, short amount);
 	void Pass();
 	void Routine6E35();
 	void AgeChars();
-	void FinishTurnCallback();
-	void AgeCallback();
-	void FinishAll();
+	bool FinishTurnCallback();
+	bool AgeCallback();
+	bool FinishAll();
+	void AddProcessEvent();
+	void AddInverse();
+	void GetChest();
+	void Yell();
+	void AddFinishTurn();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -187,7 +191,7 @@ public:
 	short m_rosNum;
 	short m_chNum;
 
-	std::stack<std::function<void()>> m_callbackStack;
+	std::stack<std::function<bool()>> m_callbackStack;
 	std::string m_input;
 	int m_input_num;
 	int m_maxInputLength;
@@ -198,6 +202,8 @@ public:
 	short m_map_id;
 
 	static const Uint64 damage_time = 50;
+	bool m_freezeAnimation;
+	SDL_Event m_currentEvent;
 
 private:
 	void Attack();
@@ -208,20 +214,22 @@ private:
 	void Fire();
 	void Look();
 	void Klimb();
+	void OtherCommand();
 	void PeerGem();
 	void Steal();
 	void Transact();
 	void Unlock();
+	
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value);
 	bool ValidDir(unsigned char value);
 
-	void LookCallback();
+	bool LookCallback();
 	
-	void TransactCallback();
-	void TransactCallback2();
+	bool TransactCallback();
+	bool TransactCallback2();
 	void What();
 	void What2();
 	void NotHere();
@@ -231,7 +239,7 @@ private:
 	void IncMoves();
 	
 	void HandleAnyKey();
-	void FinalizeHealingCallback();
+	bool FinalizeHealingCallback();
 	void ClearTiles();
 	
 	void HandleLetterImmediate(SDL_Keycode key);
@@ -249,98 +257,127 @@ private:
 	void InverseChnum(char which, bool value);
 	
 	void Shop(short shopNum, short chnum);
-	void tavernCallback();
-	void grocerCallback();
-	void moreFoodCallback();
-	void InputNumCallback();
-	void InputTextCallback();
-	void setInputTypeNum(std::function<void()> func, int inputLength = 2);
-	void setInputTypeYesNo(std::function<void()> func);
-	void setInputTypeBuySell(std::function<void()> func);
-	void setInputTypeRestricted(std::function<void()> func, short start);
-	void setInputTypeNumImmediate(std::function<void()> func);
-	void anotherDrinkCallback();
-	void weaponsListCallback();
-	void armorsListCallback();
+	bool tavernCallback();
+	bool grocerCallback();
+	bool moreFoodCallback();
+	bool InputNumCallback();
+	bool InputTextCallback();
+	void setInputTypeNum(std::function<bool()> func, int inputLength = 2);
+	void setInputTypeYesNo(std::function<bool()> func);
+	void setInputTypeBuySell(std::function<bool()> func);
+	void setInputTypeRestricted(std::function<bool()> func, short start);
+	void setInputTypeNumImmediate(std::function<bool()> func);
+	bool anotherDrinkCallback();
+	bool weaponsListCallback();
+	bool armorsListCallback();
 	void weaponsBuyOrSell();
 	void armorsBuyOrSell();
-	void listWeaponsCallback();
-	void listArmorsCallback();
+	bool listWeaponsCallback();
+	bool listArmorsCallback();
 	void WeaponList();
 	void ArmorsList();
 	void PrintWeaponList(short weapon);
 	void PrintArmorList(short armor);
-	void weaponsBuySellCallback();
-	void armorsBuySellCallback();
-	void weaponsBuyCallback();
-	void armorsBuyCallback();
-	void weaponsSellCallback();
-	void armorsSellCallback();
-	void weaponsBuySellFinishedCallback();
-	void armorsBuySellFinishedCallback();
+	bool weaponsBuySellCallback();
+	bool armorsBuySellCallback();
+	bool weaponsBuyCallback();
+	bool armorsBuyCallback();
+	bool weaponsSellCallback();
+	bool armorsSellCallback();
+	bool weaponsBuySellFinishedCallback();
+	bool armorsBuySellFinishedCallback();
 	void weaponsSellMissing();
 	void armorsSellMissing();
 	void weaponsBuyPoor();
 	void armorsBuyPoor();
 	bool AddGold(short rosNum, short gold, bool overflow);
-	void healingCallback();
-	void healingCallback2();
-	void healingPayCallback();
+	bool healingCallback();
+	bool healingCallback2();
+	bool healingPayCallback();
 	void SpellNoize(short opnum, short opnum2);
-	void guildCallback();
+	bool guildCallback();
 	bool GuildPay(short rosNum, short cost);
 	void GuildGive(short rosNum, short item, short amount);
-	void guildCompleteCallback();
-	void oracleCallback();
-	void oracleFinishCallback();
-	void horseVendorCallback();
+	bool guildCompleteCallback();
+	bool oracleCallback();
+	bool oracleFinishCallback();
+	bool horseVendorCallback();
 	void MoveMonsters();
 	void GetMonsterDir(short monNum);
 	char GetHeading(short value);
 	bool moveshoot(int offset);
 	void move7AAA(int offset);
 	bool moveoutside(int offset);
-	void AttackCallback();
-	void IgniteCallback();
-	void JoinGoldCallback();
-	void UnlockCallback();
-	void UnlockKeyCallback();
-	void PeerGemCallback();
-	void CheckAllDeadPause();
-	void HandleDeadResponse();
-	void HandleDeadResponse1();
-	void ResurrectCallback();
-	void OtherCallback();
-	void OtherCallback1();
-	void NoOpCallback();
-	void BribeCallback();
-	void InsertCallback();
-	void InsertCallback1();
-	void InsertCallback2();
+	bool AttackCallback();
+	bool IgniteCallback();
+	bool JoinGoldCallback();
+	bool UnlockCallback();
+	bool UnlockKeyCallback();
+	bool PeerGemCallback();
+	bool CheckAllDeadPause();
+	bool HandleDeadResponse();
+	bool HandleDeadResponse1();
+	bool ResurrectCallback();
+	bool OtherCallback();
+	bool OtherCallback1();
+	bool BribeCallback();
+	bool InsertCallback();
+	bool InsertCallback1();
+	bool InsertCallback2();
 	
-	void ExodusDieCallback();
-	void ExodusDieCallback1();
-	void ExodusDieCallback2();
-	void ExodusDieCallback3();
-	void ExodusDieCallback4();
-	void SleepCallback();
+	bool ExodusDieCallback();
+	bool ExodusDieCallback1();
+	bool ExodusDieCallback2();
+	bool ExodusDieCallback3();
+	bool ExodusDieCallback4();
+	bool SleepCallback();
 	
-	void StealCallback();
-	void StealCallback1();
+	bool StealCallback();
+	bool StealCallback1();
 	
 	void StealFail();
-	void GetChestCallback();
+	bool GetChestCallback();
 	void GetChest1(short chnum);
 	void GetChestBooty();
-	void ChestAcidCallback();
-	void ChestPoisonCallback();
-	void ChestGasCallback();
+	bool ChestAcidCallback();
+	bool ChestPoisonCallback();
+	bool ChestGasCallback();
 	void AddItem(short rosNum, short item, short amount);
-	void FinishEatFood();
-	void EatFood(short member, short amount, std::function<void()> callback);
-	void EatFoodCallback();
+	bool FinishEatFood();
+	void EatFood(short member, short amount, std::function<bool()> callback);
+	bool EatFoodCallback();
 	void HPAdd(short member, short amount);
-	void EndTurnCallback();
+	bool EndTurnCallback();
+	bool InverseCallback();
+
+	bool CommandNorth();
+	bool CommandSouth();
+	bool CommandEast();
+	bool CommandWest();
+	bool CommandSouthEast();
+	bool CommandSouthWest();
+	bool CommandNorthEast();
+	bool CommandNorthWest();
+	bool CommandBoard();
+	bool CommandDescend();
+	bool CommandEnter();
+	bool CommandExit();
+	bool CommandFinishTurn();
+	bool CommandGetChest();
+	bool CommandIgnite();
+	bool CommandKlimb();
+	bool CommandLook();
+	bool CommandPass();
+	bool CommandPeerGem();
+	bool CommandTransact();
+	bool CommandSteal();
+	bool CommandUnlock();
+	bool CommandOther();
+	bool CommandYell();
+	
+	bool ShowAlert();
+
+	bool ProcessEventCallback();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -354,5 +391,6 @@ private:
 	int m_transactNum;
 	long m_gTime[2];
 	std::unique_ptr <SosariaHandle> m_saved_map;
+	
 };
 

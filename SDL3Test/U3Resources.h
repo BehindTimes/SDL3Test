@@ -59,7 +59,6 @@ struct InverseStruct
 		char_details[3] = false;
 		fill = false;
 		additive = false;
-		func = nullptr;
 		color.a = 255;
 		color.r = 255;
 		color.g = 255;
@@ -73,7 +72,6 @@ struct InverseStruct
 	bool additive;
 	Uint64 inverseTileTime;
 	Uint64 elapsedTileTime;
-	std::function<void()> func;
 	SDL_Color color;
 };
 
@@ -125,21 +123,19 @@ public:
 	void DoWind();
 	void DrawInverses(Uint64 delta_time);
 	void DrawMoongates();
+	void updateGameTime(Uint64 deltaTime);
 
 	void ScrollThings();
 	void AnimateTiles();
 	void TwiddleFlags();
 
-	void updateTime(Uint64 curTick, bool wasMove);
+	void updateTime(Uint64 curTick);
 	void RenderCharStats(short ch, SDL_FRect rect);
 	void DrawPrompt();
 	void adjustRect(SDL_FRect& myRect);
 	int getTextWidth(std::string str);
 	bool isInversed() { return m_isInversed; }
-	void setInversed(bool isInversed)
-	{
-		m_isInversed = isInversed;
-	}
+	void setInversed(bool isInversed);
 	int GetRealTile(int tilenum);
 	int AlertReturn()
 	{

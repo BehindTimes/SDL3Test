@@ -15,7 +15,7 @@ public:
 	unsigned char CombatMonsterHere(short x, short y);
 	unsigned char ExodusCastle();
 private:
-	void ShowHitCallback();
+	bool ShowHitCallback();
 	unsigned char m_hitType;
 	unsigned char m_origValue;
 	short m_x;

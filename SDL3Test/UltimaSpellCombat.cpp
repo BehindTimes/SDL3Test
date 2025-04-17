@@ -70,10 +70,12 @@ void UltimaSpellCombat::ShowHit(short x, short y, unsigned char hitType, unsigne
     m_y = y;
 }
 
-void UltimaSpellCombat::ShowHitCallback()
+bool UltimaSpellCombat::ShowHitCallback()
 {
     m_resources.SwapShape(m_hitType);
     m_misc.PutXYTile(m_origValue, m_x, m_y);
+
+    return false;
 }
 
 void UltimaSpellCombat::Poison(short chnum) // $8881

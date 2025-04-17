@@ -2612,13 +2612,38 @@ void U3Resources::ShowMonsters()
 	}
 }
 
-void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
+void U3Resources::updateGameTime(Uint64 deltaTime)
 {
-	if (wasMove)
+	if (m_wasMove)
+	{
+		m_elapsedMoveTime = 0;
+		m_wasMove = false;
+	}
+	else
+	{
+		m_elapsedMoveTime += m_delta_time;
+		if (m_elapsedMoveTime > MoveTime)
+		{
+			m_elapsedMoveTime %= m_delta_time;
+			m_misc.Pass();
+		}
+
+		m_elapsedWindTime += deltaTime;
+		if (m_elapsedWindTime > DelayWind)
+		{
+			m_updateWind = true;
+			m_elapsedWindTime %= DelayWind;
+		}
+	}
+}
+
+void U3Resources::updateTime(Uint64 deltaTime)
+{
+	/*if (m_wasMove)
 	{
 		m_wasMove = true;
 		m_misc.FinishAll();
-	}
+	}*/
 	m_delta_time = deltaTime;
 
 	m_elapsedTimeDemo += deltaTime;
@@ -2645,7 +2670,7 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 	TwiddleFlags();
 	DoWind();
 
-	if (!m_scrollArea.isUpdating() && !m_misc.m_checkDead && m_misc.m_inputType == InputType::Default)
+	/*if (!m_scrollArea.isUpdating() && !m_misc.m_checkDead && m_misc.m_inputType == InputType::Default)
 	{
 		if (!isInversed())
 		{
@@ -2681,7 +2706,7 @@ void U3Resources::updateTime(Uint64 deltaTime, bool wasMove)
 		}
 	}
 
-	m_fullUpdate = false;
+	m_fullUpdate = false;*/
 }
 
 void U3Resources::ShowChars(bool force) /* $7338 methinx */
@@ -3233,21 +3258,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
 		incrementTime = true;
 	}
-	if (incrementTime)
-	{
-		m_inverses.elapsedTileTime += delta_time;
-		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
-		{
-			m_misc.InverseTiles(false);
-			m_isInversed = false;
-			if (m_inverses.func)
-			{
-				auto tempfun = m_inverses.func;
-				m_inverses.func = nullptr;
-				tempfun();
-			}
-		}
-	}
+	
 	if (m_inverses.fill)
 	{
 		m_isInversed = true;
@@ -3261,19 +3272,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
-
-		m_inverses.elapsedTileTime += delta_time;
-		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
-		{
-			m_inverses.fill = false;
-			m_isInversed = false;
-			if (m_inverses.func)
-			{
-				auto tempfun = m_inverses.func;
-				m_inverses.func = nullptr;
-				tempfun();
-			}
-		}
+		incrementTime = true;
 	}
 	else if (m_inverses.additive)
 	{
@@ -3288,19 +3287,12 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+		incrementTime = true;
+	}
 
+	if (incrementTime)
+	{
 		m_inverses.elapsedTileTime += delta_time;
-		if (m_inverses.elapsedTileTime > m_inverses.inverseTileTime)
-		{
-			m_inverses.fill = false;
-			m_isInversed = false;
-			if (m_inverses.func)
-			{
-				auto tempfun = m_inverses.func;
-				m_inverses.func = nullptr;
-				tempfun();
-			}
-		}
 	}
 }
 
@@ -3354,5 +3346,23 @@ void U3Resources::ImageDisplay()
 		adjustRect(myRect);
 
 		SDL_RenderTexture(m_renderer, curTexture, NULL, &myRect);
+	}
+}
+
+void U3Resources::setInversed(bool isInversed)
+{
+	m_isInversed = isInversed;
+	if(!isInversed)
+	{
+		
+		m_inverses.inverseTileTime = 0;
+		m_inverses.elapsedTileTime = 0;
+		m_inverses.tiles = false;
+		m_inverses.additive = false;
+		m_inverses.fill = false;
+		for (int index = 0; index < 4; ++index)
+		{
+			m_inverses.char_details[index] = false;
+		}
 	}
 }

@@ -709,24 +709,24 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     m_resources.DrawTiles();
 }
 
-void U3Graphics::render(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
 {
     switch (m_curMode)
     {
     case U3GraphicsMode::Map:
-        renderGameMap(event, deltaTime, wasMove);
+        renderGameMap(event, deltaTime);
         break;
     case U3GraphicsMode::MiniMap:
-        renderMiniMap(event, deltaTime, wasMove);
+        renderMiniMap(event, deltaTime);
         break;
     case U3GraphicsMode::MiniMapDungeon:
-        renderMiniMapDungeon(event, deltaTime, wasMove);
+        renderMiniMapDungeon(event, deltaTime);
         break;
     case U3GraphicsMode::WinScreen:
-        renderWinScreen(event, deltaTime, wasMove, m_fading);
+        renderWinScreen(event, deltaTime, m_fading);
         break;
     case U3GraphicsMode::Dungeon:
-        renderDungeon(event, deltaTime, wasMove);
+        renderDungeon(event, deltaTime);
         break;
     default:
         break;
@@ -776,7 +776,7 @@ void U3Graphics::DrawWinScreen(float ratio)
 }
 
 
-void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMove, bool fade)
+void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade)
 {
     DrawFrame(1);
     m_resources.ShowChars(true);
@@ -824,7 +824,7 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool& wasMov
     DrawWinScreen(ratio);
 }
 
-void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
 {
     DrawFrame(1);
     DrawMiniMap();
@@ -847,7 +847,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
     }
 }
 
-void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
 {
     DrawFrame(1);
     DrawMiniMapDungeon();
@@ -870,64 +870,158 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime, bool& w
     }
 }
 
-void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
 {
+    m_misc.m_currentEvent = event;
     DrawFrame(1);
     if (m_resources.m_overrideImage >= 0)
     {
-        m_resources.ImageDisplay();
-        m_resources.DrawInverses(deltaTime);
+        m_resources.ImageDisplay();     
     }
     else
     {
         if (m_resources.m_newMove)
         {
+            //m_scrollArea.blockPrompt(false);
             m_resources.m_newMove = false;
             m_misc.CheckAllDead();
         }
-        DrawMap(m_misc.m_xpos, m_misc.m_ypos);
-        m_resources.ShowChars(true);
-        m_resources.DrawInverses(deltaTime);
+        //if (!m_misc.m_freezeAnimation)
+        {
+            DrawMap(m_misc.m_xpos, m_misc.m_ypos);
+        }
     }
+    m_resources.ShowChars(true);
+    m_resources.DrawInverses(deltaTime);
     m_resources.DrawWind();
     m_scrollArea.render(deltaTime);
+    bool updateGame = true;
 
-    bool alertValid = m_resources.HandleAlert(event);
-    if (!alertValid)
+    if (m_scrollArea.isUpdating() || !m_scrollArea.MessageQueueEmpty())
     {
-        if (!m_staydead)
+        updateGame = false;
+    }
+    else
+    {
+        while (m_misc.m_callbackStack.size() > 0)
         {
-            if (m_misc.m_inputType == InputType::Callback || m_misc.m_inputType == InputType::SleepCallback)
+            auto curCallback = m_misc.m_callbackStack.top();
+            bool resumeRendering = curCallback();
+            if (resumeRendering)
             {
-                if (!m_scrollArea.isUpdating())
-                {
-                    m_misc.HandleCallback(m_misc.m_inputType == InputType::SleepCallback);
-                }
-            }
-            else
-            {
-                if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
-                {
-                    wasMove = m_misc.ProcessEvent(event);
-                    if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
-                    {
-                        m_curMode = m_queuedMode;
-                        m_queuedMode = U3GraphicsMode::None;
-                    }
-                }
-
-                if (m_scrollArea.isPrompt())
-                {
-                    m_resources.DrawPrompt();
-                }
+                // Resume rendering (i.e. we're waiting on a function)
+                break;
             }
         }
     }
+
+    if (m_misc.m_callbackStack.size() > 0)
+    {
+        updateGame = false;
+    }
+
+    if (m_staydead)
+    {
+        updateGame = false;
+    }
+
+    if (updateGame)
+    {
+        m_misc.ProcessEvent(event);
+        m_resources.updateGameTime(deltaTime);
+
+        if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+        {
+            m_curMode = m_queuedMode;
+            m_queuedMode = U3GraphicsMode::None;
+        }
+    }
+
+    if (m_scrollArea.isPrompt())
+    {
+        m_resources.DrawPrompt();
+    }
 }
 
-void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
+void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
 {
     if (m_dungeon.m_gExitDungeon)
+    {
+        m_dungeon.Routine6E6B();
+        return;
+    }
+
+    m_misc.m_currentEvent = event;
+    DrawFrame(1);
+    if (m_resources.m_overrideImage >= 0)
+    {
+        m_resources.ImageDisplay();
+    }
+    else
+    {
+        if (m_resources.m_newMove)
+        {
+            //m_scrollArea.blockPrompt(false);
+            m_resources.m_newMove = false;
+            m_misc.CheckAllDead();
+        }
+        //if (!m_misc.m_freezeAnimation)
+        {
+            m_dungeon.DrawDungeon();
+        }
+    }
+    m_resources.ShowChars(true);
+    m_resources.DrawInverses(deltaTime);
+    m_resources.DrawWind();
+    m_scrollArea.render(deltaTime);
+    bool updateGame = true;
+
+    if (m_scrollArea.isUpdating() || !m_scrollArea.MessageQueueEmpty())
+    {
+        updateGame = false;
+    }
+    else
+    {
+        while (m_misc.m_callbackStack.size() > 0)
+        {
+            auto curCallback = m_misc.m_callbackStack.top();
+            bool resumeRendering = curCallback();
+            if (resumeRendering)
+            {
+                // Resume rendering (i.e. we're waiting on a function)
+                break;
+            }
+        }
+    }
+
+    if (m_misc.m_callbackStack.size() > 0)
+    {
+        updateGame = false;
+    }
+
+    if (m_staydead)
+    {
+        updateGame = false;
+    }
+
+    if (updateGame)
+    {
+        m_misc.ProcessEvent(event);
+        m_resources.updateGameTime(deltaTime);
+
+        if (m_queuedMode != U3GraphicsMode::None && m_scrollArea.MessageQueueEmpty())
+        {
+            m_curMode = m_queuedMode;
+            m_queuedMode = U3GraphicsMode::None;
+        }
+    }
+
+    if (m_scrollArea.isPrompt())
+    {
+        m_resources.DrawPrompt();
+    }
+
+    /*if (m_dungeon.m_gExitDungeon)
     {
         m_dungeon.Routine6E6B();
         return;
@@ -973,8 +1067,8 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
             {
                 if (!m_scrollArea.isUpdating() && !m_resources.isInversed())
                 {
-                    wasMove = m_misc.ProcessEvent(event);
-                    if (wasMove)
+                    m_misc.ProcessEvent(event);
+                    if (m_resources.m_wasMove)
                     {
                         m_dungeon.dungeonmech();
                     }
@@ -991,5 +1085,5 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime, bool& wasMove)
                 }
             }
         }
-    }
+    }*/
 }

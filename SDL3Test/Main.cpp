@@ -44,7 +44,7 @@ void Organize();
 void JourneyOnward();
 void Game();
 
-void updateGame(Uint64 deltaTime, bool wasMove);
+void updateGame(Uint64 deltaTime);
 
 int main(int argc, char* argv[])
 {
@@ -652,6 +652,8 @@ void Game()
     m_misc.m_Player[4][32] = 0;*/
     //m_misc.m_xpos = 10;
     //m_misc.m_ypos = 10;
+    m_misc.m_Player[1][37] = 50;
+
     bool quit = false;
     bool gInterrupt = false;
     bool updateMouse = false;
@@ -661,13 +663,11 @@ void Game()
 
     Uint64 startTick = SDL_GetTicks();
     Uint64 elapsedTime = 0;
-    bool wasMove = false;
 
     m_resources.ShowChars(true);
 
     while (1)
     {
-        wasMove = false;
         if (gInterrupt)
         {
             break;
@@ -738,14 +738,13 @@ void Game()
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
         
-        bool wasMove = false;
-        m_graphics.render(event, deltaTime, wasMove);
+        m_graphics.render(event, deltaTime);
 
         m_resources.displayFPS(fps);
 
         SDL_RenderPresent(renderer);
         
-        updateGame(deltaTime, wasMove);
+        updateGame(deltaTime);
 
         if (changeMode)
         {
@@ -757,7 +756,7 @@ void Game()
 
 Uint64 fps_elapsed_time = 0;
 
-void updateGame(Uint64 deltaTime, bool wasMove)
+void updateGame(Uint64 deltaTime)
 {
     count++;
     fps_elapsed_time += deltaTime;
@@ -770,6 +769,6 @@ void updateGame(Uint64 deltaTime, bool wasMove)
 
     if (m_graphics.m_curMode == U3GraphicsMode::Map)
     {
-        m_resources.updateTime(deltaTime, wasMove);
+        m_resources.updateTime(deltaTime);
     }
 }

@@ -150,7 +150,8 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		NotDngCmd();
 		break;
 	case SDLK_Y:
-		m_misc.Yell(0);
+		m_misc.Yell();
+		//m_misc.Yell(0);
 		break;
 	case SDLK_Z:
 		NotDngCmd();
@@ -184,7 +185,7 @@ bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 			Right();
 			break;
 		case SDLK_SPACE:
-			Pass();
+			m_misc.Pass();
 			break;
 		default:
 			break;
@@ -990,8 +991,13 @@ void UltimaDungeon::DrawDungeon()
 	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonPort, NULL, &theRect);
 }
 
-void UltimaDungeon::Forward()
+bool UltimaDungeon::CommandForward()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(165);
 	m_misc.m_xs = m_HeadX[m_misc.m_heading] + m_misc.m_xpos & 0x0F;
 	if (m_misc.m_xs < 0)
@@ -1006,15 +1012,22 @@ void UltimaDungeon::Forward()
 	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
 	{
 		m_misc.NoGo();
-		return;
+		return false;
 	}
 	m_misc.m_xpos = m_misc.m_xs;
 	m_misc.m_ypos = m_misc.m_ys;
 	m_forceRedraw = true;
+
+	return false;
 }
 
-void UltimaDungeon::Retreat()
+bool UltimaDungeon::CommandRetreat()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(166);
 	m_misc.m_xs = m_HeadX[(m_misc.m_heading + 2) & 3] + m_misc.m_xpos & 0x0F;
 	if (m_misc.m_xs < 0)
@@ -1029,22 +1042,29 @@ void UltimaDungeon::Retreat()
 	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
 	{
 		m_misc.NoGo();
-		return;
+		return false;
 	}
 	m_misc.m_xpos = m_misc.m_xs;
 	m_misc.m_ypos = m_misc.m_ys;
 	m_forceRedraw = true;
+
+	return false;
 }
 
-void UltimaDungeon::Left()
+bool UltimaDungeon::CommandLeft()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(168);
 	m_misc.m_xs = m_misc.m_xpos;
 	m_misc.m_ys = m_misc.m_ypos;
 	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
 	{
 		m_misc.NoGo();
-		return;
+		return false;
 	}
 	m_misc.m_heading--;
 	if (m_misc.m_heading < 0)
@@ -1052,17 +1072,24 @@ void UltimaDungeon::Left()
 		m_misc.m_heading += 4;
 	}
 	m_forceRedraw = true;
+
+	return false;
 }
 
-void UltimaDungeon::Right()
+bool UltimaDungeon::CommandRight()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(167);
 	m_misc.m_xs = m_misc.m_xpos;
 	m_misc.m_ys = m_misc.m_ypos;
 	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
 	{
 		m_misc.NoGo();
-		return;
+		return false;
 	}
 	m_misc.m_heading++;
 	if (m_misc.m_heading > 3)
@@ -1070,52 +1097,111 @@ void UltimaDungeon::Right()
 		m_misc.m_heading -= 4;
 	}
 	m_forceRedraw = true;
+
+	return false;
 }
 
-void UltimaDungeon::Pass()
+void UltimaDungeon::Forward()
 {
-	m_scrollArea.UPrintMessage(23);
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandForward, this));
+}
+
+void UltimaDungeon::Retreat()
+{
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandRetreat, this));
+}
+
+
+void UltimaDungeon::Left()
+{
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandLeft, this));
+}
+
+void UltimaDungeon::Right()
+{
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandRight, this));
+}
+
+bool UltimaDungeon::CommandNotDngCmd()
+{
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
+	m_scrollArea.UPrintMessage(172);
+
+	return false;
 }
 
 void UltimaDungeon::NotDngCmd() // $8EF1
 {
-	m_scrollArea.UPrintMessage(172);
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandNotDngCmd, this));
 }
 
-void UltimaDungeon::Klimb() // $8F37
+bool UltimaDungeon::CommandKlimb() // $8EF1
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(170);
 	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x10) == 0)
 	{
 		InvalCmd();
-		return;
+		return false;
 	}
 	m_dungeonLevel--;
 	if (m_dungeonLevel >= 0 && m_dungeonLevel < 8)
 	{
 		m_forceRedraw = true;
-		return;
+		return false;
 	}
 	m_dungeonLevel = 0;
 	m_gExitDungeon = true;
-	return;
+	return false;
 }
 
-void UltimaDungeon::Descend() // $8F0C
+void UltimaDungeon::Klimb() // $8F37
 {
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandKlimb, this));
+}
+
+bool UltimaDungeon::CommandDescend() // $8F0C
+{
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(169);
 	if (GetXYDng(m_misc.m_xpos, m_misc.m_ypos) > 127)
 	{
 		InvalCmd();
-		return;
+		return false;
 	}
 	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x20) == 0)
 	{
 		InvalCmd();
-		return;
+		return false;
 	}
 	m_dungeonLevel++;
 	m_forceRedraw = true;
+	return false;
+}
+
+
+void UltimaDungeon::Descend() // $8F0C
+{
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandDescend, this));
 }
 
 void UltimaDungeon::InvalCmd() // $8ED8
@@ -1123,22 +1209,40 @@ void UltimaDungeon::InvalCmd() // $8ED8
 	m_scrollArea.UPrintMessage(171);
 }
 
-void UltimaDungeon::PeerGem()
+bool UltimaDungeon::CommandPeerGem()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_scrollArea.UPrintMessage(75);
 	m_misc.m_inputType = InputType::Transact;
 	m_graphics.setFade(false);
 	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::PeerGemCallback, this));
+	m_misc.AddProcessEvent();
+	return false;
 }
 
-void UltimaDungeon::PeerGemCallback()
+void UltimaDungeon::PeerGem()
 {
+	m_misc.AddFinishTurn();
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandPeerGem, this));
+}
+
+bool UltimaDungeon::PeerGemCallback()
+{
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	short rosnum;
 
 	if (m_misc.m_input_num > 3 || m_misc.m_input_num < 0 || m_misc.m_Party[6 + m_misc.m_input_num] == 0)
 	{
 		m_scrollArea.UPrintWin("\n\n");
-		return;
+		return false;
 	}
 	rosnum = m_misc.m_Party[6 + m_misc.m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
@@ -1155,6 +1259,7 @@ void UltimaDungeon::PeerGemCallback()
 		m_scrollArea.forceRedraw();
 		m_graphics.m_queuedMode = U3GraphicsMode::MiniMapDungeon;
 	}
+	return false;
 }
 
 void UltimaDungeon::DrawSecretMessage()
@@ -1313,6 +1418,7 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_scrollArea.UPrintMessage(161);
 		m_misc.m_inputType = InputType::Transact;
 		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback, this));
+		m_misc.AddProcessEvent();
 		break;
 	case 6: // $92DA gremlins
 	{
@@ -1347,42 +1453,71 @@ void UltimaDungeon::dngnotcombat(short value)
 	}
 }
 
-void UltimaDungeon::TimeLordCallback()
+bool UltimaDungeon::TimeLordCallback()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_resources.m_overrideImage = -1;
 	m_scrollArea.UPrintWin("\n");
+
+	return false;
 }
 
-void UltimaDungeon::foundFountain()
+bool UltimaDungeon::foundFountain()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_misc.m_wx = 0x18;
 	m_misc.m_wy = 0x17;
 	m_scrollArea.UPrintMessage(152);
 	m_misc.m_inputType = InputType::Transact;
 	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::FountainCallback, this));
+	m_misc.AddProcessEvent();
+
+	return false;
 }
 
-void UltimaDungeon::FountainCallback()
+bool UltimaDungeon::FountainCallback()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	short chNum = m_misc.m_input_num;
-	std::string dispString = std::to_string(chNum) + std::string("\n");
+	std::string dispString;
+	if (chNum >= 0)
+	{
+		dispString = std::to_string(chNum + 1) + std::string("\n");
+	}
+	else
+	{
+		dispString += '\n';
+	}
+
 	m_scrollArea.UPrintWin(dispString);
 	if (chNum < 0 || chNum > 3)
 	{
 		m_resources.m_overrideImage = -1;
-		return;
+		return false;
 	}
 	if (m_misc.m_Party[6 + chNum] == 0)
 	{
 		m_resources.m_overrideImage = -1;
 		m_scrollArea.UPrintMessage(41);
-		return;
+		return false;
 	}
 	if (m_misc.CheckAlive(chNum) == false)
 	{
 		m_resources.m_overrideImage = -1;
 		m_scrollArea.UPrintMessage(126);
-		return;
+		return false;
 	}
 	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
 	switch (m_misc.m_xpos & 0x03)
@@ -1391,26 +1526,28 @@ void UltimaDungeon::FountainCallback()
 		m_scrollArea.UPrintMessage(154);
 		m_misc.m_Player[m_misc.m_rosNum][17] = 'P';
 		m_misc.InverseCharDetails(chNum, true);
-		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
 		m_resources.setInversed(true);
 		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc.AddInverse();
 		break;
 	case 1: // Heal fountain
 		m_misc.m_Player[m_misc.m_rosNum][26] = m_misc.m_Player[m_misc.m_rosNum][28];
 		m_misc.m_Player[m_misc.m_rosNum][27] = m_misc.m_Player[m_misc.m_rosNum][29];
 		m_scrollArea.UPrintMessage(155);
-		foundFountain();
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
 		break;
 	case 2: // Damage fountain
 		m_scrollArea.UPrintMessage(156);
 		m_misc.HPSubtract(m_misc.m_rosNum, 25);
 		m_misc.InverseCharDetails(chNum, true);
 		m_resources.m_inverses.tiles = true;
-		m_resources.m_inverses.func = std::bind(&UltimaDungeon::foundFountain, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
 		m_resources.setInversed(true);
 		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc.AddInverse();
 		break;
 	case 3:
 		// Cure poison fountain
@@ -1419,47 +1556,72 @@ void UltimaDungeon::FountainCallback()
 		{
 			m_misc.m_Player[m_misc.m_rosNum][17] = 'G';
 		}
-		foundFountain();
+		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
 		break;
 	default:
 		m_resources.m_overrideImage = -1;
 		break;
 	}
+	return false;
 }
 
-void UltimaDungeon::MarkCallback()
+bool UltimaDungeon::MarkCallback()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	unsigned char bits[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
 	short chNum = m_misc.m_input_num;
-	std::string dispString = std::to_string(chNum) + std::string("\n");
+	std::string dispString;
+	if (chNum >= 0)
+	{
+		dispString = std::to_string(chNum + 1) + std::string("\n");
+	}
+	else
+	{
+		dispString += '\n';
+	}
+	
 	m_scrollArea.UPrintWin(dispString);
 	m_resources.m_overrideImage = -1;
 	if (chNum < 0 || chNum > 3)
 	{
-		return;
+		return false;
 	}
 	if (m_misc.m_Party[6 + chNum] == 0)
 	{
 		m_scrollArea.UPrintMessage(41);
-		return;
+		return false;
 	}
 	if (m_misc.CheckAlive(chNum) == false)
 	{
 		m_scrollArea.UPrintMessage(126);
-		return;
+		return false;
 	}
 	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
 	m_misc.m_Player[chNum][14] = m_misc.m_Player[chNum][14] | bits[(m_misc.m_xpos & 3) + 4];
 
 	m_misc.InverseCharDetails(chNum, true);
-	m_resources.m_inverses.func = std::bind(&UltimaDungeon::MarkCallback2, this);
 	m_resources.m_inverses.elapsedTileTime = 0;
 	m_resources.setInversed(true);
 	m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
+	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback2, this));
+	m_misc.AddInverse();
+
+	return false;
 }
 
-void UltimaDungeon::MarkCallback2()
+bool UltimaDungeon::MarkCallback2()
 {
+	if (m_misc.m_callbackStack.size() > 0)
+	{
+		m_misc.m_callbackStack.pop();
+	}
+
 	m_misc.HPSubtract(m_misc.m_rosNum, 50);
 	m_scrollArea.UPrintMessage(162);
+
+	return false;
 }

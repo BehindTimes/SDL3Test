@@ -2882,6 +2882,7 @@ bool U3Misc::healingCallback()
 	default:
 		InverseChnum(m_transactNum, false);
 		m_scrollArea.UPrintWin("\n");
+		m_scrollArea.blockPrompt(false);
 		return false;
 	}
 	m_opnum = m_input_num;
@@ -2906,6 +2907,7 @@ bool U3Misc::healingPayCallback()
 		m_scrollArea.UPrintWin("\n\n");
 		m_scrollArea.UPrintMessageRewrapped(232);
 		InverseChnum(m_transactNum, false);
+		m_scrollArea.blockPrompt(false);
 		return false;
 	}
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
@@ -2914,6 +2916,7 @@ bool U3Misc::healingPayCallback()
 		m_scrollArea.UPrintWin("\n\n");
 		m_scrollArea.UPrintMessageRewrapped(233);
 		InverseChnum(m_transactNum, false);
+		m_scrollArea.blockPrompt(false);
 		return false;
 	}
 
@@ -2937,6 +2940,7 @@ bool U3Misc::healingPayCallback()
 		break;
 	default:
 		InverseChnum(m_transactNum, false);
+		m_scrollArea.blockPrompt(false);
 		return false;
 	}
 	m_scrollArea.setInput(true);
@@ -2989,6 +2993,7 @@ bool U3Misc::FinalizeHealingCallback()
 	default:
 		break;
 	}
+	m_scrollArea.blockPrompt(false);
 	InverseChnum(m_transactNum, false);
 	return false;
 }
@@ -3002,6 +3007,7 @@ bool U3Misc::healingCallback2()
 
 	if (m_input_num >= 0 && m_input_num < 4)
 	{
+		m_scrollArea.UPrintWin(std::to_string(m_input_num + 1));
 		m_scrollArea.setInput(false);
 		m_scrollArea.UPrintWin("\n");
 		SpellNoize(m_input_num, m_opnum);

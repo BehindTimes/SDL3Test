@@ -815,9 +815,11 @@ bool U3Misc::TransactCallback2()
 			{
 				m_scrollArea.UPrintMessage(89);
 			}
+			m_scrollArea.blockPrompt(false);
 			return false;
 		}
 		Speak(perNum, m_Monsters[monNum] / 4);
+		m_scrollArea.blockPrompt(false);
 		return false;
 	}
 	m_scrollArea.UPrintMessage(90);
@@ -861,6 +863,7 @@ bool U3Misc::TransactCallback2()
 	m_Player[m_rosNum][29] = hpmax - (m_Player[m_rosNum][28] * 256);
 	m_scrollArea.UPrintMessage(94);
 	InverseTiles(true);
+	m_scrollArea.blockPrompt(false);
 
 	return false;
 }

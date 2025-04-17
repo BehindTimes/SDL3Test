@@ -437,14 +437,16 @@ void UltimaDungeon::createDoorPolygons()
 void UltimaDungeon::DungeonStart(short mode)
 {
 	m_gExitDungeon = false;
-	m_graphics.m_curMode = U3GraphicsMode::Dungeon;
-	m_misc.m_gameMode = GameStateMode::Dungeon;
+	m_graphics.m_queuedMode = U3GraphicsMode::Dungeon;
+	//m_misc.m_gameMode = GameStateMode::Dungeon;
 
 	if (mode == 1)
 	{
 		dungeonmech();
 		return;
 	}
+
+	m_misc.m_gTorch = 0;
 
 	m_misc.m_wx = 0x18;
 	m_misc.m_wy = 0x17;
@@ -725,6 +727,13 @@ void UltimaDungeon::RenderDungeon()
 	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
 	SDL_SetRenderTarget(m_resources.m_renderer, m_texDungeonPort);
 	SDL_RenderClear(m_resources.m_renderer);
+
+	if (m_misc.m_gTorch < 1)
+	{
+		SDL_SetRenderTarget(m_resources.m_renderer, NULL);
+		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+		return;
+	}
 
 	DrawDungeonBackGround();
 	Chunk1();

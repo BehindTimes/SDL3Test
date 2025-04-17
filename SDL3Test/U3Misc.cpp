@@ -1566,13 +1566,12 @@ void U3Misc::Routine6E35()
 	IncMoves();
 
 	//MoonGateUpdate();
-	if (m_Party[2] == 1)
+	/*if (m_Party[2] == 1)
 	{
 		//DrawDungeon();
 		m_gameMode = GameStateMode::Dungeon;
-		m_dungeon.DungeonStart(1);
 		return;
-	}
+	}*/
 	// if $E2=#$80 (combat?), see $6E5C.  Apparently unneccessary
 	//   code, since the combat routines never touch this area while in effect.
 	if (m_Party[2] > 1) // Town or castle, IOW
@@ -3300,11 +3299,22 @@ bool U3Misc::IgniteCallback()
 		m_callbackStack.pop();
 	}
 	short rosNum;
-	if (m_input_num < 0 || m_input_num > 3)
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
 	{
+		m_scrollArea.UPrintWin("\n");
 		return false;
 	}
-	rosNum = m_Party[5 + m_input_num];
+	std::string dispString = std::to_string(m_chNum + 1) + std::string("\n");
+	m_scrollArea.UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea.UPrintMessage(41);
+		return false;
+	}
+
+	rosNum = m_Party[6 + m_chNum];
+	
 	if (m_Player[rosNum][15] < 1)
 	{
 		m_scrollArea.UPrintMessage(67);
@@ -3833,27 +3843,28 @@ bool U3Misc::OtherCallback()
 	{
 		m_callbackStack.pop();
 	}
-	m_rosNum = m_input_num;
-	std::string strRosNum;
+	m_chNum = m_input_num;
+	std::string strchNum;
 	if (m_rosNum >= 0)
 	{
-		strRosNum = std::to_string(m_rosNum + 1) + std::string("\n");
+		strchNum = std::to_string(m_rosNum + 1) + std::string("\n");
 	}
 	else
 	{
-		strRosNum = std::string("\n");
+		strchNum = std::string("\n");
 	}
-	m_scrollArea.UPrintWin(strRosNum);
+	m_scrollArea.UPrintWin(strchNum);
 
 	if (m_rosNum < 0 || m_rosNum > 3)
 	{
 		return false;
 	}
-	if (m_Party[6 + m_rosNum] == 0)
+	if (m_Party[6 + m_chNum] == 0)
 	{
 		m_scrollArea.UPrintMessage(41);
 		return false;
 	}
+	m_rosNum = m_Party[6 + m_chNum];
 	if (CheckAlive(m_rosNum) == false)
 	{
 		m_scrollArea.UPrintMessage(126);
@@ -4799,12 +4810,21 @@ bool U3Misc::EndTurnCallback()
 	if (m_graphics.m_queuedMode != U3GraphicsMode::None)
 	{
 		m_scrollArea.blockPrompt(true);
+		m_graphics.m_curMode = m_graphics.m_queuedMode;
+
+		if (m_graphics.m_curMode == U3GraphicsMode::Dungeon)
+		{
+			m_dungeon.DungeonStart(1);
+		}
+		m_graphics.m_queuedMode = U3GraphicsMode::None;
+		m_gameMode = GameStateMode::Dungeon;
 	}
 	else
 	{
 		m_scrollArea.blockPrompt(false);
 	}
 	m_resources.m_newMove = true;
+
 	return false;
 }
 

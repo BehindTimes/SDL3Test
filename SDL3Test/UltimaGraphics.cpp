@@ -885,6 +885,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
             //m_scrollArea.blockPrompt(false);
             m_resources.m_newMove = false;
             m_misc.CheckAllDead();
+            m_misc.WhirlPool();
         }
         //if (!m_misc.m_freezeAnimation)
         {

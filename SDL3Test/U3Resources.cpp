@@ -1416,8 +1416,10 @@ void U3Resources::DrawMoongates()
 		UPrint("(", 9, 0, true);
 		UPrint(")(", 11, 0, true);
 		UPrint(")", 14, 0, true);
-		std::string strX = std::to_string(m_misc.m_gMoonDisp[0]);
-		std::string strY = std::to_string(m_misc.m_gMoonDisp[0]);
+		std::string strX;
+		strX += (char)m_misc.m_gMoonDisp[0];
+		std::string strY;
+		strY += (char)m_misc.m_gMoonDisp[0];
 		UPrint(strX, 10, 0, true);
 		UPrint(strY, 13, 0, true);
 	}
@@ -1439,11 +1441,13 @@ void U3Resources::DrawMoongates()
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
-		std::string strX = std::string("(") + std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
-		std::string strY = std::string("(") + std::to_string(m_misc.m_gMoonDisp[0]) + std::string(")");
+		std::string strX = std::string("(");
+		strX += (char)m_misc.m_gMoonDisp[0] + std::string(")");
+		std::string strY = std::string("(");
+		strY += (char)m_misc.m_gMoonDisp[1] + std::string(")");
 
-		m_graphics.DrawFramePiece(32 + m_misc.m_gMoonDisp[0], 8, 0);
-		m_graphics.DrawFramePiece(40 + m_misc.m_gMoonDisp[1], 12, 0);
+		m_graphics.DrawFramePiece(34 + (m_misc.m_gMoonDisp[0] - '0'), 8, 0);
+		m_graphics.DrawFramePiece(42 + (m_misc.m_gMoonDisp[1] - '0'), 12, 0);
 
 		int xPos = (int)(10.5f * m_blockSize);
 		int yPos = (int)(14.5f * m_blockSize);
@@ -1462,6 +1466,12 @@ void U3Resources::DrawMoongates()
 	{
 		m_misc.PutXYVal(12, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
 	}    // or forest
+	short x;
+	for (x = 0; x < 8; x++) {
+		m_misc.PutXYVal(4, m_misc.m_MoonXTable[x], m_misc.m_MoonYTable[x]);
+	}
+	x = m_misc.m_gMoonDisp[0] - '0';
+	m_misc.PutXYVal(136, m_misc.m_MoonXTable[x], m_misc.m_MoonYTable[x]);    // put Moongate
 }
 
 void U3Resources::DrawWind()
@@ -3357,12 +3367,15 @@ void U3Resources::setInversed(bool isInversed)
 		
 		m_inverses.inverseTileTime = 0;
 		m_inverses.elapsedTileTime = 0;
-		m_inverses.tiles = false;
-		m_inverses.additive = false;
-		m_inverses.fill = false;
-		for (int index = 0; index < 4; ++index)
+		if (!m_inverses.stayInversed)
 		{
-			m_inverses.char_details[index] = false;
+			m_inverses.tiles = false;
+			m_inverses.additive = false;
+			m_inverses.fill = false;
+			for (int index = 0; index < 4; ++index)
+			{
+				m_inverses.char_details[index] = false;
+			}
 		}
 	}
 }

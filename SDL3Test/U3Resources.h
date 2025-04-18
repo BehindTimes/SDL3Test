@@ -63,6 +63,7 @@ struct InverseStruct
 		color.r = 255;
 		color.g = 255;
 		color.b = 255;
+		stayInversed = false;
 	}
 
 	bool character_num[4];
@@ -70,6 +71,7 @@ struct InverseStruct
 	bool tiles;
 	bool fill;
 	bool additive;
+	bool stayInversed;
 	Uint64 inverseTileTime;
 	Uint64 elapsedTileTime;
 	SDL_Color color;

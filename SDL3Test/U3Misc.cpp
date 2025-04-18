@@ -65,7 +65,8 @@ U3Misc::U3Misc() :
 	m_map_id(0),
 	m_chNum(0),
 	m_freezeAnimation(false),
-	m_currentEvent(0)
+	m_currentEvent(0),
+	m_gWhirlCtr(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -98,6 +99,11 @@ U3Misc::U3Misc() :
 	memset(m_careerTable, 0, sizeof(unsigned char) * 12);
 	memset(m_Party, 0, sizeof(unsigned char) * 64);
 	memset(m_gTime, 0, sizeof(long) * 2);
+
+	m_gMoon[0] = 12;
+	m_gMoon[1] = 4;
+	m_gMoonDisp[0] = '4';
+	m_gMoonDisp[1] = '4';
 }
 
 U3Misc::~U3Misc()
@@ -380,7 +386,7 @@ bool U3Misc::PutRoster()
 		SDL_WriteIO(file, m_Player[player + 1], 64);
 	}
 
-	
+
 	SDL_CloseIO(file);
 
 	return true;
@@ -1565,7 +1571,7 @@ void U3Misc::Routine6E35()
 	//short temp;
 	IncMoves();
 
-	//MoonGateUpdate();
+	MoonGateUpdate();
 	/*if (m_Party[2] == 1)
 	{
 		//DrawDungeon();
@@ -1584,16 +1590,8 @@ void U3Misc::Routine6E35()
 	m_callbackStack.push(std::bind(&U3Misc::FinishAll, this));
 	AgeChars();
 	//ShowChars(false);
-	//temp = GetXYVal(m_xpos, m_ypos);
-	/*if (temp == 136)
-	{
-		HandleMoonStep();
-	}
-	if (temp == 48)
-	{
-		GoWhirlPool();
-	}
-	if (ExodusCastle() == 0)
+	
+	/*if (ExodusCastle() == 0)
 	{
 		gTimeNegate = 0;
 		xs = RandNum(0, 11);
@@ -2956,7 +2954,7 @@ void U3Misc::SpellNoize(short opnum, short opnum2)
 	m_callbackStack.push(std::bind(&U3Misc::FinalizeHealingCallback, this));
 	InverseTiles(true);
 	InverseCharDetails(opnum, true);
-	
+
 }
 
 bool U3Misc::FinalizeHealingCallback()
@@ -3320,7 +3318,7 @@ bool U3Misc::IgniteCallback()
 	}
 
 	rosNum = m_Party[6 + m_chNum];
-	
+
 	if (m_Player[rosNum][15] < 1)
 	{
 		m_scrollArea.UPrintMessage(67);
@@ -3736,7 +3734,7 @@ bool  U3Misc::HandleDeadResponse1()
 	m_resources.setInversed(true);
 	m_callbackStack.push(std::bind(&U3Misc::ResurrectCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
-	
+
 	return false;
 }
 
@@ -4821,15 +4819,26 @@ bool U3Misc::EndTurnCallback()
 		if (m_graphics.m_curMode == U3GraphicsMode::Dungeon)
 		{
 			m_dungeon.DungeonStart(1);
+			m_gameMode = GameStateMode::Dungeon;
 		}
 		m_graphics.m_queuedMode = U3GraphicsMode::None;
-		m_gameMode = GameStateMode::Dungeon;
+		
 	}
 	else
 	{
 		m_scrollArea.blockPrompt(false);
 	}
 	m_resources.m_newMove = true;
+
+	short temp = GetXYVal(m_xpos, m_ypos);
+	if (temp == 136)
+	{
+		HandleMoonStep();
+	}
+	if (temp == 48)
+	{
+		GoWhirlPool();
+	}
 
 	return false;
 }
@@ -5036,4 +5045,172 @@ void U3Misc::AddInverse()
 void U3Misc::AddFinishTurn()
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+}
+
+void U3Misc::Whirl1()
+{
+	unsigned char byte;
+
+	byte = m_utilities.getRandom(0, 7);
+	m_WhirlDX = WhirlXtable[byte];
+	m_WhirlDY = WhirlYtable[byte];
+}
+
+void U3Misc::Whirl2(int newx, int newy)
+{
+	PutXYVal(0x30, newx, newy);
+	PutXYVal(0, (unsigned char)m_WhirlX, (unsigned char)m_WhirlY);
+	m_WhirlX = newx;
+	m_WhirlY = newy;
+	Whirl3();
+}
+
+void U3Misc::Whirl3() // $771A
+{
+	if ((m_WhirlX == m_xpos) && (m_WhirlY == m_ypos)) // Whirlpool hit party
+	{
+		GoWhirlPool();
+	}
+}
+
+void U3Misc::WhirlPool() // $7665
+{
+	unsigned char byte;
+	int swap, newx, newy;
+
+	m_gWhirlCtr--;
+	if (m_gWhirlCtr > 0)
+	{
+		return;
+	}
+	m_gWhirlCtr = 4;
+
+	if (m_Party[2] != 0)
+	{
+		return;
+	}
+	byte = m_utilities.getRandom(0, 7);
+
+	if (byte == 0)
+	{
+		Whirl1();
+		return;
+	}
+
+	newx = m_graphics.MapConstrain(m_WhirlX + m_WhirlDX);
+	newy = m_graphics.MapConstrain(m_WhirlY + m_WhirlDY);
+	byte = GetXYVal(newx, newy);
+
+	if (byte == 0)
+	{
+		Whirl2(newx, newy);
+		return;
+	}
+	if (byte != 0x2C)
+	{
+		Whirl1();
+		return;
+	}
+	PutXYVal(0x30, newx, newy);
+	swap = m_WhirlX;
+	m_WhirlX = newx;
+	newx = swap;
+	swap = m_WhirlY;
+	m_WhirlY = newy;
+	newy = swap;
+	PutXYVal(0, newx, newy);
+	m_scrollArea.UPrintMessageRewrapped(110);
+	m_scrollArea.UPrintWin("\n");
+}
+
+void U3Misc::GoWhirlPool() // 772D
+{
+	m_Party[0] = 24; // Be one with the whirlpool
+
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (classic)
+	{
+		m_scrollArea.UPrintMessage(111);
+	}
+	else
+	{
+		m_scrollArea.UPrintMessageRewrapped(256);
+	}
+}
+
+void U3Misc::MoonGateUpdate() // $6F5D
+{
+	if (m_Party[2] != 0)
+	{
+		return; // only if on surface!
+	}
+	m_gMoon[0]--;
+	if (m_gMoon[0] < 1)
+	{
+		m_gMoon[0] = 12;
+		m_gMoonDisp[0]++;
+		if (m_gMoonDisp[0] > '7')
+		{
+			m_gMoonDisp[0] = '0';
+		}
+	}
+	m_gMoon[1]--;
+	if (m_gMoon[1] < 1)
+	{
+		m_gMoon[1] = 4;
+		m_gMoonDisp[1]++;
+		if (m_gMoonDisp[1] > '7')
+		{
+			m_gMoonDisp[1] = '0';
+		}
+	}
+}
+
+void U3Misc::HandleMoonStep()
+{
+	m_callbackStack.push(std::bind(&U3Misc::HandleMoonStepCallback, this));
+	InverseTiles(true);
+	m_resources.m_inverses.stayInversed = true;
+}
+
+bool U3Misc::HandleMoonStepCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	short value;
+	if (m_Party[2] == 0)
+	{
+		value = m_gMoonDisp[1] - '0';
+		m_xpos = m_MoonXTable[value];
+		m_ypos = m_MoonYTable[value];
+	}
+	else
+	{
+		value = 0;
+		while (value != 0x04)
+		{
+			m_xpos = m_utilities.getRandom(0, m_mapSize - 1);
+			m_ypos = m_utilities.getRandom(0, m_mapSize - 1);
+			value = GetXYVal(m_xpos, m_ypos);
+		}
+	}
+	
+	m_callbackStack.push(std::bind(&U3Misc::HandleMoonStepCallback1, this));
+	InverseTiles(true);
+	m_resources.m_inverses.stayInversed = false;
+
+	return false;
+}
+
+bool U3Misc::HandleMoonStepCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	return false;
 }

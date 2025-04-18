@@ -3893,7 +3893,7 @@ bool U3Misc::OtherCallback()
 	}
 	m_scrollArea.UPrintWin(strchNum);
 
-	if (m_rosNum < 0 || m_rosNum > 3)
+	if (m_chNum < 0 || m_chNum > 3)
 	{
 		return false;
 	}
@@ -5326,4 +5326,59 @@ bool U3Misc::HandleMoonStepCallback1()
 	}
 
 	return false;
+}
+
+bool U3Misc::EnterShrineCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_chNum = m_input_num;
+
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea.UPrintWin("\n");
+		return false;
+	}
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea.UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea.UPrintMessage(41);
+		return false;
+	}
+	if (CheckAlive(m_chNum) == false)
+	{
+		m_spellCombat.Incap();
+		return false;
+	}
+
+	Shrine(m_chNum);
+
+	return false;
+}
+
+void U3Misc::Shrine(short chnum)
+{
+	short shtype = m_xpos & 0x03;
+	short key = 0;
+
+	m_resources.m_overrideImage = 7;
+	std::string attributeName = m_resources.m_plistMap["Messages"][173 + shtype];
+
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+
+	if (classic)
+	{
+		m_scrollArea.UPrintMessage(235);
+		for (key = 0; key < ((16 - attributeName[0]) / 2); key++)
+		{
+			m_scrollArea.UPrintWin(" ");
+		}
+		m_scrollArea.UPrintWin(attributeName);
+		m_scrollArea.UPrintWin("\n\n");
+	}
 }

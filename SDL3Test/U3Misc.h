@@ -390,6 +390,8 @@ private:
 	bool GoWhirlPoolCallback();
 	bool GoWhirlPoolCallback1();
 	bool FinishAll1();
+	bool EnterShrineCallback();
+	void Shrine(short chnum);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

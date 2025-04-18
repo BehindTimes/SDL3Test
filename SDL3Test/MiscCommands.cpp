@@ -548,6 +548,11 @@ bool U3Misc::CommandEnter()
 		dispString += addString;
 		m_scrollArea.UPrintWin(dispString);
 
+		m_inputType = InputType::Transact;
+		m_scrollArea.blockPrompt(true);
+		m_callbackStack.push(std::bind(&U3Misc::EnterShrineCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
 		return false;
 	}
 	bool autosave;

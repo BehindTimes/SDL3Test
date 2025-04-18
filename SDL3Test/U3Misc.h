@@ -387,6 +387,9 @@ private:
 	void HandleMoonStep();
 	bool HandleMoonStepCallback();
 	bool HandleMoonStepCallback1();
+	bool GoWhirlPoolCallback();
+	bool GoWhirlPoolCallback1();
+	bool FinishAll1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -396,6 +399,7 @@ private:
 
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
+	static const Uint64 whirlpool_time = 3000;
 	static const int WhirlPoolMax = 4;
 	const char      WhirlXtable[8] = { 0,1,1,1,0,-1,-1,-1 };
 	const char      WhirlYtable[8] = { 1,1,0,-1,-1,-1,0,1 };

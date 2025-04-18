@@ -1636,6 +1636,21 @@ bool U3Misc::FinishAll() // $79DD
 			return false;
 		}
 	}
+
+	
+
+	short temp = GetXYVal(m_xpos, m_ypos);
+
+	m_callbackStack.push(std::bind(&U3Misc::FinishAll1, this));
+	if (temp == 136)
+	{
+		HandleMoonStep();
+	}
+	if (temp == 48)
+	{
+		GoWhirlPool();
+	}
+
 	/*if (gTimeNegate != 0)
 	{
 		gTimeNegate--;
@@ -1643,6 +1658,18 @@ bool U3Misc::FinishAll() // $79DD
 	}
 	SpawnMonster();*/
 	MoveMonsters();
+	return false;
+}
+
+bool U3Misc::FinishAll1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_resources.m_newMove = true;
+
 	return false;
 }
 
@@ -4783,15 +4810,19 @@ void U3Misc::AgeChars() // $7470
 		m_gTime[0]--;
 		if (m_gTime[0] > 0)
 		{
-			return;
+			//return;
 		}
-		m_gTime[0] = 4;
+		else
+		{
+			m_gTime[1]--;
+			if (m_gTime[1] < 0)
+			{
+				m_gTime[1] = 9;
+			}
+			m_gTime[0] = 4;
+		}
 	}
-	m_gTime[1]--;
-	if (m_gTime[1] < 0)
-	{
-		m_gTime[1] = 9;
-	}
+	
 	m_chNum = 3;
 	m_scrollArea.blockPrompt(true);
 	m_freezeAnimation = true;
@@ -4827,17 +4858,6 @@ bool U3Misc::EndTurnCallback()
 	else
 	{
 		m_scrollArea.blockPrompt(false);
-	}
-	m_resources.m_newMove = true;
-
-	short temp = GetXYVal(m_xpos, m_ypos);
-	if (temp == 136)
-	{
-		HandleMoonStep();
-	}
-	if (temp == 48)
-	{
-		GoWhirlPool();
 	}
 
 	return false;
@@ -5137,6 +5157,92 @@ void U3Misc::GoWhirlPool() // 772D
 	{
 		m_scrollArea.UPrintMessageRewrapped(256);
 	}
+
+	m_elapsedSleepTime = 0;
+	m_sleepCheckTime = whirlpool_time;
+	m_inputType = InputType::SleepCallback;
+	m_scrollArea.blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+}
+
+bool U3Misc::GoWhirlPoolCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	if (m_Party[2] == 0)
+	{
+		m_Party[3] = m_xpos;
+		m_xs = m_xpos;
+		m_Party[4] = m_ypos;
+		m_ys = m_ypos;
+		PutXYVal(0, m_xpos, m_ypos);
+		m_WhirlX = 2;
+		m_WhirlY = 0x3E;
+		m_Party[0] = 0x16; // frigate
+		//gSongCurrent=gSongNext=0;
+		PushSosaria();
+		bool autosave;
+		bool classic;
+		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+		if (autosave)
+		{
+			PutRoster();
+			PutParty();
+			PutSosaria();
+		}
+		m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+		if (classic)
+		{
+			m_scrollArea.UPrintMessage(112);
+		}
+		else
+		{
+			m_scrollArea.UPrintMessageRewrapped(257);
+		}
+		LoadUltimaMap(21);
+
+		m_resources.m_inverses.color.r = 0;
+		m_resources.m_inverses.color.g = 0;
+		m_resources.m_inverses.color.b = 0;
+		m_resources.m_inverses.color.a = 255;
+		m_resources.m_inverses.fill = true;
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = whirlpool_time;
+		m_Party[0] = 0x7E;
+		m_xpos = 32;
+		m_ypos = 54;
+		m_Party[2] = 255;
+		m_resources.setInversed(true);
+		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback1, this));
+		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+	}
+	return false;
+}
+
+bool U3Misc::GoWhirlPoolCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	
+	bool classic;
+	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	if (classic)
+	{
+		m_scrollArea.UPrintMessage(113);
+	}
+	else
+	{
+		m_scrollArea.UPrintMessageRewrapped(258);
+	}
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
+	return false;
 }
 
 void U3Misc::MoonGateUpdate() // $6F5D

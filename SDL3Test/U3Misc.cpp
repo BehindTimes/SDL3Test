@@ -1642,6 +1642,7 @@ bool U3Misc::FinishAll() // $79DD
 	short temp = GetXYVal(m_xpos, m_ypos);
 
 	m_callbackStack.push(std::bind(&U3Misc::FinishAll1, this));
+	m_callbackStack.push(std::bind(&U3Misc::MoveMonsters, this));
 	if (temp == 136)
 	{
 		HandleMoonStep();
@@ -1657,7 +1658,7 @@ bool U3Misc::FinishAll() // $79DD
 		return;
 	}
 	SpawnMonster();*/
-	MoveMonsters();
+	//MoveMonsters();
 	return false;
 }
 
@@ -3225,8 +3226,13 @@ bool U3Misc::moveoutside(int offset)
 	return true;
 }
 
-void U3Misc::MoveMonsters() // $7A81
+bool U3Misc::MoveMonsters() // $7A81
 {
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
 	short value;
 
 	for (int offset = 0; offset < 32; ++offset)
@@ -3239,7 +3245,7 @@ void U3Misc::MoveMonsters() // $7A81
 		{
 			if (!moveoutside(offset))
 			{
-				return;
+				return false;
 			}
 			move7AAA(offset);
 		}
@@ -3286,12 +3292,13 @@ void U3Misc::MoveMonsters() // $7A81
 			{
 				if (!moveoutside(offset))
 				{
-					return;
+					return false;
 				}
 				move7AAA(offset);
 			}
 		}
 	}
+	return false;
 }
 
 void U3Misc::Attack()

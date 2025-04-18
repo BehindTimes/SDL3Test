@@ -303,7 +303,7 @@ private:
 	bool oracleCallback();
 	bool oracleFinishCallback();
 	bool horseVendorCallback();
-	void MoveMonsters();
+	bool MoveMonsters();
 	void GetMonsterDir(short monNum);
 	char GetHeading(short value);
 	bool moveshoot(int offset);

@@ -638,15 +638,27 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
                         unsigned char above = m_misc.GetXYVal(xm, ym - 1);
                         if (above < 0x98 || above > 0xE4)
                         {
-                            if (left == 0xB8 && xm > 2)
+                            for (int index = xm - 1; index > 0; --index)
+                            {
+                                unsigned char templet = m_misc.GetXYVal(index, ym);
+                                if (templet != 0xB8)
+                                {
+                                    if (templet >= 0x98 && templet <= 0xE4)
+                                    {
+                                        isLetter = true;
+                                    }
+                                    break;
+                                }
+                            }
+                            /*if (left == 0xB8 && xm > 2)
                             {
                                 // This is a special case for Moon
                                 char left2 = m_misc.GetXYVal(xm - 2, ym);
-                                if (left >= 0x98 && left <= 0xE4)
+                                if (left >= 0x98 && left <= 0xE4 && left != 0xB8)
                                 {
                                     isLetter = true;
                                 }
-                            }
+                            }*/
                             if (!isLetter)
                             {
                                 m_resources.m_TileArray[offset - 1] = 0x5D;    // 0x5C normally for I

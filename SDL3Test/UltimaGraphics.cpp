@@ -455,6 +455,56 @@ void U3Graphics::renderMiniMap()
                 }
                 else
                 {
+                    // if it's an I and not up against the edge of the map,
+                    if (value == 78 && x > 0 && x < m_misc.m_mapSize - 1 && y > 0 && y < m_misc.m_mapSize - 1) // letter I or Door
+                    {
+                        // and the item left of it is not a letter
+                        unsigned char left = m_misc.GetXYVal(x - 1, y) / 4;
+                        minival = left;
+                        multval = left / 16;
+                        left += (16 * multval);
+
+                        bool isLetter = false;
+                        if (left < 69 || left > 106 || left == 78)
+                        {
+                            // and the item right of it is not a letter
+                            unsigned char right = m_misc.GetXYVal(x + 1, y) / 4;
+                            minival = right;
+                            multval = right / 16;
+                            right += (16 * multval);
+                            if (right < 69 || right > 106 || right == 78)
+                            {
+                                // and the item above it is not a letter, turn it into a door.
+                                unsigned char above = m_misc.GetXYVal(x, y - 1) / 4;
+                                minival = above;
+                                multval = above / 16;
+                                above += (16 * multval);
+                                if (above < 69 || above > 106)
+                                {
+                                    for (int index = x - 1; index > 0; --index)
+                                    {
+                                        unsigned char templet = m_misc.GetXYVal(index, y) / 4;
+                                        minival = templet;
+                                        multval = templet / 16;
+                                        templet += (16 * multval);
+                                        if (templet != 78)
+                                        {
+                                            if (templet >= 69 && templet <= 106)
+                                            {
+                                                isLetter = true;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (!isLetter)
+                                    {
+                                        value = 94;    // 0x5C normally for I
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     SDL_RenderTexture(m_resources.m_renderer, m_resources.m_currentGraphics->tiles[value], NULL, &outRect);
                 }
             }
@@ -650,15 +700,6 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
                                     break;
                                 }
                             }
-                            /*if (left == 0xB8 && xm > 2)
-                            {
-                                // This is a special case for Moon
-                                char left2 = m_misc.GetXYVal(xm - 2, ym);
-                                if (left >= 0x98 && left <= 0xE4 && left != 0xB8)
-                                {
-                                    isLetter = true;
-                                }
-                            }*/
                             if (!isLetter)
                             {
                                 m_resources.m_TileArray[offset - 1] = 0x5D;    // 0x5C normally for I

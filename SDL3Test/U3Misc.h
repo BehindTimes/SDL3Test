@@ -389,6 +389,7 @@ private:
 	bool HandleMoonStepCallback1();
 	bool GoWhirlPoolCallback();
 	bool GoWhirlPoolCallback1();
+	bool GoWhirlPoolCallback2();
 	bool FinishAll1();
 	bool EnterShrineCallback();
 	void Shrine(short chnum);

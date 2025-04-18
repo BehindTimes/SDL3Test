@@ -5227,6 +5227,46 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback1, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 	}
+	else if (m_Party[2] == 0xFF)
+	{
+		PullSosaria();
+		m_scrollArea.UPrintMessage(114);
+		m_resources.m_inverses.color.r = 0;
+		m_resources.m_inverses.color.g = 0;
+		m_resources.m_inverses.color.b = 0;
+		m_resources.m_inverses.color.a = 255;
+		m_resources.m_inverses.fill = true;
+		m_resources.m_inverses.elapsedTileTime = 0;
+		m_resources.m_inverses.inverseTileTime = whirlpool_time;
+		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback2, this));
+		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+		m_xpos = m_Party[3];
+		m_ypos = m_Party[4];
+		m_Party[2] = 0;
+		m_Party[0] = 0x16;
+	}
+	else if (m_Party[2] < 128)
+	{
+		short temp;
+
+		temp = 0xFF;
+		m_utilities.getRandom(0, m_mapSize - 1);
+		m_xpos = m_utilities.getRandom(0, m_mapSize - 1);
+		m_ypos = m_utilities.getRandom(0, m_mapSize - 1);
+		temp = GetXYVal(m_xpos, m_ypos);
+	}
+	return false;
+}
+
+bool U3Misc::GoWhirlPoolCallback2()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea.UPrintMessage(115);
+	m_inputType = InputType::Default;
+	m_scrollArea.blockPrompt(false);
 	return false;
 }
 

@@ -86,8 +86,8 @@ void U3Graphics::CreateOrganizeData()
 {
     m_resources.SetButtonVisibility(3, true);
     m_resources.SetButtonVisibility(4, true);
-    m_resources.SetButtonVisibility(5, true);
-    m_resources.SetButtonVisibility(6, false);
+    m_resources.SetButtonVisibility(5, false);
+    m_resources.SetButtonVisibility(6, true);
     m_resources.SetButtonVisibility(7, true);
 }
 

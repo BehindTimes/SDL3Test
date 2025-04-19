@@ -40,7 +40,6 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		break;
 	case SDLK_G:
 		GetChest();
-		//GetChest(0, 0);
 		break;
 	case SDLK_H:
 		break;
@@ -62,7 +61,6 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		break;
 	case SDLK_O:
 		OtherCommand();
-		//OtherCommand(0);
 		break;
 	case SDLK_P:
 		PeerGem();
@@ -89,7 +87,6 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		break;
 	case SDLK_Y:
 		Yell();
-		//Yell(0);
 		break;
 	case SDLK_Z:
 		break;

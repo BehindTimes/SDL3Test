@@ -392,7 +392,7 @@ void UltimaDungeon::createDoorPoly(unsigned char* canvas, short dx1, short dy1, 
 	short tempMin = std::min<short>(dy3 * 2, dy4 * 2);
 
 	maxY = std::max<short>(maxY, tempMax);
-	minY = std::min<short>(maxY, tempMin);
+	minY = std::min<short>(minY, tempMin);
 
 	renderLine(canvas, dx1 * 2, dy1 * 2, dx1 * 2, dy2 * 2);
 	renderLine(canvas, dx1 * 2, dy2 * 2, dx2 * 2, dy3 * 2);

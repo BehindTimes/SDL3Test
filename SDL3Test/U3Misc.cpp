@@ -4106,7 +4106,7 @@ bool U3Misc::InsertCallback1()
 
 	if (m_xs != object || object != m_lastCard)
 	{
-		InverseCharDetails(m_rosNum, true);
+		InverseCharDetails(m_chNum, true);
 		//m_resources.m_inverses.func = std::bind(&U3Misc::InsertCallback2, this);
 		m_resources.m_inverses.elapsedTileTime = 0;
 		m_resources.m_inverses.inverseTileTime = 250;
@@ -5244,6 +5244,13 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_ypos = m_Party[4];
 		m_Party[2] = 0;
 		m_Party[0] = 0x16;
+		bool autosave;
+		m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+		if (autosave)
+		{
+			PutRoster();
+			PutParty();
+		}
 	}
 	else if (m_Party[2] < 128)
 	{
@@ -5410,6 +5417,7 @@ void U3Misc::Shrine(short chnum)
 
 	bool classic;
 	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	m_rosNum = m_Party[6 + chnum];
 
 	if (classic)
 	{
@@ -5421,4 +5429,119 @@ void U3Misc::Shrine(short chnum)
 		m_scrollArea.UPrintWin(attributeName);
 		m_scrollArea.UPrintWin("\n\n");
 	}
+	else
+	{
+		std::string msg = m_resources.m_plistMap["Messages"][258];
+		msg += attributeName;
+		m_scrollArea.RewrapString(msg);
+		m_scrollArea.UPrintWin(msg);
+		m_scrollArea.UPrintWin("\n\n");
+	}
+
+	m_scrollArea.UPrintMessage(178);
+	setInputTypeNumImmediate(std::bind(&U3Misc::shrineCallback, this));
+}
+
+bool U3Misc::shrineCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	short race = m_Player[m_rosNum][22];
+	short shtype = m_xpos & 0x03;
+	short maxval;
+	short statnum = 0;
+	short shMax[22] = { 75, 75, 99, 75, 25, 75, 99, 75, 50, 99, 75, 50, 75, 99, 75, 75, 75, 50, 75, 99 };
+	//short voiceTile = 0;    // correspond to class which ability is most apropos for
+
+	switch (shtype)
+	{
+	case 0:
+		maxval = shMax[ShrineRace(race)];
+		statnum = 18;
+		//voiceTile = 20;
+		break;
+	case 1:
+		maxval = shMax[ShrineRace(race) + 5];
+		statnum = 19;
+		//voiceTile = 23;
+		break;
+	case 2:
+		maxval = shMax[ShrineRace(race) + 15];
+		statnum = 20;
+		//voiceTile = 22;
+		break;
+	case 3:
+		maxval = shMax[ShrineRace(race) + 10];
+		statnum = 21;
+		//voiceTile = 21;
+		break;
+	}
+
+	short key = m_input_num;
+
+	m_scrollArea.setInput(false);
+
+	if (key == 0)
+	{
+		m_scrollArea.UPrintMessage(179);
+		m_resources.m_overrideImage = -1;
+		return false;
+	}
+	short gold = ((m_Player[m_rosNum][35]) * 256) + m_Player[m_rosNum][36];
+	if (gold - (key * 100) < 0)
+	{
+		m_scrollArea.UPrintMessage(180);
+		m_resources.m_overrideImage = -1;
+		return false;
+	}
+	gold -= (key * 100);
+	m_Player[m_rosNum][35] = gold / 256;
+	m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
+	m_scrollArea.UPrintMessage(181);
+
+	if (statnum > 0)
+	{
+		m_Player[m_rosNum][statnum] += key;
+		if (m_Player[m_rosNum][statnum] > 99)
+		{
+			m_Player[m_rosNum][statnum] = 99;
+		}
+		if ((m_Player[m_rosNum][statnum] > maxval) && (m_Party[15] == 0))
+		{
+			m_Player[m_rosNum][statnum] = (unsigned char)maxval;
+		}
+	}
+	m_callbackStack.push(std::bind(&U3Misc::shrineCallback1, this));
+	InverseCharDetails(m_chNum, true);
+	InverseTiles(true);
+	return false;
+}
+
+bool U3Misc::shrineCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_resources.m_overrideImage = -1;
+	return false;
+}
+
+short U3Misc::ShrineRace(short race)
+{
+	short byte, result;
+	std::string tempStr;
+
+	result = 0;
+	for (byte = 0; byte < 5; byte++)
+	{
+		tempStr = m_resources.m_plistMap["Races"][byte];
+		if (race == tempStr[0])
+		{
+			result = byte;
+		}
+	}
+	return result;
 }

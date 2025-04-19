@@ -393,6 +393,9 @@ private:
 	bool FinishAll1();
 	bool EnterShrineCallback();
 	void Shrine(short chnum);
+	short ShrineRace(short race);
+	bool shrineCallback();
+	bool shrineCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

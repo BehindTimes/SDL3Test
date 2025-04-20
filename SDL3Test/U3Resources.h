@@ -123,11 +123,13 @@ public:
 	void SetPreference(U3PreferencesType type, bool value);
 	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
+	void UpdateFormParty(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
 	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);
 	void DrawOrganizePartyRect();
 	void DrawOrganizePartyDispersed(bool wasDispersed);
+	void DrawOrganizePartyFormed(bool inUse);
 	void DrawDemo(Uint64 curTick);
 	void setTickCount(Uint64 curTick, bool initializeTimer = true);
 	void DemoUpdate(Uint64 curTick);
@@ -195,12 +197,15 @@ public:
 		"be pure speculation!",
 		"Onward to ULTIMA IV!"
 	};
+	static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
 
 	int m_blockSize;
 	int m_overrideImage;
 	bool m_newMove;
 	Uint64 m_elapsedMoveTime;
 	bool m_wasMove;
+	int m_selectedFormRect;
+	std::vector<int> m_selectedCharacters;
 
 private:
 	void LoadResource(std::string strFile);
@@ -244,7 +249,6 @@ private:
 	static constexpr std::string_view LevelStr = "Level ";
 	static constexpr std::string_view FoodStr = "Food: ";
 	static constexpr std::string_view UnknownStr = "Unknown";
-
 
 	static constexpr Uint64 MoveTime = 6000;
 	static constexpr Uint64 DelayScroll = 2000;
@@ -315,6 +319,5 @@ private:
 	bool m_fullUpdate;
 	bool m_updateWind;
 	int m_alertReturn;
-	
 };
 

@@ -44,10 +44,12 @@ void Organize();
 void JourneyOnward();
 void Game();
 
-void disperseParty([[maybe_unused]] int button);
-void formParty([[maybe_unused]] int button);
-void backToMenu([[maybe_unused]] int button);
+void disperseParty(int button);
+void formParty(int button);
+void backToMenu(int button);
 void updateGame(Uint64 deltaTime);
+void partyFormed(int button);
+void backToOrganize(int button);
 
 int main(int argc, char* argv[])
 {
@@ -211,7 +213,7 @@ void disperseParty([[maybe_unused]] int button)
     {
         m_misc.m_Player[byte][16] = 0;
     }
-    if (m_misc.m_Party[7] == 0)
+    if (m_misc.m_Party[6] == 0)
     {
         altMessage = true;
     }
@@ -237,6 +239,79 @@ void disperseParty([[maybe_unused]] int button)
 
 void formParty([[maybe_unused]] int button)
 {
+    if (m_misc.m_Party[6] != 0)
+    {
+        m_graphics.m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
+    }
+    else
+    {
+        m_graphics.m_obsCurMode = OrganizeBottomScreen::FormParty;
+        m_resources.SetButtonVisibility(3, false);
+        m_resources.SetButtonVisibility(4, false);
+        m_resources.SetButtonVisibility(5, false);
+        m_resources.SetButtonVisibility(6, false);
+
+        m_resources.SetButtonCallback(5, partyFormed);
+        m_resources.SetButtonCallback(7, backToOrganize);
+    }
+}
+
+void partyFormed([[maybe_unused]] int button)
+{
+    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+    m_misc.m_partyFormed = true;
+
+    memset(m_misc.m_Party, 0, sizeof(unsigned char) * 64);
+
+    for (size_t index = 0; index < m_resources.m_selectedCharacters.size(); ++index)
+    {
+        int curChar = m_resources.m_selectedCharacters[index] + 1;
+        m_misc.m_Player[curChar][16] = 255;
+        m_misc.m_Party[index + 6] = curChar;
+    }
+    m_misc.m_Party[1] = (unsigned char)m_resources.m_selectedCharacters.size();
+
+    m_misc.m_Party[2] = 0;
+    m_misc.m_Party[0] = 0x7E;
+    m_misc.m_Party[5] = 255;    // WTF is this?
+    m_misc.m_xpos = 42;
+    m_misc.m_ypos = 20;
+    m_misc.m_Party[3] = m_misc.m_xpos;
+    m_misc.m_Party[4] = m_misc.m_ypos;
+    //PutParty();
+    //PutRoster();
+    m_misc.ResetSosaria();
+    //GetMiscStuff(0);
+    //PutMiscStuff();
+
+    m_resources.m_selectedFormRect = -1;
+    m_resources.SetButtonVisibility(3, true);
+    m_resources.SetButtonVisibility(4, true);
+    m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
+    m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
+    m_resources.SetButtonVisibility(7, true);
+
+    m_resources.SetButtonCallback(5, formParty);
+    m_resources.SetButtonCallback(7, backToMenu);
+    m_resources.m_selectedCharacters.clear();
+
+    m_graphics.m_obsCurMode = OrganizeBottomScreen::PartyFormed;
+}
+
+void backToOrganize([[maybe_unused]] int button)
+{
+    m_resources.m_selectedCharacters.clear();
+    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+    m_resources.m_selectedFormRect = -1;
+
+    m_resources.SetButtonVisibility(3, true);
+    m_resources.SetButtonVisibility(4, true);
+    m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
+    m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
+    m_resources.SetButtonVisibility(7, true);
+
+    m_resources.SetButtonCallback(5, formParty);
+    m_resources.SetButtonCallback(7, backToMenu);
 }
 
 void backToMenu([[maybe_unused]] int button)
@@ -536,6 +611,8 @@ void Organize()
             {
                 switch (m_graphics.m_obsCurMode)
                 {
+                case OrganizeBottomScreen::PartyFormed:
+                case OrganizeBottomScreen::PartyFormedInUse:
                 case OrganizeBottomScreen::DispersedNoOne:
                 case OrganizeBottomScreen::Dispersed:
                     m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
@@ -574,6 +651,12 @@ void Organize()
         {
             switch (m_graphics.m_obsCurMode)
             {
+            case OrganizeBottomScreen::FormParty:
+                m_resources.UpdateFormParty(event.motion.x, event.motion.y, mouseState);
+                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                break;
+            case OrganizeBottomScreen::PartyFormed:
+            case OrganizeBottomScreen::PartyFormedInUse:
             case OrganizeBottomScreen::DispersedNoOne:
             case OrganizeBottomScreen::Dispersed:
                 if (mouseState == 2)

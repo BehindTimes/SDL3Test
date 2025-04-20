@@ -86,7 +86,8 @@ U3Resources::U3Resources() :
 	m_overrideImage(-1),
 	m_elapsedMoveTime(0),
 	m_newMove(false),
-	m_wasMove(false)
+	m_wasMove(false),
+	m_selectedFormRect(-1)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -2077,6 +2078,69 @@ void U3Resources::DrawOrganizePartyDispersed(bool wasDispersed)
 	}
 }
 
+void U3Resources::DrawOrganizePartyFormed(bool inUse)
+{
+	CenterMessage(4, 13);
+
+	if (inUse)
+	{
+		CenterMessage(5, 16);
+	}
+	else
+	{
+		CenterMessage(12, 16);
+	}
+}
+
+void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
+{
+	float scaler = (float)m_blockSize / 16.0f;
+
+	short yMin = (short)((230 * scaler) + screenOffsetY);
+	short yMax = (short)((360 * scaler) + screenOffsetY);
+	short xMin = (short)(20 * scaler + screenOffsetX);
+	short xMax = (short)(620 * scaler + screenOffsetX);
+	short xMiddle = (short)(320 * scaler + screenOffsetX);
+
+	m_selectedFormRect = -1;
+
+	if (xPos > xMin && xPos < xMax &&
+		yPos > yMin && yPos < yMax)
+	{
+		m_selectedFormRect = (int)((yPos - yMin) / (13 * scaler));
+		if (xPos > xMiddle)
+		{
+			m_selectedFormRect += 10;
+		}
+		if (m_selectedFormRect >= 20 || m_selectedFormRect < 0)
+		{
+			m_selectedFormRect = -1;
+		}
+		else
+		{
+			if (!m_partyDisplay[m_selectedFormRect].Name)
+			{
+				m_selectedFormRect = -1;
+			}
+		}
+
+		if (mouseState == 2 && m_selectedFormRect >= 0 && m_selectedCharacters.size() <= 4)
+		{
+			auto it = std::find(m_selectedCharacters.begin(), m_selectedCharacters.end(), m_selectedFormRect);
+			if (it == m_selectedCharacters.end())
+			{
+				m_selectedCharacters.push_back(m_selectedFormRect);
+			}
+			else
+			{
+				m_selectedCharacters.erase(it);
+			}
+
+			SetButtonVisibility(5, (m_selectedCharacters.size() > 0));
+		}
+	}
+}
+
 void U3Resources::DrawOrganizePartyRect()
 {
 	SDL_FRect myRect;
@@ -2136,14 +2200,66 @@ void U3Resources::DrawOrganizePartyRect()
 	myRect.x += 300 * scaler;
 	SDL_RenderFillRect(m_renderer, &myRect);
 
+	if (m_selectedFormRect >= 0)
+	{
+		float tempX = (float)4 * scaler + (offx * scaler);
+		float tempY = (230.0f * scaler) + screenOffsetY;
+		float yOffset = 0;
+		float xOffset = 0;
+		int tempYPos = m_selectedFormRect;
+		if (m_selectedFormRect >= 10)
+		{
+			xOffset = 300 * scaler;
+			tempYPos -= 10;
+		}
+		yOffset = tempYPos * 13 * scaler;
+		myRect.x = (float)4 * scaler + (offx * scaler) + xOffset;
+		myRect.y = (230.0f * scaler) + screenOffsetY + yOffset;
+		myRect.w = 300.0f * scaler;
+		myRect.h = 13.0f * scaler;
+
+		adjustRect(myRect);
+
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(m_renderer, 0, 128, 255, 128);
+		SDL_RenderFillRect(m_renderer, &myRect);
+		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+	}
+
 	// text
 	x = offx - 2;
 	y = offy + 0;
 
 	std::string strName;
+	SDL_Color sdl_text_color = { 255, 255, 255 };
+
+	if (m_graphics.m_obsCurMode == OrganizeBottomScreen::FormParty)
+	{
+		renderDisplayString(m_partyDisplay[0].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
+		renderDisplayString(m_partyDisplay[1].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
+		renderDisplayString(m_partyDisplay[2].Number, (int)(((x + 115) * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
+		renderDisplayString(m_partyDisplay[3].Number, (int)(((x + 115) * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
+
+		if (m_selectedCharacters.size() > 0)
+		{
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[0]].Name, (int)((x * scaler) + (35 * scaler)), (int)((y - 30) * scaler), sdl_text_color);
+		}
+		if (m_selectedCharacters.size() > 1)
+		{
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[1]].Name, (int)((x * scaler) + (35 * scaler)), (int)((y - 17) * scaler), sdl_text_color);
+		}
+		if (m_selectedCharacters.size() > 2)
+		{
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[2]].Name, (int)(((x + 89) * scaler) + (35 * scaler)), (int)((y - 30) * scaler), sdl_text_color);
+		}
+		if (m_selectedCharacters.size() > 3)
+		{
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[3]].Name, (int)(((x + 89) * scaler) + (35 * scaler)), (int)((y - 17) * scaler), sdl_text_color);
+		}
+	}
 
 	SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-	SDL_Color sdl_text_color = { 255, 255, 255 };
+	
 	for (int i = 1; i < 21; ++i)
 	{
 		if (m_misc.m_Player[i][16])

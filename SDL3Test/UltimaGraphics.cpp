@@ -85,6 +85,7 @@ void U3Graphics::CreateMenuData()
 
 void U3Graphics::CreateOrganizeData()
 {
+    m_resources.m_selectedFormRect = -1;
     m_resources.SetButtonVisibility(3, true);
     m_resources.SetButtonVisibility(4, true);
     m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
@@ -399,11 +400,26 @@ void U3Graphics::DrawOrganizeMenu()
     
     switch (m_obsCurMode)
     {
+    case OrganizeBottomScreen::FormParty:
+    {
+        m_resources.DrawButtons({ 5, 7 });
+        std::string strMessage(m_resources.SelectPartyStr);
+        size_t startPos = (40 - strMessage.size()) / 2;
+        m_resources.CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
+        m_resources.DrawOrganizePartyRect();
+    }
+        break;
     case OrganizeBottomScreen::DispersedNoOne:
         m_resources.DrawOrganizePartyDispersed(true);
         break;
     case OrganizeBottomScreen::Dispersed:
         m_resources.DrawOrganizePartyDispersed(false);
+        break;
+    case OrganizeBottomScreen::PartyFormed:
+        m_resources.DrawOrganizePartyFormed(false);
+        break;
+    case OrganizeBottomScreen::PartyFormedInUse:
+        m_resources.DrawOrganizePartyFormed(true);
         break;
     default:
         m_resources.DrawButtons({ 3, 4, 5, 6, 7 });

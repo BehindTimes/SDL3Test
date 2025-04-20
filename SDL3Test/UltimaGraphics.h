@@ -25,7 +25,10 @@ enum class OrganizeBottomScreen
 {
 	None,
 	Dispersed,
-	DispersedNoOne
+	DispersedNoOne,
+	FormParty,
+	PartyFormed,
+	PartyFormedInUse
 };
 
 class U3Graphics

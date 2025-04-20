@@ -77,6 +77,21 @@ struct InverseStruct
 	SDL_Color color;
 };
 
+struct PartyDisplay
+{
+	PartyDisplay() :
+		Number(nullptr),
+		Name(nullptr),
+		Level(nullptr),
+		Desc(nullptr)
+	{
+	}
+	TTF_Text* Number;
+	TTF_Text* Name;
+	TTF_Text* Level;
+	TTF_Text* Desc;
+};
+
 class U3Resources
 {
 public:
@@ -92,6 +107,7 @@ public:
 	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
 	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0, bool pretty_print = false);
 	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
+	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
 	void renderStalagtites();
 	void drawIntro(int shape, int offset);
 	void drawExodus(Uint8 alpha);
@@ -147,6 +163,8 @@ public:
 	void GenerateRect(SDL_FRect* FromRect, int left, int top, int right, int bottom);
 	void ImageDisplay();
 	void SwapShape(short shape);
+	void CreatePartyNames();
+	void CleanupPartyNames();
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -163,6 +181,7 @@ public:
 
 	Uint64 m_delta_time;
 	float m_font_y_offset;
+	PartyDisplay m_partyDisplay[20];
 
 	static constexpr std::string_view WinText[10] = {
 		"   And so it came to",
@@ -224,6 +243,7 @@ private:
 
 	static constexpr std::string_view LevelStr = "Level ";
 	static constexpr std::string_view FoodStr = "Food: ";
+	static constexpr std::string_view UnknownStr = "Unknown";
 
 
 	static constexpr Uint64 MoveTime = 6000;

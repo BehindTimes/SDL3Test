@@ -119,7 +119,6 @@ void MainLoop()
     MenuBarInit();
     m_graphics.CreateIntroData();
     m_graphics.CreateMenuData();
-    m_graphics.CreateOrganizeData();
     CreateButtonCallbacks();
     Intro();
 
@@ -138,6 +137,9 @@ void MainLoop()
                 m_resources.setTickCount(curTick, false);
             }
             break;
+            case GameMode::Organize:
+                m_graphics.CreateOrganizeData();
+                break;
             case GameMode::Game:
             {
                 m_misc.GetSosaria();
@@ -218,6 +220,8 @@ void disperseParty([[maybe_unused]] int button)
         m_misc.m_Party[byte] = 0;
     }
 
+    m_misc.m_partyFormed = false;
+
     m_resources.SetButtonVisibility(5, true);
     m_resources.SetButtonVisibility(6, false);
 
@@ -237,6 +241,7 @@ void formParty([[maybe_unused]] int button)
 
 void backToMenu([[maybe_unused]] int button)
 {
+    m_resources.CleanupPartyNames();
     changeMode = true;
     newMode = GameMode::MainMenu;
 }

@@ -106,6 +106,8 @@ U3Resources::~U3Resources()
 	m_AlertDlg.reset();
 	m_buttons.clear();
 
+	CleanupPartyNames();
+
 	for (auto mode : m_allGraphics)
 	{
 		if (mode.second.font)
@@ -484,6 +486,8 @@ void U3Resources::CalculateBlockSize()
 	{
 		m_AlertDlg->changeBlockSize(m_blockSize);
 	}
+
+	CreatePartyNames();
 
 	int final = m_blockSize * 22;
 	if (m_texDisplay)
@@ -1112,6 +1116,47 @@ int U3Resources::renderString(std::string curString, int x, int y, bool autoadju
 	}
 
 	return text_extent;
+}
+
+void U3Resources::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color, int align, bool autoadjust)
+{
+	if (!text_obj)
+	{
+		return;
+	}
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
+
+	int w, h;
+	int offsetW = 0;
+	int offsetH = 0;
+	TTF_GetTextSize(text_obj, &w, &h);
+
+	if (align == 1) // left adjust
+	{
+		offsetW = w * -1;
+	}
+	else if (align == 2) // center
+	{
+		offsetW = (w / 2) * -1;
+	}
+	else if (align == 4) // center/center
+	{
+		offsetW = (w / 2) * -1;
+		offsetH = (h / 2) * -1;
+	}
+	else if (align == 6) // top
+	{
+		offsetH = h * -1;
+	}
+
+	if (autoadjust)
+	{
+		TTF_DrawRendererText(text_obj, (float)x + screenOffsetX + offsetW, (float)y + screenOffsetY + offsetH);
+	}
+	else
+	{
+		TTF_DrawRendererText(text_obj, (float)x + offsetW, (float)y + offsetH);
+	}
 }
 
 void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align, bool autoadjust)
@@ -2036,7 +2081,7 @@ void U3Resources::DrawOrganizePartyRect()
 {
 	SDL_FRect myRect;
 	short offx, offy, x, y;
-	unsigned char c;
+	//unsigned char c;
 
 	offx = 16;
 	offy = 230;
@@ -2101,10 +2146,6 @@ void U3Resources::DrawOrganizePartyRect()
 	SDL_Color sdl_text_color = { 255, 255, 255 };
 	for (int i = 1; i < 21; ++i)
 	{
-		std::string str_number = std::to_string(i);
-
-		TTF_Text* text_obj = NULL;
-
 		if (m_misc.m_Player[i][16])
 		{
 			sdl_text_color.r = 255;
@@ -2117,21 +2158,9 @@ void U3Resources::DrawOrganizePartyRect()
 			sdl_text_color.g = 0;
 			sdl_text_color.b = 0;
 		}
+		renderDisplayString(m_partyDisplay[i - 1].Number, (int)((x * scaler) + (26 * scaler)), (int)(y * scaler), sdl_text_color, 1);
 
-		renderDisplayString(m_font_11, str_number, (int)((x * scaler) + (26 * scaler)), (int)(y * scaler), sdl_text_color, 1);
-
-		strName.clear();
-		c = 0;
-		while (m_misc.m_Player[i][c] > 22)
-		{
-			strName += m_misc.m_Player[i][c];
-			c++;
-			if (c > 64)
-			{
-				break;
-			}
-		}
-		if (strName.size() > 0)
+		if (m_partyDisplay[i - 1].Name)
 		{
 			sdl_text_color.r = 255;
 			sdl_text_color.g = 255;
@@ -2142,107 +2171,42 @@ void U3Resources::DrawOrganizePartyRect()
 				sdl_text_color.r = 255;
 				sdl_text_color.g = 255;
 				sdl_text_color.b = 0;
-				renderDisplayString(m_font_11, strName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
 			}
+			renderDisplayString(m_partyDisplay[i - 1].Name, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
 
-			renderDisplayString(m_font_11, strName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
+			sdl_text_color.r = 255;
+			sdl_text_color.g = 255;
+			sdl_text_color.b = 255;
 
-			std::string str_level = std::to_string(m_misc.m_Player[i][30] + 1);
-			str_level = std::string("Lvl ") + str_level;
+			renderDisplayString(m_partyDisplay[i - 1].Level, (int)(((x + 109) * scaler)), (int)(y * scaler), sdl_text_color);
 
-			renderDisplayString(m_font_11, str_level, (int)(((x + 109) * scaler)), (int)(y * scaler), sdl_text_color);
+			int statusVal = m_misc.m_Player[i][17];
 
-			std::string str_race("Unknown");
-			std::string str_class("Unknown");
-			std::string str_sex("Unknown");
-
-			if (m_plistMap.find("Races") != m_plistMap.end())
+			switch (statusVal)
 			{
-				int val = m_misc.m_Player[i][22];
-				for (size_t index = 0; index < m_plistMap["Races"].size(); ++index)
-				{
-					if (val == m_plistMap["Races"][index][0])
-					{
-						str_race = m_plistMap["Races"][index];
-						break;
-					}
-				}
-			}
-			if (m_plistMap.find("Classes") != m_plistMap.end())
-			{
-				int val = m_misc.m_Player[i][23];
-				for (size_t index = 0; index < m_plistMap["Classes"].size(); ++index)
-				{
-					if (val == m_plistMap["Classes"][index][0])
-					{
-						str_class = m_plistMap["Classes"][index];
-						break;
-					}
-				}
-			}
-			if (m_plistMap.find("MoreMessages") != m_plistMap.end())
-			{
-				int val = m_misc.m_Player[i][24];
-				if (m_plistMap["MoreMessages"].size() > 68)
-				{
-					switch (val)
-					{
-					case 'F':
-						str_sex = m_plistMap["MoreMessages"][66];
-						break;
-					case 'M':
-						str_sex = m_plistMap["MoreMessages"][67];
-						break;
-					default:
-						str_sex = m_plistMap["MoreMessages"][68];
-						break;
-					}
-				}
+			case 'P':
+				sdl_text_color.r = 64;
+				sdl_text_color.g = 255;
+				sdl_text_color.b = 64;
+				break;
+			case 'D':
+				sdl_text_color.r = 255;
+				sdl_text_color.g = 64;
+				sdl_text_color.b = 64;
+				break;
+			case 'A':
+				sdl_text_color.r = 192;
+				sdl_text_color.g = 192;
+				sdl_text_color.b = 192;
+				break;
+			default:
+				sdl_text_color.r = 255;
+				sdl_text_color.g = 255;
+				sdl_text_color.b = 255;
+				break;
 			}
 
-			std::string str_status;
-
-			if (m_plistMap["MoreMessages"].size() > 68)
-			{
-
-				int statusVal = m_misc.m_Player[i][17];
-
-				switch (statusVal)
-				{
-				case 'P':
-					str_status = m_plistMap["MoreMessages"][63];
-					sdl_text_color.r = 64;
-					sdl_text_color.g = 255;
-					sdl_text_color.b = 64;
-					break;
-				case 'D':
-					str_status = m_plistMap["MoreMessages"][64];
-					sdl_text_color.r = 255;
-					sdl_text_color.g = 64;
-					sdl_text_color.b = 64;
-					break;
-				case 'A':
-					str_status = m_plistMap["MoreMessages"][65];
-					sdl_text_color.r = 192;
-					sdl_text_color.g = 192;
-					sdl_text_color.b = 192;
-					break;
-				default:
-					sdl_text_color.r = 255;
-					sdl_text_color.g = 255;
-					sdl_text_color.b = 255;
-					break;
-				}
-			}
-
-			std::string str_desc;
-			if (str_status.size() > 0)
-			{
-				str_desc += str_status + std::string(" ");
-			}
-			str_desc += str_race + std::string(" ") + str_class + std::string(" ") + str_sex;
-
-			renderDisplayString(m_font_11, str_desc, (int)(((x + 152) * scaler)), (int)(y * scaler), sdl_text_color);
+			renderDisplayString(m_partyDisplay[i - 1].Desc, (int)(((x + 152) * scaler)), (int)(y * scaler), sdl_text_color);
 		}
 
 		y += 13;
@@ -2711,7 +2675,7 @@ void U3Resources::updateTime(Uint64 deltaTime)
 			m_elapsedMoveTime = 0;
 			m_misc.Routine6E35();
 
-			m_elapsedWindTime += deltaTime;			
+			m_elapsedWindTime += deltaTime;
 		}
 		else
 		{
@@ -3281,7 +3245,7 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
 		incrementTime = true;
 	}
-	
+
 	if (m_inverses.fill)
 	{
 		m_isInversed = true;
@@ -3375,9 +3339,9 @@ void U3Resources::ImageDisplay()
 void U3Resources::setInversed(bool isInversed)
 {
 	m_isInversed = isInversed;
-	if(!isInversed)
+	if (!isInversed)
 	{
-		
+
 		m_inverses.inverseTileTime = 0;
 		m_inverses.elapsedTileTime = 0;
 		if (!m_inverses.stayInversed)
@@ -3389,6 +3353,145 @@ void U3Resources::setInversed(bool isInversed)
 			{
 				m_inverses.char_details[index] = false;
 			}
+		}
+	}
+}
+
+void U3Resources::CleanupPartyNames()
+{
+	for (int i = 1; i < 21; ++i)
+	{
+		if (m_partyDisplay[i - 1].Number)
+		{
+			TTF_DestroyText(m_partyDisplay[i - 1].Number);
+			m_partyDisplay[i - 1].Number = nullptr;
+		}
+		if (m_partyDisplay[i - 1].Name)
+		{
+			TTF_DestroyText(m_partyDisplay[i - 1].Name);
+			m_partyDisplay[i - 1].Name = nullptr;
+		}
+		if (m_partyDisplay[i - 1].Desc)
+		{
+			TTF_DestroyText(m_partyDisplay[i - 1].Desc);
+			m_partyDisplay[i - 1].Desc = nullptr;
+		}
+		if (m_partyDisplay[i - 1].Level)
+		{
+			TTF_DestroyText(m_partyDisplay[i - 1].Level);
+			m_partyDisplay[i - 1].Level = nullptr;
+		}
+	}
+}
+
+void U3Resources::CreatePartyNames()
+{
+	unsigned char c;
+
+	CleanupPartyNames();
+
+	for (int i = 1; i < 21; ++i)
+	{
+		std::string str_number = std::to_string(i);
+		m_partyDisplay[i - 1].Number = TTF_CreateText(engine_surface, m_font_11, str_number.c_str(), 0);
+
+		std::string strName;
+		c = 0;
+		while (m_misc.m_Player[i][c] > 22)
+		{
+			strName += m_misc.m_Player[i][c];
+			c++;
+			if (c > 64)
+			{
+				break;
+			}
+		}
+		if (strName.size() > 0)
+		{
+			m_partyDisplay[i - 1].Name = TTF_CreateText(engine_surface, m_font_11, strName.c_str(), 0);
+
+			std::string str_level = std::to_string(m_misc.m_Player[i][30] + 1);
+			str_level = std::string("Lvl ") + str_level;
+
+			m_partyDisplay[i - 1].Level = TTF_CreateText(engine_surface, m_font_11, str_level.c_str(), 0);
+
+			std::string str_race(UnknownStr);
+			std::string str_class(UnknownStr);
+			std::string str_sex(UnknownStr);
+
+			if (m_plistMap.find("Races") != m_plistMap.end())
+			{
+				int val = m_misc.m_Player[i][22];
+				for (size_t index = 0; index < m_plistMap["Races"].size(); ++index)
+				{
+					if (val == m_plistMap["Races"][index][0])
+					{
+						str_race = m_plistMap["Races"][index];
+						break;
+					}
+				}
+			}
+			if (m_plistMap.find("Classes") != m_plistMap.end())
+			{
+				int val = m_misc.m_Player[i][23];
+				for (size_t index = 0; index < m_plistMap["Classes"].size(); ++index)
+				{
+					if (val == m_plistMap["Classes"][index][0])
+					{
+						str_class = m_plistMap["Classes"][index];
+						break;
+					}
+				}
+			}
+			if (m_plistMap.find("MoreMessages") != m_plistMap.end())
+			{
+				int val = m_misc.m_Player[i][24];
+				if (m_plistMap["MoreMessages"].size() > 68)
+				{
+					switch (val)
+					{
+					case 'F':
+						str_sex = m_plistMap["MoreMessages"][66];
+						break;
+					case 'M':
+						str_sex = m_plistMap["MoreMessages"][67];
+						break;
+					default:
+						str_sex = m_plistMap["MoreMessages"][68];
+						break;
+					}
+				}
+			}
+			std::string str_status;
+
+			if (m_plistMap["MoreMessages"].size() > 68)
+			{
+
+				int statusVal = m_misc.m_Player[i][17];
+
+				switch (statusVal)
+				{
+				case 'P':
+					str_status = m_plistMap["MoreMessages"][63];
+					break;
+				case 'D':
+					str_status = m_plistMap["MoreMessages"][64];
+					break;
+				case 'A':
+					str_status = m_plistMap["MoreMessages"][65];
+					break;
+				default:
+					break;
+				}
+			}
+
+			std::string str_desc;
+			if (str_status.size() > 0)
+			{
+				str_desc += str_status + std::string(" ");
+			}
+			str_desc += str_race + std::string(" ") + str_class + std::string(" ") + str_sex;
+			m_partyDisplay[i - 1].Desc = TTF_CreateText(engine_surface, m_font_11, str_desc.c_str(), 0);
 		}
 	}
 }

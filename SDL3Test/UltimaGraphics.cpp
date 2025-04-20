@@ -90,6 +90,7 @@ void U3Graphics::CreateOrganizeData()
     m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
     m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
     m_resources.SetButtonVisibility(7, true);
+    m_resources.CreatePartyNames();
 }
 
 void U3Graphics::DrawMoonGateStuff()

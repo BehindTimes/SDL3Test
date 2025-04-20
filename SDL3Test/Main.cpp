@@ -44,6 +44,9 @@ void Organize();
 void JourneyOnward();
 void Game();
 
+void disperseParty([[maybe_unused]] int button);
+void formParty([[maybe_unused]] int button);
+void backToMenu([[maybe_unused]] int button);
 void updateGame(Uint64 deltaTime);
 
 int main(int argc, char* argv[])
@@ -104,12 +107,20 @@ void DoSplashScreen()
     ObscureCursor();*/
 }
 
+void CreateButtonCallbacks()
+{
+    m_resources.SetButtonCallback(5, formParty);
+    m_resources.SetButtonCallback(6, disperseParty);
+    m_resources.SetButtonCallback(7, backToMenu);
+}
+
 void MainLoop()
 {
     MenuBarInit();
     m_graphics.CreateIntroData();
     m_graphics.CreateMenuData();
     m_graphics.CreateOrganizeData();
+    CreateButtonCallbacks();
     Intro();
 
     m_misc.m_zp[0xCF] = 0;
@@ -188,6 +199,40 @@ void journeyOnward([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::JourneyOnward;
+}
+
+void disperseParty([[maybe_unused]] int button)
+{
+    bool altMessage = false;
+    char byte;
+    for (byte = 1; byte < 21; byte++)
+    {
+        m_misc.m_Player[byte][16] = 0;
+    }
+    if (m_misc.m_Party[7] == 0)
+    {
+        altMessage = true;
+    }
+    for (byte = 0; byte < 16; byte++)
+    {
+        m_misc.m_Party[byte] = 0;
+    }
+
+    m_resources.SetButtonVisibility(5, true);
+    m_resources.SetButtonVisibility(6, false);
+
+    if (altMessage)
+    {
+        m_graphics.m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
+    }
+    else
+    {
+        m_graphics.m_obsCurMode = OrganizeBottomScreen::Dispersed;
+    }
+}
+
+void formParty([[maybe_unused]] int button)
+{
 }
 
 void backToMenu([[maybe_unused]] int button)
@@ -446,8 +491,6 @@ void Organize()
     bool updateMouse = false;
     changeMode = false;
 
-    m_resources.SetButtonCallback(7, backToMenu);
-
     while (1)
     {
         if (gInterrupt)
@@ -486,6 +529,15 @@ void Organize()
             }
             else
             {
+                switch (m_graphics.m_obsCurMode)
+                {
+                case OrganizeBottomScreen::DispersedNoOne:
+                case OrganizeBottomScreen::Dispersed:
+                    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+                    break;
+                default:
+                    break;
+                }
             }
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -515,7 +567,19 @@ void Organize()
         SDL_RenderClear(renderer);
         if (updateMouse)
         {
-            m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+            switch (m_graphics.m_obsCurMode)
+            {
+            case OrganizeBottomScreen::DispersedNoOne:
+            case OrganizeBottomScreen::Dispersed:
+                if (mouseState == 2)
+                {
+                    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+                }
+                break;
+            default:
+                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                break;
+            }
         }
         m_graphics.DrawFrame(3);
         m_graphics.DrawOrganizeMenu();

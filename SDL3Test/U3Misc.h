@@ -205,6 +205,7 @@ public:
 	static const Uint64 damage_time = 50;
 	bool m_freezeAnimation;
 	SDL_Event m_currentEvent;
+	bool m_partyFormed;
 
 private:
 	void Attack();
@@ -415,5 +416,6 @@ private:
 	std::unique_ptr <SosariaHandle> m_saved_map;
 	int m_gWhirlCtr;
 	short m_gMoon[2];
+	
 };
 

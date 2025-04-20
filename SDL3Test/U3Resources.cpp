@@ -2018,6 +2018,19 @@ void U3Resources::DrawDemo(Uint64 curTick)
 
 }
 
+void U3Resources::DrawOrganizePartyDispersed(bool wasDispersed)
+{
+	CenterMessage(13, 17);
+
+	if (wasDispersed)
+	{
+		CenterMessage(14, 20);
+	}
+	else
+	{
+		CenterMessage(15, 19);
+	}
+}
 
 void U3Resources::DrawOrganizePartyRect()
 {
@@ -2120,6 +2133,10 @@ void U3Resources::DrawOrganizePartyRect()
 		}
 		if (strName.size() > 0)
 		{
+			sdl_text_color.r = 255;
+			sdl_text_color.g = 255;
+			sdl_text_color.b = 255;
+
 			if (m_misc.m_Player[i][16])
 			{
 				sdl_text_color.r = 255;
@@ -2129,10 +2146,6 @@ void U3Resources::DrawOrganizePartyRect()
 			}
 
 			renderDisplayString(m_font_11, strName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
-
-			sdl_text_color.r = 255;
-			sdl_text_color.g = 255;
-			sdl_text_color.b = 255;
 
 			std::string str_level = std::to_string(m_misc.m_Player[i][30] + 1);
 			str_level = std::string("Lvl ") + str_level;

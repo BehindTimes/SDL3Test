@@ -21,6 +21,13 @@ enum class U3GraphicsMode
 	Dungeon
 };
 
+enum class OrganizeBottomScreen
+{
+	None,
+	Dispersed,
+	DispersedNoOne
+};
+
 class U3Graphics
 {
 public:
@@ -60,6 +67,7 @@ public:
 	Uint64 m_winElapsed;
 
 	bool m_staydead;
+	OrganizeBottomScreen m_obsCurMode;
 
 private:
 	void renderMiniMapDungeon();

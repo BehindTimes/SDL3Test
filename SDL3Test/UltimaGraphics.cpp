@@ -28,7 +28,8 @@ U3Graphics::U3Graphics() :
     m_fading(true),
     m_blinkElapsed(0),
     m_staydead(false),
-    m_winElapsed(0)
+    m_winElapsed(0),
+    m_obsCurMode(OrganizeBottomScreen::None)
 {
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
     memset(m_maskArray, 0, sizeof(unsigned char) * 128);
@@ -86,8 +87,8 @@ void U3Graphics::CreateOrganizeData()
 {
     m_resources.SetButtonVisibility(3, true);
     m_resources.SetButtonVisibility(4, true);
-    m_resources.SetButtonVisibility(5, false);
-    m_resources.SetButtonVisibility(6, true);
+    m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
+    m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
     m_resources.SetButtonVisibility(7, true);
 }
 
@@ -394,10 +395,24 @@ void U3Graphics::DrawMenu()
 void U3Graphics::DrawOrganizeMenu()
 {
     m_resources.drawExodus(255);
-    m_resources.DrawButtons({ 3, 4, 5, 6, 7 });
+    
+    switch (m_obsCurMode)
+    {
+    case OrganizeBottomScreen::DispersedNoOne:
+        m_resources.DrawOrganizePartyDispersed(true);
+        break;
+    case OrganizeBottomScreen::Dispersed:
+        m_resources.DrawOrganizePartyDispersed(false);
+        break;
+    default:
+        m_resources.DrawButtons({ 3, 4, 5, 6, 7 });
+        m_resources.CenterMessage(33, 11);
+        m_resources.DrawOrganizePartyRect();
+        break;
+    }
+    
 
-    m_resources.CenterMessage(33, 11);
-    m_resources.DrawOrganizePartyRect();
+    //m_resources.CenterMessage(13, 17);
 }
 
 short U3Graphics::MapConstrain(short value)

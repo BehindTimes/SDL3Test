@@ -66,7 +66,8 @@ U3Misc::U3Misc() :
 	m_chNum(0),
 	m_freezeAnimation(false),
 	m_currentEvent(0),
-	m_gWhirlCtr(0)
+	m_gWhirlCtr(0),
+	m_partyFormed(false)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -471,6 +472,19 @@ bool U3Misc::GetParty()
 
 	m_xpos = m_Party[3];
 	m_ypos = m_Party[4];
+
+	if (m_Party[6] == 0)   // none should belong to a party
+	{
+		m_partyFormed = false;
+		for (short i = 1; i < 21; i++)
+		{
+			m_Player[i][16] = 0;
+		}
+	}
+	else
+	{
+		m_partyFormed = true;
+	}
 
 	return true;
 }

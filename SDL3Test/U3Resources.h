@@ -111,6 +111,7 @@ public:
 	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);
 	void DrawOrganizePartyRect();
+	void DrawOrganizePartyDispersed(bool wasDispersed);
 	void DrawDemo(Uint64 curTick);
 	void setTickCount(Uint64 curTick, bool initializeTimer = true);
 	void DemoUpdate(Uint64 curTick);

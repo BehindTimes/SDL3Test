@@ -3897,9 +3897,9 @@ bool U3Misc::OtherCallback()
 	}
 	m_chNum = m_input_num;
 	std::string strchNum;
-	if (m_rosNum >= 0)
+	if (m_chNum >= 0)
 	{
-		strchNum = std::to_string(m_rosNum + 1) + std::string("\n");
+		strchNum = std::to_string(m_chNum + 1) + std::string("\n");
 	}
 	else
 	{

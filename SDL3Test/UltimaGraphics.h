@@ -28,7 +28,9 @@ enum class OrganizeBottomScreen
 	DispersedNoOne,
 	FormParty,
 	PartyFormed,
-	PartyFormedInUse
+	PartyFormedInUse,
+	CreateCharacterChooseSlot,
+	CreateCharacter
 };
 
 class U3Graphics

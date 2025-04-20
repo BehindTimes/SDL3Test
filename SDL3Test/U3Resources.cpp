@@ -87,7 +87,9 @@ U3Resources::U3Resources() :
 	m_elapsedMoveTime(0),
 	m_newMove(false),
 	m_wasMove(false),
-	m_selectedFormRect(-1)
+	m_selectedFormRect(-1),
+	m_texRaceClass(nullptr),
+	m_texCharacterRecord(nullptr)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -209,6 +211,14 @@ U3Resources::~U3Resources()
 	if (m_texUltimaLogoFade)
 	{
 		SDL_DestroyTexture(m_texUltimaLogoFade);
+	}
+	if (m_texRaceClass)
+	{
+		SDL_DestroyTexture(m_texRaceClass);
+	}
+	if (m_texCharacterRecord)
+	{
+		SDL_DestroyTexture(m_texCharacterRecord);
 	}
 
 	if (m_font)
@@ -783,6 +793,18 @@ void U3Resources::loadImages()
 	currentPath /= "TimeLord.jpg";
 	m_texTimeLord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "CharacterRecord.jpg";
+	m_texCharacterRecord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "RaceClassInfo.gif";
+	m_texRaceClass = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
 	m_dungeon.loadGraphics();
 }
 
@@ -952,11 +974,6 @@ void U3Resources::loadGraphics()
 		}
 		else if (type == "mini")
 		{
-			/*curTexture = &m_allGraphics[mode].mini;
-			numX = MINI_X;
-			numY = MINI_Y;
-			xSize = &m_allGraphics[mode].mini_width;
-			ySize = &m_allGraphics[mode].mini_height;*/
 			loadMiniTiles(m_allGraphics[mode], dirEntry.path().string());
 		}
 		else if (type == "tiles")
@@ -2137,6 +2154,45 @@ void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
 			}
 
 			SetButtonVisibility(5, (m_selectedCharacters.size() > 0));
+		}
+	}
+}
+
+void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState)
+{
+	float scaler = (float)m_blockSize / 16.0f;
+
+	short yMin = (short)((230 * scaler) + screenOffsetY);
+	short yMax = (short)((360 * scaler) + screenOffsetY);
+	short xMin = (short)(20 * scaler + screenOffsetX);
+	short xMax = (short)(620 * scaler + screenOffsetX);
+	short xMiddle = (short)(320 * scaler + screenOffsetX);
+
+	m_selectedFormRect = -1;
+
+	if (xPos > xMin && xPos < xMax &&
+		yPos > yMin && yPos < yMax)
+	{
+		m_selectedFormRect = (int)((yPos - yMin) / (13 * scaler));
+		if (xPos > xMiddle)
+		{
+			m_selectedFormRect += 10;
+		}
+		if (m_selectedFormRect >= 20 || m_selectedFormRect < 0)
+		{
+			m_selectedFormRect = -1;
+		}
+		else
+		{
+			if (m_partyDisplay[m_selectedFormRect].Name)
+			{
+				m_selectedFormRect = -1;
+			}
+		}
+
+		if (mouseState == 2 && m_selectedFormRect >= 0)
+		{
+			int j = 0;
 		}
 	}
 }

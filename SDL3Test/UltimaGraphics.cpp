@@ -421,6 +421,15 @@ void U3Graphics::DrawOrganizeMenu()
     case OrganizeBottomScreen::PartyFormedInUse:
         m_resources.DrawOrganizePartyFormed(true);
         break;
+    case OrganizeBottomScreen::CreateCharacterChooseSlot:
+    {
+        std::string strMessage(m_resources.SelectCharacterSlotStr);
+        size_t startPos = (40 - strMessage.size()) / 2;
+        m_resources.DrawButtons({ 7 });
+        m_resources.CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
+        m_resources.DrawOrganizePartyRect();
+    }
+        break;
     default:
         m_resources.DrawButtons({ 3, 4, 5, 6, 7 });
         m_resources.CenterMessage(33, 11);

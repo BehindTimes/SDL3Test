@@ -124,6 +124,7 @@ public:
 	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void UpdateFormParty(float xPos, float yPos, int mouseState);
+	void UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
 	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);
@@ -198,6 +199,7 @@ public:
 		"Onward to ULTIMA IV!"
 	};
 	static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
+	static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
 
 	int m_blockSize;
 	int m_overrideImage;
@@ -280,6 +282,9 @@ private:
 	SDL_Texture* m_texRod;
 	SDL_Texture* m_texShrine;
 	SDL_Texture* m_texTimeLord;
+
+	SDL_Texture* m_texRaceClass;
+	SDL_Texture* m_texCharacterRecord;
 
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;

@@ -502,7 +502,21 @@ void U3Misc::BlockExodus()
 	{
 		return;
 	}
-	// TO DO
+	if (GetXYVal(0x0A, 0x35) == 0x1C && GetXYVal(0x0B, 0x36) == 0x00 && GetXYVal(0x0C, 0x35) == 0x10)
+	{
+		bool allowDiagonols;
+		m_resources.GetPreference(U3PreferencesType::Allow_Diagonal, allowDiagonols);
+		if (allowDiagonols)
+		{
+			PutXYVal(0x84, 0x09, 0x35);
+			PutXYVal(0x84, 0x0B, 0x35);
+		}
+		else
+		{
+			PutXYVal(0x10, 0x09, 0x35);
+			PutXYVal(0x10, 0x0B, 0x35);
+		}
+	}
 }
 
 void U3Misc::LoadUltimaMap(int map)

@@ -50,6 +50,7 @@ void backToMenu(int button);
 void updateGame(Uint64 deltaTime);
 void partyFormed(int button);
 void backToOrganize(int button);
+void createCharacterChooseSlot(int button);
 
 int main(int argc, char* argv[])
 {
@@ -111,6 +112,7 @@ void DoSplashScreen()
 
 void CreateButtonCallbacks()
 {
+    m_resources.SetButtonCallback(3, createCharacterChooseSlot);
     m_resources.SetButtonCallback(5, formParty);
     m_resources.SetButtonCallback(6, disperseParty);
     m_resources.SetButtonCallback(7, backToMenu);
@@ -235,6 +237,12 @@ void disperseParty([[maybe_unused]] int button)
     {
         m_graphics.m_obsCurMode = OrganizeBottomScreen::Dispersed;
     }
+}
+
+void createCharacterChooseSlot([[maybe_unused]] int button)
+{
+    m_graphics.m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
+    m_resources.SetButtonCallback(7, backToOrganize);
 }
 
 void formParty([[maybe_unused]] int button)
@@ -651,6 +659,10 @@ void Organize()
         {
             switch (m_graphics.m_obsCurMode)
             {
+            case OrganizeBottomScreen::CreateCharacterChooseSlot:
+                m_resources.UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
+                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                break;
             case OrganizeBottomScreen::FormParty:
                 m_resources.UpdateFormParty(event.motion.x, event.motion.y, mouseState);
                 m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);

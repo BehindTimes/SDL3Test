@@ -72,6 +72,7 @@ U3Dialog::~U3Dialog()
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+		m_font = nullptr;
 	}
 }
 
@@ -237,6 +238,7 @@ bool U3Dialog::createFont()
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+		m_font = nullptr;
 	}
 
 	if (m_blockSize > 8)
@@ -759,6 +761,13 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 	m_Rect(NULL),
 	m_font(nullptr)
 {
+	m_upArrow += static_cast<char>(0xE2);
+	m_upArrow += static_cast<char>(0x96);
+	m_upArrow += static_cast<char>(0xB4);
+
+	m_downArrow += static_cast<char>(0xE2);
+	m_downArrow += static_cast<char>(0x96);
+	m_downArrow += static_cast<char>(0xBE);
 }
 
 CreateCharacterDialog::~CreateCharacterDialog()
@@ -769,12 +778,13 @@ CreateCharacterDialog::~CreateCharacterDialog()
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+		m_font = nullptr;
 	}
 }
 
 void CreateCharacterDialog::init()
 {
-	float scaler = (float)m_blockSize / 16.0f;
+	float scaler = 2.0f;
 	float ratio = m_resources->m_characterRecordWidth / (m_Rect.w * scaler);
 	int offsetY = (int)(m_resources->m_characterRecordHeight * ratio) / 2;
 
@@ -796,13 +806,7 @@ void CreateCharacterDialog::init()
 	addLabel(std::to_string(99), 112, 136 + offsetY);
 	addLabel(std::to_string(99), 112, 168 + offsetY);
 
-	m_upArrow += static_cast<char>(0xE2);
-	m_upArrow += static_cast<char>(0x96);
-	m_upArrow += static_cast<char>(0xB4);
-
-	m_downArrow += static_cast<char>(0xE2);
-	m_downArrow += static_cast<char>(0x96);
-	m_downArrow += static_cast<char>(0xBE);
+	
 
 	addButton(m_upArrow, 144, 32 + offsetY);
 	addButton(m_downArrow, 144, 48 + offsetY);
@@ -831,15 +835,9 @@ void CreateCharacterDialog::changeBlockSize(int blockSize)
 	}
 	createFont();
 
-	for (auto& curLabel : m_labels)
-	{
-		curLabel->updateLabelFont(m_engine_surface, m_font);
-	}
-
-	for (auto& curButton : m_buttons)
-	{
-		curButton->resizeButton(blockSize, m_renderer, m_engine_surface, m_font);
-	}
+	m_labels.clear();
+	m_buttons.clear();
+	init();
 }
 
 void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)

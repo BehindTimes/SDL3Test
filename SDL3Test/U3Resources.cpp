@@ -2250,6 +2250,7 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 			m_CreateCharacterDlg->m_Rect.y = ((384 - (200 + addheight + addheight1 + addheight2)) / 2);
 			m_CreateCharacterDlg->m_Rect.w = 336;
 			m_CreateCharacterDlg->m_Rect.h = 200 + addheight + addheight1 + addheight2;
+			m_CreateCharacterDlg->changeBlockSize(m_blockSize);
 			m_CreateCharacterDlg->init();
 		}
 	}

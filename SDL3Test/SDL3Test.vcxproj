@@ -110,14 +110,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.8\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.2.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL3.lib;SDL3_image.lib;libxml2.lib;SDL3_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.8\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.2.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.10\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.1.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -128,7 +128,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.8\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.2.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -136,7 +136,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.8\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.2.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.10\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.1.0\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_image.lib;libxml2.lib;SDL3_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

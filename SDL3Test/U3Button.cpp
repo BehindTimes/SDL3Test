@@ -77,26 +77,16 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 			offsety = (h - blockSize) / 2.0f;
 			h = blockSize;
 		}
-		if (w < h)
+		if (w  + 4 < h)
 		{
 			offset = (h - w) / 2.0f;
-			w = h;
+			w = h - 4;
 		}
 
-		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
 		SDL_SetTextureScaleMode(m_texDefault, SDL_SCALEMODE_NEAREST);
 
 		SDL_SetRenderTarget(renderer, m_texDefault);
-		
-		/*SDL_RenderClear(renderer);
-		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
-		SDL_RenderFillRect(renderer, NULL);
-		//TTF_SetTextColor(text_obj, 0, 0, 0, 255);
-		TTF_SetTextColor(text_obj, 255, 255, 255, 255);
-		TTF_DrawRendererText(text_obj, 2 + offset, offsety);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderRect(renderer, NULL);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);*/
 
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
@@ -109,7 +99,7 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 
 		SDL_SetRenderTarget(renderer, NULL);
 
-		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
 
 		SDL_SetRenderTarget(renderer, m_texPushed);
 		SDL_RenderClear(renderer);

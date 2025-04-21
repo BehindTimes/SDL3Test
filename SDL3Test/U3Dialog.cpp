@@ -195,7 +195,7 @@ void U3Dialog::changeBlockSize(int blockSize)
 	createFont();
 	for (auto& curButton : m_vecButtons)
 	{
-		curButton->resizeButton(blockSize, m_renderer, m_engine_surface, m_resources->m_font);
+		curButton->resizeButton(blockSize, m_renderer, m_engine_surface, m_font);
 	}
 	calculateRects();
 }

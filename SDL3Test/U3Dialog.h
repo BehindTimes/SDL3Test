@@ -28,6 +28,28 @@ public:
 	int m_y;
 };
 
+struct U3TextBox
+{
+public:
+	U3TextBox(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize, int x, int y, int width);
+	~U3TextBox();
+
+	void U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize);
+	void render(SDL_Renderer* renderer, int x, int y);
+	void setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text);
+
+	int m_x;
+	int m_y;
+	int m_width;
+	int m_blockSize;
+	bool m_readOnly;
+
+private:
+	std::string m_strText;
+	TTF_Text* m_ttfText;
+	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
+};
+
 class CreateCharacterDialog
 {
 public:
@@ -39,6 +61,7 @@ public:
 	void changeBlockSize(int blockSize);
 	void addLabel(std::string strLabel, int x, int y);
 	void addButton(std::string strLabel, int x, int y);
+	void addTextBox(int x, int y, int width);
 	void updateDialog(float xPos, float yPos, int mouseState);
 	SDL_FRect m_Rect;
 
@@ -61,12 +84,16 @@ private:
 	static constexpr std::string_view SexString = "Sex:";
 	static constexpr std::string_view RaceString = "Race:";
 	static constexpr std::string_view TypeString = "Type:";
+	static constexpr std::string_view OKString = "  OK  ";
+	static constexpr std::string_view CancelString = " Cancel ";
+	static constexpr std::string_view RandomNameString = " Random Name ";
 
 	int m_blockSize;
 	SDL_Renderer* m_renderer;
 	TTF_TextEngine* m_engine_surface;
 	std::vector<std::unique_ptr<U3DlgLabel>> m_labels;
 	std::vector<std::unique_ptr<U3Button>> m_buttons;
+	std::vector<std::unique_ptr<U3TextBox>> m_textBoxes;
 	TTF_Font* m_font; // block size font
 
 	std::string m_upArrow;

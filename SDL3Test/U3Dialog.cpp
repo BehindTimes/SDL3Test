@@ -726,6 +726,79 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 	}
 }
 
+U3TextBox::U3TextBox(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize, int x, int y, int width) :
+	m_ttfText(nullptr),
+	m_x(x),
+	m_y(y),
+	m_width(width),
+	m_blockSize(blockSize),
+	m_readOnly(true)
+{
+}
+
+U3TextBox::~U3TextBox()
+{
+	if (m_ttfText)
+	{
+		TTF_DestroyText(m_ttfText);
+		m_ttfText = nullptr;
+	}
+}
+
+void U3TextBox::U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize)
+{
+	if (m_ttfText)
+	{
+		TTF_DestroyText(m_ttfText);
+		m_ttfText = nullptr;
+	}
+	m_ttfText = TTF_CreateText(engine_surface, font, m_strText.c_str(), 0);
+	m_blockSize = blockSize;
+}
+
+void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
+{
+	SDL_FRect myRect;
+	float scaler = (float)m_blockSize / 16.0f;
+	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
+
+	myRect.x = (float)x;
+	myRect.y = (float)y;
+	myRect.w = (float)m_width * scaler;
+	myRect.h = (float)m_blockSize;
+
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_RenderFillRect(renderer, &myRect);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderRect(renderer, &myRect);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+	SDL_Color sdl_text_color = { 0, 0, 0 };
+
+	renderDisplayString(m_ttfText, (int)(x + (4 * scaler)), (int)(y - (1 * scaler)), sdl_text_color);
+}
+
+void U3TextBox::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
+{
+	if (!text_obj)
+	{
+		return;
+	}
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
+	TTF_DrawRendererText(text_obj, (float)x, (float)y);
+}
+
+void U3TextBox::setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text)
+{
+	if (m_ttfText)
+	{
+		TTF_DestroyText(m_ttfText);
+		m_ttfText = nullptr;
+	}
+	m_strText = text;
+	m_ttfText = TTF_CreateText(engine_surface, font, text.c_str(), 0);
+}
+
 U3DlgLabel::U3DlgLabel(TTF_TextEngine* engine_surface, TTF_Font* font, std::string strLabel, int x, int y) :
 	m_strLabel(strLabel),
 	m_ttfLabel(nullptr),
@@ -791,38 +864,50 @@ void CreateCharacterDialog::init()
 	createFont();
 	addLabel(std::string(NameString), 8, 8 + offsetY);
 	addLabel(std::string(StrengthString), 8, 40 + offsetY);
-	addLabel(std::string(DexterityString), 8, 72 + offsetY);
-	addLabel(std::string(IntelligenceString), 8, 104 + offsetY);
-	addLabel(std::string(WisdomString), 8, 136 + offsetY);
-	addLabel(std::string(PointsString), 8, 168 + offsetY);
+	addLabel(std::string(DexterityString), 8, 74 + offsetY);
+	addLabel(std::string(IntelligenceString), 8, 108 + offsetY);
+	addLabel(std::string(WisdomString), 8, 142 + offsetY);
+	addLabel(std::string(PointsString), 8, 176 + offsetY);
 
 	addLabel(std::string(SexString), 176, 56 + offsetY);
-	addLabel(std::string(RaceString), 176, 88 + offsetY);
-	addLabel(std::string(TypeString), 176, 120 + offsetY);
+	addLabel(std::string(RaceString), 176, 90 + offsetY);
+	addLabel(std::string(TypeString), 176, 124 + offsetY);
 
 	addLabel(std::to_string(99), 112, 40 + offsetY);
-	addLabel(std::to_string(99), 112, 72 + offsetY);
-	addLabel(std::to_string(99), 112, 104 + offsetY);
-	addLabel(std::to_string(99), 112, 136 + offsetY);
-	addLabel(std::to_string(99), 112, 168 + offsetY);
-
-	
+	addLabel(std::to_string(99), 112, 74 + offsetY);
+	addLabel(std::to_string(99), 112, 108 + offsetY);
+	addLabel(std::to_string(99), 112, 142 + offsetY);
+	addLabel(std::to_string(99), 112, 176 + offsetY);
 
 	addButton(m_upArrow, 144, 32 + offsetY);
 	addButton(m_downArrow, 144, 48 + offsetY);
-	addButton(m_upArrow, 144, 64 + offsetY);
-	addButton(m_downArrow, 144, 80 + offsetY);
-	addButton(m_upArrow, 144, 96 + offsetY);
-	addButton(m_downArrow, 144, 112 + offsetY);
-	addButton(m_upArrow, 144, 128 + offsetY);
-	addButton(m_downArrow, 144, 144 + offsetY);
+	addButton(m_upArrow, 144, 66 + offsetY);
+	addButton(m_downArrow, 144, 82 + offsetY);
+	addButton(m_upArrow, 144, 100 + offsetY);
+	addButton(m_downArrow, 144, 116 + offsetY);
+	addButton(m_upArrow, 144, 134 + offsetY);
+	addButton(m_downArrow, 144, 150 + offsetY);
 
 	addButton(m_upArrow, 312, 48 + offsetY);
 	addButton(m_downArrow, 312, 64 + offsetY);
-	addButton(m_upArrow, 312, 80 + offsetY);
-	addButton(m_downArrow, 312, 96 + offsetY);
-	addButton(m_upArrow, 312, 112 + offsetY);
-	addButton(m_downArrow, 312, 128 + offsetY);
+	addButton(m_upArrow, 312, 82 + offsetY);
+	addButton(m_downArrow, 312, 98 + offsetY);
+	addButton(m_upArrow, 312, 116 + offsetY);
+	addButton(m_downArrow, 312, 132 + offsetY);
+
+	addButton(std::string(CancelString), 176, 176 + offsetY);
+	addButton(std::string(OKString), 256, 176 + offsetY);
+	addButton(std::string(RandomNameString), 176, 8 + offsetY);
+
+	addTextBox(60, 8 + offsetY, 100);
+	addTextBox(210, 56 + offsetY, 100);
+	addTextBox(210, 90 + offsetY, 100);
+	addTextBox(210, 124 + offsetY, 100);
+
+	m_textBoxes[0]->setText(m_engine_surface, m_font, "Tatiana");
+	m_textBoxes[1]->setText(m_engine_surface, m_font, "Female");
+	m_textBoxes[2]->setText(m_engine_surface, m_font, "Human");
+	m_textBoxes[3]->setText(m_engine_surface, m_font, "Fighter");
 }
 
 void CreateCharacterDialog::changeBlockSize(int blockSize)
@@ -837,6 +922,7 @@ void CreateCharacterDialog::changeBlockSize(int blockSize)
 
 	m_labels.clear();
 	m_buttons.clear();
+	m_textBoxes.clear();
 	init();
 }
 
@@ -918,6 +1004,12 @@ bool CreateCharacterDialog::display()
 			(int)(curButton->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
+	for (auto& curTextBox : m_textBoxes)
+	{
+		curTextBox->render(m_renderer, (int)(curTextBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+			(int)(curTextBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
+	}
+
 	myRect.x = (float)m_Rect.x * scaler;
 	myRect.y = (float)m_Rect.y * scaler;
 	myRect.w = (float)m_Rect.w * scaler;
@@ -944,6 +1036,12 @@ void CreateCharacterDialog::addButton(std::string strLabel, int x, int y)
 	m_buttons.push_back(std::move(curButton));
 	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
 	m_buttons.back()->setVisible(true);
+}
+
+void CreateCharacterDialog::addTextBox(int x, int y, int width)
+{
+	auto curTextBox = std::make_unique<U3TextBox>(m_engine_surface, m_font, m_blockSize, x, y, width);
+	m_textBoxes.push_back(std::move(curTextBox));
 }
 
 bool CreateCharacterDialog::createFont()

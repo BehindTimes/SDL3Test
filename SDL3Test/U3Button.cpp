@@ -12,7 +12,10 @@ U3Button::U3Button() :
 	m_visible(false),
 	m_forcecapture(false),
 	m_renderRect(0),
-	m_id(0)
+	m_id(0),
+	m_hasFocus(false),
+	m_x(0),
+	m_y(0)
 {
 }
 
@@ -35,7 +38,7 @@ U3Button::~U3Button()
 	}
 }
 
-void U3Button::resizeButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font)
+void U3Button::resizeButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font)
 {
 	if (m_texDefault)
 	{
@@ -52,11 +55,16 @@ void U3Button::resizeButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surfa
 		SDL_DestroyTexture(m_texDisabled);
 		m_texDisabled = NULL;
 	}
-	CreateTextButton(renderer, engine_surface, font, m_text);
+	CreateTextButton(blockSize, renderer, engine_surface, font, m_text, m_x, m_y);
 }
 
-void U3Button::CreateTextButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText)
+void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x, int y)
 {
+	m_x = x;
+	m_y = y;
+	float offset = 0;
+	float offsety = 0;
+
 	TTF_Text* text_obj = NULL;
 	text_obj = TTF_CreateText(engine_surface, font, strText.c_str(), 0);
 	if (text_obj)
@@ -64,33 +72,45 @@ void U3Button::CreateTextButton(SDL_Renderer* renderer, TTF_TextEngine* engine_s
 		int w, h;
 		TTF_GetTextSize(text_obj, &w, &h);
 
-		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+		if (h > blockSize)
+		{
+			offsety = (h - blockSize) / 2.0f;
+			h = blockSize;
+		}
+		if (w < h)
+		{
+			offset = (h - w) / 2.0f;
+			w = h;
+		}
+
+		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+		SDL_SetTextureScaleMode(m_texDefault, SDL_SCALEMODE_NEAREST);
 
 		SDL_SetRenderTarget(renderer, m_texDefault);
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
 		SDL_RenderFillRect(renderer, NULL);
 		TTF_SetTextColor(text_obj, 0, 0, 0, 255);
-		TTF_DrawRendererText(text_obj, 2, 0);
+		TTF_DrawRendererText(text_obj, 2 + offset, offsety);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
-		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 
 		SDL_SetRenderTarget(renderer, m_texPushed);
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
 		SDL_RenderFillRect(renderer, NULL);
 		TTF_SetTextColor(text_obj, 255,255, 255, 255);
-		TTF_DrawRendererText(text_obj, 2, 0);
+		TTF_DrawRendererText(text_obj, 2 + offset, 0);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
 		SDL_SetRenderTarget(renderer, NULL);
 
-		m_width = (float)w + 4;
+		m_width = (float)w;
 		m_height = (float)h;
 
 		m_visible = true;
@@ -142,18 +162,18 @@ void U3Button::renderCentered(SDL_Renderer* renderer)
 	}
 }
 
-void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY)
+void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y)
 {
 	if (!m_visible)
 	{
 		return;
 	}
-	float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
+	//float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
 
-	m_renderRect.x = (float)x * 4 + adjustX;
-	m_renderRect.y = (float)y * 4 + adjustY;
-	m_renderRect.h = (float)mult * m_height;
-	m_renderRect.w = (float)mult * m_width;
+	m_renderRect.x = (float)x;
+	m_renderRect.y = (float)y;
+	m_renderRect.h = (float)m_height;
+	m_renderRect.w = (float)m_width;
 
 	if (m_showPushed)
 	{
@@ -165,7 +185,30 @@ void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, short
 	}
 }
 
-void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, int y, int width, int height, bool has_clicked, bool has_disabled)
+void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY)
+{
+	if (!m_visible)
+	{
+		return;
+	}
+	//float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
+
+	m_renderRect.x = (float)x * 4 + adjustX;
+	m_renderRect.y = (float)y * 4 + adjustY;
+	m_renderRect.h = (float)m_height;
+	m_renderRect.w = (float)m_width;
+
+	if (m_showPushed)
+	{
+		SDL_RenderTexture(renderer, m_texPushed, NULL, &m_renderRect);
+	}
+	else
+	{
+		SDL_RenderTexture(renderer, m_texDefault, NULL, &m_renderRect);
+	}
+}
+
+void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int blockSize, int x, int y, int width, int height, bool has_clicked, bool has_disabled)
 {
 	SDL_FRect myRect;
 
@@ -176,11 +219,29 @@ void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, 
 
 	myRect.x = (float)x * 4;
 	myRect.y = (float)y * 4;
-	myRect.w = (float)width * 4;
-	myRect.h = (float)height * 4;
+	myRect.w = (float)width;
+	myRect.h = (float)height;
 
-	m_width = myRect.w;
-	m_height = myRect.h;
+	float mult = blockSize / 64.0f;
+
+	m_width = myRect.w * mult;
+	m_height = myRect.h * mult;
+
+	if (m_texDefault)
+	{
+		SDL_DestroyTexture(m_texDefault);
+		m_texDefault = NULL;
+	}
+	if (m_texPushed)
+	{
+		SDL_DestroyTexture(m_texPushed);
+		m_texPushed = NULL;
+	}
+	if (m_texDisabled)
+	{
+		SDL_DestroyTexture(m_texDisabled);
+		m_texDisabled = NULL;
+	}
 
 	m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
 
@@ -191,9 +252,9 @@ void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, 
 	if (has_clicked)
 	{
 		myRect.x = (float)x * 4;
-		myRect.y = (float)y * 4 + (height * 4);
-		myRect.w = (float)width * 4;
-		myRect.h = (float)height * 4;
+		myRect.y = (float)y * 4 + (height);
+		myRect.w = (float)width;
+		myRect.h = (float)height;
 
 		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
 		SDL_SetRenderTarget(renderer, m_texPushed);
@@ -203,9 +264,9 @@ void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, 
 	if (has_disabled)
 	{
 		myRect.x = (float)x * 4;
-		myRect.y = (float)y * 4 + (height * 8);
-		myRect.w = (float)width * 4;
-		myRect.h = (float)height * 4;
+		myRect.y = (float)y * 4 + (height * 2);
+		myRect.w = (float)width;
+		myRect.h = (float)height;
 
 		m_texDisabled = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, width, height);
 		SDL_SetRenderTarget(renderer, m_texDisabled);
@@ -238,14 +299,14 @@ void U3Button::setMouseCapture(int blockSize, int capture, float mouse_x, float 
 		return;
 	}
 	SDL_FRect myRect;
-	float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
+	//float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
 	m_showPushed = false;
 	bool bCallback = false;
 
-	myRect.x = (float)x * 4 + adjustX;
-	myRect.y = (float)y * 4 + adjustY;
-	myRect.h = (float)mult * m_height;
-	myRect.w = (float)mult * m_width;
+	myRect.x = (float)x + adjustX;
+	myRect.y = (float)y + adjustY;
+	myRect.h = (float)m_height;
+	myRect.w = (float)m_width;
 
 	switch (capture)
 	{

@@ -7,12 +7,12 @@
 #include "UltimaSpellCombat.h"
 #include "U3Utilities.h"
 
-extern U3ScrollArea m_scrollArea;
-extern U3Graphics m_graphics;
-extern U3Misc m_misc;
-extern U3Resources m_resources;
-extern UltimaSpellCombat m_spellCombat;
-extern U3Utilities m_utilities;
+extern std::unique_ptr<U3Resources> m_resources;
+extern std::unique_ptr<U3Graphics> m_graphics;
+extern std::unique_ptr<U3ScrollArea> m_scrollArea;
+extern std::unique_ptr<U3Utilities> m_utilities;
+extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
+extern std::unique_ptr<U3Misc> m_misc;
 
 /*                           0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23   24   25   26   27   28   29   30   31 */
 const short     dOfX[37] = { 600,   0,   0,1200,1200,1200, 300,   0,   0, 300,1200,1200,1200,1200,1200, 300, 300,   0,   0, 300, 300,1200,1200,1200,1200,1200,1200,1200, 300,   0,   0, 300 };
@@ -117,16 +117,16 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		Descend();
 		break;
 	case SDLK_G:
-		m_misc.GetChest(0, 0);
+		m_misc->GetChest(0, 0);
 		break;
 	case SDLK_H:
 		NotDngCmd();
 		break;
 	case SDLK_I:
-		m_misc.Ignite();
+		m_misc->Ignite();
 		break;
 	case SDLK_J:
-		m_misc.JoinGold();
+		m_misc->JoinGold();
 		break;
 	case SDLK_K:
 		Klimb();
@@ -138,7 +138,7 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		NotDngCmd();
 		break;
 	case SDLK_O:
-		m_misc.OtherCommand(0);
+		m_misc->OtherCommand(0);
 		break;
 	case SDLK_P:
 		PeerGem();
@@ -150,8 +150,8 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		NotDngCmd();
 		break;
 	case SDLK_Y:
-		m_misc.Yell();
-		//m_misc.Yell(0);
+		m_misc->Yell();
+		//m_misc->Yell(0);
 		break;
 	case SDLK_Z:
 		NotDngCmd();
@@ -185,7 +185,7 @@ bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 			Right();
 			break;
 		case SDLK_SPACE:
-			m_misc.Pass();
+			m_misc->Pass();
 			break;
 		default:
 			break;
@@ -201,7 +201,7 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= ImagesLoc;
 	currentPath /= "DungeonShapes.png";
 
-	m_texDungeonShapes = IMG_LoadTexture(m_resources.m_renderer, currentPath.string().c_str());
+	m_texDungeonShapes = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
 	SDL_SetTextureScaleMode(m_texDungeonShapes, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -209,7 +209,7 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= ImagesLoc;
 	currentPath /= "Fountain.jpg";
 
-	m_texFountain = IMG_LoadTexture(m_resources.m_renderer, currentPath.string().c_str());
+	m_texFountain = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
 	SDL_SetTextureScaleMode(m_texFountain, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -217,7 +217,7 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= ImagesLoc;
 	currentPath /= "Shrine.jpg";
 
-	m_texShrine = IMG_LoadTexture(m_resources.m_renderer, currentPath.string().c_str());
+	m_texShrine = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
 	SDL_SetTextureScaleMode(m_texShrine, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -225,7 +225,7 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= ImagesLoc;
 	currentPath /= "TimeLord.jpg";
 
-	m_texTimeLord = IMG_LoadTexture(m_resources.m_renderer, currentPath.string().c_str());
+	m_texTimeLord = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
 	SDL_SetTextureScaleMode(m_texTimeLord, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -233,10 +233,10 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= ImagesLoc;
 	currentPath /= "Rod.jpg";
 
-	m_texRod = IMG_LoadTexture(m_resources.m_renderer, currentPath.string().c_str());
+	m_texRod = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
 	SDL_SetTextureScaleMode(m_texRod, SDL_SCALEMODE_NEAREST);
 
-	m_texDungeonPort = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 600, 512);
+	m_texDungeonPort = SDL_CreateTexture(m_resources->m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 600, 512);
 
 	createDoorPolygons();
 	createTextureSecrets();
@@ -426,7 +426,7 @@ void UltimaDungeon::createDoorPolygons()
 	{
 		createDoorPoly(canvas.data(), dx1[index], dy1[index], dx2[index], dy2[index], dy3[index], dy4[index]);
 
-		m_texDungeonDoors[index] = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 600, 512);
+		m_texDungeonDoors[index] = SDL_CreateTexture(m_resources->m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 600, 512);
 
 		SDL_GetTextureProperties(m_texDungeonDoors[index]);
 
@@ -437,8 +437,8 @@ void UltimaDungeon::createDoorPolygons()
 void UltimaDungeon::DungeonStart(short mode)
 {
 	m_gExitDungeon = false;
-	m_graphics.m_queuedMode = U3GraphicsMode::Dungeon;
-	//m_misc.m_gameMode = GameStateMode::Dungeon;
+	m_graphics->m_queuedMode = U3GraphicsMode::Dungeon;
+	//m_misc->m_gameMode = GameStateMode::Dungeon;
 
 	if (mode == 1)
 	{
@@ -446,114 +446,114 @@ void UltimaDungeon::DungeonStart(short mode)
 		return;
 	}
 
-	m_misc.m_gTorch = 0;
+	m_misc->m_gTorch = 0;
 
-	m_misc.m_wx = 0x18;
-	m_misc.m_wy = 0x17;
+	m_misc->m_wx = 0x18;
+	m_misc->m_wy = 0x17;
 
 	bool autosave;
-	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
 	{
-		m_misc.GetSosaria();
-		m_misc.PutRoster();
-		m_misc.PutParty();
-		m_misc.PutSosaria();
+		m_misc->GetSosaria();
+		m_misc->PutRoster();
+		m_misc->PutParty();
+		m_misc->PutSosaria();
 	}
 	else
 	{
-		m_misc.PullSosaria();
+		m_misc->PullSosaria();
 	}
 	m_forceRedraw = true;
 }
 
 void UltimaDungeon::Routine6E6B()
 {
-	m_misc.m_xpos = m_misc.m_zp[0xE3];
-	m_misc.m_ypos = m_misc.m_zp[0xE4];
-	m_graphics.m_curMode = U3GraphicsMode::Map;
-	m_misc.m_gameMode = GameStateMode::Map;
-	m_misc.m_Party[2] = 0;    // back to surface
+	m_misc->m_xpos = m_misc->m_zp[0xE3];
+	m_misc->m_ypos = m_misc->m_zp[0xE4];
+	m_graphics->m_curMode = U3GraphicsMode::Map;
+	m_misc->m_gameMode = GameStateMode::Map;
+	m_misc->m_Party[2] = 0;    // back to surface
 
-	if (!m_misc.m_checkDead)
+	if (!m_misc->m_checkDead)
 	{
-		m_scrollArea.UPrintMessage(182);
+		m_scrollArea->UPrintMessage(182);
 	}
 
-	m_misc.m_Party[3] = m_misc.m_xpos;
-	m_misc.m_Party[4] = m_misc.m_ypos;
+	m_misc->m_Party[3] = m_misc->m_xpos;
+	m_misc->m_Party[4] = m_misc->m_ypos;
 
 	bool autosave;
-	m_resources.GetPreference(U3PreferencesType::Auto_Save, autosave);
+	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 
 	if (autosave)
 	{
-		m_misc.GetSosaria();
-		m_misc.PutRoster();
-		m_misc.PutParty();
-		m_misc.PutSosaria();
+		m_misc->GetSosaria();
+		m_misc->PutRoster();
+		m_misc->PutParty();
+		m_misc->PutSosaria();
 	}
 	else
 	{
-		m_misc.PullSosaria();
+		m_misc->PullSosaria();
 	}
 }
 
 void UltimaDungeon::DngInfo()
 {
-    m_graphics.DrawFramePiece(12, 8, 0);
-    m_graphics.DrawFramePiece(13, 15, 0);
-    m_graphics.DrawFramePiece(12, 6, 23);
-    m_graphics.DrawFramePiece(13, 17, 23);
-    m_graphics.DrawFramePiece(10, 5, 23);
-    m_graphics.DrawFramePiece(10, 7, 0);
-    m_graphics.DrawFramePiece(10, 16, 0);
+    m_graphics->DrawFramePiece(12, 8, 0);
+    m_graphics->DrawFramePiece(13, 15, 0);
+    m_graphics->DrawFramePiece(12, 6, 23);
+    m_graphics->DrawFramePiece(13, 17, 23);
+    m_graphics->DrawFramePiece(10, 5, 23);
+    m_graphics->DrawFramePiece(10, 7, 0);
+    m_graphics->DrawFramePiece(10, 16, 0);
 
 	SDL_FRect myRect;
 
-	myRect.x = (float)(9 * m_resources.m_blockSize);
+	myRect.x = (float)(9 * m_resources->m_blockSize);
 	myRect.y = 0;
-	myRect.w = (float)(6 * m_resources.m_blockSize);
-	myRect.h = (float)(m_resources.m_blockSize);
+	myRect.w = (float)(6 * m_resources->m_blockSize);
+	myRect.h = (float)(m_resources->m_blockSize);
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
-	SDL_RenderFillRect(m_resources.m_renderer, &myRect);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_resources->m_renderer, &myRect);
 
-	myRect.x = (float)(7 * m_resources.m_blockSize);
-	myRect.y = (float)(23 * m_resources.m_blockSize);
-	myRect.w = (float)(10 * m_resources.m_blockSize);
-	m_resources.adjustRect(myRect);
-	SDL_RenderFillRect(m_resources.m_renderer, &myRect);
+	myRect.x = (float)(7 * m_resources->m_blockSize);
+	myRect.y = (float)(23 * m_resources->m_blockSize);
+	myRect.w = (float)(10 * m_resources->m_blockSize);
+	m_resources->adjustRect(myRect);
+	SDL_RenderFillRect(m_resources->m_renderer, &myRect);
 
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 
-	std::string dispString = m_resources.m_plistMap["MoreMessages"][47];
+	std::string dispString = m_resources->m_plistMap["MoreMessages"][47];
 	dispString += std::to_string(m_dungeonLevel + 1);
 
-	m_resources.renderString(dispString, 9, 0);
-	dispString = m_resources.m_plistMap["MoreMessages"][48];
-	m_resources.renderString(dispString, 7, 23);
+	m_resources->renderString(dispString, 9, 0);
+	dispString = m_resources->m_plistMap["MoreMessages"][48];
+	m_resources->renderString(dispString, 7, 23);
 	std::string strHeading;
-	switch (m_misc.m_heading)
+	switch (m_misc->m_heading)
 	{
 	case 0:
-		strHeading = m_resources.m_plistMap["MoreMessages"][49];
+		strHeading = m_resources->m_plistMap["MoreMessages"][49];
 		break;
 	case 1:
-		strHeading = m_resources.m_plistMap["MoreMessages"][50];
+		strHeading = m_resources->m_plistMap["MoreMessages"][50];
 		break;
 	case 2:
-		strHeading = m_resources.m_plistMap["MoreMessages"][51];
+		strHeading = m_resources->m_plistMap["MoreMessages"][51];
 		break;
 	case 3:
-		strHeading = m_resources.m_plistMap["MoreMessages"][52];
+		strHeading = m_resources->m_plistMap["MoreMessages"][52];
 		break;
 	default:
 		break;
 	}
-	m_resources.renderString(strHeading, 12, 23);
+	m_resources->renderString(strHeading, 12, 23);
 }
 
 void UltimaDungeon::Chunk2() // $183A
@@ -724,14 +724,14 @@ void UltimaDungeon::Chunk1()
 
 void UltimaDungeon::RenderDungeon()
 {
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
-	SDL_SetRenderTarget(m_resources.m_renderer, m_texDungeonPort);
-	SDL_RenderClear(m_resources.m_renderer);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 255);
+	SDL_SetRenderTarget(m_resources->m_renderer, m_texDungeonPort);
+	SDL_RenderClear(m_resources->m_renderer);
 
-	if (m_misc.m_gTorch < 1)
+	if (m_misc->m_gTorch < 1)
 	{
-		SDL_SetRenderTarget(m_resources.m_renderer, NULL);
-		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+		SDL_SetRenderTarget(m_resources->m_renderer, NULL);
+		SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 		return;
 	}
 
@@ -742,14 +742,14 @@ void UltimaDungeon::RenderDungeon()
 
 	if (m_dimDungeon)
 	{
-		SDL_SetRenderDrawBlendMode(m_resources.m_renderer, SDL_BLENDMODE_BLEND);
-		SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 128);
-		SDL_RenderFillRect(m_resources.m_renderer, NULL);
-		SDL_SetRenderDrawBlendMode(m_resources.m_renderer, SDL_BLENDMODE_NONE);
+		SDL_SetRenderDrawBlendMode(m_resources->m_renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 128);
+		SDL_RenderFillRect(m_resources->m_renderer, NULL);
+		SDL_SetRenderDrawBlendMode(m_resources->m_renderer, SDL_BLENDMODE_NONE);
 	}
 
-	SDL_SetRenderTarget(m_resources.m_renderer, NULL);
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+	SDL_SetRenderTarget(m_resources->m_renderer, NULL);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 }
 
 unsigned char UltimaDungeon::GetXYDng(short x, short y) // $93DE
@@ -770,7 +770,7 @@ unsigned char UltimaDungeon::GetXYDng(short x, short y) // $93DE
 	{
 		x -= 16;
 	}
-	return m_misc.m_Dungeon[(m_dungeonLevel * 256) + (y * 16) + x];
+	return m_misc->m_Dungeon[(m_dungeonLevel * 256) + (y * 16) + x];
 }
 
 short UltimaDungeon::DungeonBlock(short location)
@@ -783,7 +783,7 @@ short UltimaDungeon::DungeonBlock(short location)
 						-2, -2, -2, -2, -2, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3 };
 	dx = offsetX[location];
 	dy = offsetY[location];
-	misc = m_misc.m_heading;
+	misc = m_misc->m_heading;
 	while (misc > 0)
 	{
 		misc--;
@@ -791,17 +791,17 @@ short UltimaDungeon::DungeonBlock(short location)
 		dx = (-dy);
 		dy = swap;
 	}
-	m_misc.m_xs = (m_misc.m_xpos + dx) & 0x0F;
-	m_misc.m_ys = (m_misc.m_ypos + dy) & 0x0F;
-	if (m_misc.m_xs < 0)
+	m_misc->m_xs = (m_misc->m_xpos + dx) & 0x0F;
+	m_misc->m_ys = (m_misc->m_ypos + dy) & 0x0F;
+	if (m_misc->m_xs < 0)
 	{
-		m_misc.m_xs += 16;
+		m_misc->m_xs += 16;
 	}
-	if (m_misc.m_ys < 0)
+	if (m_misc->m_ys < 0)
 	{
-		m_misc.m_ys += 16;
+		m_misc->m_ys += 16;
 	}
-	tile = GetXYDng(m_misc.m_xs, m_misc.m_ys);
+	tile = GetXYDng(m_misc->m_xs, m_misc->m_ys);
 	if (tile < 128)
 	{
 		if ((tile & 0x10) != 0)
@@ -857,7 +857,7 @@ short UltimaDungeon::DrawWall(short location) // $19B4
 	FromRect.w -= FromRect.x;
 	FromRect.h -= FromRect.y;
 
-	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+	SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 	return location;
 }
 
@@ -865,7 +865,7 @@ void UltimaDungeon::DrawDoor(short location)
 {
 	if (m_texDungeonDoors[location])
 	{
-		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonDoors[location], NULL, NULL);
+		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonDoors[location], NULL, NULL);
 	}
 }
 
@@ -879,7 +879,7 @@ void UltimaDungeon::DrawChest(short location) // $1A5A
 		return;
 	}
 	shape = 33;
-	m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+	m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
 	width = (short)(FromRect.w / 2);
 	if (chSide[location] == 1)
 	{
@@ -890,8 +890,8 @@ void UltimaDungeon::DrawChest(short location) // $1A5A
 		FromRect.x += (width - 1);
 		FromRect.w -= (width);
 	}
-	m_resources.GenerateRect(&ToRect, (chL[location] * 2), (chT[location] * 2), (chR[location] + 1) * 2, (chB[location] + 1) * 2);
-	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+	m_resources->GenerateRect(&ToRect, (chL[location] * 2), (chT[location] * 2), (chR[location] + 1) * 2, (chB[location] + 1) * 2);
+	SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 }
 
 void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
@@ -935,33 +935,33 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 	FromRect.y = (float)(base - height);
 	FromRect.w = (float)((lright + width + 2) - (lleft - width - 2));
 	FromRect.h = (float)(2 * height);
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 255);
-	SDL_RenderFillRect(m_resources.m_renderer, &FromRect);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_resources->m_renderer, &FromRect);
 
 	if (side == 0 || side == 1)
 	{
 		shape = 35;
-		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
-		m_resources.GenerateRect(&ToRect, lleft, ltop, lleft + width, lbottom);
-		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources->GenerateRect(&ToRect, lleft, ltop, lleft + width, lbottom);
+		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 		shape = 34;
-		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
-		m_resources.GenerateRect(&ToRect, lleft, rung, half + 1, rung + width);
-		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources->GenerateRect(&ToRect, lleft, rung, half + 1, rung + width);
+		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 	}
 	if (side == 0 || side == 2)
 	{
 		shape = 35;
-		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
-		m_resources.GenerateRect(&ToRect, lright - width, ltop, lright, lbottom);
-		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources->GenerateRect(&ToRect, lright - width, ltop, lright, lbottom);
+		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 		shape = 34;
-		m_resources.GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
-		m_resources.GenerateRect(&ToRect, half, rung, lright, rung + width);
-		SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
+		m_resources->GenerateRect(&ToRect, half, rung, lright, rung + width);
+		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
 	}
 
-	SDL_SetRenderDrawColor(m_resources.m_renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 }
 
 void UltimaDungeon::DrawDungeonBackGround()
@@ -971,7 +971,7 @@ void UltimaDungeon::DrawDungeonBackGround()
 	theRect.y = 0;
 	theRect.w = (float)600;
 	theRect.h = (float)512;
-	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonShapes, &theRect, NULL);
+	SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &theRect, NULL);
 }
 
 void UltimaDungeon::DrawDungeon()
@@ -989,42 +989,42 @@ void UltimaDungeon::DrawDungeon()
 		return;
 	}
 
-	float ratio = m_resources.m_blockSize / 32.0f;
+	float ratio = m_resources->m_blockSize / 32.0f;
 
 	theRect.x = 84.0f * ratio;
 	theRect.y = 128.0f * ratio;
 	theRect.w = 600.0f * ratio;
 	theRect.h = 512.0f * ratio;
 
-	m_resources.adjustRect(theRect);
-	SDL_RenderTexture(m_resources.m_renderer, m_texDungeonPort, NULL, &theRect);
+	m_resources->adjustRect(theRect);
+	SDL_RenderTexture(m_resources->m_renderer, m_texDungeonPort, NULL, &theRect);
 }
 
 bool UltimaDungeon::CommandForward()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(165);
-	m_misc.m_xs = m_HeadX[m_misc.m_heading] + m_misc.m_xpos & 0x0F;
-	if (m_misc.m_xs < 0)
+	m_scrollArea->UPrintMessage(165);
+	m_misc->m_xs = m_HeadX[m_misc->m_heading] + m_misc->m_xpos & 0x0F;
+	if (m_misc->m_xs < 0)
 	{
-		m_misc.m_xs += 16;
+		m_misc->m_xs += 16;
 	}
-	m_misc.m_ys = m_HeadY[m_misc.m_heading] + m_misc.m_ypos & 0x0F;
-	if (m_misc.m_ys < 0)
+	m_misc->m_ys = m_HeadY[m_misc->m_heading] + m_misc->m_ypos & 0x0F;
+	if (m_misc->m_ys < 0)
 	{
-		m_misc.m_ys += 16;
+		m_misc->m_ys += 16;
 	}
-	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
+	if (GetXYDng(m_misc->m_xs, m_misc->m_ys) == 0x80)
 	{
-		m_misc.NoGo();
+		m_misc->NoGo();
 		return false;
 	}
-	m_misc.m_xpos = m_misc.m_xs;
-	m_misc.m_ypos = m_misc.m_ys;
+	m_misc->m_xpos = m_misc->m_xs;
+	m_misc->m_ypos = m_misc->m_ys;
 	m_forceRedraw = true;
 
 	return false;
@@ -1032,29 +1032,29 @@ bool UltimaDungeon::CommandForward()
 
 bool UltimaDungeon::CommandRetreat()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(166);
-	m_misc.m_xs = m_HeadX[(m_misc.m_heading + 2) & 3] + m_misc.m_xpos & 0x0F;
-	if (m_misc.m_xs < 0)
+	m_scrollArea->UPrintMessage(166);
+	m_misc->m_xs = m_HeadX[(m_misc->m_heading + 2) & 3] + m_misc->m_xpos & 0x0F;
+	if (m_misc->m_xs < 0)
 	{
-		m_misc.m_xs += 16;
+		m_misc->m_xs += 16;
 	}
-	m_misc.m_ys = m_HeadY[(m_misc.m_heading + 2) & 3] + m_misc.m_ypos & 0x0F;
-	if (m_misc.m_ys < 0)
+	m_misc->m_ys = m_HeadY[(m_misc->m_heading + 2) & 3] + m_misc->m_ypos & 0x0F;
+	if (m_misc->m_ys < 0)
 	{
-		m_misc.m_ys += 16;
+		m_misc->m_ys += 16;
 	}
-	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) == 0x80)
+	if (GetXYDng(m_misc->m_xs, m_misc->m_ys) == 0x80)
 	{
-		m_misc.NoGo();
+		m_misc->NoGo();
 		return false;
 	}
-	m_misc.m_xpos = m_misc.m_xs;
-	m_misc.m_ypos = m_misc.m_ys;
+	m_misc->m_xpos = m_misc->m_xs;
+	m_misc->m_ypos = m_misc->m_ys;
 	m_forceRedraw = true;
 
 	return false;
@@ -1062,23 +1062,23 @@ bool UltimaDungeon::CommandRetreat()
 
 bool UltimaDungeon::CommandLeft()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(168);
-	m_misc.m_xs = m_misc.m_xpos;
-	m_misc.m_ys = m_misc.m_ypos;
-	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
+	m_scrollArea->UPrintMessage(168);
+	m_misc->m_xs = m_misc->m_xpos;
+	m_misc->m_ys = m_misc->m_ypos;
+	if (GetXYDng(m_misc->m_xs, m_misc->m_ys) >= 0xA0)
 	{
-		m_misc.NoGo();
+		m_misc->NoGo();
 		return false;
 	}
-	m_misc.m_heading--;
-	if (m_misc.m_heading < 0)
+	m_misc->m_heading--;
+	if (m_misc->m_heading < 0)
 	{
-		m_misc.m_heading += 4;
+		m_misc->m_heading += 4;
 	}
 	m_forceRedraw = true;
 
@@ -1087,23 +1087,23 @@ bool UltimaDungeon::CommandLeft()
 
 bool UltimaDungeon::CommandRight()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(167);
-	m_misc.m_xs = m_misc.m_xpos;
-	m_misc.m_ys = m_misc.m_ypos;
-	if (GetXYDng(m_misc.m_xs, m_misc.m_ys) >= 0xA0)
+	m_scrollArea->UPrintMessage(167);
+	m_misc->m_xs = m_misc->m_xpos;
+	m_misc->m_ys = m_misc->m_ypos;
+	if (GetXYDng(m_misc->m_xs, m_misc->m_ys) >= 0xA0)
 	{
-		m_misc.NoGo();
+		m_misc->NoGo();
 		return false;
 	}
-	m_misc.m_heading++;
-	if (m_misc.m_heading > 3)
+	m_misc->m_heading++;
+	if (m_misc->m_heading > 3)
 	{
-		m_misc.m_heading -= 4;
+		m_misc->m_heading -= 4;
 	}
 	m_forceRedraw = true;
 
@@ -1112,56 +1112,56 @@ bool UltimaDungeon::CommandRight()
 
 void UltimaDungeon::Forward()
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandForward, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandForward, this));
 }
 
 void UltimaDungeon::Retreat()
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandRetreat, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandRetreat, this));
 }
 
 
 void UltimaDungeon::Left()
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandLeft, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandLeft, this));
 }
 
 void UltimaDungeon::Right()
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandRight, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandRight, this));
 }
 
 bool UltimaDungeon::CommandNotDngCmd()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(172);
+	m_scrollArea->UPrintMessage(172);
 
 	return false;
 }
 
 void UltimaDungeon::NotDngCmd() // $8EF1
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandNotDngCmd, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandNotDngCmd, this));
 }
 
 bool UltimaDungeon::CommandKlimb() // $8EF1
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(170);
-	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x10) == 0)
+	m_scrollArea->UPrintMessage(170);
+	if ((GetXYDng(m_misc->m_xpos, m_misc->m_ypos) & 0x10) == 0)
 	{
 		InvalCmd();
 		return false;
@@ -1179,24 +1179,24 @@ bool UltimaDungeon::CommandKlimb() // $8EF1
 
 void UltimaDungeon::Klimb() // $8F37
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandKlimb, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandKlimb, this));
 }
 
 bool UltimaDungeon::CommandDescend() // $8F0C
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(169);
-	if (GetXYDng(m_misc.m_xpos, m_misc.m_ypos) > 127)
+	m_scrollArea->UPrintMessage(169);
+	if (GetXYDng(m_misc->m_xpos, m_misc->m_ypos) > 127)
 	{
 		InvalCmd();
 		return false;
 	}
-	if ((GetXYDng(m_misc.m_xpos, m_misc.m_ypos) & 0x20) == 0)
+	if ((GetXYDng(m_misc->m_xpos, m_misc->m_ypos) & 0x20) == 0)
 	{
 		InvalCmd();
 		return false;
@@ -1209,81 +1209,81 @@ bool UltimaDungeon::CommandDescend() // $8F0C
 
 void UltimaDungeon::Descend() // $8F0C
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandDescend, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandDescend, this));
 }
 
 void UltimaDungeon::InvalCmd() // $8ED8
 {
-	m_scrollArea.UPrintMessage(171);
+	m_scrollArea->UPrintMessage(171);
 }
 
 bool UltimaDungeon::CommandPeerGem()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_scrollArea.UPrintMessage(75);
-	m_misc.m_inputType = InputType::Transact;
-	m_graphics.setFade(false);
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::PeerGemCallback, this));
-	m_misc.AddProcessEvent();
+	m_scrollArea->UPrintMessage(75);
+	m_misc->m_inputType = InputType::Transact;
+	m_graphics->setFade(false);
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::PeerGemCallback, this));
+	m_misc->AddProcessEvent();
 	return false;
 }
 
 void UltimaDungeon::PeerGem()
 {
-	m_misc.AddFinishTurn();
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::CommandPeerGem, this));
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandPeerGem, this));
 }
 
 bool UltimaDungeon::PeerGemCallback()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
 	short rosnum;
 
-	if (m_misc.m_input_num > 3 || m_misc.m_input_num < 0 || m_misc.m_Party[6 + m_misc.m_input_num] == 0)
+	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0 || m_misc->m_Party[6 + m_misc->m_input_num] == 0)
 	{
-		m_scrollArea.UPrintWin("\n\n");
+		m_scrollArea->UPrintWin("\n\n");
 		return false;
 	}
-	rosnum = m_misc.m_Party[6 + m_misc.m_input_num];
+	rosnum = m_misc->m_Party[6 + m_misc->m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
-	/*if (m_misc.m_Player[rosnum][37] < 1)
+	/*if (m_misc->m_Player[rosnum][37] < 1)
 	{
-		m_scrollArea.UPrintWin(strRosNum);
-		m_scrollArea.UPrintMessage(67);
+		m_scrollArea->UPrintWin(strRosNum);
+		m_scrollArea->UPrintMessage(67);
 	}
 	else*/
 	{
-		m_scrollArea.blockPrompt(true);
-		m_scrollArea.UPrintWin(strRosNum);
-		m_misc.m_Player[rosnum][37]--;
-		m_scrollArea.forceRedraw();
-		m_graphics.m_queuedMode = U3GraphicsMode::MiniMapDungeon;
+		m_scrollArea->blockPrompt(true);
+		m_scrollArea->UPrintWin(strRosNum);
+		m_misc->m_Player[rosnum][37]--;
+		m_scrollArea->forceRedraw();
+		m_graphics->m_queuedMode = U3GraphicsMode::MiniMapDungeon;
 	}
 	return false;
 }
 
 void UltimaDungeon::DrawSecretMessage()
 {
-	if (m_dungeonLevel == 6 && m_misc.m_xpos == 1 && m_misc.m_ypos == 1 && m_misc.m_heading == 3)
+	if (m_dungeonLevel == 6 && m_misc->m_xpos == 1 && m_misc->m_ypos == 1 && m_misc->m_heading == 3)
 	{
-		ShowSecret((m_misc.m_map_id - 12) * 3 + 0);
+		ShowSecret((m_misc->m_map_id - 12) * 3 + 0);
 	}
-	if (m_dungeonLevel == 6 && m_misc.m_xpos == 1 && m_misc.m_ypos == 15 && m_misc.m_heading == 2)
+	if (m_dungeonLevel == 6 && m_misc->m_xpos == 1 && m_misc->m_ypos == 15 && m_misc->m_heading == 2)
 	{
-		ShowSecret((m_misc.m_map_id - 12) * 3 + 1);
+		ShowSecret((m_misc->m_map_id - 12) * 3 + 1);
 	}
-	if (m_dungeonLevel == 7 && m_misc.m_xpos == 15 && m_misc.m_ypos == 15 && m_misc.m_heading == 1)
+	if (m_dungeonLevel == 7 && m_misc->m_xpos == 15 && m_misc->m_ypos == 15 && m_misc->m_heading == 1)
 	{
-		ShowSecret((m_misc.m_map_id - 12) * 3 + 2);
+		ShowSecret((m_misc->m_map_id - 12) * 3 + 2);
 	}
 }
 
@@ -1301,7 +1301,7 @@ bool UltimaDungeon::ShowSecret(short which)
 			frameRect.h = size.y;
 			frameRect.x = 300 - (frameRect.w / 2);
 			frameRect.y = 282 - (frameRect.h / 2);
-			SDL_RenderTexture(m_resources.m_renderer, tex, NULL, &frameRect);
+			SDL_RenderTexture(m_resources->m_renderer, tex, NULL, &frameRect);
 		}
 	}
 	return true;
@@ -1312,8 +1312,8 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
 
 	SDL_Color sdl_text_color1 = { 255, 255, 255, 255 };
-	SDL_Surface* surf = TTF_RenderText_Solid(m_resources.m_font, dispString.c_str(), dispString.size(), sdl_text_color1);
-	m_texSecrets[texId] = SDL_CreateTexture(m_resources.m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, surf->w, surf->h);
+	SDL_Surface* surf = TTF_RenderText_Solid(m_resources->m_font, dispString.c_str(), dispString.size(), sdl_text_color1);
+	m_texSecrets[texId] = SDL_CreateTexture(m_resources->m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, surf->w, surf->h);
 	SDL_SetTextureScaleMode(m_texSecrets[texId], SDL_SCALEMODE_NEAREST);
 	std::vector<unsigned char> canvas;
 	canvas.resize(surf->w * surf->h * 4);
@@ -1372,7 +1372,7 @@ void UltimaDungeon::createTextureSecrets()
 {
 	for (int index = 0; index < 21; ++index)
 	{
-		std::string dispString = m_resources.m_plistMap["Messages"][index];
+		std::string dispString = m_resources->m_plistMap["Messages"][index];
 		dispString.erase(std::remove(dispString.begin(), dispString.end(), '\n'), dispString.cend());
 		createOutlineText(dispString, index);
 	}
@@ -1380,11 +1380,11 @@ void UltimaDungeon::createTextureSecrets()
 
 void UltimaDungeon::dungeonmech()
 {
-	m_misc.m_wx = 0x18;
-	m_misc.m_wy = 0x17;
-	m_misc.m_xs = m_misc.m_xpos;
-	m_misc.m_ys = m_misc.m_ypos;
-	short value = GetXYDng(m_misc.m_xs, m_misc.m_ys);
+	m_misc->m_wx = 0x18;
+	m_misc->m_wy = 0x17;
+	m_misc->m_xs = m_misc->m_xpos;
+	m_misc->m_ys = m_misc->m_ypos;
+	short value = GetXYDng(m_misc->m_xs, m_misc->m_ys);
 	if (value != 0)
 	{
 		dngnotcombat(value);
@@ -1397,54 +1397,54 @@ void UltimaDungeon::dngnotcombat(short value)
 	switch (value)
 	{
 	case 1: // $9076 time lord
-		m_resources.m_overrideImage = 8;
-		m_scrollArea.UPrintMessage(151);
-		m_misc.m_inputType = InputType::AnyKey;
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::TimeLordCallback, this));
+		m_resources->m_overrideImage = 8;
+		m_scrollArea->UPrintMessage(151);
+		m_misc->m_inputType = InputType::AnyKey;
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::TimeLordCallback, this));
 		break;
 	case 2: // $9174 fountain
-		m_resources.m_overrideImage = 5;
+		m_resources->m_overrideImage = 5;
 		foundFountain();
 		break;
 	case 3: // $92C1 strange wind
-		m_scrollArea.UPrintMessage(158);
-		m_misc.m_gTorch = 0;
+		m_scrollArea->UPrintMessage(158);
+		m_misc->m_gTorch = 0;
 		break;
 	case 4: // $9135 trap
-		m_spellCombat.PutXYDng(0, m_misc.m_xs, m_misc.m_ys);
-		m_scrollArea.UPrintMessage(159);
-		if (m_misc.StealDisarmFail(m_misc.m_Party[6]))
+		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
+		m_scrollArea->UPrintMessage(159);
+		if (m_misc->StealDisarmFail(m_misc->m_Party[6]))
 		{
-			m_scrollArea.UPrintMessage(160);
+			m_scrollArea->UPrintMessage(160);
 			return;
 		}
-		m_misc.BombTrap();
+		m_misc->BombTrap();
 		break;
 	case 5: // $931C brand
-		m_resources.m_overrideImage = 6;
-		m_misc.m_wx = 0x18;
-		m_misc.m_wy = 0x17;
-		m_scrollArea.UPrintMessage(161);
-		m_misc.m_inputType = InputType::Transact;
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback, this));
-		m_misc.AddProcessEvent();
+		m_resources->m_overrideImage = 6;
+		m_misc->m_wx = 0x18;
+		m_misc->m_wy = 0x17;
+		m_scrollArea->UPrintMessage(161);
+		m_misc->m_inputType = InputType::Transact;
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback, this));
+		m_misc->AddProcessEvent();
 		break;
 	case 6: // $92DA gremlins
 	{
-		m_spellCombat.PutXYDng(0, m_misc.m_xs, m_misc.m_ys);
-		int rngNum = m_utilities.getRandom(0, m_misc.m_Party[1] - 1);
-		if (m_misc.CheckAlive(rngNum))
+		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
+		int rngNum = m_utilities->getRandom(0, m_misc->m_Party[1] - 1);
+		if (m_misc->CheckAlive(rngNum))
 		{
-			short rosNum = m_misc.m_Party[6 + rngNum];
-			if (m_misc.m_Player[rosNum][32] < 1)
+			short rosNum = m_misc->m_Party[6 + rngNum];
+			if (m_misc->m_Player[rosNum][32] < 1)
 			{
-				m_misc.m_Player[rosNum][32] = 0;
+				m_misc->m_Player[rosNum][32] = 0;
 			}
 			else
 			{
-				m_misc.m_Player[rosNum][32]--;
+				m_misc->m_Player[rosNum][32]--;
 			}
-			m_scrollArea.UPrintMessage(163);
+			m_scrollArea->UPrintMessage(163);
 		}
 		else
 		{
@@ -1453,9 +1453,9 @@ void UltimaDungeon::dngnotcombat(short value)
 	}
 		break;
 	case 8: // $9053 writing
-		m_scrollArea.UPrintMessage(164);
-		m_misc.Speak(m_dungeonLevel + 1, 23);
-		m_scrollArea.UPrintWin("\n");
+		m_scrollArea->UPrintMessage(164);
+		m_misc->Speak(m_dungeonLevel + 1, 23);
+		m_scrollArea->UPrintWin("\n");
 		break;
 	default:
 		break;
@@ -1464,42 +1464,42 @@ void UltimaDungeon::dngnotcombat(short value)
 
 bool UltimaDungeon::TimeLordCallback()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_resources.m_overrideImage = -1;
-	m_scrollArea.UPrintWin("\n");
+	m_resources->m_overrideImage = -1;
+	m_scrollArea->UPrintWin("\n");
 
 	return false;
 }
 
 bool UltimaDungeon::foundFountain()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_misc.m_wx = 0x18;
-	m_misc.m_wy = 0x17;
-	m_scrollArea.UPrintMessage(152);
-	m_misc.m_inputType = InputType::Transact;
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::FountainCallback, this));
-	m_misc.AddProcessEvent();
+	m_misc->m_wx = 0x18;
+	m_misc->m_wy = 0x17;
+	m_scrollArea->UPrintMessage(152);
+	m_misc->m_inputType = InputType::Transact;
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::FountainCallback, this));
+	m_misc->AddProcessEvent();
 
 	return false;
 }
 
 bool UltimaDungeon::FountainCallback()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	short chNum = m_misc.m_input_num;
+	short chNum = m_misc->m_input_num;
 	std::string dispString;
 	if (chNum >= 0)
 	{
@@ -1510,65 +1510,65 @@ bool UltimaDungeon::FountainCallback()
 		dispString += '\n';
 	}
 
-	m_scrollArea.UPrintWin(dispString);
+	m_scrollArea->UPrintWin(dispString);
 	if (chNum < 0 || chNum > 3)
 	{
-		m_resources.m_overrideImage = -1;
+		m_resources->m_overrideImage = -1;
 		return false;
 	}
-	if (m_misc.m_Party[6 + chNum] == 0)
+	if (m_misc->m_Party[6 + chNum] == 0)
 	{
-		m_resources.m_overrideImage = -1;
-		m_scrollArea.UPrintMessage(41);
+		m_resources->m_overrideImage = -1;
+		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
-	if (m_misc.CheckAlive(chNum) == false)
+	if (m_misc->CheckAlive(chNum) == false)
 	{
-		m_resources.m_overrideImage = -1;
-		m_scrollArea.UPrintMessage(126);
+		m_resources->m_overrideImage = -1;
+		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
-	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
-	switch (m_misc.m_xpos & 0x03)
+	m_misc->m_rosNum = m_misc->m_Party[6 + chNum];
+	switch (m_misc->m_xpos & 0x03)
 	{
 	case 0: // Poison fountain
-		m_scrollArea.UPrintMessage(154);
-		m_misc.m_Player[m_misc.m_rosNum][17] = 'P';
-		m_misc.InverseCharDetails(chNum, true);
-		m_resources.m_inverses.elapsedTileTime = 0;
-		m_resources.setInversed(true);
-		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
-		m_misc.AddInverse();
+		m_scrollArea->UPrintMessage(154);
+		m_misc->m_Player[m_misc->m_rosNum][17] = 'P';
+		m_misc->InverseCharDetails(chNum, true);
+		m_resources->m_inverses.elapsedTileTime = 0;
+		m_resources->setInversed(true);
+		m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc->AddInverse();
 		break;
 	case 1: // Heal fountain
-		m_misc.m_Player[m_misc.m_rosNum][26] = m_misc.m_Player[m_misc.m_rosNum][28];
-		m_misc.m_Player[m_misc.m_rosNum][27] = m_misc.m_Player[m_misc.m_rosNum][29];
-		m_scrollArea.UPrintMessage(155);
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc->m_Player[m_misc->m_rosNum][26] = m_misc->m_Player[m_misc->m_rosNum][28];
+		m_misc->m_Player[m_misc->m_rosNum][27] = m_misc->m_Player[m_misc->m_rosNum][29];
+		m_scrollArea->UPrintMessage(155);
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
 		break;
 	case 2: // Damage fountain
-		m_scrollArea.UPrintMessage(156);
-		m_misc.HPSubtract(m_misc.m_rosNum, 25);
-		m_misc.InverseCharDetails(chNum, true);
-		m_resources.m_inverses.tiles = true;
-		m_resources.m_inverses.elapsedTileTime = 0;
-		m_resources.setInversed(true);
-		m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
-		m_misc.AddInverse();
+		m_scrollArea->UPrintMessage(156);
+		m_misc->HPSubtract(m_misc->m_rosNum, 25);
+		m_misc->InverseCharDetails(chNum, true);
+		m_resources->m_inverses.tiles = true;
+		m_resources->m_inverses.elapsedTileTime = 0;
+		m_resources->setInversed(true);
+		m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc->AddInverse();
 		break;
 	case 3:
 		// Cure poison fountain
-		m_scrollArea.UPrintMessage(157);
-		if (m_misc.m_Player[m_misc.m_rosNum][17] == 'P')
+		m_scrollArea->UPrintMessage(157);
+		if (m_misc->m_Player[m_misc->m_rosNum][17] == 'P')
 		{
-			m_misc.m_Player[m_misc.m_rosNum][17] = 'G';
+			m_misc->m_Player[m_misc->m_rosNum][17] = 'G';
 		}
-		m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
 		break;
 	default:
-		m_resources.m_overrideImage = -1;
+		m_resources->m_overrideImage = -1;
 		break;
 	}
 	return false;
@@ -1576,13 +1576,13 @@ bool UltimaDungeon::FountainCallback()
 
 bool UltimaDungeon::MarkCallback()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
 	unsigned char bits[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
-	short chNum = m_misc.m_input_num;
+	short chNum = m_misc->m_input_num;
 	std::string dispString;
 	if (chNum >= 0)
 	{
@@ -1593,44 +1593,44 @@ bool UltimaDungeon::MarkCallback()
 		dispString += '\n';
 	}
 	
-	m_scrollArea.UPrintWin(dispString);
-	m_resources.m_overrideImage = -1;
+	m_scrollArea->UPrintWin(dispString);
+	m_resources->m_overrideImage = -1;
 	if (chNum < 0 || chNum > 3)
 	{
 		return false;
 	}
-	if (m_misc.m_Party[6 + chNum] == 0)
+	if (m_misc->m_Party[6 + chNum] == 0)
 	{
-		m_scrollArea.UPrintMessage(41);
+		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
-	if (m_misc.CheckAlive(chNum) == false)
+	if (m_misc->CheckAlive(chNum) == false)
 	{
-		m_scrollArea.UPrintMessage(126);
+		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
-	m_misc.m_rosNum = m_misc.m_Party[6 + chNum];
-	m_misc.m_Player[chNum][14] = m_misc.m_Player[chNum][14] | bits[(m_misc.m_xpos & 3) + 4];
+	m_misc->m_rosNum = m_misc->m_Party[6 + chNum];
+	m_misc->m_Player[chNum][14] = m_misc->m_Player[chNum][14] | bits[(m_misc->m_xpos & 3) + 4];
 
-	m_misc.InverseCharDetails(chNum, true);
-	m_resources.m_inverses.elapsedTileTime = 0;
-	m_resources.setInversed(true);
-	m_resources.m_inverses.inverseTileTime = m_misc.damage_time;
-	m_misc.m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback2, this));
-	m_misc.AddInverse();
+	m_misc->InverseCharDetails(chNum, true);
+	m_resources->m_inverses.elapsedTileTime = 0;
+	m_resources->setInversed(true);
+	m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback2, this));
+	m_misc->AddInverse();
 
 	return false;
 }
 
 bool UltimaDungeon::MarkCallback2()
 {
-	if (m_misc.m_callbackStack.size() > 0)
+	if (m_misc->m_callbackStack.size() > 0)
 	{
-		m_misc.m_callbackStack.pop();
+		m_misc->m_callbackStack.pop();
 	}
 
-	m_misc.HPSubtract(m_misc.m_rosNum, 50);
-	m_scrollArea.UPrintMessage(162);
+	m_misc->HPSubtract(m_misc->m_rosNum, 50);
+	m_scrollArea->UPrintMessage(162);
 
 	return false;
 }

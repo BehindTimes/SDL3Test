@@ -27,13 +27,13 @@ GameMode oldMode = GameMode::Unknown;
 Uint64 count = 0;
 int fps = 0;
 
-U3Resources m_resources;
-U3Misc m_misc;
-U3Graphics m_graphics;
-U3ScrollArea m_scrollArea;
-U3Utilities m_utilities;
-UltimaSpellCombat m_spellCombat;
-UltimaDungeon m_dungeon;
+std::unique_ptr<U3Resources> m_resources;
+std::unique_ptr<U3Misc> m_misc;
+std::unique_ptr<U3Graphics> m_graphics;
+std::unique_ptr<U3ScrollArea> m_scrollArea;
+std::unique_ptr<U3Utilities> m_utilities;
+std::unique_ptr<UltimaSpellCombat> m_spellCombat;
+std::unique_ptr<UltimaDungeon> m_dungeon;
 
 void DoSplashScreen();
 void MainLoop();
@@ -54,6 +54,14 @@ void createCharacterChooseSlot(int button);
 
 int main(int argc, char* argv[])
 {
+    m_resources = std::make_unique<U3Resources>();
+    m_misc = std::make_unique<U3Misc>();
+    m_graphics = std::make_unique<U3Graphics>();
+    m_scrollArea = std::make_unique<U3ScrollArea>();
+    m_utilities = std::make_unique<U3Utilities>();
+    m_spellCombat = std::make_unique<UltimaSpellCombat>();
+    m_dungeon = std::make_unique<UltimaDungeon>();
+
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
@@ -68,7 +76,7 @@ int main(int argc, char* argv[])
 
     SDL_SetRenderVSync(renderer, 1);
 
-    bool valid = m_resources.init(renderer);
+    bool valid = m_resources->init(renderer);
 
     if (valid)
     {
@@ -80,6 +88,14 @@ int main(int argc, char* argv[])
         MainLoop();
     }
 
+    m_dungeon.reset();
+    m_spellCombat.reset();
+    m_utilities.reset();
+    m_scrollArea.reset();
+    m_graphics.reset();
+    m_misc.reset();
+    m_resources.reset();
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -90,9 +106,9 @@ int main(int argc, char* argv[])
 
 void DoSplashScreen()
 {
-    m_misc.GetMiscStuff(false);
-    m_misc.GetRoster();
-    m_misc.GetParty();
+    m_misc->GetMiscStuff(false);
+    m_misc->GetRoster();
+    m_misc->GetParty();
    /* OpenChannel();
     SetUpFont();
     DisableMenus();
@@ -112,22 +128,22 @@ void DoSplashScreen()
 
 void CreateButtonCallbacks()
 {
-    m_resources.SetButtonCallback(3, createCharacterChooseSlot);
-    m_resources.SetButtonCallback(5, formParty);
-    m_resources.SetButtonCallback(6, disperseParty);
-    m_resources.SetButtonCallback(7, backToMenu);
+    m_resources->SetButtonCallback(3, createCharacterChooseSlot);
+    m_resources->SetButtonCallback(5, formParty);
+    m_resources->SetButtonCallback(6, disperseParty);
+    m_resources->SetButtonCallback(7, backToMenu);
 }
 
 void MainLoop()
 {
     MenuBarInit();
-    m_graphics.CreateIntroData();
-    m_graphics.CreateMenuData();
+    m_graphics->CreateIntroData();
+    m_graphics->CreateMenuData();
     CreateButtonCallbacks();
     Intro();
 
-    m_misc.m_zp[0xCF] = 0;
-    m_misc.m_zp[0x10] = 0;
+    m_misc->m_zp[0xCF] = 0;
+    m_misc->m_zp[0x10] = 0;
     
     while (newMode != GameMode::Unknown)
     {
@@ -138,15 +154,15 @@ void MainLoop()
             case GameMode::Demo:
             {
                 Uint64 curTick = SDL_GetTicks();
-                m_resources.setTickCount(curTick, false);
+                m_resources->setTickCount(curTick, false);
             }
             break;
             case GameMode::Organize:
-                m_graphics.CreateOrganizeData();
+                m_graphics->CreateOrganizeData();
                 break;
             case GameMode::Game:
             {
-                m_misc.GetSosaria();
+                m_misc->GetSosaria();
             }
             break;
             default:
@@ -213,118 +229,118 @@ void disperseParty([[maybe_unused]] int button)
     char byte;
     for (byte = 1; byte < 21; byte++)
     {
-        m_misc.m_Player[byte][16] = 0;
+        m_misc->m_Player[byte][16] = 0;
     }
-    if (m_misc.m_Party[6] == 0)
+    if (m_misc->m_Party[6] == 0)
     {
         altMessage = true;
     }
     for (byte = 0; byte < 16; byte++)
     {
-        m_misc.m_Party[byte] = 0;
+        m_misc->m_Party[byte] = 0;
     }
 
-    m_misc.m_partyFormed = false;
+    m_misc->m_partyFormed = false;
 
-    m_resources.SetButtonVisibility(5, true);
-    m_resources.SetButtonVisibility(6, false);
+    m_resources->SetButtonVisibility(5, true);
+    m_resources->SetButtonVisibility(6, false);
 
     if (altMessage)
     {
-        m_graphics.m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
+        m_graphics->m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
     }
     else
     {
-        m_graphics.m_obsCurMode = OrganizeBottomScreen::Dispersed;
+        m_graphics->m_obsCurMode = OrganizeBottomScreen::Dispersed;
     }
 }
 
 void createCharacterChooseSlot([[maybe_unused]] int button)
 {
-    m_graphics.m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
-    m_resources.SetButtonCallback(7, backToOrganize);
+    m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
+    m_resources->SetButtonCallback(7, backToOrganize);
 }
 
 void formParty([[maybe_unused]] int button)
 {
-    if (m_misc.m_Party[6] != 0)
+    if (m_misc->m_Party[6] != 0)
     {
-        m_graphics.m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
+        m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
     }
     else
     {
-        m_graphics.m_obsCurMode = OrganizeBottomScreen::FormParty;
-        m_resources.SetButtonVisibility(3, false);
-        m_resources.SetButtonVisibility(4, false);
-        m_resources.SetButtonVisibility(5, false);
-        m_resources.SetButtonVisibility(6, false);
+        m_graphics->m_obsCurMode = OrganizeBottomScreen::FormParty;
+        m_resources->SetButtonVisibility(3, false);
+        m_resources->SetButtonVisibility(4, false);
+        m_resources->SetButtonVisibility(5, false);
+        m_resources->SetButtonVisibility(6, false);
 
-        m_resources.SetButtonCallback(5, partyFormed);
-        m_resources.SetButtonCallback(7, backToOrganize);
+        m_resources->SetButtonCallback(5, partyFormed);
+        m_resources->SetButtonCallback(7, backToOrganize);
     }
 }
 
 void partyFormed([[maybe_unused]] int button)
 {
-    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
-    m_misc.m_partyFormed = true;
+    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+    m_misc->m_partyFormed = true;
 
-    memset(m_misc.m_Party, 0, sizeof(unsigned char) * 64);
+    memset(m_misc->m_Party, 0, sizeof(unsigned char) * 64);
 
-    for (size_t index = 0; index < m_resources.m_selectedCharacters.size(); ++index)
+    for (size_t index = 0; index < m_resources->m_selectedCharacters.size(); ++index)
     {
-        int curChar = m_resources.m_selectedCharacters[index] + 1;
-        m_misc.m_Player[curChar][16] = 255;
-        m_misc.m_Party[index + 6] = curChar;
+        int curChar = m_resources->m_selectedCharacters[index] + 1;
+        m_misc->m_Player[curChar][16] = 255;
+        m_misc->m_Party[index + 6] = curChar;
     }
-    m_misc.m_Party[1] = (unsigned char)m_resources.m_selectedCharacters.size();
+    m_misc->m_Party[1] = (unsigned char)m_resources->m_selectedCharacters.size();
 
-    m_misc.m_Party[2] = 0;
-    m_misc.m_Party[0] = 0x7E;
-    m_misc.m_Party[5] = 255;    // WTF is this?
-    m_misc.m_xpos = 42;
-    m_misc.m_ypos = 20;
-    m_misc.m_Party[3] = m_misc.m_xpos;
-    m_misc.m_Party[4] = m_misc.m_ypos;
+    m_misc->m_Party[2] = 0;
+    m_misc->m_Party[0] = 0x7E;
+    m_misc->m_Party[5] = 255;    // WTF is this?
+    m_misc->m_xpos = 42;
+    m_misc->m_ypos = 20;
+    m_misc->m_Party[3] = m_misc->m_xpos;
+    m_misc->m_Party[4] = m_misc->m_ypos;
     //PutParty();
     //PutRoster();
-    m_misc.ResetSosaria();
+    m_misc->ResetSosaria();
     //GetMiscStuff(0);
     //PutMiscStuff();
 
-    m_resources.m_selectedFormRect = -1;
-    m_resources.SetButtonVisibility(3, true);
-    m_resources.SetButtonVisibility(4, true);
-    m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
-    m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
-    m_resources.SetButtonVisibility(7, true);
+    m_resources->m_selectedFormRect = -1;
+    m_resources->SetButtonVisibility(3, true);
+    m_resources->SetButtonVisibility(4, true);
+    m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
+    m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
+    m_resources->SetButtonVisibility(7, true);
 
-    m_resources.SetButtonCallback(5, formParty);
-    m_resources.SetButtonCallback(7, backToMenu);
-    m_resources.m_selectedCharacters.clear();
+    m_resources->SetButtonCallback(5, formParty);
+    m_resources->SetButtonCallback(7, backToMenu);
+    m_resources->m_selectedCharacters.clear();
 
-    m_graphics.m_obsCurMode = OrganizeBottomScreen::PartyFormed;
+    m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormed;
 }
 
 void backToOrganize([[maybe_unused]] int button)
 {
-    m_resources.m_selectedCharacters.clear();
-    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
-    m_resources.m_selectedFormRect = -1;
+    m_resources->m_selectedCharacters.clear();
+    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+    m_resources->m_selectedFormRect = -1;
 
-    m_resources.SetButtonVisibility(3, true);
-    m_resources.SetButtonVisibility(4, true);
-    m_resources.SetButtonVisibility(5, !m_misc.m_partyFormed);
-    m_resources.SetButtonVisibility(6, m_misc.m_partyFormed);
-    m_resources.SetButtonVisibility(7, true);
+    m_resources->SetButtonVisibility(3, true);
+    m_resources->SetButtonVisibility(4, true);
+    m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
+    m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
+    m_resources->SetButtonVisibility(7, true);
 
-    m_resources.SetButtonCallback(5, formParty);
-    m_resources.SetButtonCallback(7, backToMenu);
+    m_resources->SetButtonCallback(5, formParty);
+    m_resources->SetButtonCallback(7, backToMenu);
 }
 
 void backToMenu([[maybe_unused]] int button)
 {
-    m_resources.CleanupPartyNames();
+    m_resources->CleanupPartyNames();
     changeMode = true;
     newMode = GameMode::MainMenu;
 }
@@ -338,10 +354,10 @@ void MainMenu()
     bool updateMouse = false;
     changeMode = false;
 
-    m_resources.SetButtonCallback(0, returnToView);
-    m_resources.SetButtonCallback(1, organizeParty);
-    m_resources.SetButtonCallback(2, journeyOnward);
-    m_resources.SetButtonCallback(8, changeOptions);
+    m_resources->SetButtonCallback(0, returnToView);
+    m_resources->SetButtonCallback(1, organizeParty);
+    m_resources->SetButtonCallback(2, journeyOnward);
+    m_resources->SetButtonCallback(8, changeOptions);
 
     while (1)
     {
@@ -367,12 +383,12 @@ void MainMenu()
                     SDL_SetWindowFullscreen(window, isFullScreen);
                     SDL_SyncWindow(window);
 
-                    m_resources.CalculateBlockSize();
+                    m_resources->CalculateBlockSize();
                 }
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources.changeMode(mode);
+                    m_resources->changeMode(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -408,12 +424,12 @@ void MainMenu()
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
-        m_graphics.DrawFrame(3);
+        m_graphics->DrawFrame(3);
         if (updateMouse)
         {
-            m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+            m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
         }
-        m_graphics.DrawMenu();
+        m_graphics->DrawMenu();
         SDL_RenderPresent(renderer);
 
         if (changeMode)
@@ -454,12 +470,12 @@ void Demo()
                     SDL_SetWindowFullscreen(window, isFullScreen);
                     SDL_SyncWindow(window);
 
-                    m_resources.CalculateBlockSize();
+                    m_resources->CalculateBlockSize();
                 }
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources.changeMode(mode);
+                    m_resources->changeMode(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -488,9 +504,9 @@ void Demo()
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
-        m_graphics.DrawFrame(2);
-        m_graphics.DrawDemoScreen(curTick);
-        m_resources.DemoUpdate(curTick);
+        m_graphics->DrawFrame(2);
+        m_graphics->DrawDemoScreen(curTick);
+        m_resources->DemoUpdate(curTick);
         SDL_RenderPresent(renderer);
     }
 }
@@ -503,7 +519,7 @@ void Intro()
 
     /*isFullScreen = !isFullScreen;
     SDL_SetWindowFullscreen(window, isFullScreen);
-    m_resources.CalculateBlockSize();*/
+    m_resources->CalculateBlockSize();*/
 
     while (1)
     {
@@ -528,12 +544,12 @@ void Intro()
 					SDL_SetWindowFullscreen(window, isFullScreen);
 					SDL_SyncWindow(window);
 
-					m_resources.CalculateBlockSize();
+					m_resources->CalculateBlockSize();
 				}
 				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
-					m_resources.changeMode(mode);
+					m_resources->changeMode(mode);
 				}
 			}
 			else if (event.key.key == SDLK_ESCAPE)
@@ -561,10 +577,10 @@ void Intro()
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
-        m_graphics.DrawFrame(3);
-        m_graphics.FadeOnExodusUltima(curTick);
-        m_graphics.WriteLordBritish(curTick);
-        m_graphics.FightScene(curTick);
+        m_graphics->DrawFrame(3);
+        m_graphics->FadeOnExodusUltima(curTick);
+        m_graphics->WriteLordBritish(curTick);
+        m_graphics->FightScene(curTick);
         SDL_RenderPresent(renderer);
     }
 }
@@ -603,12 +619,12 @@ void Organize()
                     SDL_SetWindowFullscreen(window, isFullScreen);
                     SDL_SyncWindow(window);
 
-                    m_resources.CalculateBlockSize();
+                    m_resources->CalculateBlockSize();
                 }
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources.changeMode(mode);
+                    m_resources->changeMode(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -617,13 +633,13 @@ void Organize()
             }
             else
             {
-                switch (m_graphics.m_obsCurMode)
+                switch (m_graphics->m_obsCurMode)
                 {
                 case OrganizeBottomScreen::PartyFormed:
                 case OrganizeBottomScreen::PartyFormedInUse:
                 case OrganizeBottomScreen::DispersedNoOne:
                 case OrganizeBottomScreen::Dispersed:
-                    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+                    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
                     break;
                 default:
                     break;
@@ -657,15 +673,18 @@ void Organize()
         SDL_RenderClear(renderer);
         if (updateMouse)
         {
-            switch (m_graphics.m_obsCurMode)
+            switch (m_graphics->m_obsCurMode)
             {
             case OrganizeBottomScreen::CreateCharacterChooseSlot:
-                m_resources.UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
-                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                break;
+            case OrganizeBottomScreen::CreateCharacter:
+                m_resources->UpdateCreateCharacter(event.motion.x, event.motion.y, mouseState);
                 break;
             case OrganizeBottomScreen::FormParty:
-                m_resources.UpdateFormParty(event.motion.x, event.motion.y, mouseState);
-                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateFormParty(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
                 break;
             case OrganizeBottomScreen::PartyFormed:
             case OrganizeBottomScreen::PartyFormedInUse:
@@ -673,16 +692,16 @@ void Organize()
             case OrganizeBottomScreen::Dispersed:
                 if (mouseState == 2)
                 {
-                    m_graphics.m_obsCurMode = OrganizeBottomScreen::None;
+                    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
                 }
                 break;
             default:
-                m_resources.UpdateButtons(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
                 break;
             }
         }
-        m_graphics.DrawFrame(3);
-        m_graphics.DrawOrganizeMenu();
+        m_graphics->DrawFrame(3);
+        m_graphics->DrawOrganizeMenu();
         SDL_RenderPresent(renderer);
 
         if (changeMode)
@@ -694,7 +713,7 @@ void Organize()
 
 void JourneyOnward()
 {
-    bool journey = m_resources.CheckJourneyOnward();
+    bool journey = m_resources->CheckJourneyOnward();
     bool quit = false;
     bool gInterrupt = false;
     bool updateMouse = false;
@@ -711,7 +730,7 @@ void JourneyOnward()
     
     if (!journey)
     {
-        m_resources.CreateAlertMessage(7);
+        m_resources->CreateAlertMessage(7);
     }
 
     while (1)
@@ -738,12 +757,12 @@ void JourneyOnward()
                     SDL_SetWindowFullscreen(window, isFullScreen);
                     SDL_SyncWindow(window);
 
-                    m_resources.CalculateBlockSize();
+                    m_resources->CalculateBlockSize();
                 }
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources.changeMode(mode);
+                    m_resources->changeMode(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -765,17 +784,17 @@ void JourneyOnward()
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
-        m_graphics.DrawFrame(3);
-        m_resources.drawExodus(255);
-        m_resources.CenterMessage(1, 15);
+        m_graphics->DrawFrame(3);
+        m_resources->drawExodus(255);
+        m_resources->CenterMessage(1, 15);
 
         if (journey)
         {
         }
         else
         {
-            m_resources.CenterMessage(2, 21);
-            bool alertValid = m_resources.HandleAlert(event);
+            m_resources->CenterMessage(2, 21);
+            bool alertValid = m_resources->HandleAlert(event);
             if (!alertValid)
             {
                 gInterrupt = true;
@@ -802,22 +821,22 @@ void JourneyOnward()
 
 void Game()
 {
-    /*m_misc.m_Player[1][34] = 0;
-    m_misc.m_Player[2][34] = 0;
-    m_misc.m_Player[3][34] = 0;
-    m_misc.m_Player[4][34] = 0;
-    m_misc.m_Player[1][33] = 0;
-    m_misc.m_Player[2][33] = 0;
-    m_misc.m_Player[3][33] = 0;
-    m_misc.m_Player[4][33] = 0;
-    m_misc.m_Player[1][32] = 0;
-    m_misc.m_Player[2][32] = 0;
-    m_misc.m_Player[3][32] = 0;
-    m_misc.m_Player[4][32] = 0;*/
-    //m_misc.m_xpos = 10;
-    //m_misc.m_ypos = 10;
-    m_misc.m_Player[1][15] = 50;
-    m_misc.m_Player[1][37] = 50;
+    m_misc->m_Player[1][34] = 0;
+    m_misc->m_Player[2][34] = 0;
+    m_misc->m_Player[3][34] = 0;
+    m_misc->m_Player[4][34] = 0;
+    m_misc->m_Player[1][33] = 0;
+    m_misc->m_Player[2][33] = 0;
+    m_misc->m_Player[3][33] = 0;
+    m_misc->m_Player[4][33] = 0;
+    m_misc->m_Player[1][32] = 0;
+    m_misc->m_Player[2][32] = 0;
+    m_misc->m_Player[3][32] = 0;
+    m_misc->m_Player[4][32] = 0;
+    //m_misc->m_xpos = 10;
+    //m_misc->m_ypos = 10;
+    m_misc->m_Player[1][15] = 50;
+    m_misc->m_Player[1][37] = 50;
 
     bool quit = false;
     bool gInterrupt = false;
@@ -829,7 +848,7 @@ void Game()
     Uint64 startTick = SDL_GetTicks();
     Uint64 elapsedTime = 0;
 
-    m_resources.ShowChars(true);
+    m_resources->ShowChars(true);
 
     while (1)
     {
@@ -855,12 +874,12 @@ void Game()
                     SDL_SetWindowFullscreen(window, isFullScreen);
                     SDL_SyncWindow(window);
 
-                    m_resources.CalculateBlockSize();
+                    m_resources->CalculateBlockSize();
                 }
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources.changeMode(mode);
+                    m_resources->changeMode(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -898,14 +917,14 @@ void Game()
 
         elapsedTime += deltaTime;
 
-        m_misc.m_gResurrect = false;
+        m_misc->m_gResurrect = false;
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
         
-        m_graphics.render(event, deltaTime);
+        m_graphics->render(event, deltaTime);
 
-        m_resources.displayFPS(fps);
+        m_resources->displayFPS(fps);
 
         SDL_RenderPresent(renderer);
         
@@ -932,8 +951,8 @@ void updateGame(Uint64 deltaTime)
         count = 0;
     }
 
-    if (m_graphics.m_curMode == U3GraphicsMode::Map)
+    if (m_graphics->m_curMode == U3GraphicsMode::Map)
     {
-        m_resources.updateTime(deltaTime);
+        m_resources->updateTime(deltaTime);
     }
 }

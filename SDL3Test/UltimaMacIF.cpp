@@ -8,7 +8,7 @@
 #include "U3Resources.h"
 
 extern SDL_Window* window;
-extern U3Resources m_resources;
+extern std::unique_ptr<U3Resources> m_resources;
 
 
 extern short screenOffsetX;
@@ -20,7 +20,7 @@ void ToolBoxInit()
 
 void WindowInit(short which)
 {
-    m_resources.CalculateBlockSize();
+    m_resources->CalculateBlockSize();
 }
 
 void MenuBarInit()

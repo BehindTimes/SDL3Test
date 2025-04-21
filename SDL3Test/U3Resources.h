@@ -125,6 +125,7 @@ public:
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void UpdateFormParty(float xPos, float yPos, int mouseState);
 	void UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState);
+	void UpdateCreateCharacter(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
 	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);

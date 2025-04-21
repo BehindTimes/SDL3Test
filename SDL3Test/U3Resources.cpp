@@ -15,11 +15,12 @@ extern short screenOffsetX;
 extern short screenOffsetY;
 extern SDL_Window* window;
 extern TTF_TextEngine* engine_surface;
-extern U3Misc m_misc;
-extern U3Graphics m_graphics;
-extern U3ScrollArea m_scrollArea;
-extern UltimaDungeon m_dungeon;
-extern U3Utilities m_utilities;
+
+extern std::unique_ptr<U3Misc> m_misc;
+extern std::unique_ptr<U3Graphics> m_graphics;
+extern std::unique_ptr<U3ScrollArea> m_scrollArea;
+extern std::unique_ptr<U3Utilities> m_utilities;
+extern std::unique_ptr<UltimaDungeon> m_dungeon;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
@@ -328,7 +329,7 @@ void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 bool U3Resources::init(SDL_Renderer* renderer)
 {
 	m_renderer = renderer;
-	m_scrollArea.setRenderer(m_renderer);
+	m_scrollArea->setRenderer(m_renderer);
 	if (!loadFont())
 	{
 		return false;
@@ -342,7 +343,7 @@ bool U3Resources::init(SDL_Renderer* renderer)
 
 	loadButtons();
 	loadDemo();
-	m_misc.OpenRstr();
+	m_misc->OpenRstr();
 
 	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
 	{
@@ -361,7 +362,7 @@ void U3Resources::loadDemo()
 	currentPath /= BinLoc;
 	currentPath /= "MainResources.rsrc_DEMO_400_WhereWhatHow.bin";
 
-	std::string strTemp = m_utilities.PathToSDLString(currentPath);
+	std::string strTemp = m_utilities->PathToSDLString(currentPath);
 	if (strTemp.empty())
 	{
 		return;
@@ -471,8 +472,8 @@ void U3Resources::CalculateBlockSize()
 	screenOffsetX = (windowWidth - m_blockSize * 40) / 2;
 	screenOffsetY = (windowHeight - m_blockSize * 24) / 2;
 
-	m_scrollArea.setBlockSize(m_blockSize);
-	m_graphics.setBlockSize(m_blockSize);
+	m_scrollArea->setBlockSize(m_blockSize);
+	m_graphics->setBlockSize(m_blockSize);
 
 	if (m_font)
 	{
@@ -517,6 +518,7 @@ void U3Resources::CalculateBlockSize()
 	{
 		SDL_DestroyTexture(m_texBy);
 	}
+	loadButtons();
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
 	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
 	m_fullUpdate = true;
@@ -527,16 +529,16 @@ void U3Resources::changeMode(int mode)
 {
 	if (mode == 2)
 	{
-		m_graphics.ChangeClassic();
-		m_scrollArea.forceRedraw();
-		m_graphics.setForceRedraw();
+		m_graphics->ChangeClassic();
+		m_scrollArea->forceRedraw();
+		m_graphics->setForceRedraw();
 		return;
 	}
 	if (mode == 6)
 	{
 		m_currentGraphics = &m_allGraphics["Standard"];
-		m_scrollArea.forceRedraw();
-		m_graphics.setForceRedraw();
+		m_scrollArea->forceRedraw();
+		m_graphics->setForceRedraw();
 		return;
 	}
 
@@ -547,8 +549,8 @@ void U3Resources::changeMode(int mode)
 		{
 			m_currentGraphics = &m_allGraphics[strMode];
 		}
-		m_scrollArea.forceRedraw();
-		m_graphics.setForceRedraw();
+		m_scrollArea->forceRedraw();
+		m_graphics->setForceRedraw();
 	}
 }
 
@@ -674,8 +676,8 @@ void U3Resources::loadButtons()
 
 	for (size_t index = 0; index < 9; ++index)
 	{
-		m_buttons[index].setRect(m_renderer, buttonImage, butLeft[index], butTop[index],
-			butRight[index] - butLeft[index], butBottom[index] - butTop[index],
+		m_buttons[index].setRect(m_renderer, buttonImage, m_blockSize, butLeft[index], butTop[index],
+			(butRight[index] - butLeft[index]) * 4, (butBottom[index] - butTop[index]) * 4,
 			hasClick[index], hasDisabled[index]);
 	}
 
@@ -767,7 +769,7 @@ void U3Resources::loadImages()
 	currentPath /= "Credits.png";
 
 	m_texCredits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
-	m_dungeon.loadGraphics();
+	m_dungeon->loadGraphics();
 
 	//////////////////////////////////////////////////
 
@@ -815,7 +817,7 @@ void U3Resources::loadImages()
 	currentPath /= "RaceClassInfo.gif";
 	m_texRaceClass = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
-	m_dungeon.loadGraphics();
+	m_dungeon->loadGraphics();
 }
 
 void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
@@ -1443,7 +1445,7 @@ void U3Resources::loadSignatureData()
 	currentPath /= BinLoc;
 	currentPath /= "MainResources.rsrc_SGNT_400_Signature Data.bin";
 
-	std::string strTemp = m_utilities.PathToSDLString(currentPath);
+	std::string strTemp = m_utilities->PathToSDLString(currentPath);
 	if (strTemp.empty())
 	{
 		return;
@@ -1472,8 +1474,8 @@ void U3Resources::DrawMoongates()
 
 	if (classic)
 	{
-		m_graphics.DrawFramePiece(12, 8, 0);
-		m_graphics.DrawFramePiece(13, 15, 0);
+		m_graphics->DrawFramePiece(12, 8, 0);
+		m_graphics->DrawFramePiece(13, 15, 0);
 
 		myRect.x = (float)(9 * m_blockSize);
 		myRect.y = (float)(0 * m_blockSize);
@@ -1490,9 +1492,9 @@ void U3Resources::DrawMoongates()
 		UPrint(")(", 11, 0, true);
 		UPrint(")", 14, 0, true);
 		std::string strX;
-		strX += (char)m_misc.m_gMoonDisp[0];
+		strX += (char)m_misc->m_gMoonDisp[0];
 		std::string strY;
-		strY += (char)m_misc.m_gMoonDisp[0];
+		strY += (char)m_misc->m_gMoonDisp[0];
 		UPrint(strX, 10, 0, true);
 		UPrint(strY, 13, 0, true);
 	}
@@ -1505,8 +1507,8 @@ void U3Resources::DrawMoongates()
 		myRect.w = (float)(8 * m_blockSize);
 		myRect.h = (float)(m_blockSize);
 
-		m_graphics.DrawFramePiece(12, 7, 0);
-		m_graphics.DrawFramePiece(13, 16, 0);
+		m_graphics->DrawFramePiece(12, 7, 0);
+		m_graphics->DrawFramePiece(13, 16, 0);
 
 		adjustRect(myRect);
 
@@ -1515,44 +1517,44 @@ void U3Resources::DrawMoongates()
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
 		std::string strX = std::string("(");
-		strX += (char)m_misc.m_gMoonDisp[0] + std::string(")");
+		strX += (char)m_misc->m_gMoonDisp[0] + std::string(")");
 		std::string strY = std::string("(");
-		strY += (char)m_misc.m_gMoonDisp[1] + std::string(")");
+		strY += (char)m_misc->m_gMoonDisp[1] + std::string(")");
 
-		m_graphics.DrawFramePiece(34 + (m_misc.m_gMoonDisp[0] - '0'), 8, 0);
-		m_graphics.DrawFramePiece(42 + (m_misc.m_gMoonDisp[1] - '0'), 12, 0);
+		m_graphics->DrawFramePiece(34 + (m_misc->m_gMoonDisp[0] - '0'), 8, 0);
+		m_graphics->DrawFramePiece(42 + (m_misc->m_gMoonDisp[1] - '0'), 12, 0);
 
 		int xPos = (int)(10.5f * m_blockSize);
 		int yPos = (int)(14.5f * m_blockSize);
 		renderDisplayString(m_font, strX, xPos, 0, sdl_text_color, 2);
 		renderDisplayString(m_font, strY, yPos, 0, sdl_text_color, 2);
 	}
-	if (m_misc.m_Party[2] != 0)
+	if (m_misc->m_Party[2] != 0)
 	{
 		return;
 	}
-	if ((m_misc.m_gMoonDisp[0] == '0') && (m_misc.m_gMoonDisp[1] == '0'))
+	if ((m_misc->m_gMoonDisp[0] == '0') && (m_misc->m_gMoonDisp[1] == '0'))
 	{
-		m_misc.PutXYVal(24, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
+		m_misc->PutXYVal(24, m_misc->m_LocationX[8], m_misc->m_LocationY[8]);
 	}    // Towne (Dawn)
-	else if (m_misc.GetXYVal(m_misc.m_LocationX[8], m_misc.m_LocationY[8]) == 24)
+	else if (m_misc->GetXYVal(m_misc->m_LocationX[8], m_misc->m_LocationY[8]) == 24)
 	{
-		m_misc.PutXYVal(12, m_misc.m_LocationX[8], m_misc.m_LocationY[8]);
+		m_misc->PutXYVal(12, m_misc->m_LocationX[8], m_misc->m_LocationY[8]);
 	}    // or forest
 	short x;
 	for (x = 0; x < 8; x++) {
-		m_misc.PutXYVal(4, m_misc.m_MoonXTable[x], m_misc.m_MoonYTable[x]);
+		m_misc->PutXYVal(4, m_misc->m_MoonXTable[x], m_misc->m_MoonYTable[x]);
 	}
-	x = m_misc.m_gMoonDisp[0] - '0';
-	m_misc.PutXYVal(136, m_misc.m_MoonXTable[x], m_misc.m_MoonYTable[x]);    // put Moongate
+	x = m_misc->m_gMoonDisp[0] - '0';
+	m_misc->PutXYVal(136, m_misc->m_MoonXTable[x], m_misc->m_MoonYTable[x]);    // put Moongate
 }
 
 void U3Resources::DrawWind()
 {
 	SDL_FRect myRect;
 
-	m_graphics.DrawFramePiece(12, 6, 23);
-	m_graphics.DrawFramePiece(13, 17, 23);
+	m_graphics->DrawFramePiece(12, 6, 23);
+	m_graphics->DrawFramePiece(13, 17, 23);
 
 	myRect.x = (float)(7 * m_blockSize);
 	myRect.y = (float)(23 * m_blockSize);
@@ -1566,7 +1568,7 @@ void U3Resources::DrawWind()
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 
 	std::string dispString;
-	int winddir = m_misc.m_WindDir;
+	int winddir = m_misc->m_WindDir;
 	if (winddir < 0 || winddir > 4)
 	{
 		winddir = 0;
@@ -1578,7 +1580,7 @@ void U3Resources::DrawWind()
 
 void U3Resources::DoWind()
 {
-	if (m_misc.m_Party[2] == 1)
+	if (m_misc->m_Party[2] == 1)
 	{
 		return;
 	}
@@ -1588,18 +1590,18 @@ void U3Resources::DoWind()
 	}
 	m_updateWind = false;
 
-	int newDir = m_misc.m_WindDir;
+	int newDir = m_misc->m_WindDir;
 
 
-	while (newDir == m_misc.m_WindDir)
+	while (newDir == m_misc->m_WindDir)
 	{
-		newDir = m_utilities.getRandom(0, 8);
+		newDir = m_utilities->getRandom(0, 8);
 		if (newDir > 4)
 		{
 			newDir -= 4;
 		}
 	}
-	m_misc.m_WindDir = newDir;
+	m_misc->m_WindDir = newDir;
 }
 
 void U3Resources::PlotSig(int x, int y)
@@ -1797,17 +1799,17 @@ void U3Resources::UpdateButtons(float xPos, float yPos, int mouseState)
 		if (mouseState == 2) // mouse up
 		{
 			m_buttons[m_currentButtons[index]].setMouseCapture(m_blockSize, 2, xPos, yPos,
-				(butOffsetX[curOffset] * mult), (butOffsetY[curOffset] * mult), screenOffsetX, screenOffsetY);
+				(butOffsetX[curOffset] * mult) * 4, (butOffsetY[curOffset] * mult) * 4, screenOffsetX, screenOffsetY);
 		}
 		else if (mouseState == 1) // mouse down
 		{
 			m_buttons[m_currentButtons[index]].setMouseCapture(m_blockSize, 1, xPos, yPos,
-				(butOffsetX[curOffset] * mult), (butOffsetY[curOffset] * mult), screenOffsetX, screenOffsetY);
+				(butOffsetX[curOffset] * mult) * 4, (butOffsetY[curOffset] * mult) * 4, screenOffsetX, screenOffsetY);
 		}
 		else // mouse move
 		{
 			m_buttons[m_currentButtons[index]].setMouseCapture(m_blockSize, 0, xPos, yPos,
-				(butOffsetX[curOffset] * mult), (butOffsetY[curOffset] * mult), screenOffsetX, screenOffsetY);
+				(butOffsetX[curOffset] * mult) * 4, (butOffsetY[curOffset] * mult) * 4, screenOffsetX, screenOffsetY);
 		}
 	}
 }
@@ -2168,6 +2170,14 @@ void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
 	}
 }
 
+void U3Resources::UpdateCreateCharacter(float xPos, float yPos, int mouseState)
+{
+	if (m_CreateCharacterDlg)
+	{
+		m_CreateCharacterDlg->updateDialog(xPos, yPos, mouseState);
+	}
+}
+
 void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState)
 {
 	float scaler = (float)m_blockSize / 16.0f;
@@ -2207,7 +2217,7 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 			float addheight = 336.0f * ratio;
 			float addheight1 = 336.0f * (34.0f / 400.0f);
 			float addheight2 = 336.0f * (53.0f / 400.0f);
-			m_graphics.m_obsCurMode = OrganizeBottomScreen::CreateCharacter;
+			m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacter;
 			m_CreateCharacterDlg = std::make_unique<CreateCharacterDialog>(m_renderer, engine_surface);
 			m_CreateCharacterDlg->m_Rect.x = 144;
 			m_CreateCharacterDlg->m_Rect.y = ((384 - (200 + addheight + addheight1 + addheight2)) / 2);
@@ -2310,7 +2320,7 @@ void U3Resources::DrawOrganizePartyRect()
 	std::string strName;
 	SDL_Color sdl_text_color = { 255, 255, 255 };
 
-	if (m_graphics.m_obsCurMode == OrganizeBottomScreen::FormParty)
+	if (m_graphics->m_obsCurMode == OrganizeBottomScreen::FormParty)
 	{
 		renderDisplayString(m_partyDisplay[0].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
 		renderDisplayString(m_partyDisplay[1].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
@@ -2339,7 +2349,7 @@ void U3Resources::DrawOrganizePartyRect()
 	
 	for (int i = 1; i < 21; ++i)
 	{
-		if (m_misc.m_Player[i][16])
+		if (m_misc->m_Player[i][16])
 		{
 			sdl_text_color.r = 255;
 			sdl_text_color.g = 255;
@@ -2359,7 +2369,7 @@ void U3Resources::DrawOrganizePartyRect()
 			sdl_text_color.g = 255;
 			sdl_text_color.b = 255;
 
-			if (m_misc.m_Player[i][16])
+			if (m_misc->m_Player[i][16])
 			{
 				sdl_text_color.r = 255;
 				sdl_text_color.g = 255;
@@ -2373,7 +2383,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 			renderDisplayString(m_partyDisplay[i - 1].Level, (int)(((x + 109) * scaler)), (int)(y * scaler), sdl_text_color);
 
-			int statusVal = m_misc.m_Player[i][17];
+			int statusVal = m_misc->m_Player[i][17];
 
 			switch (statusVal)
 			{
@@ -2415,7 +2425,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 bool U3Resources::CheckJourneyOnward()
 {
-	if (!m_misc.m_Party[6])
+	if (!m_misc->m_Party[6])
 	{
 		return false;
 	}
@@ -2556,26 +2566,26 @@ void U3Resources::DrawTiles()
 void U3Resources::HideMonsters()
 {
 	short mon, xm, ym, offset, value;
-	if (m_misc.m_Party[2] == 1)
+	if (m_misc->m_Party[2] == 1)
 	{
 		return;
 	}
-	if (m_misc.m_Party[2] != 0x80)
+	if (m_misc->m_Party[2] != 0x80)
 	{
 		// first hide the actual monster tiles.
 		for (mon = 0; mon < 32; mon++)
 		{
-			if (m_misc.m_Monsters[mon] != 0)
+			if (m_misc->m_Monsters[mon] != 0)
 			{
-				xm = (m_misc.m_Monsters[mon + XMON] - m_misc.m_stx);
-				if (m_misc.m_Party[2] == 0)
+				xm = (m_misc->m_Monsters[mon + XMON] - m_misc->m_stx);
+				if (m_misc->m_Party[2] == 0)
 				{
-					xm = m_graphics.MapConstrain(xm);
+					xm = m_graphics->MapConstrain(xm);
 				}
-				ym = (m_misc.m_Monsters[mon + YMON] - m_misc.m_sty);
-				if (m_misc.m_Party[2] == 0)
+				ym = (m_misc->m_Monsters[mon + YMON] - m_misc->m_sty);
+				if (m_misc->m_Party[2] == 0)
 				{
-					ym = m_graphics.MapConstrain(ym);
+					ym = m_graphics->MapConstrain(ym);
 				}
 				if (xm > -1 && xm < 11 && ym > -1 && ym < 11)
 				{
@@ -2583,9 +2593,9 @@ void U3Resources::HideMonsters()
 					if (m_TileArray[offset] != 72 && (m_TileArray[offset] < 120 || m_TileArray[offset] > 122))
 					{
 						unsigned char tileChar = m_TileArray[offset];
-						m_graphics.m_maskRestoreArray[offset] = m_TileArray[offset];
-						m_TileArray[offset] = m_misc.m_Monsters[TILEON + mon] / 2;
-						m_graphics.m_maskArray[offset] = tileChar;    //Monsters[mon];
+						m_graphics->m_maskRestoreArray[offset] = m_TileArray[offset];
+						m_TileArray[offset] = m_misc->m_Monsters[TILEON + mon] / 2;
+						m_graphics->m_maskArray[offset] = tileChar;    //Monsters[mon];
 					}
 				}
 			}
@@ -2600,36 +2610,36 @@ void U3Resources::HideMonsters()
 				switch (value)
 				{
 				case 0x22:    // Jester in castle on water (breaks the Talk cursor!)
-					m_graphics.m_maskRestoreArray[offset] = 0x22;
-					m_graphics.m_maskArray[offset] = 0x22;
+					m_graphics->m_maskRestoreArray[offset] = 0x22;
+					m_graphics->m_maskArray[offset] = 0x22;
 					m_TileArray[offset] = 0;
 					break;
 				case 0x74:    // Snake Bottom
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
 					m_TileArray[offset] = 0;
 					break;
 				case 0x76:    // Snake Top
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
 					m_TileArray[offset] = 0;
 					break;
 				case 0x7C:    // Shrine
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
-					m_TileArray[offset] = m_misc.GetXYVal(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5) / 2;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc->GetXYVal(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5) / 2;
 					//TileArray[offset] = TileArray[offset-1];
 					break;
 				case 0x16:    // Frigate
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
 					m_TileArray[offset] = 0;
 					break;
 				case 0x12:    // Chest 1 or
 				case 0x13:    // Chest 2
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = 0x12;
-					value = (m_misc.GetXYVal(m_misc.m_xpos + xm - 5, m_misc.m_ypos + ym - 5) & 0x3) * 2;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = 0x12;
+					value = (m_misc->GetXYVal(m_misc->m_xpos + xm - 5, m_misc->m_ypos + ym - 5) & 0x3) * 2;
 					if (value == 0)
 					{
 						value = 0x10;
@@ -2637,21 +2647,21 @@ void U3Resources::HideMonsters()
 					m_TileArray[offset] = (unsigned char)value;
 					break;
 				case 0x14:    // Horse
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
 					m_TileArray[offset] = 2;
 					break;
 				case 0x18:    // Whirlpool
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
 					m_TileArray[offset] = 0;
 					break;
 				case 0x5D:    // Door
 				{
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
-					int mon = m_misc.MonsterHere(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5);
-					short neighbor = (mon < 255) ? m_misc.m_Monsters[(mon + TILEON) % 256] / 2 : m_misc.GetXYVal(m_misc.m_xpos + xm - 6, m_misc.m_ypos + ym - 5) / 2;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
+					int mon = m_misc->MonsterHere(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5);
+					short neighbor = (mon < 255) ? m_misc->m_Monsters[(mon + TILEON) % 256] / 2 : m_misc->GetXYVal(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5) / 2;
 					if (neighbor > 0x10)
 					{
 						neighbor = 0x02;
@@ -2661,9 +2671,9 @@ void U3Resources::HideMonsters()
 				break;
 				case 0x78:    // Magic ball
 				case 0x7A:    // Fire ball
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
-					m_TileArray[offset] = m_misc.m_gBallTileBackground;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc->m_gBallTileBackground;
 				}
 				offset++;
 			}
@@ -2673,26 +2683,26 @@ void U3Resources::HideMonsters()
 	{
 		for (mon = 0; mon < 8; mon++)
 		{
-			if (m_misc.m_MonsterHP[mon] > 0)
+			if (m_misc->m_MonsterHP[mon] > 0)
 			{
-				xm = m_misc.m_MonsterX[mon];
-				ym = m_misc.m_MonsterY[mon];
-				if (m_misc.GetXYTile(xm, ym) < 120 || m_misc.GetXYTile(xm, ym) > 122)
+				xm = m_misc->m_MonsterX[mon];
+				ym = m_misc->m_MonsterY[mon];
+				if (m_misc->GetXYTile(xm, ym) < 120 || m_misc->GetXYTile(xm, ym) > 122)
 				{
-					m_misc.PutXYTile(m_misc.m_MonsterTile[mon], xm, ym);
+					m_misc->PutXYTile(m_misc->m_MonsterTile[mon], xm, ym);
 				}
 			}
 		}
 		for (mon = 0; mon < 4; mon++)
 		{
-			if (m_misc.CheckAlive(mon))
+			if (m_misc->CheckAlive(mon))
 			{
-				xm = m_misc.m_CharX[mon];
-				ym = m_misc.m_CharY[mon];
-				value = m_misc.GetXYTile(xm, ym);
+				xm = m_misc->m_CharX[mon];
+				ym = m_misc->m_CharY[mon];
+				value = m_misc->GetXYTile(xm, ym);
 				if (value != 0x78 && value != 0x7A)
 				{
-					m_misc.PutXYTile(m_misc.m_CharTile[mon], xm, ym);
+					m_misc->PutXYTile(m_misc->m_CharTile[mon], xm, ym);
 				}
 			}
 		}
@@ -2707,9 +2717,9 @@ void U3Resources::HideMonsters()
 				{
 				case 0x78:    // Magic ball
 				case 0x7A:    // Fire ball
-					m_graphics.m_maskRestoreArray[offset] = (unsigned char)value;
-					m_graphics.m_maskArray[offset] = (unsigned char)value;
-					m_TileArray[offset] = m_misc.m_gBallTileBackground;
+					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
+					m_graphics->m_maskArray[offset] = (unsigned char)value;
+					m_TileArray[offset] = m_misc->m_gBallTileBackground;
 					break;
 				}
 				offset++;
@@ -2721,7 +2731,7 @@ void U3Resources::HideMonsters()
 void U3Resources::ShowMonsters()
 {
 	short mon, xm, ym, value, offset;
-	if (m_misc.m_Party[2] == 1)
+	if (m_misc->m_Party[2] == 1)
 	{
 		return;
 	}
@@ -2732,60 +2742,60 @@ void U3Resources::ShowMonsters()
 	{
 		for (xm = 0; xm < 11; xm++)
 		{
-			if (m_graphics.m_maskArray[offset] != 255)
+			if (m_graphics->m_maskArray[offset] != 255)
 			{
-				m_TileArray[offset] = m_graphics.m_maskRestoreArray[offset];
-				DrawMasked(m_graphics.m_maskArray[offset], xm, ym);
-				m_graphics.m_maskArray[offset] = 255;
+				m_TileArray[offset] = m_graphics->m_maskRestoreArray[offset];
+				DrawMasked(m_graphics->m_maskArray[offset], xm, ym);
+				m_graphics->m_maskArray[offset] = 255;
 			}
 			offset++;
 		}
 	}
 
 	// Then either the outdoor party symbol ...
-	if (m_misc.m_Party[2] != 0x80)
+	if (m_misc->m_Party[2] != 0x80)
 	{
 		if (m_TileArray[0x3C] < 120 || m_TileArray[0x3C] > 122)
 		{
-			if (m_misc.m_Party[0] == 0x14 && m_misc.m_gHorseFacingEast)
+			if (m_misc->m_Party[0] == 0x14 && m_misc->m_gHorseFacingEast)
 			{
-				m_misc.m_gShapeSwapped[10] = true;
+				m_misc->m_gShapeSwapped[10] = true;
 			}
-			DrawMasked(m_misc.m_Party[0], 5, 5);
-			m_misc.m_gShapeSwapped[10] = false;
+			DrawMasked(m_misc->m_Party[0], 5, 5);
+			m_misc->m_gShapeSwapped[10] = false;
 		}
 	}
 	else   // ... or in combat, draw masked mons & chars, restore tiles.
 	{
 		for (mon = 0; mon < 8; mon++)
 		{
-			if (m_misc.m_MonsterHP[mon] > 0)
+			if (m_misc->m_MonsterHP[mon] > 0)
 			{
-				xm = m_misc.m_MonsterX[mon];
-				ym = m_misc.m_MonsterY[mon];
-				unsigned char tileValue = (unsigned char)m_misc.m_gMonType;    // tile * 2
-				if (m_misc.m_gMonVarType && m_misc.m_gMonType >= 46 && m_misc.m_gMonType <= 63)
+				xm = m_misc->m_MonsterX[mon];
+				ym = m_misc->m_MonsterY[mon];
+				unsigned char tileValue = (unsigned char)m_misc->m_gMonType;    // tile * 2
+				if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
 				{
-					tileValue = (((m_misc.m_gMonType / 2) - 23) * 2 + 79 + m_misc.m_gMonVarType) * 2;
+					tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
 				}
-				if (m_misc.GetXYTile(xm, ym) < 120 || m_misc.GetXYTile(xm, ym) > 122)
+				if (m_misc->GetXYTile(xm, ym) < 120 || m_misc->GetXYTile(xm, ym) > 122)
 				{
 					DrawMasked(tileValue, xm, ym);
 				}
-				m_misc.PutXYTile(m_misc.m_gMonType, xm, ym);
+				m_misc->PutXYTile(m_misc->m_gMonType, xm, ym);
 			}
 		}
 		for (mon = 0; mon < 4; mon++)
 		{
-			if (m_misc.CheckAlive(mon) && (mon + 1) != m_misc.m_cHide)
+			if (m_misc->CheckAlive(mon) && (mon + 1) != m_misc->m_cHide)
 			{
-				xm = m_misc.m_CharX[mon];
-				ym = m_misc.m_CharY[mon];
-				value = m_misc.GetXYTile(xm, ym);
+				xm = m_misc->m_CharX[mon];
+				ym = m_misc->m_CharY[mon];
+				value = m_misc->GetXYTile(xm, ym);
 				if (value != 0x78 && value != 0x7A)
 				{
-					DrawMasked(m_misc.m_CharShape[mon], xm, ym);
-					m_misc.PutXYTile(m_misc.m_CharShape[mon], xm, ym);
+					DrawMasked(m_misc->m_CharShape[mon], xm, ym);
+					m_misc->PutXYTile(m_misc->m_CharShape[mon], xm, ym);
 				}
 			}
 		}
@@ -2805,7 +2815,7 @@ void U3Resources::updateGameTime(Uint64 deltaTime)
 		if (m_elapsedMoveTime > MoveTime)
 		{
 			m_elapsedMoveTime %= m_delta_time;
-			m_misc.Pass();
+			m_misc->Pass();
 		}
 
 		m_elapsedWindTime += deltaTime;
@@ -2822,7 +2832,7 @@ void U3Resources::updateTime(Uint64 deltaTime)
 	/*if (m_wasMove)
 	{
 		m_wasMove = true;
-		m_misc.FinishAll();
+		m_misc->FinishAll();
 	}*/
 	m_delta_time = deltaTime;
 
@@ -2850,7 +2860,7 @@ void U3Resources::updateTime(Uint64 deltaTime)
 	TwiddleFlags();
 	DoWind();
 
-	/*if (!m_scrollArea.isUpdating() && !m_misc.m_checkDead && m_misc.m_inputType == InputType::Default)
+	/*if (!m_scrollArea->isUpdating() && !m_misc->m_checkDead && m_misc->m_inputType == InputType::Default)
 	{
 		if (!isInversed())
 		{
@@ -2866,7 +2876,7 @@ void U3Resources::updateTime(Uint64 deltaTime)
 		{
 			m_wasMove = false;
 			m_elapsedMoveTime = 0;
-			m_misc.Routine6E35();
+			m_misc->Routine6E35();
 
 			m_elapsedWindTime += deltaTime;
 		}
@@ -2878,9 +2888,9 @@ void U3Resources::updateTime(Uint64 deltaTime)
 				if (m_elapsedMoveTime > MoveTime)
 				{
 					m_elapsedMoveTime %= m_delta_time;
-					m_misc.Pass();
-					m_misc.Routine6E35();
-					m_misc.FinishAll();
+					m_misc->Pass();
+					m_misc->Routine6E35();
+					m_misc->FinishAll();
 				}
 			}
 		}
@@ -2903,40 +2913,40 @@ void U3Resources::ShowChars(bool force) /* $7338 methinx */
 		rect.w = (float)(15 * m_blockSize);
 		rect.y = (float)(i * (m_blockSize * 4) + m_blockSize);
 		rect.h = (float)(m_blockSize * 3);
-		ros = m_misc.m_Party[6 + i];
+		ros = m_misc->m_Party[6 + i];
 
 		thisChanged = force;
-		num = m_misc.m_Player[ros][17];
+		num = m_misc->m_Player[ros][17];
 		if (num != oldStatus[i])
 		{
 			oldStatus[i] = num;
 			thisChanged = true;
 		}
-		num = m_misc.m_Player[ros][25];
+		num = m_misc->m_Player[ros][25];
 		if (num != oldMana[i])
 		{
 			oldMana[i] = num;
 			thisChanged = true;
 		}
-		num = m_misc.m_Player[ros][26] * 256 + m_misc.m_Player[ros][27];    // hp
+		num = m_misc->m_Player[ros][26] * 256 + m_misc->m_Player[ros][27];    // hp
 		if (num != oldHP[i])
 		{
 			oldHP[i] = num;
 			thisChanged = true;
 		}
-		num = m_misc.m_Player[ros][28] * 256 + m_misc.m_Player[ros][29];    // max hp
+		num = m_misc->m_Player[ros][28] * 256 + m_misc->m_Player[ros][29];    // max hp
 		if (num != oldMaxHP[i])
 		{
 			oldMaxHP[i] = num;
 			thisChanged = true;
 		}
-		num = m_misc.m_Player[ros][30] * 100 + m_misc.m_Player[ros][31];    // exp
+		num = m_misc->m_Player[ros][30] * 100 + m_misc->m_Player[ros][31];    // exp
 		if (num != oldExp[i])
 		{
 			oldExp[i] = num;
 			thisChanged = true;
 		}
-		num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];    // food
+		num = m_misc->m_Player[ros][32] * 100 + m_misc->m_Player[ros][33];    // food
 		if (num != oldFood[i])
 		{
 			oldFood[i] = num;
@@ -2960,11 +2970,11 @@ void U3Resources::DrawPortrait(char charNum)
 	short sx;
 	char charRaces[5] = { 'H', 'E', 'D', 'B', 'F' };
 	char usePortrait[12] = { 0, 1, 2, 3, 0, 3, 2, 2, 1, 2, 0, 0 };
-	rosNum = m_misc.m_Party[6 + charNum];
+	rosNum = m_misc->m_Party[6 + charNum];
 	short clss = 0;
 	for (value = 0; value < 11; value++)
 	{
-		if (m_misc.m_Player[rosNum][23] == m_misc.m_careerTable[value])
+		if (m_misc->m_Player[rosNum][23] == m_misc->m_careerTable[value])
 		{
 			clss = usePortrait[value];
 			break;
@@ -2972,14 +2982,14 @@ void U3Resources::DrawPortrait(char charNum)
 	}
 	for (value = 0; value < 5; value++)
 	{
-		if (m_misc.m_Player[rosNum][22] == charRaces[value])
+		if (m_misc->m_Player[rosNum][22] == charRaces[value])
 		{
 			rce = value;
 			break;
 		}
 	}
 	sx = 0;
-	if (m_misc.m_Player[rosNum][24] == 'F')
+	if (m_misc->m_Player[rosNum][24] == 'F')
 	{
 		sx = 1;
 	}
@@ -3002,17 +3012,17 @@ void U3Resources::DrawPortrait(char charNum)
 
 	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 
-	if (m_misc.m_Player[rosNum][17] == 'P')
+	if (m_misc->m_Player[rosNum][17] == 'P')
 	{
 		SDL_SetRenderDrawColor(m_renderer, 0, 255, 0, 128);
 		SDL_RenderFillRect(m_renderer, &offRect);
 	}
-	else if (m_misc.m_Player[rosNum][17] == 'D')
+	else if (m_misc->m_Player[rosNum][17] == 'D')
 	{
 		SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 128);
 		SDL_RenderFillRect(m_renderer, &offRect);
 	}
-	else if (m_misc.m_Player[rosNum][17] == 'A')
+	else if (m_misc->m_Player[rosNum][17] == 'A')
 	{
 		SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 128);
 		SDL_RenderFillRect(m_renderer, &offRect);
@@ -3040,17 +3050,17 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 	fromRect.y = 0;
 	fromRect.w = m_blockSize * 15.0f;
 	fromRect.h = m_blockSize * 3.0f;
-	ros = m_misc.m_Party[ch + 6];
+	ros = m_misc->m_Party[ch + 6];
 	std::string tempstr;
 	short i;
 	SDL_Color sdl_text_color = { 255, 255, 255 };
 
-	if (m_misc.m_Player[ros][0]) // character here
+	if (m_misc->m_Player[ros][0]) // character here
 	{
 		int showPortraitVal = 0;
 		if (!showPortraits)
 		{
-			tempstr += m_misc.m_Player[ros][17];
+			tempstr += m_misc->m_Player[ros][17];
 			renderString(tempstr, 14, 0, false);
 			tempstr.clear();
 		}
@@ -3060,9 +3070,9 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			DrawPortrait((unsigned char)ch);
 		}
 		i = 0;
-		while (i < 13 && m_misc.m_Player[ros][i] != 0)
+		while (i < 13 && m_misc->m_Player[ros][i] != 0)
 		{
-			tempstr += (m_misc.m_Player[ros][i] & 0x7F);
+			tempstr += (m_misc->m_Player[ros][i] & 0x7F);
 			i++;
 		}
 		if (classic)
@@ -3075,9 +3085,9 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 		}
 
 		tempstr.clear();
-		tempstr += m_misc.m_Player[ros][24];
-		tempstr += m_misc.m_Player[ros][22];
-		tempstr += m_misc.m_Player[ros][23];
+		tempstr += m_misc->m_Player[ros][24];
+		tempstr += m_misc->m_Player[ros][22];
+		tempstr += m_misc->m_Player[ros][23];
 		renderString(tempstr, 1 + showPortraitVal, 1, false);
 
 		if (!classic) // draw bars & such
@@ -3086,12 +3096,12 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			SDL_Color bar_color = { 128, 128, 128 };
 
 			// Hit Points
-			num = (m_misc.m_Player[ros][26] * 256) + (m_misc.m_Player[ros][27]);
+			num = (m_misc->m_Player[ros][26] * 256) + (m_misc->m_Player[ros][27]);
 			barRect.x = m_blockSize * 5.0f;
 			barRect.y = m_blockSize * 2.0f + 1;
 			barRect.w = m_blockSize * 4.5f;
 			barRect.h = (m_blockSize * 3.0f - 4) - (m_blockSize * 2.0f + 1);
-			maxnum = m_misc.m_Player[ros][28] * 256 + m_misc.m_Player[ros][29];
+			maxnum = m_misc->m_Player[ros][28] * 256 + m_misc->m_Player[ros][29];
 			scale = (float)(barRect.w) / (float)maxnum;
 
 			if (num > maxnum)
@@ -3151,8 +3161,8 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			}
 
 			// Mana
-			num = m_misc.m_Player[ros][25];
-			maxnum = (char)m_misc.MaxMana((char)ros);
+			num = m_misc->m_Player[ros][25];
+			maxnum = (char)m_misc->MaxMana((char)ros);
 			barRect.x = m_blockSize * 5.0f;
 			barRect.y = m_blockSize + 1.0f;
 			barRect.w = m_blockSize * 4.5f;
@@ -3235,7 +3245,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 				renderDisplayString(m_font_9, tempstr, (int)textPos, (int)(m_blockSize * 1.5f), sdl_text_color, 4, false);
 			}
 			// Level / experience
-			num = (unsigned char)m_misc.m_Player[ros][31];
+			num = (unsigned char)m_misc->m_Player[ros][31];
 			maxnum = 100;
 			textPos = (m_blockSize * 10.0f) + (m_blockSize * 2.25f);
 
@@ -3298,13 +3308,13 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			if (m_blockSize > 16)
 			{
 				tempstr = LevelStr;
-				tempstr += std::to_string(m_misc.m_Player[ros][30] + 1);
+				tempstr += std::to_string(m_misc->m_Player[ros][30] + 1);
 
 				renderDisplayString(m_font_9, tempstr, (int)textPos, (int)(m_blockSize * 1.5f), sdl_text_color, 4, false);
 			}
 			// Food
 			textPos = m_blockSize * 10.0f;
-			num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];
+			num = m_misc->m_Player[ros][32] * 100 + m_misc->m_Player[ros][33];
 			if (num > 150)
 			{
 				sdl_text_color.r = 255;
@@ -3332,28 +3342,28 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 		else // the old fashioned way
 		{
 			// Hit Points
-			num = (m_misc.m_Player[ros][26] * 256) + (m_misc.m_Player[ros][27]);
+			num = (m_misc->m_Player[ros][26] * 256) + (m_misc->m_Player[ros][27]);
 			tempstr = std::string("H:");
 			auto padded = std::to_string(num);
 			padded.insert(0, 4U - std::min(std::string::size_type(4), padded.length()), '0');
 			tempstr += padded;
 			renderString(tempstr, 1 + showPortraitVal, 2, false);
 			// Mana
-			num = (m_misc.m_Player[ros][25]);
+			num = (m_misc->m_Player[ros][25]);
 			tempstr = std::string("M:");
 			padded = std::to_string(num);
 			padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
 			tempstr += padded;
 			renderString(tempstr, 5 + showPortraitVal, 1, false);
 			// Level
-			num = (m_misc.m_Player[ros][30] + 1);
+			num = (m_misc->m_Player[ros][30] + 1);
 			tempstr = std::string("L:");
 			padded = std::to_string(num);
 			padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
 			tempstr += padded;
 			renderString(tempstr, 10 + showPortraitVal, 1, false);
 			// Food
-			num = m_misc.m_Player[ros][32] * 100 + m_misc.m_Player[ros][33];
+			num = m_misc->m_Player[ros][32] * 100 + m_misc->m_Player[ros][33];
 			tempstr = std::string("F:");
 			padded = std::to_string(num);
 			padded.insert(0, 4U - std::min(std::string::size_type(4), padded.length()), '0');
@@ -3374,7 +3384,7 @@ void U3Resources::UPrint(std::string gString, char x, char y, bool autoadjust)
 
 void U3Resources::DrawPrompt()
 {
-	m_graphics.DrawFramePiece(8, 23, 23);
+	m_graphics->DrawFramePiece(8, 23, 23);
 }
 
 void U3Resources::DrawInverses(Uint64 delta_time)
@@ -3432,6 +3442,8 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		myRect.w = (float)m_blockSize * 22;
 		myRect.h = (float)m_blockSize * 22;
 
+		adjustRect(myRect);
+
 		SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
@@ -3448,6 +3460,8 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		myRect.w = (float)m_blockSize * 22;
 		myRect.h = (float)m_blockSize * 22;
 
+		adjustRect(myRect);
+
 		SDL_SetRenderDrawColor(m_renderer, m_inverses.color.r, m_inverses.color.g, m_inverses.color.b, m_inverses.color.a);
 		SDL_RenderFillRect(m_renderer, &myRect);
 		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
@@ -3462,6 +3476,8 @@ void U3Resources::DrawInverses(Uint64 delta_time)
 		myRect.y = (float)(1 * m_blockSize);
 		myRect.w = (float)m_blockSize * 22;
 		myRect.h = (float)m_blockSize * 22;
+
+		adjustRect(myRect);
 
 		SDL_SetRenderDrawColor(m_renderer, m_inverses.color.r, m_inverses.color.g, m_inverses.color.b, m_inverses.color.a);
 		SDL_RenderFillRect(m_renderer, &myRect);
@@ -3590,9 +3606,9 @@ void U3Resources::CreatePartyNames()
 
 		std::string strName;
 		c = 0;
-		while (m_misc.m_Player[i][c] > 22)
+		while (m_misc->m_Player[i][c] > 22)
 		{
-			strName += m_misc.m_Player[i][c];
+			strName += m_misc->m_Player[i][c];
 			c++;
 			if (c > 64)
 			{
@@ -3603,7 +3619,7 @@ void U3Resources::CreatePartyNames()
 		{
 			m_partyDisplay[i - 1].Name = TTF_CreateText(engine_surface, m_font_11, strName.c_str(), 0);
 
-			std::string str_level = std::to_string(m_misc.m_Player[i][30] + 1);
+			std::string str_level = std::to_string(m_misc->m_Player[i][30] + 1);
 			str_level = std::string("Lvl ") + str_level;
 
 			m_partyDisplay[i - 1].Level = TTF_CreateText(engine_surface, m_font_11, str_level.c_str(), 0);
@@ -3614,7 +3630,7 @@ void U3Resources::CreatePartyNames()
 
 			if (m_plistMap.find("Races") != m_plistMap.end())
 			{
-				int val = m_misc.m_Player[i][22];
+				int val = m_misc->m_Player[i][22];
 				for (size_t index = 0; index < m_plistMap["Races"].size(); ++index)
 				{
 					if (val == m_plistMap["Races"][index][0])
@@ -3626,7 +3642,7 @@ void U3Resources::CreatePartyNames()
 			}
 			if (m_plistMap.find("Classes") != m_plistMap.end())
 			{
-				int val = m_misc.m_Player[i][23];
+				int val = m_misc->m_Player[i][23];
 				for (size_t index = 0; index < m_plistMap["Classes"].size(); ++index)
 				{
 					if (val == m_plistMap["Classes"][index][0])
@@ -3638,7 +3654,7 @@ void U3Resources::CreatePartyNames()
 			}
 			if (m_plistMap.find("MoreMessages") != m_plistMap.end())
 			{
-				int val = m_misc.m_Player[i][24];
+				int val = m_misc->m_Player[i][24];
 				if (m_plistMap["MoreMessages"].size() > 68)
 				{
 					switch (val)
@@ -3660,7 +3676,7 @@ void U3Resources::CreatePartyNames()
 			if (m_plistMap["MoreMessages"].size() > 68)
 			{
 
-				int statusVal = m_misc.m_Player[i][17];
+				int statusVal = m_misc->m_Player[i][17];
 
 				switch (statusVal)
 				{

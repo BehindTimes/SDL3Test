@@ -3,9 +3,9 @@
 #include "U3Utilities.h"
 #include "UltimaGraphics.h"
 
-extern U3Resources m_resources;
-extern U3Graphics m_graphics;
-extern U3Utilities m_utilities;
+extern std::unique_ptr<U3Resources> m_resources;
+extern std::unique_ptr<U3Graphics> m_graphics;
+extern std::unique_ptr<U3Utilities> m_utilities;
 
 U3ScrollArea::U3ScrollArea() :
 	m_updating(false),
@@ -41,7 +41,7 @@ U3ScrollArea::~U3ScrollArea()
 
 void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 {
-	auto vecString = m_utilities.splitString(gString, '\n', true);
+	auto vecString = m_utilities->splitString(gString, '\n', true);
 	if (m_messageQueue.size() == 0)
 	{
 		m_queueBegin = true;
@@ -91,11 +91,11 @@ void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 void U3ScrollArea::UPrintMessage(short msgNum)
 {
 	msgNum--;
-	if (m_resources.m_plistMap.contains("Messages"))
+	if (m_resources->m_plistMap.contains("Messages"))
 	{
-		if (m_resources.m_plistMap["Messages"].size() > msgNum)
+		if (m_resources->m_plistMap["Messages"].size() > msgNum)
 		{
-			std::string message = m_resources.m_plistMap["Messages"][msgNum];
+			std::string message = m_resources->m_plistMap["Messages"][msgNum];
 			UPrintWin(message);
 		}
 	}
@@ -104,13 +104,13 @@ void U3ScrollArea::UPrintMessage(short msgNum)
 void U3ScrollArea::UPrintMessageRewrapped(short msgNum)
 {
 	bool classic;
-	m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 	msgNum--;
-	if (m_resources.m_plistMap.contains("Messages"))
+	if (m_resources->m_plistMap.contains("Messages"))
 	{
-		if (m_resources.m_plistMap["Messages"].size() > msgNum)
+		if (m_resources->m_plistMap["Messages"].size() > msgNum)
 		{
-			std::string message = m_resources.m_plistMap["Messages"][msgNum];
+			std::string message = m_resources->m_plistMap["Messages"][msgNum];
 			if (classic)
 			{
 				UPrintWin(message);
@@ -142,7 +142,7 @@ void U3ScrollArea::redraw()
 		tempMessages.pop_back();
 		if (curPair.first.prompt)
 		{
-			m_graphics.DrawFramePieceScroll(12, 0, tempIndex);
+			m_graphics->DrawFramePieceScroll(12, 0, tempIndex);
 		}
 		if (curPair.second.size() > 0)
 		{
@@ -152,20 +152,20 @@ void U3ScrollArea::redraw()
 				drawInput = false;
 				strTemp += m_input;
 				bool classic;
-				m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
-				m_cursorPos = m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, curPair.first.pretty_print);
+				m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
+				m_cursorPos = m_resources->renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, curPair.first.pretty_print);
 			}
 			else
 			{
 				bool classic;
-				m_resources.GetPreference(U3PreferencesType::Classic_Appearance, classic);
+				m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 				if (!classic && curPair.first.pretty_print)
 				{
-					m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, true);
+					m_resources->renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false, 0, 0, true);
 				}
 				else
 				{
-					m_resources.renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false);
+					m_resources->renderString(strTemp, curPair.first.prompt ? 1 : 0, tempIndex, false);
 				}
 			}
 			
@@ -346,7 +346,7 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 	toRect.w = (float)17.0f * m_blockSize;
 	toRect.h = (float)7.0f * m_blockSize;
 	
-	m_resources.adjustRect(toRect);
+	m_resources->adjustRect(toRect);
 	SDL_RenderTexture(m_renderer, m_texDisplay, &fromRect, &toRect);
 	if (yOffset > 0)
 	{
@@ -356,7 +356,7 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 	{
 		if (m_cursorPos > 0)
 		{
-			m_resources.DrawFramePieceReal(16 + m_curCursor, (m_cursorPos + 24 * m_blockSize), (23 * m_blockSize), true);
+			m_resources->DrawFramePieceReal(16 + m_curCursor, (m_cursorPos + 24 * m_blockSize), (23 * m_blockSize), true);
 			m_elapsedTimeCursor += currentTickCount;
 			m_curCursor = (m_elapsedTimeCursor / CURSOR_DELAY) % 7;
 			m_elapsedTimeCursor %= (CURSOR_DELAY * 7);
@@ -382,7 +382,7 @@ void U3ScrollArea::setBlockSize(int blockSize)
 
 void U3ScrollArea::DrawPrompt()
 {
-	m_graphics.DrawFramePieceScroll(12, 0, 6);
+	m_graphics->DrawFramePieceScroll(12, 0, 6);
 }
 
 bool U3ScrollArea::isPrompt()
@@ -407,12 +407,12 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	int totalMaxSize = 12 * m_blockSize;
 	bool emptyBackString = true;
 	std::vector<std::string> tokens;
-	auto vecString = m_utilities.splitString(str, '\n', true);
+	auto vecString = m_utilities->splitString(str, '\n', true);
 	int tempSub = 0;
 
 	for (std::string& tempString : vecString)
 	{
-		auto vecTemp = m_utilities.splitString(tempString, ' ', true);
+		auto vecTemp = m_utilities->splitString(tempString, ' ', true);
 		tokens.insert(tokens.end(), vecTemp.begin(), vecTemp.end());
 	}
 	// If there's a queue, we want to base it off of what will be the last message
@@ -445,7 +445,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		}
 		else
 		{
-			textLen = m_resources.getTextWidth(m_messages.back().second);
+			textLen = m_resources->getTextWidth(m_messages.back().second);
 			maxSize -= textLen;
 			emptyBackString = false;
 		}
@@ -500,7 +500,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 		{
 			tempString = std::string(" ");
 		}
-		textLen = m_resources.getTextWidth(tempString);
+		textLen = m_resources->getTextWidth(tempString);
 		if (index == 0) // Special append case
 		{
 			if (emptyBackString) // append here no matter what

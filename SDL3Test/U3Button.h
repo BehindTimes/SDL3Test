@@ -10,12 +10,13 @@ public:
 	explicit U3Button();
 	~U3Button();
 
-	void resizeButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font);
-	void CreateTextButton(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText);
+	void resizeButton(int m_blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font);
+	void CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x = 0, int y = 0);
 	void forceCapture();
 	void click();
 	void render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY);
-	void setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int x, int y, int width, int height, bool has_clicked, bool has_disabled);
+	void render(SDL_Renderer* renderer, int blockSize, int x, int y);
+	void setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int blockSize, int x, int y, int width, int height, bool has_clicked, bool has_disabled);
 	void setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY);
 	void setMouseCapture(int capture, float mouse_x, float mouse_y);
 	void SetButtonCallback(std::function<void(int)> func, int id = 0);
@@ -26,6 +27,9 @@ public:
 	SDL_Texture* getPushedTexture() { return m_texPushed; }
 	float getWidth() { return m_width; }
 	float getHeight() { return m_height; }
+
+	int m_x;
+	int m_y;
 private:
 	SDL_Texture* m_texDefault;
 	SDL_Texture* m_texPushed;
@@ -41,5 +45,6 @@ private:
 	bool m_forcecapture;
 	int m_id;
 	std::string m_text;
+	bool m_hasFocus;
 };
 

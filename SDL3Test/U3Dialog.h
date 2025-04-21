@@ -38,7 +38,8 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void addLabel(std::string strLabel, int x, int y);
-
+	void addButton(std::string strLabel, int x, int y);
+	void updateDialog(float xPos, float yPos, int mouseState);
 	SDL_FRect m_Rect;
 
 private:
@@ -65,6 +66,7 @@ private:
 	SDL_Renderer* m_renderer;
 	TTF_TextEngine* m_engine_surface;
 	std::vector<std::unique_ptr<U3DlgLabel>> m_labels;
+	std::vector<std::unique_ptr<U3Button>> m_buttons;
 	TTF_Font* m_font; // block size font
 
 	std::string m_upArrow;
@@ -91,7 +93,7 @@ private:
 	void DrawFramePiece(int part, int x, int y);
 	void adjustRect(SDL_FRect& myRect);
 	void loadString();
-	void loadDitl(std::function<void(int)> callback);
+	void loadDitl(int blockSize, std::function<void(int)> callback);
 	bool createFont();
 	void createButton(std::function<void(int)> callback);
 	void createBorder(int x, int y, int numBlocksW, int numBlocksH);

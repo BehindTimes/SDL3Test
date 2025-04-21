@@ -8,8 +8,8 @@
 extern SDL_Window* window;
 extern short screenOffsetX;
 extern short screenOffsetY;
-extern U3Utilities m_utilities;
-extern U3Resources m_resources;
+extern std::unique_ptr<U3Resources> m_resources;
+extern std::unique_ptr<U3Utilities> m_utilities;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
@@ -44,7 +44,7 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	}
 	else if (type == DialogType::DITL)
 	{
-		loadDitl(std::bind(&U3Dialog::finishedCallback, this, std::placeholders::_1));
+		loadDitl(m_blockSize, std::bind(&U3Dialog::finishedCallback, this, std::placeholders::_1));
 		//createButton(callback);
 	}
 	calculateRects();
@@ -194,7 +194,7 @@ void U3Dialog::changeBlockSize(int blockSize)
 	createFont();
 	for (auto& curButton : m_vecButtons)
 	{
-		curButton->resizeButton(m_renderer, m_engine_surface, m_resources.m_font);
+		curButton->resizeButton(blockSize, m_renderer, m_engine_surface, m_resources->m_font);
 	}
 	calculateRects();
 }
@@ -202,9 +202,9 @@ void U3Dialog::changeBlockSize(int blockSize)
 void U3Dialog::createButton(std::function<void(int)> callback)
 {
 	short butLeft = 100;
-	short butRight = 153;
 	short butTop = 300;
-	short butBottom = 325;
+	short butWidth = 212;
+	short butHeight = 100;
 
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -213,8 +213,8 @@ void U3Dialog::createButton(std::function<void(int)> callback)
 
 	SDL_Texture* buttonImage = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
-	m_backButton.setRect(m_renderer, buttonImage, butLeft, butTop,
-		butRight - butLeft, butBottom - butTop,
+	m_backButton.setRect(m_renderer, buttonImage, m_blockSize, butLeft, butTop,
+		butWidth, butHeight,
 		true, false);
 
 	if (buttonImage)
@@ -257,7 +257,7 @@ void U3Dialog::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
-void U3Dialog::loadDitl(std::function<void(int)> callback)
+void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 {
 	std::filesystem::path currentPathMessage = std::filesystem::current_path();
 	currentPathMessage /= ResourceLoc;
@@ -270,7 +270,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 	}
 
 	std::uintmax_t file_size = std::filesystem::file_size(currentPathMessage);
-	std::string strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	std::string strTemp = m_utilities->PathToSDLString(currentPathMessage);
 	if (strTemp.empty())
 	{
 		return;
@@ -289,7 +289,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 	fileTitleData.emplace_back(0);
 
 	file_size = std::filesystem::file_size(currentPathMessage);
-	strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	strTemp = m_utilities->PathToSDLString(currentPathMessage);
 	if (strTemp.empty())
 	{
 		return;
@@ -308,7 +308,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 	fileData.emplace_back(0);
 	std::string strData = std::string(fileData.data());
 
-	auto tokens = m_utilities.splitString(strData, '\n');
+	auto tokens = m_utilities->splitString(strData, '\n');
 
 	int mode = 0;
 
@@ -323,8 +323,8 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 			continue;
 		}
 		curToken.erase(0, 1);
-		m_utilities.trim(curToken);
-		auto linetokens = m_utilities.splitString(curToken, ':');
+		m_utilities->trim(curToken);
+		auto linetokens = m_utilities->splitString(curToken, ':');
 		if (linetokens.size() < 2)
 		{
 			continue;
@@ -354,7 +354,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 			if (mode == 1)
 			{
 				std::string strText = linetokens[1];
-				m_utilities.trim(strText);
+				m_utilities->trim(strText);
 				size_t nStart = strText.find('\"');
 				size_t nEnd = strText.rfind('\"');
 				if (nStart != std::string::npos && nStart < nEnd)
@@ -365,14 +365,14 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 					curId++;
 					auto curButton = std::make_unique<U3Button>();
 					m_vecButtons.push_back(std::move(curButton));
-					m_vecButtons.back()->CreateTextButton(m_renderer, m_engine_surface, m_resources.m_font, strText);
+					m_vecButtons.back()->CreateTextButton(blockSize, m_renderer, m_engine_surface, m_font, strText);
 					m_vecButtons.back()->SetButtonCallback(callback, curId);
 				}
 			}
 			else if (mode == 2)
 			{
 				std::string strText = linetokens[1];
-				m_utilities.trim(strText);
+				m_utilities->trim(strText);
 				size_t nStart = strText.find('\"');
 				size_t nEnd = strText.rfind('\"');
 				if (nStart != std::string::npos && nStart < nEnd)
@@ -388,7 +388,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 			if (mode == 3)
 			{
 				std::string icon_str = linetokens[1];
-				m_utilities.trim(icon_str);
+				m_utilities->trim(icon_str);
 				std::filesystem::path IconPathMessage = std::filesystem::current_path();
 				IconPathMessage /= ResourceLoc;
 				IconPathMessage /= BinLoc;
@@ -411,7 +411,7 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 
 void U3Dialog::RewrapMessage(std::string& strMesssage)
 {
-	auto newLineTokens = m_utilities.splitString(m_strMessage, '\n', true);
+	auto newLineTokens = m_utilities->splitString(m_strMessage, '\n', true);
 	m_strMessage.clear();
 	bool maxLineCountHit = false;
 	const int MAX_LEN_TOKEN = 40;
@@ -430,7 +430,7 @@ void U3Dialog::RewrapMessage(std::string& strMesssage)
 		{
 			break;
 		}
-		auto tokens = m_utilities.splitString(curLineToken, ' ');
+		auto tokens = m_utilities->splitString(curLineToken, ' ');
 		size_t nCurLen = 0;
 
 		for (auto& curToken : tokens)
@@ -494,7 +494,7 @@ void U3Dialog::loadString()
 	}
 
 	std::uintmax_t file_size = std::filesystem::file_size(currentPathTitle);
-	std::string strTemp = m_utilities.PathToSDLString(currentPathTitle);
+	std::string strTemp = m_utilities->PathToSDLString(currentPathTitle);
 	if (strTemp.empty())
 	{
 		return;
@@ -513,7 +513,7 @@ void U3Dialog::loadString()
 	fileTitleData.emplace_back(0);
 
 	file_size = std::filesystem::file_size(currentPathMessage);
-	strTemp = m_utilities.PathToSDLString(currentPathMessage);
+	strTemp = m_utilities->PathToSDLString(currentPathMessage);
 	if (strTemp.empty())
 	{
 		return;
@@ -664,7 +664,7 @@ bool U3Dialog::display()
 		frameRect.y = m_dialogRect.y;
 		frameRect.w = (float)m_blockSize;
 		frameRect.h = (float)m_blockSize;
-		m_resources.adjustRect(frameRect);
+		m_resources->adjustRect(frameRect);
 		SDL_RenderTexture(m_renderer, m_icon, NULL, &frameRect);
 	}
 
@@ -764,6 +764,7 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 CreateCharacterDialog::~CreateCharacterDialog()
 {
 	m_labels.clear();
+	m_buttons.clear();
 
 	if (m_font)
 	{
@@ -774,8 +775,8 @@ CreateCharacterDialog::~CreateCharacterDialog()
 void CreateCharacterDialog::init()
 {
 	float scaler = (float)m_blockSize / 16.0f;
-	float ratio = m_resources.m_characterRecordWidth / (m_Rect.w * scaler);
-	int offsetY = (int)(m_resources.m_characterRecordHeight * ratio) / 2;
+	float ratio = m_resources->m_characterRecordWidth / (m_Rect.w * scaler);
+	int offsetY = (int)(m_resources->m_characterRecordHeight * ratio) / 2;
 
 	createFont();
 	addLabel(std::string(NameString), 8, 8 + offsetY);
@@ -803,21 +804,21 @@ void CreateCharacterDialog::init()
 	m_downArrow += static_cast<char>(0x96);
 	m_downArrow += static_cast<char>(0xBE);
 
-	addLabel(m_upArrow, 144, 32 + offsetY);
-	addLabel(m_downArrow, 144, 48 + offsetY);
-	addLabel(m_upArrow, 144, 64 + offsetY);
-	addLabel(m_downArrow, 144, 80 + offsetY);
-	addLabel(m_upArrow, 144, 96 + offsetY);
-	addLabel(m_downArrow, 144, 112 + offsetY);
-	addLabel(m_upArrow, 144, 128 + offsetY);
-	addLabel(m_downArrow, 144, 144 + offsetY);
+	addButton(m_upArrow, 144, 32 + offsetY);
+	addButton(m_downArrow, 144, 48 + offsetY);
+	addButton(m_upArrow, 144, 64 + offsetY);
+	addButton(m_downArrow, 144, 80 + offsetY);
+	addButton(m_upArrow, 144, 96 + offsetY);
+	addButton(m_downArrow, 144, 112 + offsetY);
+	addButton(m_upArrow, 144, 128 + offsetY);
+	addButton(m_downArrow, 144, 144 + offsetY);
 
-	addLabel(m_upArrow, 312, 48 + offsetY);
-	addLabel(m_downArrow, 312, 64 + offsetY);
-	addLabel(m_upArrow, 312, 80 + offsetY);
-	addLabel(m_downArrow, 312, 96 + offsetY);
-	addLabel(m_upArrow, 312, 112 + offsetY);
-	addLabel(m_downArrow, 312, 128 + offsetY);
+	addButton(m_upArrow, 312, 48 + offsetY);
+	addButton(m_downArrow, 312, 64 + offsetY);
+	addButton(m_upArrow, 312, 80 + offsetY);
+	addButton(m_downArrow, 312, 96 + offsetY);
+	addButton(m_upArrow, 312, 112 + offsetY);
+	addButton(m_downArrow, 312, 128 + offsetY);
 }
 
 void CreateCharacterDialog::changeBlockSize(int blockSize)
@@ -834,7 +835,11 @@ void CreateCharacterDialog::changeBlockSize(int blockSize)
 	{
 		curLabel->updateLabelFont(m_engine_surface, m_font);
 	}
-	//calculateRects();
+
+	for (auto& curButton : m_buttons)
+	{
+		curButton->resizeButton(blockSize, m_renderer, m_engine_surface, m_font);
+	}
 }
 
 void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
@@ -845,20 +850,21 @@ void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y
 
 bool CreateCharacterDialog::display()
 {
-	if (m_resources.m_characterRecordWidth == 0 || m_resources.m_characterRecordHeight == 0)
+	if (m_resources->m_characterRecordWidth == 0 || m_resources->m_characterRecordHeight == 0)
 	{
 		return false;
 	}
-	SDL_FRect myRect, fromRect;
+	SDL_FRect myRect;
+	SDL_FRect fromRect;
 	float scaler = (float)m_blockSize / 16.0f;
-	float ratio = m_resources.m_characterRecordHeight / m_resources.m_characterRecordWidth;
+	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
 
 	myRect.x = (float)m_Rect.x * scaler;
 	myRect.y = (float)m_Rect.y * scaler;
 	myRect.w = (float)m_Rect.w * scaler;
 	myRect.h = (float)m_Rect.h * scaler;
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
 	SDL_SetRenderDrawColor(m_renderer, 224, 224, 224, 255);
 	SDL_RenderFillRect(m_renderer, &myRect);
@@ -868,9 +874,9 @@ bool CreateCharacterDialog::display()
 	myRect.w = (float)m_Rect.w * scaler;
 	myRect.h = myRect.w * ratio;
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
-	SDL_RenderTexture(m_renderer, m_resources.m_texCharacterRecord, NULL, &myRect);
+	SDL_RenderTexture(m_renderer, m_resources->m_texCharacterRecord, NULL, &myRect);
 
 	fromRect.x = 0;
 	fromRect.y = 0;
@@ -882,9 +888,9 @@ bool CreateCharacterDialog::display()
 	myRect.w = (float)m_Rect.w * scaler;
 	myRect.h = myRect.w * (34.0f / 400.0f);
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
-	SDL_RenderTexture(m_renderer, m_resources.m_texRaceClass, &fromRect, &myRect);
+	SDL_RenderTexture(m_renderer, m_resources->m_texRaceClass, &fromRect, &myRect);
 
 	fromRect.x = 0;
 	fromRect.y = 170;
@@ -896,15 +902,22 @@ bool CreateCharacterDialog::display()
 	myRect.w = (float)m_Rect.w * scaler;
 	myRect.h = myRect.w * (53.0f / 400.0f);
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
-	SDL_RenderTexture(m_renderer, m_resources.m_texRaceClass, &fromRect, &myRect);
+	SDL_RenderTexture(m_renderer, m_resources->m_texRaceClass, &fromRect, &myRect);
 
 	SDL_Color sdl_text_color = { 0, 0, 0 };
 
 	for (auto& curLabel : m_labels)
 	{
-		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler), (int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
+		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler),
+			(int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
+	}
+
+	for (auto& curButton : m_buttons)
+	{
+		curButton->render(m_renderer, m_blockSize, (int)(curButton->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+			(int)(curButton->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
 	myRect.x = (float)m_Rect.x * scaler;
@@ -912,7 +925,7 @@ bool CreateCharacterDialog::display()
 	myRect.w = (float)m_Rect.w * scaler;
 	myRect.h = (float)m_Rect.h * scaler;
 
-	m_resources.adjustRect(myRect);
+	m_resources->adjustRect(myRect);
 
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
 	SDL_RenderRect(m_renderer, &myRect);
@@ -925,6 +938,14 @@ void CreateCharacterDialog::addLabel(std::string strLabel, int x, int y)
 {
 	auto curLabel = std::make_unique<U3DlgLabel>(m_engine_surface, m_font, strLabel, x, y);
 	m_labels.push_back(std::move(curLabel));
+}
+
+void CreateCharacterDialog::addButton(std::string strLabel, int x, int y)
+{
+	auto curButton = std::make_unique<U3Button>();
+	m_buttons.push_back(std::move(curButton));
+	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
+	m_buttons.back()->setVisible(true);
 }
 
 bool CreateCharacterDialog::createFont()
@@ -951,4 +972,30 @@ bool CreateCharacterDialog::createFont()
 	}
 
 	return retVal;
+}
+
+void CreateCharacterDialog::updateDialog(float xPos, float yPos, int mouseState)
+{
+	float scaler = (float)m_blockSize / 16.0f;
+
+	for (auto& curButton : m_buttons)
+	{
+		float butOffsetX = (float)(curButton->m_x * scaler + m_Rect.x * scaler);
+		float butOffsetY = (float)(curButton->m_y * scaler + m_Rect.y * scaler);
+		if (mouseState == 2) // mouse up
+		{
+			curButton->setMouseCapture(m_blockSize, 2, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+		else if (mouseState == 1) // mouse down
+		{
+			curButton->setMouseCapture(m_blockSize, 1, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+		else // mouse move
+		{
+			curButton->setMouseCapture(m_blockSize, 0, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+	}
 }

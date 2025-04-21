@@ -362,6 +362,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 				if (nStart != std::string::npos && nStart < nEnd)
 				{
 					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
+					strText = std::string(" ") + strText + std::string(" "); // just to give some extra padding
 					//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
 
 					curId++;

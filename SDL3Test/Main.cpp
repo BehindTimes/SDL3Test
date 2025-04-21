@@ -826,7 +826,7 @@ void JourneyOnward()
 
 void Game()
 {
-    /*m_misc->m_Player[1][34] = 0;
+    m_misc->m_Player[1][34] = 0;
     m_misc->m_Player[2][34] = 0;
     m_misc->m_Player[3][34] = 0;
     m_misc->m_Player[4][34] = 0;
@@ -837,7 +837,7 @@ void Game()
     m_misc->m_Player[1][32] = 0;
     m_misc->m_Player[2][32] = 0;
     m_misc->m_Player[3][32] = 0;
-    m_misc->m_Player[4][32] = 0;*/
+    m_misc->m_Player[4][32] = 0;
     //m_misc->m_xpos = 10;
     //m_misc->m_ypos = 10;
     m_misc->m_Player[1][15] = 50;

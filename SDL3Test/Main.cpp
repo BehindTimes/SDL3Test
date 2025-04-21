@@ -99,6 +99,8 @@ int main(int argc, char* argv[])
     m_graphics.reset();
     m_misc.reset();
     m_resources.reset();
+    auto blah = SDL_GetError();
+    std::cout << "Error = " << blah << std::endl;
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

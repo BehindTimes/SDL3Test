@@ -222,11 +222,13 @@ U3Resources::~U3Resources()
 		SDL_DestroyTexture(m_texBy);
 		m_texBy = nullptr;
 	}
+
 	if (m_texCredits)
 	{
 		SDL_DestroyTexture(m_texCredits);
 		m_texCredits = nullptr;
 	}
+
 	if (m_texExodusFade)
 	{
 		SDL_DestroyTexture(m_texExodusFade);
@@ -237,6 +239,7 @@ U3Resources::~U3Resources()
 		SDL_DestroyTexture(m_texUltimaLogoFade);
 		m_texUltimaLogoFade = nullptr;
 	}
+
 	if (m_texRaceClass)
 	{
 		SDL_DestroyTexture(m_texRaceClass);
@@ -539,11 +542,11 @@ void U3Resources::CalculateBlockSize()
 	int final = m_blockSize * 22;
 	if (m_texDisplay)
 	{
-		SDL_DestroyTexture(m_texBy);
+		SDL_DestroyTexture(m_texDisplay);
 	}
 	if (m_texStats)
 	{
-		SDL_DestroyTexture(m_texBy);
+		SDL_DestroyTexture(m_texStats);
 	}
 	loadButtons();
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);

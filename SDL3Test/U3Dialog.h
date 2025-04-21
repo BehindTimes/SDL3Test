@@ -10,7 +10,67 @@
 enum class DialogType
 {
 	Alert,
-	DITL
+	DITL,
+	Custom
+};
+
+struct U3DlgLabel
+{
+public:
+	U3DlgLabel(TTF_TextEngine* engine_surface, TTF_Font* font, std::string strLabel, int x, int y);
+	~U3DlgLabel();
+
+	void updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font);
+
+	std::string m_strLabel;
+	TTF_Text* m_ttfLabel;
+	int m_x;
+	int m_y;
+};
+
+class CreateCharacterDialog
+{
+public:
+	explicit CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface);
+	~CreateCharacterDialog();
+
+	void init();
+	bool display();
+	void changeBlockSize(int blockSize);
+	void addLabel(std::string strLabel, int x, int y);
+
+	SDL_FRect m_Rect;
+
+private:
+	bool createFont();
+	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
+
+	static constexpr std::string_view ResourceLoc = "Resources";
+	static constexpr std::string_view TextLoc = "Text";
+	static constexpr std::string_view FontLoc = "Fonts";
+	static constexpr std::string_view ImagesLoc = "Images";
+	static constexpr std::string_view BinLoc = "Bin";
+
+	static constexpr std::string_view NameString = "Name:";
+	static constexpr std::string_view StrengthString = "Strength:";
+	static constexpr std::string_view DexterityString = "Dexterity:";
+	static constexpr std::string_view IntelligenceString = "Intelligence:";
+	static constexpr std::string_view WisdomString = "Wisdom:";
+	static constexpr std::string_view PointsString = "Points Remaining:";
+	static constexpr std::string_view SexString = "Sex:";
+	static constexpr std::string_view RaceString = "Race:";
+	static constexpr std::string_view TypeString = "Type:";
+
+	int m_blockSize;
+	SDL_Renderer* m_renderer;
+	TTF_TextEngine* m_engine_surface;
+	std::vector<std::unique_ptr<U3DlgLabel>> m_labels;
+	TTF_Font* m_font; // block size font
+
+	std::string m_upArrow;
+	std::string m_downArrow;
+
+	//static const unsigned char m_upArrow[4] = { 0xE2, 0x87, 0xA7, 0 };
 };
 
 class U3Dialog
@@ -24,8 +84,7 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void HandleEvent(SDL_Event& event);
-	int ReturnValue() { return m_retVal; }
-
+	const int ReturnValue() { return m_retVal; }
 
 private:
 	void RewrapMessage(std::string& strMesssage);

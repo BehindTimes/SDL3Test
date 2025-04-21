@@ -208,6 +208,11 @@ public:
 	bool m_wasMove;
 	int m_selectedFormRect;
 	std::vector<int> m_selectedCharacters;
+	std::unique_ptr<CreateCharacterDialog> m_CreateCharacterDlg;
+	float m_characterRecordWidth;
+	float m_characterRecordHeight;
+	SDL_Texture* m_texRaceClass;
+	SDL_Texture* m_texCharacterRecord;
 
 private:
 	void LoadResource(std::string strFile);
@@ -282,9 +287,6 @@ private:
 	SDL_Texture* m_texRod;
 	SDL_Texture* m_texShrine;
 	SDL_Texture* m_texTimeLord;
-
-	SDL_Texture* m_texRaceClass;
-	SDL_Texture* m_texCharacterRecord;
 
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;

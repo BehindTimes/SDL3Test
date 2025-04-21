@@ -234,9 +234,14 @@ bool U3Dialog::createFont()
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";
 
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+	}
+
 	if (m_blockSize > 8)
 	{
-		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize - 4);
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
 		if (m_font)
 		{
 			retVal = true;
@@ -358,7 +363,8 @@ void U3Dialog::loadDitl(std::function<void(int)> callback)
 					//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
 
 					curId++;
-					m_vecButtons.emplace_back(std::make_unique<U3Button>());
+					auto curButton = std::make_unique<U3Button>();
+					m_vecButtons.push_back(std::move(curButton));
 					m_vecButtons.back()->CreateTextButton(m_renderer, m_engine_surface, m_resources.m_font, strText);
 					m_vecButtons.back()->SetButtonCallback(callback, curId);
 				}
@@ -545,6 +551,7 @@ TTF_Text* U3Dialog::calcDisplayString(TTF_Font* font, std::string curString, int
 
 void U3Dialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
 {
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
 	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX, (float)y + screenOffsetY);
 }
 
@@ -715,4 +722,233 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 			m_backButton.setMouseCapture(mouseState, event.motion.x, event.motion.y);
 		}
 	}
+}
+
+U3DlgLabel::U3DlgLabel(TTF_TextEngine* engine_surface, TTF_Font* font, std::string strLabel, int x, int y) :
+	m_strLabel(strLabel),
+	m_ttfLabel(nullptr),
+	m_x(x),
+	m_y(y)
+{
+	m_ttfLabel = TTF_CreateText(engine_surface, font, m_strLabel.c_str(), 0);
+}
+
+U3DlgLabel::~U3DlgLabel()
+{
+	if (m_ttfLabel)
+	{
+		TTF_DestroyText(m_ttfLabel);
+		m_ttfLabel = nullptr;
+	}
+}
+
+void U3DlgLabel::updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font)
+{
+	if (m_ttfLabel)
+	{
+		TTF_DestroyText(m_ttfLabel);
+		m_ttfLabel = nullptr;
+	}
+	m_ttfLabel = TTF_CreateText(engine_surface, font, m_strLabel.c_str(), 0);
+}
+
+CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface) :
+	m_renderer(renderer),
+	m_engine_surface(engine_surface),
+	m_blockSize(32),
+	m_Rect(NULL),
+	m_font(nullptr)
+{
+}
+
+CreateCharacterDialog::~CreateCharacterDialog()
+{
+	m_labels.clear();
+
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+	}
+}
+
+void CreateCharacterDialog::init()
+{
+	float scaler = (float)m_blockSize / 16.0f;
+	float ratio = m_resources.m_characterRecordWidth / (m_Rect.w * scaler);
+	int offsetY = (int)(m_resources.m_characterRecordHeight * ratio) / 2;
+
+	createFont();
+	addLabel(std::string(NameString), 8, 8 + offsetY);
+	addLabel(std::string(StrengthString), 8, 40 + offsetY);
+	addLabel(std::string(DexterityString), 8, 72 + offsetY);
+	addLabel(std::string(IntelligenceString), 8, 104 + offsetY);
+	addLabel(std::string(WisdomString), 8, 136 + offsetY);
+	addLabel(std::string(PointsString), 8, 168 + offsetY);
+
+	addLabel(std::string(SexString), 176, 56 + offsetY);
+	addLabel(std::string(RaceString), 176, 88 + offsetY);
+	addLabel(std::string(TypeString), 176, 120 + offsetY);
+
+	addLabel(std::to_string(99), 112, 40 + offsetY);
+	addLabel(std::to_string(99), 112, 72 + offsetY);
+	addLabel(std::to_string(99), 112, 104 + offsetY);
+	addLabel(std::to_string(99), 112, 136 + offsetY);
+	addLabel(std::to_string(99), 112, 168 + offsetY);
+
+	m_upArrow += static_cast<char>(0xE2);
+	m_upArrow += static_cast<char>(0x96);
+	m_upArrow += static_cast<char>(0xB4);
+
+	m_downArrow += static_cast<char>(0xE2);
+	m_downArrow += static_cast<char>(0x96);
+	m_downArrow += static_cast<char>(0xBE);
+
+	addLabel(m_upArrow, 144, 32 + offsetY);
+	addLabel(m_downArrow, 144, 48 + offsetY);
+	addLabel(m_upArrow, 144, 64 + offsetY);
+	addLabel(m_downArrow, 144, 80 + offsetY);
+	addLabel(m_upArrow, 144, 96 + offsetY);
+	addLabel(m_downArrow, 144, 112 + offsetY);
+	addLabel(m_upArrow, 144, 128 + offsetY);
+	addLabel(m_downArrow, 144, 144 + offsetY);
+
+	addLabel(m_upArrow, 312, 48 + offsetY);
+	addLabel(m_downArrow, 312, 64 + offsetY);
+	addLabel(m_upArrow, 312, 80 + offsetY);
+	addLabel(m_downArrow, 312, 96 + offsetY);
+	addLabel(m_upArrow, 312, 112 + offsetY);
+	addLabel(m_downArrow, 312, 128 + offsetY);
+}
+
+void CreateCharacterDialog::changeBlockSize(int blockSize)
+{
+	m_blockSize = blockSize;
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+		m_font = nullptr;
+	}
+	createFont();
+
+	for (auto& curLabel : m_labels)
+	{
+		curLabel->updateLabelFont(m_engine_surface, m_font);
+	}
+	//calculateRects();
+}
+
+void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
+{
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
+	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX, (float)y + screenOffsetY);
+}
+
+bool CreateCharacterDialog::display()
+{
+	if (m_resources.m_characterRecordWidth == 0 || m_resources.m_characterRecordHeight == 0)
+	{
+		return false;
+	}
+	SDL_FRect myRect, fromRect;
+	float scaler = (float)m_blockSize / 16.0f;
+	float ratio = m_resources.m_characterRecordHeight / m_resources.m_characterRecordWidth;
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = (float)m_Rect.h * scaler;
+
+	m_resources.adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 224, 224, 224, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = myRect.w * ratio;
+
+	m_resources.adjustRect(myRect);
+
+	SDL_RenderTexture(m_renderer, m_resources.m_texCharacterRecord, NULL, &myRect);
+
+	fromRect.x = 0;
+	fromRect.y = 0;
+	fromRect.w = 400;
+	fromRect.h = 34;
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = ((float)m_Rect.y * scaler) + ((float)m_Rect.h * scaler) - ((myRect.w * (34.0f / 400.0f)) + (myRect.w * (53.0f / 400.0f)));
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = myRect.w * (34.0f / 400.0f);
+
+	m_resources.adjustRect(myRect);
+
+	SDL_RenderTexture(m_renderer, m_resources.m_texRaceClass, &fromRect, &myRect);
+
+	fromRect.x = 0;
+	fromRect.y = 170;
+	fromRect.w = 400;
+	fromRect.h = 53;
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = ((float)m_Rect.y * scaler) + ((float)m_Rect.h * scaler) - ((myRect.w * (53.0f / 400.0f)));
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = myRect.w * (53.0f / 400.0f);
+
+	m_resources.adjustRect(myRect);
+
+	SDL_RenderTexture(m_renderer, m_resources.m_texRaceClass, &fromRect, &myRect);
+
+	SDL_Color sdl_text_color = { 0, 0, 0 };
+
+	for (auto& curLabel : m_labels)
+	{
+		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler), (int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
+	}
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = (float)m_Rect.h * scaler;
+
+	m_resources.adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_RenderRect(m_renderer, &myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	return false;
+}
+
+void CreateCharacterDialog::addLabel(std::string strLabel, int x, int y)
+{
+	auto curLabel = std::make_unique<U3DlgLabel>(m_engine_surface, m_font, strLabel, x, y);
+	m_labels.push_back(std::move(curLabel));
+}
+
+bool CreateCharacterDialog::createFont()
+{
+	bool retVal = false;
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= FontLoc;
+	currentPath /= "FreeSerif.ttf";
+
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+		m_font = nullptr;
+	}
+
+	if (m_blockSize > 8)
+	{
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
+		if (m_font)
+		{
+			retVal = true;
+		}
+	}
+
+	return retVal;
 }

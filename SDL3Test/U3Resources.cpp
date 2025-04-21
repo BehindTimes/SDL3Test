@@ -89,7 +89,9 @@ U3Resources::U3Resources() :
 	m_wasMove(false),
 	m_selectedFormRect(-1),
 	m_texRaceClass(nullptr),
-	m_texCharacterRecord(nullptr)
+	m_texCharacterRecord(nullptr),
+	m_characterRecordWidth(0),
+	m_characterRecordHeight(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -106,6 +108,7 @@ U3Resources::U3Resources() :
 
 U3Resources::~U3Resources()
 {
+	m_CreateCharacterDlg.reset();
 	m_AlertDlg.reset();
 	m_buttons.clear();
 
@@ -498,6 +501,11 @@ void U3Resources::CalculateBlockSize()
 		m_AlertDlg->changeBlockSize(m_blockSize);
 	}
 
+	if (m_CreateCharacterDlg.get())
+	{
+		m_CreateCharacterDlg->changeBlockSize(m_blockSize);
+	}
+
 	CreatePartyNames();
 
 	int final = m_blockSize * 22;
@@ -798,6 +806,8 @@ void U3Resources::loadImages()
 	currentPath /= ImagesLoc;
 	currentPath /= "CharacterRecord.jpg";
 	m_texCharacterRecord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	SDL_GetTextureSize(m_texCharacterRecord, &m_characterRecordWidth, &m_characterRecordHeight);
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -2192,7 +2202,18 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 
 		if (mouseState == 2 && m_selectedFormRect >= 0)
 		{
-			int j = 0;
+			float scaler = (float)m_blockSize / 16.0f;
+			float ratio = m_characterRecordHeight / m_characterRecordWidth;
+			float addheight = 336.0f * ratio;
+			float addheight1 = 336.0f * (34.0f / 400.0f);
+			float addheight2 = 336.0f * (53.0f / 400.0f);
+			m_graphics.m_obsCurMode = OrganizeBottomScreen::CreateCharacter;
+			m_CreateCharacterDlg = std::make_unique<CreateCharacterDialog>(m_renderer, engine_surface);
+			m_CreateCharacterDlg->m_Rect.x = 144;
+			m_CreateCharacterDlg->m_Rect.y = ((384 - (200 + addheight + addheight1 + addheight2)) / 2);
+			m_CreateCharacterDlg->m_Rect.w = 336;
+			m_CreateCharacterDlg->m_Rect.h = 200 + addheight + addheight1 + addheight2;
+			m_CreateCharacterDlg->init();
 		}
 	}
 }

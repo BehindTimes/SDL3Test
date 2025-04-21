@@ -903,11 +903,6 @@ void CreateCharacterDialog::init()
 	addTextBox(210, 56 + offsetY, 100);
 	addTextBox(210, 90 + offsetY, 100);
 	addTextBox(210, 124 + offsetY, 100);
-
-	m_textBoxes[0]->setText(m_engine_surface, m_font, "Tatiana");
-	m_textBoxes[1]->setText(m_engine_surface, m_font, "Female");
-	m_textBoxes[2]->setText(m_engine_surface, m_font, "Human");
-	m_textBoxes[3]->setText(m_engine_surface, m_font, "Fighter");
 }
 
 void CreateCharacterDialog::changeBlockSize(int blockSize)
@@ -924,6 +919,11 @@ void CreateCharacterDialog::changeBlockSize(int blockSize)
 	m_buttons.clear();
 	m_textBoxes.clear();
 	init();
+
+	m_textBoxes[0]->setText(m_engine_surface, m_font, "Tatiana");
+	m_textBoxes[1]->setText(m_engine_surface, m_font, "Female");
+	m_textBoxes[2]->setText(m_engine_surface, m_font, "Human");
+	m_textBoxes[3]->setText(m_engine_surface, m_font, "Fighter");
 }
 
 void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)

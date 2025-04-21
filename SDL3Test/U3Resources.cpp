@@ -120,59 +120,71 @@ U3Resources::~U3Resources()
 		if (mode.second.font)
 		{
 			SDL_DestroyTexture(mode.second.font);
+			mode.second.font = nullptr;
 		}
 		if (mode.second.ui)
 		{
 			SDL_DestroyTexture(mode.second.ui);
+			mode.second.ui = nullptr;
 		}
 
 		for (auto& curTex : mode.second.tiles)
 		{
 			SDL_DestroyTexture(curTex);
+			curTex = nullptr;
 		}
 		for (auto& curTex : mode.second.tile_target)
 		{
 			SDL_DestroyTexture(curTex);
+			curTex = nullptr;
 		}
 		for (auto& curTex : mode.second.mini_tiles)
 		{
 			SDL_DestroyTexture(curTex);
+			curTex = nullptr;
 		}
 	}
 
 	if (m_texSosariaMap)
 	{
 		SDL_DestroyTexture(m_texSosariaMap);
+		m_texSosariaMap = nullptr;
 	}
 
 	if (m_texFountain)
 	{
 		SDL_DestroyTexture(m_texFountain);
+		m_texFountain = nullptr;
 	}
 
 	if (m_texRod)
 	{
 		SDL_DestroyTexture(m_texRod);
+		m_texRod = nullptr;
 	}
 
 	if (m_texShrine)
 	{
 		SDL_DestroyTexture(m_texShrine);
+		m_texShrine = nullptr;
 	}
 
 	if (m_texTimeLord)
 	{
 		SDL_DestroyTexture(m_texTimeLord);
+		m_texTimeLord = nullptr;
 	}
 
 	if (m_texStalagtites)
 	{
 		SDL_DestroyTexture(m_texStalagtites);
+		m_texStalagtites = nullptr;
 	}
 
 	if (m_texPortraits)
 	{
 		SDL_DestroyTexture(m_texPortraits);
+		m_texPortraits = nullptr;
 	}
 
 	for (int index = 0; index < 5; ++index)
@@ -180,66 +192,81 @@ U3Resources::~U3Resources()
 		if (m_texIntro[index])
 		{
 			SDL_DestroyTexture(m_texIntro[index]);
+			m_texIntro[index] = nullptr;
 		}
 	}
 
 	if (m_texDisplay)
 	{
 		SDL_DestroyTexture(m_texDisplay);
+		m_texDisplay = nullptr;
 	}
 	if (m_texStats)
 	{
-		SDL_DestroyTexture(m_texDisplay);
+		SDL_DestroyTexture(m_texStats);
+		m_texStats = nullptr;
 	}
 
 	if (m_texExodus)
 	{
 		SDL_DestroyTexture(m_texExodus);
+		m_texExodus = nullptr;
 	}
 	if (m_texUltimaLogo)
 	{
 		SDL_DestroyTexture(m_texUltimaLogo);
+		m_texUltimaLogo = nullptr;
 	}
 	if (m_texBy)
 	{
 		SDL_DestroyTexture(m_texBy);
+		m_texBy = nullptr;
 	}
 	if (m_texCredits)
 	{
 		SDL_DestroyTexture(m_texCredits);
+		m_texCredits = nullptr;
 	}
 	if (m_texExodusFade)
 	{
 		SDL_DestroyTexture(m_texExodusFade);
+		m_texExodusFade = nullptr;
 	}
 	if (m_texUltimaLogoFade)
 	{
 		SDL_DestroyTexture(m_texUltimaLogoFade);
+		m_texUltimaLogoFade = nullptr;
 	}
 	if (m_texRaceClass)
 	{
 		SDL_DestroyTexture(m_texRaceClass);
+		m_texRaceClass = nullptr;
 	}
 	if (m_texCharacterRecord)
 	{
 		SDL_DestroyTexture(m_texCharacterRecord);
+		m_texCharacterRecord = nullptr;
 	}
 
 	if (m_font)
 	{
 		TTF_CloseFont(m_font);
+		m_font = nullptr;
 	}
 	if (m_font_9)
 	{
 		TTF_CloseFont(m_font_9);
+		m_font_9 = nullptr;
 	}
 	if (m_font_11)
 	{
 		TTF_CloseFont(m_font_11);
+		m_font_11 = nullptr;
 	}
 	if (m_font_12)
 	{
 		TTF_CloseFont(m_font_12);
+		m_font_12 = nullptr;
 	}
 
 	TTF_Quit();

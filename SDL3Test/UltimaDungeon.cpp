@@ -70,6 +70,7 @@ UltimaDungeon::~UltimaDungeon()
 		if (m_texDungeonDoors[index])
 		{
 			SDL_DestroyTexture(m_texDungeonDoors[index]);
+			m_texDungeonDoors[index] = nullptr;
 		}
 	}
 	for (int index = 0; index < 21; ++index)
@@ -77,32 +78,39 @@ UltimaDungeon::~UltimaDungeon()
 		if (m_texSecrets[index])
 		{
 			SDL_DestroyTexture(m_texSecrets[index]);
+			m_texSecrets[index] = nullptr;
 		}
 	}
 
 	if (m_texDungeonPort)
 	{
 		SDL_DestroyTexture(m_texDungeonPort);
+		m_texDungeonPort = nullptr;
 	}
 	if (m_texDungeonShapes)
 	{
 		SDL_DestroyTexture(m_texDungeonShapes);
+		m_texDungeonShapes = nullptr;
 	}
 	if (m_texFountain)
 	{
 		SDL_DestroyTexture(m_texFountain);
+		m_texFountain = nullptr;
 	}
 	if (m_texTimeLord)
 	{
 		SDL_DestroyTexture(m_texTimeLord);
+		m_texTimeLord = nullptr;
 	}
 	if (m_texRod)
 	{
 		SDL_DestroyTexture(m_texRod);
+		m_texRod = nullptr;
 	}
 	if (m_texShrine)
 	{
 		SDL_DestroyTexture(m_texShrine);
+		m_texShrine = nullptr;
 	}
 }
 

@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <array>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
@@ -50,6 +52,31 @@ private:
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 };
 
+struct ccdData
+{
+	ccdData() :
+		strength(5),
+		wisdom(5),
+		dexterity(5),
+		intelligence(5),
+		sex(0),
+		race(0),
+		type(0),
+		remaining(0)
+	{
+	}
+	std::string name;
+	unsigned char strength;
+	unsigned char wisdom;
+	unsigned char dexterity;
+	unsigned char intelligence;
+	unsigned char remaining;
+
+	int sex;
+	int type;
+	int race;
+};
+
 class CreateCharacterDialog
 {
 public:
@@ -60,14 +87,36 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void addLabel(std::string strLabel, int x, int y);
-	void addButton(std::string strLabel, int x, int y);
+	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func);
 	void addTextBox(int x, int y, int width);
 	void updateDialog(float xPos, float yPos, int mouseState);
+	void loadPresets();
 	SDL_FRect m_Rect;
 
+	unsigned char* m_curPlayer;
+
 private:
+	void strengthUp(int id);
+	void strengthDown(int id);
+	void dexterityUp(int id);
+	void dexterityDown(int id);
+	void intelligenceUp(int id);
+	void intelligenceDown(int id);
+	void wisdomUp(int id);
+	void wisdomDown(int id);
+	void sexUp(int id);
+	void sexDown(int id);
+	void raceUp(int id);
+	void raceDown(int id);
+	void typeUp(int id);
+	void typeDown(int id);
+	void cancelPushed(int id);
+	void okPushed(int id);
+	void randomNamePushed(int id);
+
 	bool createFont();
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
+	int getClassIndex(char value);
 
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view TextLoc = "Text";
@@ -98,8 +147,8 @@ private:
 
 	std::string m_upArrow;
 	std::string m_downArrow;
-
-	//static const unsigned char m_upArrow[4] = { 0xE2, 0x87, 0xA7, 0 };
+	std::vector<std::array<char, 4>> m_Presets;
+	ccdData m_ccdData;
 };
 
 class U3Dialog

@@ -33,6 +33,8 @@ constexpr int MINITILES_NUM_Y = 1;
 
 constexpr int NUM_PORTRAITS = 40;
 
+void backToMenu(int button);
+
 U3Resources::U3Resources() :
 	m_renderer(nullptr),
 	m_currentGraphics(nullptr),
@@ -2240,7 +2242,7 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 			}
 		}
 
-		if (mouseState == 2 && m_selectedFormRect >= 0)
+		if (mouseState == 2 && m_selectedFormRect >= 0 && m_selectedFormRect < 20)
 		{
 			float scaler = (float)m_blockSize / 16.0f;
 			float ratio = m_characterRecordHeight / m_characterRecordWidth;
@@ -2249,11 +2251,15 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 			float addheight2 = 336.0f * (53.0f / 400.0f);
 			m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacter;
 			m_CreateCharacterDlg = std::make_unique<CreateCharacterDialog>(m_renderer, engine_surface);
+			m_CreateCharacterDlg->loadPresets();
 			m_CreateCharacterDlg->m_Rect.x = 144;
 			m_CreateCharacterDlg->m_Rect.y = ((384 - (200 + addheight + addheight1 + addheight2)) / 2);
 			m_CreateCharacterDlg->m_Rect.w = 336;
 			m_CreateCharacterDlg->m_Rect.h = 200 + addheight + addheight1 + addheight2;
 			m_CreateCharacterDlg->changeBlockSize(m_blockSize);
+			m_CreateCharacterDlg->m_curPlayer = m_misc->m_Player[m_selectedFormRect + 1];
+			m_selectedFormRect = -1;
+			SetButtonCallback(7, backToMenu);
 		}
 	}
 }

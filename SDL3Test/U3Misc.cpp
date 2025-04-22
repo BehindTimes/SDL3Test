@@ -199,7 +199,7 @@ void U3Misc::OpenRstr()
 			}
 		}
 	}
-	catch (std::exception)
+	catch ([[maybe_unused]]const std::exception& e)
 	{
 		return;
 	}
@@ -1434,7 +1434,7 @@ bool U3Misc::InputNumCallback()
 	{
 		m_input_num = std::stoi(m_input);
 	}
-	catch ([[maybe_unused]] std::exception& e)
+	catch ([[maybe_unused]]const std::exception& e)
 	{
 		m_input_num = 0;
 	}
@@ -2622,7 +2622,7 @@ bool U3Misc::weaponsBuyCallback()
 		{
 			amount = std::stoi(dispString);
 		}
-		catch ([[maybe_unused]] std::exception& e)
+		catch ([[maybe_unused]] const std::exception& e)
 		{
 			amount = 0;
 		}
@@ -2699,7 +2699,7 @@ bool U3Misc::weaponsSellCallback()
 		{
 			amount = std::stoi(dispString);
 		}
-		catch ([[maybe_unused]] std::exception& e)
+		catch ([[maybe_unused]] const std::exception& e)
 		{
 			amount = 0;
 		}
@@ -2750,7 +2750,7 @@ bool U3Misc::armorsBuyCallback()
 		{
 			amount = std::stoi(dispString);
 		}
-		catch ([[maybe_unused]] std::exception& e)
+		catch ([[maybe_unused]] const std::exception& e)
 		{
 			amount = 0;
 		}
@@ -2816,7 +2816,7 @@ bool U3Misc::armorsSellCallback()
 		{
 			amount = std::stoi(dispString);
 		}
-		catch ([[maybe_unused]] std::exception& e)
+		catch ([[maybe_unused]] const std::exception& e)
 		{
 			amount = 0;
 		}

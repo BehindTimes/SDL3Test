@@ -4,12 +4,14 @@
 #include "U3Button.h"
 #include "U3Utilities.h"
 #include "U3Resources.h"
+#include "UltimaGraphics.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;
 extern short screenOffsetY;
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Utilities> m_utilities;
+extern std::unique_ptr<U3Graphics> m_graphics;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
@@ -833,7 +835,8 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 	m_engine_surface(engine_surface),
 	m_blockSize(32),
 	m_Rect(NULL),
-	m_font(nullptr)
+	m_font(nullptr),
+	m_curPlayer(nullptr)
 {
 	m_upArrow += static_cast<char>(0xE2);
 	m_upArrow += static_cast<char>(0x96);
@@ -856,6 +859,114 @@ CreateCharacterDialog::~CreateCharacterDialog()
 	}
 }
 
+void CreateCharacterDialog::loadPresets()
+{
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= TextLoc;
+	currentPath /= "MainResources.rsrc_STR#_415_Class Preset Values_";
+
+	m_Presets.resize(10);
+
+	for (int index = 0; index < 10; ++index)
+	{
+		std::filesystem::path tempPath = currentPath;
+		tempPath += std::to_string(index);
+		tempPath += std::string(".txt");
+
+		std::string strTemp = m_utilities->PathToSDLString(tempPath);
+		if (strTemp.empty())
+		{
+			m_Presets[index][0] = 5;
+			m_Presets[index][1] = 5;
+			m_Presets[index][2] = 5;
+			m_Presets[index][3] = 5;
+
+			continue;
+		}
+		SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
+		if (!file)
+		{
+			m_Presets[index][0] = 5;
+			m_Presets[index][1] = 5;
+			m_Presets[index][2] = 5;
+			m_Presets[index][3] = 5;
+
+			continue;
+		}
+		Sint64 fSize = SDL_GetIOSize(file);
+		std::vector<char> file_data;
+
+		if (fSize > 0)
+		{
+			file_data.resize(fSize);
+			SDL_ReadIO(file, file_data.data(), fSize);
+		}
+		
+		SDL_CloseIO(file);
+		file_data.emplace_back(0);
+		std::string strData = std::string(file_data.data());
+		auto vals = m_utilities->splitString(strData, ' ');
+		if (vals.size() != 5)
+		{
+			m_Presets[index][0] = 5;
+			m_Presets[index][1] = 5;
+			m_Presets[index][2] = 5;
+			m_Presets[index][3] = 5;
+		}
+		else
+		{
+			int totalCount = 0;
+			try
+			{
+				for (int tempIndex = 1; tempIndex < 5; ++tempIndex)
+				{
+					int tempcount = std::stoi(vals[tempIndex]);
+					m_Presets[index][tempIndex - 1] = tempcount;
+					totalCount += tempcount;
+				}
+				if (totalCount < 20 || totalCount > 50)
+				{
+					m_Presets[index][0] = 5;
+					m_Presets[index][1] = 5;
+					m_Presets[index][2] = 5;
+					m_Presets[index][3] = 5;
+				}
+			}
+			catch ([[maybe_unused]]const std::exception& e)
+			{
+				m_Presets[index][0] = 5;
+				m_Presets[index][1] = 5;
+				m_Presets[index][2] = 5;
+				m_Presets[index][3] = 5;
+			}
+		}
+	}
+	int rngVal = m_utilities->getRandom(0, 1);
+	m_ccdData.sex = rngVal;
+	if (rngVal == 0)
+	{
+		int maxVal = (int)m_resources->m_plistMap["Male"].size();
+		rngVal = m_utilities->getRandom(0, maxVal - 1);
+		m_ccdData.name = m_resources->m_plistMap["Male"][rngVal];
+	}
+	else
+	{
+		int maxVal = (int)m_resources->m_plistMap["Female"].size();
+		rngVal = m_utilities->getRandom(0, maxVal - 1);
+		m_ccdData.name = m_resources->m_plistMap["Female"][rngVal];
+	}
+	if (m_ccdData.name.size() > 12)
+	{
+		m_ccdData.name.clear();
+	}
+}
+
+int CreateCharacterDialog::getClassIndex(char value)
+{
+	return 0;
+}
+
 void CreateCharacterDialog::init()
 {
 	float scaler = 2.0f;
@@ -863,6 +974,12 @@ void CreateCharacterDialog::init()
 	int offsetY = (int)(m_resources->m_characterRecordHeight * ratio) / 2;
 
 	createFont();
+	addLabel(std::to_string((int)m_ccdData.strength), 112, 40 + offsetY);
+	addLabel(std::to_string((int)m_ccdData.dexterity), 112, 74 + offsetY);
+	addLabel(std::to_string((int)m_ccdData.intelligence), 112, 108 + offsetY);
+	addLabel(std::to_string((int)m_ccdData.wisdom), 112, 142 + offsetY);
+	addLabel(std::to_string((int)m_ccdData.remaining), 112, 176 + offsetY);
+
 	addLabel(std::string(NameString), 8, 8 + offsetY);
 	addLabel(std::string(StrengthString), 8, 40 + offsetY);
 	addLabel(std::string(DexterityString), 8, 74 + offsetY);
@@ -874,37 +991,241 @@ void CreateCharacterDialog::init()
 	addLabel(std::string(RaceString), 176, 90 + offsetY);
 	addLabel(std::string(TypeString), 176, 124 + offsetY);
 
-	addLabel(std::to_string(99), 112, 40 + offsetY);
-	addLabel(std::to_string(99), 112, 74 + offsetY);
-	addLabel(std::to_string(99), 112, 108 + offsetY);
-	addLabel(std::to_string(99), 112, 142 + offsetY);
-	addLabel(std::to_string(99), 112, 176 + offsetY);
+	addButton(m_upArrow, 144, 32 + offsetY, std::bind(&CreateCharacterDialog::strengthUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 144, 48 + offsetY, std::bind(&CreateCharacterDialog::strengthDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 144, 66 + offsetY, std::bind(&CreateCharacterDialog::dexterityUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 144, 82 + offsetY, std::bind(&CreateCharacterDialog::dexterityDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 144, 100 + offsetY, std::bind(&CreateCharacterDialog::intelligenceUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 144, 116 + offsetY, std::bind(&CreateCharacterDialog::intelligenceDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 144, 134 + offsetY, std::bind(&CreateCharacterDialog::wisdomUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 144, 150 + offsetY, std::bind(&CreateCharacterDialog::wisdomDown, this, std::placeholders::_1));
 
-	addButton(m_upArrow, 144, 32 + offsetY);
-	addButton(m_downArrow, 144, 48 + offsetY);
-	addButton(m_upArrow, 144, 66 + offsetY);
-	addButton(m_downArrow, 144, 82 + offsetY);
-	addButton(m_upArrow, 144, 100 + offsetY);
-	addButton(m_downArrow, 144, 116 + offsetY);
-	addButton(m_upArrow, 144, 134 + offsetY);
-	addButton(m_downArrow, 144, 150 + offsetY);
+	addButton(m_upArrow, 312, 48 + offsetY, std::bind(&CreateCharacterDialog::sexUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 312, 64 + offsetY, std::bind(&CreateCharacterDialog::sexDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 312, 82 + offsetY, std::bind(&CreateCharacterDialog::raceUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 312, 98 + offsetY, std::bind(&CreateCharacterDialog::raceDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 312, 116 + offsetY, std::bind(&CreateCharacterDialog::typeUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 312, 132 + offsetY, std::bind(&CreateCharacterDialog::typeDown, this, std::placeholders::_1));
 
-	addButton(m_upArrow, 312, 48 + offsetY);
-	addButton(m_downArrow, 312, 64 + offsetY);
-	addButton(m_upArrow, 312, 82 + offsetY);
-	addButton(m_downArrow, 312, 98 + offsetY);
-	addButton(m_upArrow, 312, 116 + offsetY);
-	addButton(m_downArrow, 312, 132 + offsetY);
-
-	addButton(std::string(CancelString), 176, 176 + offsetY);
-	addButton(std::string(OKString), 256, 176 + offsetY);
-	addButton(std::string(RandomNameString), 176, 8 + offsetY);
+	addButton(std::string(CancelString), 176, 176 + offsetY, std::bind(&CreateCharacterDialog::cancelPushed, this, std::placeholders::_1));
+	addButton(std::string(OKString), 256, 176 + offsetY, std::bind(&CreateCharacterDialog::okPushed, this, std::placeholders::_1));
+	addButton(std::string(RandomNameString), 176, 8 + offsetY, std::bind(&CreateCharacterDialog::randomNamePushed, this, std::placeholders::_1));
 
 	addTextBox(60, 8 + offsetY, 100);
 	addTextBox(210, 56 + offsetY, 100);
 	addTextBox(210, 90 + offsetY, 100);
 	addTextBox(210, 124 + offsetY, 100);
+
+	m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+	std::string strSex;
+	switch (m_ccdData.sex)
+	{
+	case 1:
+		strSex = std::string("Female");
+		break;
+	case 2:
+		strSex = std::string("Other");
+		break;
+	default:
+		strSex = std::string("Male");
+		break;
+	}
+	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+
+	std::string strRace;
+	if (m_resources->m_plistMap["Races"].size() < m_ccdData.race)
+	{
+		strRace = std::string("Human");
+	}
+	else
+	{
+		strRace = m_resources->m_plistMap["Races"][m_ccdData.race];
+	}
+	m_textBoxes[2]->setText(m_engine_surface, m_font, strRace);
+	std::string strClass;
+	if (m_resources->m_plistMap["Classes"].size() < m_ccdData.type)
+	{
+		strClass = std::string("Fighter");
+	}
+	else
+	{
+		strClass = m_resources->m_plistMap["Classes"][m_ccdData.type];
+	}
+	m_textBoxes[3]->setText(m_engine_surface, m_font, strClass);
 }
+
+void CreateCharacterDialog::strengthUp(int id)
+{
+}
+
+void CreateCharacterDialog::strengthDown(int id)
+{
+}
+
+void CreateCharacterDialog::dexterityUp(int id)
+{
+}
+
+void CreateCharacterDialog::dexterityDown(int id)
+{
+}
+
+void CreateCharacterDialog::intelligenceUp(int id)
+{
+}
+
+void CreateCharacterDialog::intelligenceDown(int id)
+{
+}
+
+void CreateCharacterDialog::wisdomUp(int id)
+{
+}
+
+void CreateCharacterDialog::wisdomDown(int id)
+{
+}
+
+void CreateCharacterDialog::sexUp(int id)
+{
+	m_ccdData.sex++;
+	if (m_ccdData.sex > 2)
+	{
+		m_ccdData.sex = 0;
+	}
+	std::string strSex;
+	switch (m_ccdData.sex)
+	{
+	case 1:
+		strSex = std::string("Female");
+		break;
+	case 2:
+		strSex = std::string("Other");
+		break;
+	default:
+		strSex = std::string("Male");
+		break;
+	}
+	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+}
+
+void CreateCharacterDialog::sexDown(int id)
+{
+	m_ccdData.sex--;
+	if (m_ccdData.sex < 0)
+	{
+		m_ccdData.sex = 2;
+	}
+	std::string strSex;
+	switch (m_ccdData.sex)
+	{
+	case 1:
+		strSex = std::string("Female");
+		break;
+	case 2:
+		strSex = std::string("Other");
+		break;
+	default:
+		strSex = std::string("Male");
+		break;
+	}
+	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+}
+
+void CreateCharacterDialog::raceUp(int id)
+{
+	m_ccdData.race++;
+	if (m_ccdData.race >= m_resources->m_plistMap["Races"].size())
+	{
+		m_ccdData.race = 0;
+	}
+	if (m_resources->m_plistMap["Races"].size() > 0)
+	{
+		std::string strValue = m_resources->m_plistMap["Races"][m_ccdData.race];
+		m_textBoxes[2]->setText(m_engine_surface, m_font, strValue);
+	}
+}
+
+void CreateCharacterDialog::raceDown(int id)
+{
+	m_ccdData.race--;
+	if (m_ccdData.race < 0)
+	{
+		m_ccdData.race = (int)m_resources->m_plistMap["Races"].size() - 1;
+	}
+	if (m_resources->m_plistMap["Races"].size() > 0)
+	{
+		std::string strValue = m_resources->m_plistMap["Races"][m_ccdData.race];
+		m_textBoxes[2]->setText(m_engine_surface, m_font, strValue);
+	}
+}
+
+void CreateCharacterDialog::typeUp(int id)
+{
+	m_ccdData.type++;
+	if (m_ccdData.type >= m_resources->m_plistMap["Classes"].size())
+	{
+		m_ccdData.type = 0;
+	}
+	if (m_resources->m_plistMap["Classes"].size() > 0)
+	{
+		std::string strValue = m_resources->m_plistMap["Classes"][m_ccdData.type];
+		m_textBoxes[3]->setText(m_engine_surface, m_font, strValue);
+	}
+}
+
+void CreateCharacterDialog::typeDown(int id)
+{
+	m_ccdData.type--;
+	if (m_ccdData.type < 0)
+	{
+		m_ccdData.type = (int)m_resources->m_plistMap["Classes"].size() - 1;
+	}
+	if (m_resources->m_plistMap["Classes"].size() > 0)
+	{
+		std::string strValue = m_resources->m_plistMap["Classes"][m_ccdData.type];
+		m_textBoxes[3]->setText(m_engine_surface, m_font, strValue);
+	}
+}
+
+void CreateCharacterDialog::cancelPushed(int id)
+{
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+}
+
+void CreateCharacterDialog::okPushed(int id)
+{
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+}
+
+void CreateCharacterDialog::randomNamePushed(int id)
+{
+	int rngVal;
+	if (m_ccdData.sex == 0)
+	{
+		int maxVal = (int)m_resources->m_plistMap["Male"].size();
+		rngVal = m_utilities->getRandom(0, maxVal - 1);
+		m_ccdData.name = m_resources->m_plistMap["Male"][rngVal];
+	}
+	else if(m_ccdData.sex == 1)
+	{
+		int maxVal = (int)m_resources->m_plistMap["Female"].size();
+		rngVal = m_utilities->getRandom(0, maxVal - 1);
+		m_ccdData.name = m_resources->m_plistMap["Female"][rngVal];
+	}
+	else
+	{
+		int maxVal = (int)m_resources->m_plistMap["Intersex"].size();
+		rngVal = m_utilities->getRandom(0, maxVal - 1);
+		m_ccdData.name = m_resources->m_plistMap["Intersex"][rngVal];
+	}
+	if (m_ccdData.name.size() > 12)
+	{
+		m_ccdData.name.clear();
+	}
+	m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+}
+
 
 void CreateCharacterDialog::changeBlockSize(int blockSize)
 {
@@ -920,11 +1241,6 @@ void CreateCharacterDialog::changeBlockSize(int blockSize)
 	m_buttons.clear();
 	m_textBoxes.clear();
 	init();
-
-	m_textBoxes[0]->setText(m_engine_surface, m_font, "Tatiana");
-	m_textBoxes[1]->setText(m_engine_surface, m_font, "Female");
-	m_textBoxes[2]->setText(m_engine_surface, m_font, "Human");
-	m_textBoxes[3]->setText(m_engine_surface, m_font, "Fighter");
 }
 
 void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
@@ -1031,12 +1347,13 @@ void CreateCharacterDialog::addLabel(std::string strLabel, int x, int y)
 	m_labels.push_back(std::move(curLabel));
 }
 
-void CreateCharacterDialog::addButton(std::string strLabel, int x, int y)
+void CreateCharacterDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func)
 {
 	auto curButton = std::make_unique<U3Button>();
 	m_buttons.push_back(std::move(curButton));
 	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
 	m_buttons.back()->setVisible(true);
+	m_buttons.back()->SetButtonCallback(func);
 }
 
 void CreateCharacterDialog::addTextBox(int x, int y, int width)

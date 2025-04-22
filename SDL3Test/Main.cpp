@@ -262,8 +262,17 @@ void disperseParty([[maybe_unused]] int button)
 
 void createCharacterChooseSlot([[maybe_unused]] int button)
 {
+    bool hasSpace = m_resources->CheckRosterSpace();
     m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
-    m_resources->SetButtonCallback(7, backToOrganize);
+    
+    if (!hasSpace)
+    {
+        m_resources->CreateAlertMessage(6);
+    }
+    else
+    {
+        m_resources->SetButtonCallback(7, backToOrganize);
+    }
 }
 
 void formParty([[maybe_unused]] int button)
@@ -599,6 +608,7 @@ void Organize()
     int mouseState = 0;
     bool updateMouse = false;
     changeMode = false;
+    bool hasAlert = false;
 
     while (1)
     {
@@ -676,6 +686,13 @@ void Organize()
         }
         Uint64 curTick = SDL_GetTicks();
 
+        bool alertValid = false;
+        if (m_resources->HasAlert())
+        {
+            hasAlert = true;
+            alertValid = true;
+        }
+
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
         if (updateMouse)
@@ -683,8 +700,13 @@ void Organize()
             switch (m_graphics->m_obsCurMode)
             {
             case OrganizeBottomScreen::CreateCharacterChooseSlot:
-                m_resources->UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
-                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+            {
+				if (!hasAlert)
+				{
+					m_resources->UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
+					m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+				}
+			}
                 break;
             case OrganizeBottomScreen::CreateCharacter:
                 m_resources->UpdateCreateCharacter(event.motion.x, event.motion.y, mouseState);
@@ -711,7 +733,20 @@ void Organize()
         }
         m_graphics->DrawFrame(3);
         m_graphics->DrawOrganizeMenu(event);
+        if (hasAlert)
+        {
+            m_resources->HandleAlert(event);
+        }
         SDL_RenderPresent(renderer);
+
+        if (!alertValid)
+        {
+            if (hasAlert)
+            {
+                hasAlert = false;
+                m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+            }
+        }
 
         if (changeMode)
         {

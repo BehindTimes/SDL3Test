@@ -140,6 +140,7 @@ public:
 	void setTickCount(Uint64 curTick, bool initializeTimer = true);
 	void DemoUpdate(Uint64 curTick);
 	bool CheckJourneyOnward();
+	bool CheckRosterSpace() const;
 	void CreateAlertMessage(int message, DialogType type = DialogType::Alert);
 	bool HandleAlert(SDL_Event& event);
 	bool HasAlert();

@@ -3644,6 +3644,19 @@ void U3Resources::CleanupPartyNames()
 	}
 }
 
+bool U3Resources::CheckRosterSpace() const
+{
+	for (int i = 1; i < 21; ++i)
+	{
+		if (!m_partyDisplay[i - 1].Name)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void U3Resources::CreatePartyNames()
 {
 	unsigned char c;

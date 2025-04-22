@@ -23,6 +23,7 @@ public:
 	~U3DlgLabel();
 
 	void updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font);
+	void setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text);
 
 	std::string m_strLabel;
 	TTF_Text* m_ttfLabel;
@@ -147,7 +148,7 @@ private:
 
 	std::string m_upArrow;
 	std::string m_downArrow;
-	std::vector<std::array<char, 4>> m_Presets;
+	std::vector<std::array<char, 5>> m_Presets;
 	ccdData m_ccdData;
 };
 

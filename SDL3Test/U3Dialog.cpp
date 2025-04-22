@@ -820,6 +820,17 @@ U3DlgLabel::~U3DlgLabel()
 	}
 }
 
+void U3DlgLabel::setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text)
+{
+	if (m_ttfLabel)
+	{
+		TTF_DestroyText(m_ttfLabel);
+		m_ttfLabel = nullptr;
+	}
+	m_strLabel = text;
+	m_ttfLabel = TTF_CreateText(engine_surface, font, text.c_str(), 0);
+}
+
 void U3DlgLabel::updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font)
 {
 	if (m_ttfLabel)
@@ -866,10 +877,12 @@ void CreateCharacterDialog::loadPresets()
 	currentPath /= TextLoc;
 	currentPath /= "MainResources.rsrc_STR#_415_Class Preset Values_";
 
-	m_Presets.resize(10);
+	m_Presets.resize((int)m_resources->m_plistMap["Classes"].size());
 
-	for (int index = 0; index < 10; ++index)
+	for (int index = 0; index < (int)m_resources->m_plistMap["Classes"].size(); ++index)
 	{
+		m_Presets[index][4] = 0;
+
 		std::filesystem::path tempPath = currentPath;
 		tempPath += std::to_string(index);
 		tempPath += std::string(".txt");
@@ -925,6 +938,10 @@ void CreateCharacterDialog::loadPresets()
 					m_Presets[index][tempIndex - 1] = tempcount;
 					totalCount += tempcount;
 				}
+				if (vals[0].size() >= 2)
+				{
+					m_Presets[index][4] = vals[0][1] - '0';
+				}
 				if (totalCount < 20 || totalCount > 50)
 				{
 					m_Presets[index][0] = 5;
@@ -959,6 +976,23 @@ void CreateCharacterDialog::loadPresets()
 	if (m_ccdData.name.size() > 12)
 	{
 		m_ccdData.name.clear();
+	}
+
+	m_ccdData.type = m_utilities->getRandom(0, (int)m_resources->m_plistMap["Classes"].size() - 1);
+	m_ccdData.type = (int)m_resources->m_plistMap["Classes"].size() - 1;
+
+	if (m_ccdData.type < m_Presets.size())
+	{
+		m_ccdData.race = m_Presets[m_ccdData.type][4];
+		m_ccdData.strength = m_Presets[m_ccdData.type][0];
+		m_ccdData.dexterity = m_Presets[m_ccdData.type][1];
+		m_ccdData.intelligence = m_Presets[m_ccdData.type][2];
+		m_ccdData.wisdom = m_Presets[m_ccdData.type][3];
+		m_ccdData.remaining = 50 - (m_ccdData.strength + m_ccdData.dexterity + m_ccdData.intelligence + m_ccdData.wisdom);
+		if (m_ccdData.remaining < 0)
+		{
+			m_ccdData.remaining = 0;
+		}
 	}
 }
 
@@ -1056,34 +1090,90 @@ void CreateCharacterDialog::init()
 
 void CreateCharacterDialog::strengthUp(int id)
 {
+	if (m_ccdData.remaining > 0 && m_ccdData.strength < 25)
+	{
+		m_ccdData.remaining--;
+		m_ccdData.strength++;
+		m_labels[0]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.strength));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::strengthDown(int id)
 {
+	if (m_ccdData.remaining < 35 && m_ccdData.strength > 5)
+	{
+		m_ccdData.remaining++;
+		m_ccdData.strength--;
+		m_labels[0]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.strength));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::dexterityUp(int id)
 {
+	if (m_ccdData.remaining > 0 && m_ccdData.dexterity < 25)
+	{
+		m_ccdData.remaining--;
+		m_ccdData.dexterity++;
+		m_labels[1]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.dexterity));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::dexterityDown(int id)
 {
+	if (m_ccdData.remaining < 35 && m_ccdData.dexterity > 5)
+	{
+		m_ccdData.remaining++;
+		m_ccdData.dexterity--;
+		m_labels[1]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.dexterity));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::intelligenceUp(int id)
 {
+	if (m_ccdData.remaining > 0 && m_ccdData.intelligence < 25)
+	{
+		m_ccdData.remaining--;
+		m_ccdData.intelligence++;
+		m_labels[2]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.intelligence));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::intelligenceDown(int id)
 {
+	if (m_ccdData.remaining < 35 && m_ccdData.intelligence > 5)
+	{
+		m_ccdData.remaining++;
+		m_ccdData.intelligence--;
+		m_labels[2]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.intelligence));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::wisdomUp(int id)
 {
+	if (m_ccdData.remaining > 0 && m_ccdData.wisdom < 25)
+	{
+		m_ccdData.remaining--;
+		m_ccdData.wisdom++;
+		m_labels[3]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.wisdom));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::wisdomDown(int id)
 {
+	if (m_ccdData.remaining < 35 && m_ccdData.wisdom > 5)
+	{
+		m_ccdData.remaining++;
+		m_ccdData.wisdom--;
+		m_labels[3]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.wisdom));
+		m_labels[4]->setText(m_engine_surface, m_font, std::to_string(m_ccdData.remaining));
+	}
 }
 
 void CreateCharacterDialog::sexUp(int id)
@@ -1280,7 +1370,7 @@ bool CreateCharacterDialog::display()
 	SDL_RenderTexture(m_renderer, m_resources->m_texCharacterRecord, NULL, &myRect);
 
 	fromRect.x = 0;
-	fromRect.y = 0;
+	fromRect.y = 34.0f * m_ccdData.race;
 	fromRect.w = 400;
 	fromRect.h = 34;
 
@@ -1294,7 +1384,7 @@ bool CreateCharacterDialog::display()
 	SDL_RenderTexture(m_renderer, m_resources->m_texRaceClass, &fromRect, &myRect);
 
 	fromRect.x = 0;
-	fromRect.y = 170;
+	fromRect.y = 170 + (53.0f * m_ccdData.type);
 	fromRect.w = 400;
 	fromRect.h = 53;
 

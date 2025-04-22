@@ -33,6 +33,7 @@ enum class OrganizeBottomScreen
 	CreateCharacter,
 	CreateCharacterAborted,
 	CreateCharacterDone,
+	TerminateCharacter
 };
 
 class U3Graphics

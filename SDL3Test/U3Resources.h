@@ -126,6 +126,7 @@ public:
 	void GetPreference(U3PreferencesType type, bool& value);
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void UpdateFormParty(float xPos, float yPos, int mouseState);
+	void UpdateTerminateCharacter(float xPos, float yPos, int mouseState);
 	void UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState);
 	void UpdateCreateCharacter(float xPos, float yPos, int mouseState);
 	void DrawButtons(std::vector<short> buttons);
@@ -206,6 +207,7 @@ public:
 	};
 	static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
 	static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
+	static constexpr std::string_view SelectRemoveCharacterStr = "SELECT CHARACTER TO REMOVE";
 
 	int m_blockSize;
 	int m_overrideImage;

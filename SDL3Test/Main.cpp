@@ -46,6 +46,8 @@ void Game();
 
 void disperseParty(int button);
 void formParty(int button);
+void terminateCharacter(int button);
+void removeCharacter(int button);
 void backToMenu(int button);
 void updateGame(Uint64 deltaTime);
 void partyFormed(int button);
@@ -134,6 +136,7 @@ void DoSplashScreen()
 void CreateButtonCallbacks()
 {
     m_resources->SetButtonCallback(3, createCharacterChooseSlot);
+    m_resources->SetButtonCallback(4, terminateCharacter);
     m_resources->SetButtonCallback(5, formParty);
     m_resources->SetButtonCallback(6, disperseParty);
     m_resources->SetButtonCallback(7, backToMenu);
@@ -275,11 +278,38 @@ void createCharacterChooseSlot([[maybe_unused]] int button)
     }
 }
 
+void terminateCharacter([[maybe_unused]] int button)
+{
+    m_graphics->m_obsCurMode = OrganizeBottomScreen::TerminateCharacter;
+    m_resources->SetButtonCallback(4, removeCharacter);
+    m_resources->SetButtonCallback(7, backToOrganize);
+}
+
+void removeCharacter([[maybe_unused]] int button)
+{
+    if (!m_resources->m_selectedCharacters.empty())
+    {
+        int curChar = m_resources->m_selectedCharacters[0] + 1;
+        m_resources->m_selectedFormRect = -1;
+        m_resources->m_selectedCharacters.clear();
+        if (curChar > 0 && curChar < 21)
+        {
+            memset(m_misc->m_Player[curChar], 0, sizeof(unsigned char) * 65);
+            m_resources->CreatePartyNames();
+        }
+    }
+}
+
 void formParty([[maybe_unused]] int button)
 {
     if (m_misc->m_Party[6] != 0)
     {
         m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
+        m_resources->SetButtonVisibility(3, false);
+        m_resources->SetButtonVisibility(4, true);
+        m_resources->SetButtonVisibility(5, false);
+        m_resources->SetButtonVisibility(6, false);
+        m_resources->SetButtonCallback(7, backToOrganize);
     }
     else
     {
@@ -348,6 +378,7 @@ void backToOrganize([[maybe_unused]] int button)
     m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
     m_resources->SetButtonVisibility(7, true);
 
+    m_resources->SetButtonCallback(4, terminateCharacter);
     m_resources->SetButtonCallback(5, formParty);
     m_resources->SetButtonCallback(7, backToMenu);
 }
@@ -710,6 +741,10 @@ void Organize()
                 break;
             case OrganizeBottomScreen::CreateCharacter:
                 m_resources->UpdateCreateCharacter(event.motion.x, event.motion.y, mouseState);
+                break;
+            case OrganizeBottomScreen::TerminateCharacter:
+                m_resources->UpdateTerminateCharacter(event.motion.x, event.motion.y, mouseState);
+                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
                 break;
             case OrganizeBottomScreen::FormParty:
                 m_resources->UpdateFormParty(event.motion.x, event.motion.y, mouseState);

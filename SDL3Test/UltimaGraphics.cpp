@@ -395,6 +395,9 @@ void U3Graphics::DrawMenu()
 
 void U3Graphics::DrawOrganizeMenu(SDL_Event event)
 {
+    std::string strMessage;
+    std::string_view tempMessage;
+
     m_resources->drawExodus(255);
     
     switch (m_obsCurMode)
@@ -402,12 +405,13 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
     case OrganizeBottomScreen::FormParty:
     {
         m_resources->DrawButtons({ 5, 7 });
-        std::string strMessage(m_resources->SelectPartyStr);
+        tempMessage = m_resources->SelectPartyStr;
+        strMessage = std::string(tempMessage);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
         m_resources->DrawOrganizePartyRect();
     }
-        break;
+    break;
     case OrganizeBottomScreen::CreateCharacterAborted:
         m_resources->DrawOrganizeCreateCharacterAborted();
         break;
@@ -425,6 +429,16 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
         break;
     case OrganizeBottomScreen::PartyFormedInUse:
         m_resources->DrawOrganizePartyFormed(true);
+        break;
+    case OrganizeBottomScreen::TerminateCharacter:
+    {
+        m_resources->DrawButtons({ 4, 7 });
+        tempMessage = m_resources->SelectRemoveCharacterStr;
+        strMessage = std::string(tempMessage);
+        size_t startPos = (40 - strMessage.size()) / 2;
+        m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
+        m_resources->DrawOrganizePartyRect();
+    }
         break;
     case OrganizeBottomScreen::CreateCharacter:
     {

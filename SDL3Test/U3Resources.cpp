@@ -2163,6 +2163,53 @@ void U3Resources::DrawOrganizePartyFormed(bool inUse)
 	}
 }
 
+void U3Resources::UpdateTerminateCharacter(float xPos, float yPos, int mouseState)
+{
+	float scaler = (float)m_blockSize / 16.0f;
+
+	short yMin = (short)((230 * scaler) + screenOffsetY);
+	short yMax = (short)((360 * scaler) + screenOffsetY);
+	short xMin = (short)(20 * scaler + screenOffsetX);
+	short xMax = (short)(620 * scaler + screenOffsetX);
+	short xMiddle = (short)(320 * scaler + screenOffsetX);
+
+	m_selectedFormRect = -1;
+
+	if (xPos > xMin && xPos < xMax &&
+		yPos > yMin && yPos < yMax)
+	{
+		m_selectedFormRect = (int)((yPos - yMin) / (13 * scaler));
+		if (xPos > xMiddle)
+		{
+			m_selectedFormRect += 10;
+		}
+		if (m_selectedFormRect >= 20 || m_selectedFormRect < 0)
+		{
+			m_selectedFormRect = -1;
+		}
+		else
+		{
+			if (!m_partyDisplay[m_selectedFormRect].Name)
+			{
+				m_selectedFormRect = -1;
+			}
+			else
+			{
+				if (m_misc->m_Player[m_selectedFormRect + 1][16] > 0)
+				{
+					m_selectedFormRect = -1;
+				}
+			}
+		}
+
+		if (mouseState == 2 && m_selectedFormRect >= 0 && m_selectedCharacters.size() <= 4)
+		{
+			m_selectedCharacters.clear();
+			m_selectedCharacters.push_back(m_selectedFormRect);
+		}
+	}
+}
+
 void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
 {
 	float scaler = (float)m_blockSize / 16.0f;
@@ -2388,6 +2435,13 @@ void U3Resources::DrawOrganizePartyRect()
 		if (m_selectedCharacters.size() > 3)
 		{
 			renderDisplayString(m_partyDisplay[m_selectedCharacters[3]].Name, (int)(((x + 174) * scaler) + (35 * scaler)), (int)((y - 17) * scaler), sdl_text_color);
+		}
+	}
+	else if (m_graphics->m_obsCurMode == OrganizeBottomScreen::TerminateCharacter)
+	{
+		if (m_selectedCharacters.size() > 0)
+		{
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[0]].Name, (int)((x * scaler) + (35 * scaler)), (int)((y - 30) * scaler), sdl_text_color);
 		}
 	}
 

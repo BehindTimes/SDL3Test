@@ -1,5 +1,7 @@
 Requirements:
 
+C++ 20
+
 [SDL3](https://github.com/libsdl-org/SDL/releases/tag/release-3.2.10)
 
 [SDL3 Image](https://github.com/libsdl-org/SDL_image/releases)

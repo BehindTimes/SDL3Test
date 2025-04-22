@@ -92,6 +92,7 @@ public:
 	void addTextBox(int x, int y, int width);
 	void updateDialog(float xPos, float yPos, int mouseState);
 	void loadPresets();
+	void ProcessEvent(SDL_Event event);
 	SDL_FRect m_Rect;
 
 	unsigned char* m_curPlayer;
@@ -114,6 +115,7 @@ private:
 	void cancelPushed(int id);
 	void okPushed(int id);
 	void randomNamePushed(int id);
+	void HandleInputText(SDL_KeyboardEvent key);
 
 	bool createFont();
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);

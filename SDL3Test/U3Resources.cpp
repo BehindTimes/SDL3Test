@@ -2125,6 +2125,16 @@ void U3Resources::DrawDemo(Uint64 curTick)
 
 }
 
+void U3Resources::DrawOrganizeCreateCharacterAborted()
+{
+	CenterMessage(20, 16);
+}
+
+void U3Resources::DrawOrganizeCreateCharacterDone()
+{
+	CenterMessage(21, 16);
+}
+
 void U3Resources::DrawOrganizePartyDispersed(bool wasDispersed)
 {
 	CenterMessage(13, 17);
@@ -2360,8 +2370,8 @@ void U3Resources::DrawOrganizePartyRect()
 	{
 		renderDisplayString(m_partyDisplay[0].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
 		renderDisplayString(m_partyDisplay[1].Number, (int)((x * scaler) + (26 * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
-		renderDisplayString(m_partyDisplay[2].Number, (int)(((x + 115) * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
-		renderDisplayString(m_partyDisplay[3].Number, (int)(((x + 115) * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
+		renderDisplayString(m_partyDisplay[2].Number, (int)(((x + 200) * scaler)), (int)((y - 30) * scaler), sdl_text_color, 1);
+		renderDisplayString(m_partyDisplay[3].Number, (int)(((x + 200) * scaler)), (int)((y - 17) * scaler), sdl_text_color, 1);
 
 		if (m_selectedCharacters.size() > 0)
 		{
@@ -2373,11 +2383,11 @@ void U3Resources::DrawOrganizePartyRect()
 		}
 		if (m_selectedCharacters.size() > 2)
 		{
-			renderDisplayString(m_partyDisplay[m_selectedCharacters[2]].Name, (int)(((x + 89) * scaler) + (35 * scaler)), (int)((y - 30) * scaler), sdl_text_color);
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[2]].Name, (int)(((x + 174) * scaler) + (35 * scaler)), (int)((y - 30) * scaler), sdl_text_color);
 		}
 		if (m_selectedCharacters.size() > 3)
 		{
-			renderDisplayString(m_partyDisplay[m_selectedCharacters[3]].Name, (int)(((x + 89) * scaler) + (35 * scaler)), (int)((y - 17) * scaler), sdl_text_color);
+			renderDisplayString(m_partyDisplay[m_selectedCharacters[3]].Name, (int)(((x + 174) * scaler) + (35 * scaler)), (int)((y - 17) * scaler), sdl_text_color);
 		}
 	}
 
@@ -2411,7 +2421,7 @@ void U3Resources::DrawOrganizePartyRect()
 				sdl_text_color.g = 255;
 				sdl_text_color.b = 0;
 			}
-			renderDisplayString(m_partyDisplay[i - 1].Name, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
+			renderDisplayString(m_partyDisplay[i - 1].ShortName, (int)(((x + 35) * scaler)), (int)(y * scaler), sdl_text_color);
 
 			sdl_text_color.r = 255;
 			sdl_text_color.g = 255;
@@ -3611,6 +3621,11 @@ void U3Resources::CleanupPartyNames()
 			TTF_DestroyText(m_partyDisplay[i - 1].Number);
 			m_partyDisplay[i - 1].Number = nullptr;
 		}
+		if (m_partyDisplay[i - 1].ShortName)
+		{
+			TTF_DestroyText(m_partyDisplay[i - 1].ShortName);
+			m_partyDisplay[i - 1].ShortName = nullptr;
+		}
 		if (m_partyDisplay[i - 1].Name)
 		{
 			TTF_DestroyText(m_partyDisplay[i - 1].Name);
@@ -3654,6 +3669,39 @@ void U3Resources::CreatePartyNames()
 		if (strName.size() > 0)
 		{
 			m_partyDisplay[i - 1].Name = TTF_CreateText(engine_surface, m_font_11, strName.c_str(), 0);
+
+			int w, h;
+			float scaler = (float)m_blockSize / 16.0f;
+
+			TTF_GetTextSize(m_partyDisplay[i - 1].Name, &w, &h);
+			if (w > 70.0f * scaler)
+			{
+				int maxSize = (int)strName.size() - 1;
+				std::string strTemp;
+				while (w > 70.0f * scaler)
+				{
+					maxSize--;
+					if (maxSize < 5)
+					{
+						break;
+					}
+
+					if (m_partyDisplay[i - 1].ShortName)
+					{
+						TTF_DestroyText(m_partyDisplay[i - 1].ShortName);
+						m_partyDisplay[i - 1].ShortName = nullptr;
+					}
+					
+					strTemp = strName.substr(0, maxSize);
+					strTemp += std::string("...");
+					m_partyDisplay[i - 1].ShortName = TTF_CreateText(engine_surface, m_font_11, strTemp.c_str(), 0);
+					TTF_GetTextSize(m_partyDisplay[i - 1].ShortName, &w, &h);
+				}
+			}
+			else
+			{
+				m_partyDisplay[i - 1].ShortName = TTF_CreateText(engine_surface, m_font_11, strName.c_str(), 0);
+			}
 
 			std::string str_level = std::to_string(m_misc->m_Player[i][30] + 1);
 			str_level = std::string("Lvl ") + str_level;

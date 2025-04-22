@@ -30,7 +30,9 @@ enum class OrganizeBottomScreen
 	PartyFormed,
 	PartyFormedInUse,
 	CreateCharacterChooseSlot,
-	CreateCharacter
+	CreateCharacter,
+	CreateCharacterAborted,
+	CreateCharacterDone,
 };
 
 class U3Graphics
@@ -50,7 +52,7 @@ public:
 	void FightScene(Uint64 curTick);
 	void DrawDemoScreen(Uint64 curTick);
 	void DrawMenu();
-	void DrawOrganizeMenu();
+	void DrawOrganizeMenu(SDL_Event event);
 	void DrawMap(unsigned char x, unsigned char y);
 	void DrawMiniMap();
 	short MapConstrain(short value);

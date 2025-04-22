@@ -979,7 +979,6 @@ void CreateCharacterDialog::loadPresets()
 	}
 
 	m_ccdData.type = m_utilities->getRandom(0, (int)m_resources->m_plistMap["Classes"].size() - 1);
-	m_ccdData.type = (int)m_resources->m_plistMap["Classes"].size() - 1;
 
 	if (m_ccdData.type < m_Presets.size())
 	{
@@ -1043,9 +1042,9 @@ void CreateCharacterDialog::init()
 
 	addButton(std::string(CancelString), 176, 176 + offsetY, std::bind(&CreateCharacterDialog::cancelPushed, this, std::placeholders::_1));
 	addButton(std::string(OKString), 256, 176 + offsetY, std::bind(&CreateCharacterDialog::okPushed, this, std::placeholders::_1));
-	addButton(std::string(RandomNameString), 176, 8 + offsetY, std::bind(&CreateCharacterDialog::randomNamePushed, this, std::placeholders::_1));
+	addButton(std::string(RandomNameString), 237, 8 + offsetY, std::bind(&CreateCharacterDialog::randomNamePushed, this, std::placeholders::_1));
 
-	addTextBox(60, 8 + offsetY, 100);
+	addTextBox(50, 8 + offsetY, 182);
 	addTextBox(210, 56 + offsetY, 100);
 	addTextBox(210, 90 + offsetY, 100);
 	addTextBox(210, 124 + offsetY, 100);
@@ -1280,12 +1279,74 @@ void CreateCharacterDialog::typeDown(int id)
 
 void CreateCharacterDialog::cancelPushed(int id)
 {
-	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterAborted;
 }
 
 void CreateCharacterDialog::okPushed(int id)
 {
-	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterDone;
+	memset(m_curPlayer, 0, sizeof(unsigned char) * 65);
+	size_t copySize = std::min<size_t>(13, m_ccdData.name.size());
+	memcpy(m_curPlayer, m_ccdData.name.c_str(), copySize);
+	if (m_ccdData.sex == 0)
+	{
+		m_curPlayer[24] = 'M';
+	}
+	else if (m_ccdData.sex == 1)
+	{
+		m_curPlayer[24] = 'F';
+	}
+	else
+	{
+		m_curPlayer[24] = 'O';
+	}
+	if(m_resources->m_plistMap["Races"].size() > m_ccdData.race)
+	{
+		if (m_resources->m_plistMap["Races"][m_ccdData.race].size() > 0)
+		{
+			m_curPlayer[22] = m_resources->m_plistMap["Races"][m_ccdData.race].c_str()[0];
+		}
+		else
+		{
+			m_curPlayer[22] = 'H';
+		}
+	}
+	else
+	{
+		m_curPlayer[22] = 'H';
+	}
+	if (m_resources->m_plistMap["Classes"].size() > m_ccdData.type)
+	{
+		if (m_resources->m_plistMap["Classes"][m_ccdData.type].size() > 0)
+		{
+			m_curPlayer[23] = m_resources->m_plistMap["Classes"][m_ccdData.type].c_str()[0];
+		}
+		else
+		{
+			m_curPlayer[23] = 'F';
+		}
+	}
+	else
+	{
+		m_curPlayer[23] = 'F';
+	}
+	m_curPlayer[18] = m_ccdData.strength;		// Strength
+	m_curPlayer[19] = m_ccdData.dexterity;		// Dexterity
+	m_curPlayer[20] = m_ccdData.intelligence;   // Intelligence
+	m_curPlayer[21] = m_ccdData.wisdom;			// Wisdom
+
+	m_curPlayer[17] = 'G';    // Good Health
+	m_curPlayer[27] = 100;    // Current Hit Points
+	m_curPlayer[29] = 100;    // Max Hit Points
+	m_curPlayer[32] = 1;
+	m_curPlayer[33] = 50;     // Food
+	m_curPlayer[36] = 150;    // Gold Pieces
+	m_curPlayer[41] = 1;      // Cloth
+	m_curPlayer[40] = 1;      // pre-readied
+	m_curPlayer[49] = 1;      // Dagger
+	m_curPlayer[48] = 1;      // pre-readied
+
+	m_resources->CreatePartyNames();
 }
 
 void CreateCharacterDialog::randomNamePushed(int id)
@@ -1337,6 +1398,43 @@ void CreateCharacterDialog::renderDisplayString(TTF_Text* text_obj, int x, int y
 {
 	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
 	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX, (float)y + screenOffsetY);
+}
+
+void CreateCharacterDialog::HandleInputText(SDL_KeyboardEvent key)
+{
+	const int maxInputLength = 12;
+	SDL_Keycode display_key = SDL_GetKeyFromScancode(key.scancode, key.mod, false);
+	if (key.key >= SDLK_A && key.key <= SDLK_Z)
+	{
+			if (maxInputLength > (int)m_ccdData.name.size())
+			{
+				m_ccdData.name += (char)display_key;
+				m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+			}
+	}
+	else if (key.key == SDLK_BACKSPACE)
+	{
+		if (!m_ccdData.name.empty())
+		{
+			m_ccdData.name.pop_back();
+			m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+		}
+	}
+}
+
+void CreateCharacterDialog::ProcessEvent(SDL_Event event)
+{
+	switch (event.type)
+	{
+	case SDL_EVENT_KEY_DOWN:
+		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
+		{
+			HandleInputText(event.key);
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 bool CreateCharacterDialog::display()

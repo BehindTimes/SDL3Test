@@ -80,12 +80,14 @@ struct InverseStruct
 struct PartyDisplay
 {
 	PartyDisplay() :
+		ShortName(nullptr),
 		Number(nullptr),
 		Name(nullptr),
 		Level(nullptr),
 		Desc(nullptr)
 	{
 	}
+	TTF_Text* ShortName;
 	TTF_Text* Number;
 	TTF_Text* Name;
 	TTF_Text* Level;
@@ -131,6 +133,8 @@ public:
 	void SetButtonVisibility(short button, bool visible);
 	void DrawOrganizePartyRect();
 	void DrawOrganizePartyDispersed(bool wasDispersed);
+	void DrawOrganizeCreateCharacterAborted();
+	void DrawOrganizeCreateCharacterDone();
 	void DrawOrganizePartyFormed(bool inUse);
 	void DrawDemo(Uint64 curTick);
 	void setTickCount(Uint64 curTick, bool initializeTimer = true);

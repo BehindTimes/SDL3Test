@@ -393,7 +393,7 @@ void U3Graphics::DrawMenu()
     m_resources->DrawButtons({0, 1, 2, 8});
 }
 
-void U3Graphics::DrawOrganizeMenu()
+void U3Graphics::DrawOrganizeMenu(SDL_Event event)
 {
     m_resources->drawExodus(255);
     
@@ -407,6 +407,12 @@ void U3Graphics::DrawOrganizeMenu()
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
         m_resources->DrawOrganizePartyRect();
     }
+        break;
+    case OrganizeBottomScreen::CreateCharacterAborted:
+        m_resources->DrawOrganizeCreateCharacterAborted();
+        break;
+    case OrganizeBottomScreen::CreateCharacterDone:
+        m_resources->DrawOrganizeCreateCharacterDone();
         break;
     case OrganizeBottomScreen::DispersedNoOne:
         m_resources->DrawOrganizePartyDispersed(true);
@@ -424,12 +430,14 @@ void U3Graphics::DrawOrganizeMenu()
     {
         m_resources->CenterMessage(33, 11);
         m_resources->DrawOrganizePartyRect();
+        m_resources->m_CreateCharacterDlg->ProcessEvent(event);
         m_resources->m_CreateCharacterDlg->display();
     }
         break;
     case OrganizeBottomScreen::CreateCharacterChooseSlot:
     {
-        std::string strMessage(m_resources->SelectCharacterSlotStr);
+        std::string_view tempStr = m_resources->SelectCharacterSlotStr;
+        std::string strMessage(tempStr);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->DrawButtons({ 7 });
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
@@ -442,9 +450,6 @@ void U3Graphics::DrawOrganizeMenu()
         m_resources->DrawOrganizePartyRect();
         break;
     }
-    
-
-    //m_resources->CenterMessage(13, 17);
 }
 
 short U3Graphics::MapConstrain(short value)

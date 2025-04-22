@@ -640,6 +640,8 @@ void Organize()
             {
                 switch (m_graphics->m_obsCurMode)
                 {
+                case OrganizeBottomScreen::CreateCharacterAborted:
+                case OrganizeBottomScreen::CreateCharacterDone:
                 case OrganizeBottomScreen::PartyFormed:
                 case OrganizeBottomScreen::PartyFormedInUse:
                 case OrganizeBottomScreen::DispersedNoOne:
@@ -695,6 +697,8 @@ void Organize()
             case OrganizeBottomScreen::PartyFormedInUse:
             case OrganizeBottomScreen::DispersedNoOne:
             case OrganizeBottomScreen::Dispersed:
+            case OrganizeBottomScreen::CreateCharacterAborted:
+            case OrganizeBottomScreen::CreateCharacterDone:
                 if (mouseState == 2)
                 {
                     m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
@@ -706,7 +710,7 @@ void Organize()
             }
         }
         m_graphics->DrawFrame(3);
-        m_graphics->DrawOrganizeMenu();
+        m_graphics->DrawOrganizeMenu(event);
         SDL_RenderPresent(renderer);
 
         if (changeMode)

@@ -76,6 +76,7 @@ public:
 
 	bool m_staydead;
 	OrganizeBottomScreen m_obsCurMode;
+	SDL_Texture* m_texMap;
 
 private:
 	void renderMiniMapDungeon();
@@ -102,5 +103,4 @@ private:
 	int m_blockSize;
 	bool m_forceRedraw;
 	Uint64 m_blinkElapsed;
-	SDL_Texture* m_texMap;
 };

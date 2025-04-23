@@ -94,6 +94,7 @@ public:
 	void SouthWest();
 	void NorthEast();
 	void NorthWest();
+	void ZStats();
 
 	void GetChest(short spell, short chnum);
 	void Ignite();
@@ -222,7 +223,7 @@ private:
 	void Steal();
 	void Transact();
 	void Unlock();
-	void ZStats();
+	
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
@@ -403,6 +404,7 @@ private:
 	void Stats(short mode, short chnum);
 	bool StatsCallback();
 	bool StatsCallback1();
+	bool StatsCallback2();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

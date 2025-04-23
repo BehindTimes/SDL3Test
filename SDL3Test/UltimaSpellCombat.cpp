@@ -156,15 +156,15 @@ unsigned char UltimaSpellCombat::DetermineShape(short type) // $7F5D
     }
     if (type == m_misc->m_careerTable[1])
     {
-        return 0x82;
+        return 0x81;
     }
     if (type == m_misc->m_careerTable[2])
     {
-        return 0x84;
+        return 0x82;
     }
     if (type == m_misc->m_careerTable[3])
     {
-        return 0x86;
+        return 0x83;
     }
     if (type == m_misc->m_careerTable[4])
     {
@@ -176,21 +176,21 @@ unsigned char UltimaSpellCombat::DetermineShape(short type) // $7F5D
     }
     if (type == m_misc->m_careerTable[6])
     {
-        return 0x22;
+        return 0x21;
     }
     if (type == m_misc->m_careerTable[7])
     {
-        return 0x84;
+        return 0x82;
     }
     if (type == m_misc->m_careerTable[8])
     {
-        return 0x82;
+        return 0x81;
     }
     if (type == m_misc->m_careerTable[9])
     {
-        return 0x84;
+        return 0x82;
     }
-    return 0x7E;
+    return 0x6F;
 }
 
 unsigned char UltimaSpellCombat::CombatCharacterHere(short x, short y)

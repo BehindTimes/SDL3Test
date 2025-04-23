@@ -163,7 +163,7 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		//m_misc->Yell(0);
 		break;
 	case SDLK_Z:
-		NotDngCmd();
+		m_misc->ZStats();
 		break;
 	default:
 		NotDngCmd();
@@ -1490,6 +1490,7 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_misc->m_wy = 0x17;
 		m_scrollArea->UPrintMessage(161);
 		m_misc->m_inputType = InputType::Transact;
+		m_scrollArea->blockPrompt(true);
 		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback, this));
 		m_misc->AddProcessEvent();
 		break;
@@ -1661,15 +1662,18 @@ bool UltimaDungeon::MarkCallback()
 	m_resources->m_overrideImage = -1;
 	if (chNum < 0 || chNum > 3)
 	{
+		m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	if (m_misc->m_Party[6 + chNum] == 0)
 	{
+		m_scrollArea->blockPrompt(false);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 	if (m_misc->CheckAlive(chNum) == false)
 	{
+		m_scrollArea->blockPrompt(false);
 		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
@@ -1692,9 +1696,9 @@ bool UltimaDungeon::MarkCallback2()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-
+	
 	m_misc->HPSubtract(m_misc->m_rosNum, 50);
 	m_scrollArea->UPrintMessage(162);
-
+	m_scrollArea->blockPrompt(false);
 	return false;
 }

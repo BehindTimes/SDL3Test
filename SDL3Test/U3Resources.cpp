@@ -10,6 +10,7 @@
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
+#include "UltimaSpellCombat.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -21,6 +22,7 @@ extern std::unique_ptr<U3Graphics> m_graphics;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
+extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
@@ -94,7 +96,9 @@ U3Resources::U3Resources() :
 	m_texRaceClass(nullptr),
 	m_texCharacterRecord(nullptr),
 	m_characterRecordWidth(0),
-	m_characterRecordHeight(0)
+	m_characterRecordHeight(0),
+	m_texDistributeFood(nullptr),
+	m_texGatherGold(nullptr)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -145,6 +149,18 @@ U3Resources::~U3Resources()
 			SDL_DestroyTexture(curTex);
 			curTex = nullptr;
 		}
+	}
+
+	if (m_texDistributeFood)
+	{
+		SDL_DestroyTexture(m_texDistributeFood);
+		m_texDistributeFood = nullptr;
+	}
+
+	if (m_texGatherGold)
+	{
+		SDL_DestroyTexture(m_texGatherGold);
+		m_texGatherGold = nullptr;
 	}
 
 	if (m_texSosariaMap)
@@ -848,6 +864,18 @@ void U3Resources::loadImages()
 	currentPath /= ImagesLoc;
 	currentPath /= "RaceClassInfo.gif";
 	m_texRaceClass = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "DistributeFood.png";
+	m_texDistributeFood = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "GatherGold.png";
+	m_texGatherGold = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
 	m_dungeon->loadGraphics();
 }
@@ -2446,7 +2474,7 @@ void U3Resources::DrawOrganizePartyRect()
 	}
 
 	SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-	
+
 	for (int i = 1; i < 21; ++i)
 	{
 		if (m_misc->m_Player[i][16])
@@ -3627,6 +3655,13 @@ void U3Resources::ImageDisplay()
 	case 8:
 		curTexture = m_texTimeLord;
 		break;
+	case 9: // ZStats
+		if (m_fullUpdate)
+		{
+			GenerateZStatImage(m_misc->m_rosNum);
+		}
+		curTexture = m_graphics->m_texMap;
+		break;
 	default:
 		m_overrideImage = -1;
 		break;
@@ -3758,7 +3793,7 @@ void U3Resources::CreatePartyNames()
 						TTF_DestroyText(m_partyDisplay[i - 1].ShortName);
 						m_partyDisplay[i - 1].ShortName = nullptr;
 					}
-					
+
 					strTemp = strName.substr(0, maxSize);
 					strTemp += std::string("...");
 					m_partyDisplay[i - 1].ShortName = TTF_CreateText(engine_surface, m_font_11, strTemp.c_str(), 0);
@@ -3854,4 +3889,421 @@ void U3Resources::CreatePartyNames()
 			m_partyDisplay[i - 1].Desc = TTF_CreateText(engine_surface, m_font_11, str_desc.c_str(), 0);
 		}
 	}
+}
+
+void U3Resources::GenerateZStatImage(int rosNum)
+{
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= FontLoc;
+	currentPath /= "FreeSerif.ttf";
+
+	SDL_SetRenderDrawColor(m_renderer, 192, 192, 192, 255);
+	SDL_SetRenderTarget(m_renderer, m_graphics->m_texMap);
+	SDL_RenderClear(m_renderer);
+
+	float scaler = (float)m_blockSize / 16.0f;
+	char charRaces[5] = { 'H', 'E', 'D', 'B', 'F' };
+	short rectList[28] = { 30,  37,  72, 79,  247, 37,  340, 82,  30,  99,  110, 177, 118, 99,
+						  264, 177, 30, 195, 218, 293, 245, 195, 340, 293, 272, 99,  340, 177 };
+
+	short hOff;
+	short vOff;
+	short value;
+	SDL_FRect myRect;
+	SDL_FRect toRect;
+	myRect.x = (float)(0);
+	myRect.y = (float)(0);
+	myRect.w = (float)352.0f * scaler;
+	myRect.h = (float)37.0f * scaler;
+
+	hOff = (m_blockSize / 2) - m_blockSize;
+	vOff = (short)(m_blockSize * 1.5f) - m_blockSize;
+
+	SDL_Color sdl_text_color = { 0, 0, 0 };
+	SDL_Color sdl_text_color_red = { 255, 0, 0 };
+	SDL_Color sdl_text_color_black = { 0, 0, 0 };
+
+	SDL_RenderTexture(m_renderer, m_texCharacterRecord, NULL, &myRect);
+
+	for (value = 0; value < 7; value++)
+	{
+		GenerateRect(&myRect, (int)((rectList[value * 4] * scaler) + hOff),
+			(int)((rectList[value * 4 + 1] * scaler) + vOff),
+			(int)((rectList[value * 4 + 2] * scaler) + hOff),
+			(int)((rectList[value * 4 + 3] * scaler) + vOff));
+
+		sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 230;
+		SDL_SetRenderDrawColor(m_renderer, sdl_text_color.r, sdl_text_color.g, sdl_text_color.b, 255);
+		SDL_RenderRect(m_renderer, &myRect);
+
+		myRect.x -= scaler;
+		myRect.y -= scaler;
+		sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 127;
+		SDL_SetRenderDrawColor(m_renderer, sdl_text_color.r, sdl_text_color.g, sdl_text_color.b, 255);
+		SDL_RenderRect(m_renderer, &myRect);
+	}
+
+	GenerateRect(&myRect, (int)((rectList[0] * scaler) + hOff),
+		(int)((rectList[1] * scaler) + vOff),
+		(int)((rectList[2] * scaler) + hOff - 2),
+		(int)((rectList[3] * scaler) + vOff - 2));
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+
+	value = m_spellCombat->DetermineShape(m_misc->m_Player[rosNum][23]);
+
+	GenerateRect(&toRect, (int)((34 * scaler) + hOff),
+		(int)((41 * scaler) + vOff),
+		(int)(((34 * scaler) + hOff)) + (int)(32 * scaler),
+		(int)(((41 * scaler) + vOff)) + (int)(32 * scaler));
+
+	TTF_Font* font18 = TTF_OpenFont(currentPath.string().c_str(), 18 * scaler);
+	TTF_Font* font10 = TTF_OpenFont(currentPath.string().c_str(), 10 * scaler);
+	std::string strName;
+	for (int index = 0; index < 13; ++index)
+	{
+		if (m_misc->m_Player[rosNum][index] == 0)
+		{
+			break;
+		}
+		strName += (char)m_misc->m_Player[rosNum][index];
+	}
+
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[value], NULL, &toRect);
+	sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 127;
+	renderDisplayString(font18, strName, (int)((83 * scaler) + hOff), (int)((55 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 0;
+	renderDisplayString(font18, strName, (int)((82 * scaler) + hOff), (int)((54 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	sdl_text_color.r = 235;
+	sdl_text_color.g = sdl_text_color.b = 255;
+	renderDisplayString(font18, strName, (int)((80 * scaler) + hOff), (int)((52 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	sdl_text_color.r = 0;
+	sdl_text_color.g = sdl_text_color.b = 192;
+	renderDisplayString(font18, strName, (int)((81 * scaler) + hOff), (int)((53 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	std::string outStr;
+	std::string tempStr;
+	int tempNum;
+	std::string dispString;
+	sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 0;
+
+	// Strength, Dexterity, Intelligence, Wisdom
+	for (int index = 0; index < 4; ++index)
+	{
+		tempNum = m_misc->m_Player[rosNum][18 + index];
+		outStr = std::to_string(tempNum);
+		outStr += ' ';
+		dispString = m_plistMap["Messages"][173 + index];
+		outStr += dispString;
+		renderDisplayString(font10, outStr, (int)((36 * scaler) + hOff), (int)(((121 + (18 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	}
+
+	// Magic, HP, Exp, Food, Gold labels
+	for (int index = 0; index < 5; ++index)
+	{
+		outStr = m_plistMap["MoreMessages"][69 + index];
+		renderDisplayString(font10, outStr, (int)((125 * scaler) + hOff), (int)(((121 + (14 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	}
+
+	// Display current magic value / max value
+	tempNum = m_misc->MaxMana(rosNum);
+	if (tempNum != 0)
+	{
+		std::string maxMana = std::to_string(tempNum);
+		tempNum = m_misc->m_Player[rosNum][25];
+		outStr = std::to_string(tempNum);
+		outStr += '/';
+		outStr += maxMana;
+	}
+	else
+	{
+		outStr = m_plistMap["MoreMessages"][74];
+	}
+	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((121 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	// Display current hit points / max value
+	tempNum = (m_misc->m_Player[rosNum][26] * 256) + m_misc->m_Player[rosNum][27];
+	outStr = std::to_string(tempNum);
+	outStr += '/';
+	tempNum = (m_misc->m_Player[rosNum][28] * 256) + m_misc->m_Player[rosNum][29];
+	outStr += std::to_string(tempNum);
+	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((135 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	// experience
+	tempNum = (m_misc->m_Player[rosNum][30] * 256) + m_misc->m_Player[rosNum][31];
+	outStr = std::to_string(tempNum);
+	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((149 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	// food
+	tempNum = (m_misc->m_Player[rosNum][32] * 100) + m_misc->m_Player[rosNum][33];
+	outStr = std::to_string(tempNum);
+	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((163 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	// gold
+	tempNum = (m_misc->m_Player[rosNum][35] * 256) + m_misc->m_Player[rosNum][36];
+	outStr = std::to_string(tempNum);
+	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((177 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+
+	// draw weapons list
+	short cx = 36;
+	short cy = 200;
+
+	for (value = 0; value < 16; value++)
+	{
+		sdl_text_color = sdl_text_color_black;
+
+		tempNum = m_misc->m_Player[rosNum][48 + value];    // tempnum = quantity
+		if (value == 0)
+		{
+			tempNum = 2;    // always 2 hands
+		}
+		if (tempNum)
+		{
+			tempStr = std::to_string(tempNum);
+			renderDisplayString(font10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			outStr = std::string("(");
+			outStr += (char)('A' + value);
+			outStr += std::string(") ");
+			if (value == m_misc->m_Player[rosNum][48])
+			{
+				sdl_text_color = sdl_text_color_red;
+			}
+			else
+			{
+				sdl_text_color = sdl_text_color_black;
+			}
+			renderDisplayString(font10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			tempStr = m_plistMap["WeaponsArmour"][value];
+			renderDisplayString(font10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			cy += 11;
+			if (cy > 285)
+			{
+				cy = 200;
+				cx += 100;
+			}
+		}
+	}
+	sdl_text_color = sdl_text_color_black;
+
+	// draw armour list
+	cx = 252;
+	cy = 200;
+
+	for (value = 0; value < 8; value++)
+	{
+		sdl_text_color = sdl_text_color_black;
+
+		tempNum = m_misc->m_Player[rosNum][40 + value];    // tempnum = quantity
+		if (value == 0)
+		{
+			tempNum = 1;    // Always 1 skin
+		}
+		if (tempNum)
+		{
+			tempStr = std::to_string(tempNum);
+			renderDisplayString(font10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			outStr = std::string("(");
+			outStr += (char)('A' + value);
+			outStr += std::string(") ");
+			if (value == m_misc->m_Player[rosNum][48])
+			{
+				sdl_text_color = sdl_text_color_red;
+			}
+			else
+			{
+				sdl_text_color = sdl_text_color_black;
+			}
+			renderDisplayString(font10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			tempStr = m_plistMap["WeaponsArmour"][value + 16];
+			renderDisplayString(font10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+
+			cy += 11;
+		}
+	}
+	sdl_text_color = sdl_text_color_black;
+	// cards
+	cx = 36;
+	cy = 296;
+
+	if (m_misc->m_Player[rosNum][14] & 0x08)
+	{
+		tempStr = m_plistMap["MoreMessages"][75];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x02)
+	{
+		tempStr = m_plistMap["MoreMessages"][76];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x01)
+	{
+		tempStr = m_plistMap["MoreMessages"][77];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x04)
+	{
+		tempStr = m_plistMap["MoreMessages"][78];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	// marks
+	cx = 130;
+	cy = 296;
+	if (m_misc->m_Player[rosNum][14] & 0x10)
+	{
+		tempStr = m_plistMap["MoreMessages"][79];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x20)
+	{
+		tempStr = m_plistMap["MoreMessages"][80];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x40)
+	{
+		tempStr = m_plistMap["MoreMessages"][81];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+	if (m_misc->m_Player[rosNum][14] & 0x80)
+	{
+		tempStr = m_plistMap["MoreMessages"][82];
+		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		cy += 12;
+	}
+
+	// Torches
+	tempNum = m_misc->m_Player[rosNum][15];
+	outStr = std::to_string(tempNum);
+	tempStr = m_plistMap["MoreMessages"][83];
+	outStr += tempStr;
+	renderDisplayString(font10, outStr, (int)(((280) * scaler) + hOff), (int)((104 * scaler) + vOff), sdl_text_color, 0, false);
+	// Powders
+	tempNum = m_misc->m_Player[rosNum][37];
+	outStr = std::to_string(tempNum);
+	tempStr = m_plistMap["MoreMessages"][84];
+	outStr += tempStr;
+	renderDisplayString(font10, outStr, (int)(((280) * scaler) + hOff), (int)((118 * scaler) + vOff), sdl_text_color, 0, false);
+	// Gems
+	tempNum = m_misc->m_Player[rosNum][38];
+	outStr = std::to_string(tempNum);
+	tempStr = m_plistMap["MoreMessages"][85];
+	outStr += tempStr;
+	renderDisplayString(font10, outStr, (int)(((280)* scaler) + hOff), (int)((132 * scaler) + vOff), sdl_text_color, 0, false);
+	// Keys
+	tempNum = m_misc->m_Player[rosNum][39];
+	outStr = std::to_string(tempNum);
+	tempStr = m_plistMap["MoreMessages"][86];
+	outStr += tempStr;
+	renderDisplayString(font10, outStr, (int)(((280)* scaler) + hOff), (int)((146 * scaler) + vOff), sdl_text_color, 0, false);
+
+	// Small text
+	outStr = m_plistMap["MoreMessages"][61];
+	// add the user's level
+	tempNum = m_misc->m_Player[rosNum][30] + 1;
+	outStr += std::to_string(tempNum);
+	// space
+	outStr += ' ';
+	tempStr.clear();
+	for (value = 0; value < 11; value++)
+	{
+		if (m_misc->m_Player[rosNum][23] == m_misc->m_careerTable[value])
+		{
+			tempStr = m_plistMap["Classes"][value];
+			break;
+		}
+	}
+	outStr += tempStr;
+	renderDisplayString(font10, outStr, (int)(((82)* scaler) + hOff), (int)((64 * scaler) + vOff), sdl_text_color, 0, false);
+
+	// Draw boxed overall health, race, and gender.
+	if (m_misc->m_Player[rosNum][17] == 'G')
+	{
+		value = 0;
+		sdl_text_color.r = 0;
+		sdl_text_color.g = 0;
+		sdl_text_color.b = 0;
+	}
+	if (m_misc->m_Player[rosNum][17] == 'P')
+	{
+		value = 1;
+		sdl_text_color.r = 0;
+		sdl_text_color.g = 255;
+		sdl_text_color.b = 0;
+	}
+	else if (m_misc->m_Player[rosNum][17] == 'D')
+	{
+		value = 2;
+		sdl_text_color.r = 255;
+		sdl_text_color.g = 0;
+		sdl_text_color.b = 0;
+	}
+	else if (m_misc->m_Player[rosNum][17] == 'A')
+	{
+		value = 3;
+		sdl_text_color.r = 255;
+		sdl_text_color.g = 255;
+		sdl_text_color.b = 255;
+	}
+	outStr = m_plistMap["MoreMessages"][62 + value];
+	renderDisplayString(font10, outStr, (int)(((252) * scaler) + hOff), (int)((42 * scaler) + vOff), sdl_text_color, 0, false);
+
+	sdl_text_color = sdl_text_color_black;
+
+	for (value = 0; value < 5; value++)
+	{
+		if (m_misc->m_Player[rosNum][22] == charRaces[value])
+		{
+			outStr = m_plistMap["Races"][value];
+			break;
+		}
+	}
+	renderDisplayString(font10, outStr, (int)(((252)* scaler) + hOff), (int)((55 * scaler) + vOff), sdl_text_color, 0, false);
+
+	if (m_misc->m_Player[rosNum][24] == 'F')
+	{
+		value = 0;
+	}
+	else if (m_misc->m_Player[rosNum][24] == 'M')
+	{
+		value = 1;
+	}
+	else
+	{
+		value = 2;
+	}
+	outStr = m_plistMap["MoreMessages"][66 + value];
+	renderDisplayString(font10, outStr, (int)(((252) * scaler) + hOff), (int)((68 * scaler) + vOff), sdl_text_color, 0, false);
+
+	sdl_text_color.r = 0;
+	sdl_text_color.g = 0;
+	sdl_text_color.b = 255;
+
+	outStr = m_plistMap["MoreMessages"][87];
+	renderDisplayString(m_font_9, outStr, (int)(((36) * scaler) + hOff), (int)((87 * scaler) + vOff), sdl_text_color, 0, false);
+	outStr = m_plistMap["MoreMessages"][88];
+	renderDisplayString(m_font_9, outStr, (int)(((125) * scaler) + hOff), (int)((87 * scaler) + vOff), sdl_text_color, 0, false);
+	outStr = m_plistMap["MoreMessages"][89];
+	renderDisplayString(m_font_9, outStr, (int)(((36) * scaler) + hOff), (int)((183 * scaler) + vOff), sdl_text_color, 0, false);
+	outStr = m_plistMap["MoreMessages"][90];
+	renderDisplayString(m_font_9, outStr, (int)(((252) * scaler) + hOff), (int)((183 * scaler) + vOff), sdl_text_color, 0, false);
+	outStr = m_plistMap["MoreMessages"][91];
+	renderDisplayString(m_font_9, outStr, (int)(((280) * scaler) + hOff), (int)((87 * scaler) + vOff), sdl_text_color, 0, false);
+
+	SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	TTF_CloseFont(font10);
+	TTF_CloseFont(font18);
 }

@@ -1207,6 +1207,12 @@ bool U3Misc::StatsCallback()
 	short x;
 	if (!classic)
 	{
+		m_resources->m_overrideImage = 9;
+		m_inputType = InputType::AnyKeyEscape;
+		m_callbackStack.push(std::bind(&U3Misc::StatsCallback2, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+		m_rosNum = m_Party[6 + m_chNum];
+		m_resources->GenerateZStatImage(m_rosNum);
 	}
 	else
 	{
@@ -1248,6 +1254,16 @@ bool U3Misc::StatsCallback()
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 	}
 
+	return false;
+}
+
+bool U3Misc::StatsCallback2()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_resources->m_overrideImage = -1;
 	return false;
 }
 

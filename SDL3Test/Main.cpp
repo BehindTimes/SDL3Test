@@ -1034,4 +1034,5 @@ void updateGame(Uint64 deltaTime)
     {
         m_resources->updateTime(deltaTime);
     }
+    m_resources->m_fullUpdate = false;
 }

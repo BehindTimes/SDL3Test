@@ -175,6 +175,7 @@ public:
 	void SwapShape(short shape);
 	void CreatePartyNames();
 	void CleanupPartyNames();
+	void GenerateZStatImage(int rosNum);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -221,6 +222,7 @@ public:
 	float m_characterRecordHeight;
 	SDL_Texture* m_texRaceClass;
 	SDL_Texture* m_texCharacterRecord;
+	bool m_fullUpdate;
 
 private:
 	void LoadResource(std::string strFile);
@@ -296,6 +298,9 @@ private:
 	SDL_Texture* m_texShrine;
 	SDL_Texture* m_texTimeLord;
 
+	SDL_Texture* m_texDistributeFood;
+	SDL_Texture* m_texGatherGold;
+
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
@@ -331,7 +336,7 @@ private:
 	int m_xPos;
 	int m_yPos;
 	bool m_isInversed;
-	bool m_fullUpdate;
+	
 	bool m_updateWind;
 	int m_alertReturn;
 };

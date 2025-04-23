@@ -41,7 +41,8 @@ UltimaDungeon::UltimaDungeon() :
 	m_forceRedraw(true),
 	m_texDungeonPort(nullptr),
 	m_gExitDungeon(false),
-	m_dimDungeon(false)
+	m_dimDungeon(false),
+	m_isChunk0Wall0(false)
 {
 	m_HeadX[0] = 0;
 	m_HeadX[1] = 1;
@@ -566,6 +567,14 @@ void UltimaDungeon::DngInfo()
 
 void UltimaDungeon::Chunk2() // $183A
 {
+	if (m_ladderRect.size() > 0)
+	{
+		for (auto& curPair : m_ladderRect)
+		{
+			SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &curPair.first, &curPair.second);
+		}
+		m_ladderRect.clear();
+	}
 	if (DungeonBlock(2) > 127)
 	{
 		Chunk3();
@@ -597,6 +606,15 @@ void UltimaDungeon::Chunk2() // $183A
 
 void UltimaDungeon::Chunk3() // $1862
 {
+	if (m_ladderRect.size() > 0)
+	{
+		for (auto& curPair : m_ladderRect)
+		{
+			SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &curPair.first, &curPair.second);
+		}
+		m_ladderRect.clear();
+	}
+
 	if (DungeonBlock(4) != 0)
 	{
 		return;
@@ -622,6 +640,14 @@ void UltimaDungeon::Chunk3() // $1862
 
 void UltimaDungeon::Chunk4() // $1884
 {
+	if (m_ladderRect.size() > 0)
+	{
+		for (auto& curPair : m_ladderRect)
+		{
+			SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &curPair.first, &curPair.second);
+		}
+		m_ladderRect.clear();
+	}
 	if (DungeonBlock(8) > 127)
 	{
 		Chunk5();
@@ -643,6 +669,14 @@ void UltimaDungeon::Chunk4() // $1884
 
 void UltimaDungeon::Chunk5() // $189E
 {
+	if (m_ladderRect.size() > 0)
+	{
+		for (auto& curPair : m_ladderRect)
+		{
+			SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &curPair.first, &curPair.second);
+		}
+		m_ladderRect.clear();
+	}
 	if (DungeonBlock(12) != 0)
 	{
 		return;
@@ -690,7 +724,14 @@ void UltimaDungeon::Chunk1()
 {
 	short value;
 
+	m_isChunk0Wall0 = false;
+
 	value = DungeonBlock(0);
+
+	if (value == 1)
+	{
+		m_isChunk0Wall0 = true;
+	}
 
 	if (value < 0 || value > 127)
 	{
@@ -744,6 +785,7 @@ void UltimaDungeon::RenderDungeon()
 	}
 
 	DrawDungeonBackGround();
+	m_ladderRect.clear();
 	Chunk1();
 
 	DrawSecretMessage();
@@ -944,7 +986,12 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 	FromRect.w = (float)((lright + width + 2) - (lleft - width - 2));
 	FromRect.h = (float)(2 * height);
 	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 255);
-	SDL_RenderFillRect(m_resources->m_renderer, &FromRect);
+	if (!m_isChunk0Wall0)
+	{
+		// In the case we're in a door, the floor and ceiling are going to be black, so no need for an overlapping rectangle which
+		// overlaps the front door
+		SDL_RenderFillRect(m_resources->m_renderer, &FromRect);
+	}
 
 	if (side == 0 || side == 1)
 	{
@@ -952,6 +999,10 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
 		m_resources->GenerateRect(&ToRect, lleft, ltop, lleft + width, lbottom);
 		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		if (side == 1)
+		{
+			m_ladderRect.push_back(std::make_pair(FromRect, ToRect));
+		}
 		shape = 34;
 		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
 		m_resources->GenerateRect(&ToRect, lleft, rung, half + 1, rung + width);
@@ -963,6 +1014,10 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
 		m_resources->GenerateRect(&ToRect, lright - width, ltop, lright, lbottom);
 		SDL_RenderTexture(m_resources->m_renderer, m_texDungeonShapes, &FromRect, &ToRect);
+		if (side == 2)
+		{
+			m_ladderRect.push_back(std::make_pair(FromRect, ToRect));
+		}
 		shape = 34;
 		m_resources->GenerateRect(&FromRect, (dngL[shape] * 2), (dngT[shape] * 2), (dngR[shape] * 2), (dngB[shape] * 2));
 		m_resources->GenerateRect(&ToRect, half, rung, lright, rung + width);

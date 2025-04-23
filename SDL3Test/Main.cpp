@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         return 3;
     }
 
-    if (!SDL_CreateWindowAndRenderer("Ultima 3 - Lairware", 1280, 768, SDL_WINDOW_OPENGL, &window, &renderer))
+    if (!SDL_CreateWindowAndRenderer("Ultima 3 - LairWare", 1280, 768, SDL_WINDOW_OPENGL /*| SDL_WINDOW_HIGH_PIXEL_DENSITY*/, &window, &renderer))
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
         return 3;
@@ -663,7 +663,7 @@ void Organize()
                 {
                     isFullScreen = !isFullScreen;
                     SDL_SetWindowFullscreen(window, isFullScreen);
-                    SDL_SyncWindow(window);
+                    bool blah = SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
                 }

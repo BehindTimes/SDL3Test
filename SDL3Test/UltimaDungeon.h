@@ -89,6 +89,8 @@ private:
 	SDL_Texture* m_texShrine;
 	SDL_Texture* m_texDungeonPort;
 
+	std::vector < std::pair<SDL_FRect, SDL_FRect>> m_ladderRect; // A hack to render ladders
+
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view GraphicsLoc = "Graphics";
 	static constexpr std::string_view PListLoc = "PLists";
@@ -101,5 +103,6 @@ private:
 	char m_HeadX[4];
 	char m_HeadY[4];
 	bool m_dimDungeon;
+	bool m_isChunk0Wall0;
 };
 

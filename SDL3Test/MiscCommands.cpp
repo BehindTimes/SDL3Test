@@ -27,6 +27,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Board();
 		break;
 	case SDLK_C:
+		//Cast();
 		break;
 	case SDLK_D:
 		Descend();
@@ -41,6 +42,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		GetChest();
 		break;
 	case SDLK_H:
+		//HandEquip
 		break;
 	case SDLK_I:
 		Ignite();
@@ -55,8 +57,10 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Look();
 		break;
 	case SDLK_M:
+		//ModifyOrder
 		break;
 	case SDLK_N:
+		//NegateTime
 		break;
 	case SDLK_O:
 		OtherCommand();
@@ -65,8 +69,10 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		PeerGem();
 		break;
 	case SDLK_Q:
+		//QuitSave
 		break;
 	case SDLK_R:
+		//ReadyWeapon
 		break;
 	case SDLK_S:
 		Steal();
@@ -80,6 +86,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	case SDLK_V:
 		break;
 	case SDLK_W:
+		//WearArmor
 		break;
 	case SDLK_X:
 		Exit();
@@ -88,6 +95,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Yell();
 		break;
 	case SDLK_Z:
+		ZStats();
 		break;
 	default:
 		break;
@@ -1134,9 +1142,395 @@ bool U3Misc::CommandYell()
 	return false;
 }
 
-
 void U3Misc::Yell()
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
 	m_callbackStack.push(std::bind(&U3Misc::CommandYell, this));
+}
+
+bool U3Misc::CommandZStats()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	Stats(0, 0);
+
+	return false;
+}
+
+void U3Misc::ZStats()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandZStats, this));
+}
+
+void U3Misc::Stats(short mode, short chnum)
+{
+	if (mode == 0)
+	{
+		m_scrollArea->UPrintMessage(105);
+		m_inputType = InputType::Transact;
+		m_scrollArea->blockPrompt(true);
+		m_callbackStack.push(std::bind(&U3Misc::StatsCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	}
+}
+
+bool U3Misc::StatsCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_chNum = m_input_num;
+
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	bool classic;
+	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
+
+	short temp;
+	short x;
+	if (!classic)
+	{
+	}
+	else
+	{
+		m_rosNum = m_Party[6 + m_chNum];
+		for (x = 0; x < 13; x++)
+		{
+			temp = m_Player[m_rosNum][x];
+			if (temp > 0)
+			{
+				std::string strValue;
+				strValue += (char)temp;
+				m_scrollArea->UPrintWin(strValue);
+			}
+			else
+			{
+				break;
+			}
+		}
+		m_scrollArea->UPrintWin(std::string(StrString));
+		auto padded = std::to_string(m_Player[m_rosNum][18]);
+		padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+		m_scrollArea->UPrintWin(padded);
+		m_scrollArea->UPrintWin(std::string(DexString));
+		padded = std::to_string(m_Player[m_rosNum][19]);
+		padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+		m_scrollArea->UPrintWin(padded);
+		m_scrollArea->UPrintWin(std::string(IntString));
+		padded = std::to_string(m_Player[m_rosNum][20]);
+		padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+		m_scrollArea->UPrintWin(padded);
+		m_scrollArea->UPrintWin(std::string(WisString));
+		padded = std::to_string(m_Player[m_rosNum][21]);
+		padded.insert(0, 2U - std::min(std::string::size_type(2), padded.length()), '0');
+		m_scrollArea->UPrintWin(padded);
+
+		m_inputType = InputType::AnyKeyEscape;
+		m_opnum = 0;
+		m_callbackStack.push(std::bind(&U3Misc::StatsCallback1, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	}
+
+	return false;
+}
+
+bool U3Misc::StatsCallback1()
+{
+	unsigned char value;
+	bool skip = false;
+	short x;
+
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	short temp;
+	switch (m_opnum)
+	{
+	case 0:
+	{
+		m_scrollArea->UPrintWin(std::string(HpString));
+		temp = m_Player[m_rosNum][26] * 256 + m_Player[m_rosNum][27];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 4);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 1:
+	{
+		m_scrollArea->UPrintWin(std::string(HmString));
+		temp = m_Player[m_rosNum][28] * 256 + m_Player[m_rosNum][29];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 4);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 2:
+	{
+		m_scrollArea->UPrintWin(std::string(GoldString));
+		temp = m_Player[m_rosNum][35] * 256 + m_Player[m_rosNum][36];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 4);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 3:
+	{
+		m_scrollArea->UPrintWin(std::string(ExpString));
+		temp = m_Player[m_rosNum][30] * 256 + m_Player[m_rosNum][31];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 4);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 4:
+	{
+		m_scrollArea->UPrintWin(std::string(GemString));
+		temp = m_Player[m_rosNum][37];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 2);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 5:
+	{
+		m_scrollArea->UPrintWin(std::string(KeyString));
+		temp = m_Player[m_rosNum][38];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 2);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 6:
+	{
+		m_scrollArea->UPrintWin(std::string(PowdString));
+		temp = m_Player[m_rosNum][39];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 2);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 7:
+	{
+		m_scrollArea->UPrintWin(std::string(TrchString));
+		temp = m_Player[m_rosNum][15];
+		std::string dispString = m_utilities->GetPaddedNum(temp, 2);
+		m_scrollArea->UPrintWin(dispString);
+	}
+	break;
+	case 8:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x08)
+		{
+			m_scrollArea->UPrintWin(std::string(CoDString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 9:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x02)
+		{
+			m_scrollArea->UPrintWin(std::string(CoSString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 10:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x01)
+		{
+			m_scrollArea->UPrintWin(std::string(CoLString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 11:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x04)
+		{
+			m_scrollArea->UPrintWin(std::string(CoMString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 12:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x04)
+		{
+			m_scrollArea->UPrintWin(std::string(MoForceString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 13:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x04)
+		{
+			m_scrollArea->UPrintWin(std::string(MoFireString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 14:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x04)
+		{
+			m_scrollArea->UPrintWin(std::string(MoSString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 15:
+		value = m_Player[m_rosNum][14];
+		if (value & 0x04)
+		{
+			m_scrollArea->UPrintWin(std::string(MoKString));
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 16:
+	{
+		m_scrollArea->UPrintWin(std::string(WeaponString));
+		std::string dispString = m_resources->m_plistMap["WeaponsArmour"][m_Player[m_rosNum][48]];
+		m_scrollArea->UPrintWin(std::string(dispString));
+	}
+		break;
+	case 17:
+	{
+		m_scrollArea->UPrintWin(std::string(ArmorString));
+		std::string dispString = m_resources->m_plistMap["WeaponsArmour"][m_Player[m_rosNum][40] + 16];
+		m_scrollArea->UPrintWin(std::string(dispString));
+	}
+	break;
+	case 18:
+		m_scrollArea->UPrintWin(std::string(WeaponsString));
+		skip = true;
+		break;
+	case 19:
+	case 20:
+	case 21:
+	case 22:
+	case 23:
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 28:
+	case 29:
+	case 30:
+	case 31:
+	case 32:
+	case 33:
+	{
+		x = 15 - (m_opnum - 19);
+		if (m_Player[m_rosNum][x + 48])
+		{
+			m_scrollArea->UPrintWin("\n");
+			std::string dispString = m_utilities->GetPaddedNum(m_Player[m_rosNum][x + 48], 2);
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin("-");
+			dispString = m_resources->m_plistMap["WeaponsArmour"][x];
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin("(");
+			dispString.clear();
+			dispString += (char)(x + 65);
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin(")");
+		}
+		else
+		{
+			skip = true;
+		}
+	}
+		break;
+	case 34:
+		m_scrollArea->UPrintWin(std::string(NoWeaponsString));
+		skip = true;
+		break;
+	case 35:
+	case 36:
+	case 37:
+	case 38:
+	case 39:
+	case 40:
+	case 41:
+		x = 7 - (m_opnum - 35);
+		if (m_Player[m_rosNum][x + 40])
+		{
+			m_scrollArea->UPrintWin("\n");
+			std::string dispString = m_utilities->GetPaddedNum(m_Player[m_rosNum][x + 40], 2);
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin("-");
+			dispString = m_resources->m_plistMap["WeaponsArmour"][x + 16];
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin("(");
+			dispString.clear();
+			dispString += (char)(x + 65);
+			m_scrollArea->UPrintWin(dispString);
+			m_scrollArea->UPrintWin(")");
+		}
+		else
+		{
+			skip = true;
+		}
+		break;
+	case 42:
+		m_scrollArea->UPrintWin(std::string(NoArmorString));
+		skip = true;
+		break;
+	default:
+		break;
+	}
+	if (m_opnum < 42)
+	{
+		m_opnum++;
+		if (!skip)
+		{
+			m_inputType = InputType::AnyKeyEscape;
+			m_callbackStack.push(std::bind(&U3Misc::StatsCallback1, this));
+			m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+		}
+		else
+		{
+			m_callbackStack.push(std::bind(&U3Misc::StatsCallback1, this));
+		}
+	}
+	else
+	{
+		m_scrollArea->UPrintWin("\n");
+	}
+	return false;
 }

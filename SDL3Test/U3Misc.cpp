@@ -985,6 +985,9 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 	case InputType::AnyKey:
 		HandleAnyKey();
 		break;
+	case InputType::AnyKeyEscape:
+		HandleAnyKeyEscape(key.key);
+		break;
 	case InputType::SleepCallback:
 		HandleCallback(true);
 		break;
@@ -1396,6 +1399,20 @@ void U3Misc::HandleInputText(SDL_KeyboardEvent key)
 	}
 }
 
+void U3Misc::HandleAnyKeyEscape(SDL_Keycode key)
+{
+	m_inputType = InputType::Default;
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_input_num = 0;
+	if (key == SDLK_ESCAPE)
+	{
+		m_input_num = -1;
+	}
+}
+
 void U3Misc::HandleAnyKey()
 {
 	m_inputType = InputType::Default;
@@ -1509,6 +1526,11 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		if (m_inputType == InputType::AnyKey)
 		{
 			HandleAnyKey();
+			//retVal = true;
+		}
+		else if (m_inputType == InputType::AnyKeyEscape)
+		{
+			HandleAnyKeyEscape(0);
 			//retVal = true;
 		}
 		break;

@@ -1443,6 +1443,7 @@ void UltimaDungeon::createTextureSecrets()
 
 void UltimaDungeon::dungeonmech()
 {
+	m_resources->m_newMove = true;
 	m_misc->m_wx = 0x18;
 	m_misc->m_wy = 0x17;
 	m_misc->m_xs = m_misc->m_xpos;

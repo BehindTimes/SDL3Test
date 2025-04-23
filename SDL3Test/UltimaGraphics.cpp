@@ -1092,7 +1092,6 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     }
     m_resources->ShowChars(true);
     m_resources->DrawInverses(deltaTime);
-    m_resources->DrawWind();
     m_scrollArea->render(deltaTime);
     bool updateGame = true;
 

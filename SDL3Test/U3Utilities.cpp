@@ -84,3 +84,10 @@ std::string U3Utilities::PathToSDLString(std::filesystem::path input)
 
 	return strRet;
 }
+
+std::string U3Utilities::GetPaddedNum(int num, int length)
+{
+	std::stringstream ss;
+	ss << std::setw(length) << std::setfill('0') << num;
+	return ss.str();
+}

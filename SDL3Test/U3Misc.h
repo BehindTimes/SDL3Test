@@ -39,6 +39,7 @@ enum class InputType
 	InputText,
 	YesNo,
 	AnyKey,
+	AnyKeyEscape,
 	BuySell,
 	Restricted,
 	SleepCallback,
@@ -221,7 +222,7 @@ private:
 	void Steal();
 	void Transact();
 	void Unlock();
-	
+	void ZStats();
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
@@ -241,6 +242,7 @@ private:
 	void IncMoves();
 	
 	void HandleAnyKey();
+	void HandleAnyKeyEscape(SDL_Keycode key);
 	bool FinalizeHealingCallback();
 	void ClearTiles();
 	
@@ -376,6 +378,7 @@ private:
 	bool CommandUnlock();
 	bool CommandOther();
 	bool CommandYell();
+	bool CommandZStats();
 	
 	bool ShowAlert();
 
@@ -397,12 +400,40 @@ private:
 	short ShrineRace(short race);
 	bool shrineCallback();
 	bool shrineCallback1();
+	void Stats(short mode, short chnum);
+	bool StatsCallback();
+	bool StatsCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view BinLoc = "Bin";
 	static constexpr std::string_view DoorString = "Door";
 	static constexpr std::string_view DioramaString = "Diorama\n";
+	static constexpr std::string_view StrString = "\nSTR...";
+	static constexpr std::string_view DexString = "\nDEX...";
+	static constexpr std::string_view IntString = "\nINT...";
+	static constexpr std::string_view WisString = "\nWIS...";
+	static constexpr std::string_view HpString = "\nH.P...";
+	static constexpr std::string_view HmString = "\nH.M...";
+	static constexpr std::string_view GoldString = "\nGOLD: ";
+	static constexpr std::string_view ExpString = "\nEXP...";
+	static constexpr std::string_view GemString = "\nGEMS..";
+	static constexpr std::string_view KeyString = "\nKEYS..";
+	static constexpr std::string_view PowdString = "\nPOWD..";
+	static constexpr std::string_view TrchString = "\nTRCH..";
+	static constexpr std::string_view CoDString = "\nCARD OF DEATH";
+	static constexpr std::string_view CoSString = "\nCARD OF SOL";
+	static constexpr std::string_view CoLString = "\nCARD OF LOVE";
+	static constexpr std::string_view CoMString = "\nCARD OF MOONS";
+	static constexpr std::string_view MoForceString = "\nMARK OF FORCE";
+	static constexpr std::string_view MoFireString = "\nMARK OF FIRE";
+	static constexpr std::string_view MoSString = "\nMARK OF SNAKE";
+	static constexpr std::string_view MoKString = "\nMARK OF KINGS";
+	static constexpr std::string_view WeaponString = "\nWEAPON:";
+	static constexpr std::string_view ArmorString = "\nARMOUR:";
+	static constexpr std::string_view WeaponsString = "\n**WEAPONS**";
+	static constexpr std::string_view NoWeaponsString = "\n02-Hands-(A)\n**ARMOUR**";
+	static constexpr std::string_view NoArmorString = "\n01-Skin-(A)";
 
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;

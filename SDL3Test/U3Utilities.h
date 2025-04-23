@@ -13,6 +13,7 @@ public:
 	int getRandom(int min, int max);
 	void trim(std::string& str);
 	std::string PathToSDLString(std::filesystem::path input);
+	std::string GetPaddedNum(int num, int length);
 
 private:
 	std::random_device m_rd;

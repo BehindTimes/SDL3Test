@@ -103,6 +103,7 @@ public:
 	void ZStats();
 
 	void GetChest(short spell, short chnum);
+	void HandEquip();
 	void Ignite();
 	void JoinGold();
 	void JoinGold(short chnum);
@@ -378,6 +379,7 @@ private:
 	bool CommandExit();
 	bool CommandFinishTurn();
 	bool CommandGetChest();
+	bool CommandHandEquip();
 	bool CommandIgnite();
 	bool CommandKlimb();
 	bool CommandLook();
@@ -428,6 +430,15 @@ private:
 	void NegateTime(short chnum);
 	bool ModifyOrderCallback();
 	bool ModifyOrderCallback1();
+	bool HandEquipCallback();
+	bool HandEquipCallback1();
+	bool HandEquipCallback2();
+	bool handWeaponCallback();
+	bool handArmorCallback();
+	bool handFoodCallback();
+	bool handGoldCallback();
+	bool handItemCallback();
+	bool handItemCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

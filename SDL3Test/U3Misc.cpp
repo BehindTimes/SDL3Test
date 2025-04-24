@@ -1160,7 +1160,7 @@ void U3Misc::HandleInputGuild(SDL_Keycode key)
 		handled = true;
 		break;
 	default:
-		m_input_num = 0;
+		m_input_num = -1;
 		break;
 	}
 	if (handled)
@@ -1223,6 +1223,7 @@ void U3Misc::HandleInputRestricted(SDL_Keycode key)
 	if (value >= (int)((m_restrictedStart - 'A')) && value < (int)((m_opnum - 'A')))
 	{
 		m_input_num = value;
+		m_input = std::string(SDL_GetKeyName(key));
 		if (m_callbackStack.size() > 0)
 		{
 			//auto callbackFunction = m_callbackStack.top();
@@ -2688,11 +2689,11 @@ bool U3Misc::weaponsBuyCallback()
 		gold -= amount;
 		m_Player[m_rosNum][35] = gold / 256;
 		m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
-		m_Player[m_rosNum][49 + m_input_num]++;
+		m_Player[m_rosNum][48 + m_input_num]++;
 
-		if (m_Player[m_rosNum][49 + m_input_num] > 99)
+		if (m_Player[m_rosNum][48 + m_input_num] > 99)
 		{
-			m_Player[m_rosNum][49 + m_input_num] = 99;
+			m_Player[m_rosNum][48 + m_input_num] = 99;
 		}
 
 		m_scrollArea->UPrintMessageRewrapped(210);
@@ -2732,7 +2733,7 @@ bool U3Misc::weaponsSellCallback()
 		strInput += m_input_num + 'A';
 		m_scrollArea->setInputString(strInput);
 		m_scrollArea->setInput(false);
-		if (m_Player[m_rosNum][49 + m_input_num] < 1)
+		if (m_Player[m_rosNum][48 + m_input_num] < 1)
 		{
 			weaponsSellMissing();
 			return false;
@@ -2749,8 +2750,8 @@ bool U3Misc::weaponsSellCallback()
 		}
 		if (AddGold(m_rosNum, amount, false))
 		{
-			m_Player[m_rosNum][49 + m_input_num]--;
-			if (m_Player[m_rosNum][49 + m_input_num] < 1 && m_Player[m_rosNum][48] == m_input_num + 1)
+			m_Player[m_rosNum][48 + m_input_num]--;
+			if (m_Player[m_rosNum][48 + m_input_num] < 1 && m_Player[m_rosNum][48] == m_input_num)
 			{
 				m_Player[m_rosNum][48] = 0;
 			}
@@ -2803,7 +2804,7 @@ bool U3Misc::armorsBuyCallback()
 			armorsBuyPoor();
 			return false;
 		}
-		if (m_Player[m_rosNum][41 + m_input_num] > 98)
+		if (m_Player[m_rosNum][40 + m_input_num] > 98)
 		{
 			m_scrollArea->UPrintMessage(260);
 			m_scrollArea->UPrintWin("\n\n");
@@ -2816,11 +2817,11 @@ bool U3Misc::armorsBuyCallback()
 		gold -= amount;
 		m_Player[m_rosNum][35] = gold / 256;
 		m_Player[m_rosNum][36] = gold - (m_Player[m_rosNum][35] * 256);
-		m_Player[m_rosNum][41 + m_input_num]++;
+		m_Player[m_rosNum][40 + m_input_num]++;
 
-		if (m_Player[m_rosNum][41 + m_input_num] > 99)
+		if (m_Player[m_rosNum][40 + m_input_num] > 99)
 		{
-			m_Player[m_rosNum][41 + m_input_num] = 99;
+			m_Player[m_rosNum][40 + m_input_num] = 99;
 		}
 
 		m_scrollArea->UPrintMessageRewrapped(210);
@@ -2849,7 +2850,7 @@ bool U3Misc::armorsSellCallback()
 		strInput += m_input_num + 'A';
 		m_scrollArea->setInputString(strInput);
 		m_scrollArea->setInput(false);
-		if (m_Player[m_rosNum][41 + m_input_num] < 1)
+		if (m_Player[m_rosNum][40 + m_input_num] < 1)
 		{
 			armorsSellMissing();
 			return false;
@@ -2866,8 +2867,8 @@ bool U3Misc::armorsSellCallback()
 		}
 		if (AddGold(m_rosNum, amount, false))
 		{
-			m_Player[m_rosNum][41 + m_input_num]--;
-			if (m_Player[m_rosNum][41 + m_input_num] < 1 && m_Player[m_rosNum][40] == m_input_num + 1)
+			m_Player[m_rosNum][40 + m_input_num]--;
+			if (m_Player[m_rosNum][40 + m_input_num] < 1 && m_Player[m_rosNum][40] == m_input_num)
 			{
 				m_Player[m_rosNum][40] = 0;
 			}

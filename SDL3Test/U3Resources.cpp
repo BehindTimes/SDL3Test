@@ -4377,7 +4377,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			outStr = std::string("(");
 			outStr += (char)('A' + value);
 			outStr += std::string(") ");
-			if (value == m_misc->m_Player[rosNum][48])
+			if (value == m_misc->m_Player[rosNum][40])
 			{
 				sdl_text_color = sdl_text_color_red;
 			}

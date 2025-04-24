@@ -126,10 +126,12 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		Descend();
 		break;
 	case SDLK_G:
-		m_misc->GetChest(0, 0);
+		m_misc->GetChest();
+		//m_misc->GetChest(0, 0);
 		break;
 	case SDLK_H:
-		NotDngCmd();
+		m_misc->HandEquip();
+		//NotDngCmd();
 		break;
 	case SDLK_I:
 		m_misc->Ignite();

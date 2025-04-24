@@ -42,7 +42,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		GetChest();
 		break;
 	case SDLK_H:
-		//HandEquip
+		HandEquip();
 		break;
 	case SDLK_I:
 		Ignite();
@@ -1910,4 +1910,398 @@ void U3Misc::ModifyOrder()
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
 	m_callbackStack.push(std::bind(&U3Misc::CommandModifyOrder, this));
+}
+
+bool U3Misc::CommandHandEquip()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_scrollArea->UPrintMessage(51);
+
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::HandEquipCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+void U3Misc::HandEquip()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandHandEquip, this));
+}
+
+
+bool U3Misc::HandEquipCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintMessage(71);
+		return false;
+	}
+
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	if (!m_Player[m_Party[6 + m_chNum]][17])
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	m_scrollArea->UPrintMessage(52);
+
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::HandEquipCallback1, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::HandEquipCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_opnum2 = m_input_num;
+	if (m_opnum2 < 0 || m_opnum2 > 3)
+	{
+		m_scrollArea->UPrintMessage(71);
+		return false;
+	}
+
+	std::string dispString(std::to_string(m_opnum2 + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_opnum2] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	if (!m_Player[m_Party[6 + m_opnum2]][17])
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+	if (m_chNum == m_opnum2)
+	{
+		return false;
+	}
+	m_scrollArea->UPrintMessage(53);
+
+	m_inputType = InputType::LetterImmediate;
+	m_callbackStack.push(std::bind(&U3Misc::HandEquipCallback2, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::HandEquipCallback2()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin(m_input);
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input.empty())
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+
+	char item = m_input[0];
+	m_input.clear();
+	m_scrollArea->setInputString("");
+	switch (item)
+	{
+	case 'F':
+		m_scrollArea->UPrintMessage(54);
+		setInputTypeNum(std::bind(&U3Misc::handFoodCallback, this), 4);
+		break;
+	case 'G':
+		m_scrollArea->UPrintMessage(54);
+		setInputTypeNum(std::bind(&U3Misc::handGoldCallback, this), 4);
+		break;
+	case 'E':
+		m_scrollArea->UPrintMessage(58);
+		m_inputType = InputType::GuildVendor;
+		m_scrollArea->setInput(true);
+		m_callbackStack.push(std::bind(&U3Misc::handItemCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+		break;
+	case 'W':
+		m_opnum = 'P';
+		m_scrollArea->UPrintMessage(61);
+		setInputTypeRestricted(std::bind(&U3Misc::handWeaponCallback, this), 'B');
+		break;
+	case 'A':
+		m_opnum = 'H';
+		m_scrollArea->UPrintMessage(62);
+		setInputTypeRestricted(std::bind(&U3Misc::handArmorCallback, this), 'B');
+		break;
+	default:
+		m_scrollArea->UPrintMessage(59);
+		break;
+	}
+
+	return false;
+}
+
+bool U3Misc::handWeaponCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->setInputString(m_input);
+	m_scrollArea->setInput(false);
+	m_inputType = InputType::Default;
+	m_scrollArea->UPrintWin("\n");
+	if (m_input.empty())
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	if (m_input[0] < 'B' || m_input[0] > 'P')
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	short rosNum1 = m_Party[6 + m_chNum];
+	short rosNum2 = m_Party[6 + m_opnum2];
+
+	if (m_Player[rosNum1][48] == m_input_num && m_Player[rosNum1][48 + m_input_num] < 2)
+	{
+		m_scrollArea->UPrintMessage(63);
+		return false;
+	}
+	if (m_Player[rosNum1][48 + m_input_num] == 0)
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	m_Player[rosNum1][48 + m_input_num]--;
+	m_Player[rosNum2][48 + m_input_num]++;
+
+	if (m_Player[rosNum2][48 + m_input_num] > 99)
+	{
+		m_Player[rosNum2][48 + m_input_num] = 99;
+	}
+	m_scrollArea->UPrintMessage(57);
+	return false;
+}
+
+bool U3Misc::handArmorCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->setInputString(m_input);
+	m_scrollArea->setInput(false);
+	m_inputType = InputType::Default;
+	m_scrollArea->UPrintWin("\n");
+	if (m_input.empty())
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	if (m_input[0] < 'B' || m_input[0] > 'H')
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	short rosNum1 = m_Party[6 + m_chNum];
+	short rosNum2 = m_Party[6 + m_opnum2];
+
+	if (m_Player[rosNum1][40] == m_input_num && m_Player[rosNum1][40 + m_input_num] < 2)
+	{
+		m_scrollArea->UPrintMessage(63);
+		return false;
+	}
+	if (m_Player[rosNum1][40 + m_input_num] == 0)
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	m_Player[rosNum1][40 + m_input_num]--;
+	m_Player[rosNum2][40 + m_input_num]++;
+
+	if (m_Player[rosNum2][40 + m_input_num] > 99)
+	{
+		m_Player[rosNum2][40 + m_input_num] = 99;
+	}
+	m_scrollArea->UPrintMessage(57);
+	return false;
+}
+
+bool U3Misc::handFoodCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin("\n");
+	short rosNum1 = m_Party[6 + m_chNum];
+	short rosNum2 = m_Party[6 + m_opnum2];
+	short fromAmount = (m_Player[rosNum1][32] * 100) + m_Player[rosNum1][33];
+	short toAmount = (m_Player[rosNum2][32] * 100) + m_Player[rosNum2][33];
+	if (m_input_num == 0)
+	{
+		return false;
+	}
+	if (m_input_num > fromAmount)
+	{
+		m_scrollArea->UPrintMessage(55);
+		return false;
+	}
+	if (toAmount + m_input_num > 9999)
+	{
+		m_scrollArea->UPrintMessage(56);
+		return false;
+	}
+	fromAmount -= m_input_num;
+	toAmount += m_input_num;
+	m_Player[rosNum1][32] = fromAmount / 100;
+	m_Player[rosNum1][33] = fromAmount - (m_Player[rosNum1][32] * 100);
+	m_Player[rosNum2][32] = toAmount / 100;
+	m_Player[rosNum2][33] = toAmount - (m_Player[rosNum2][32] * 100);
+
+	m_scrollArea->UPrintMessage(57);
+
+	return false;
+}
+
+bool U3Misc::handGoldCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin("\n");
+	short rosNum1 = m_Party[6 + m_chNum];
+	short rosNum2 = m_Party[6 + m_opnum2];
+
+	short fromAmount = (m_Player[rosNum1][35] * 256) + m_Player[rosNum1][36];
+	short toAmount = (m_Player[rosNum2][35] * 256) + m_Player[rosNum2][36];
+	if (m_input_num == 0)
+	{
+		return false;
+	}
+	if (m_input_num > fromAmount)
+	{
+		m_scrollArea->UPrintMessage(55);
+		return false;
+	}
+	if (toAmount + m_input_num > 9999)
+	{
+		m_scrollArea->UPrintMessage(56);
+		return false;
+	}
+	fromAmount -= m_input_num;
+	toAmount += m_input_num;
+	m_Player[rosNum1][35] = fromAmount / 256;
+	m_Player[rosNum1][36] = fromAmount - (m_Player[rosNum1][35] * 256);
+	m_Player[rosNum2][35] = toAmount / 256;
+	m_Player[rosNum2][36] = toAmount - (m_Player[rosNum2][35] * 256);
+
+	m_scrollArea->UPrintMessage(57);
+
+	return false;
+}
+
+bool U3Misc::handItemCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin("\n");
+	if (m_input_num < 0)
+	{
+		return false;
+	}
+	m_opnum = 0;
+	
+	if (m_input_num == 0) // T
+	{
+		m_opnum = 15;
+	}
+	else if (m_input_num == 1) // K
+	{
+		m_opnum = 38;
+	}
+	else if (m_input_num == 2) // P
+	{
+		m_opnum = 39;
+	}
+	else if (m_input_num == 3) // G
+	{
+		m_opnum = 37;
+	}
+
+	if (m_opnum == 0)
+	{
+		m_scrollArea->UPrintMessage(59);
+		return false;
+	}
+	m_scrollArea->UPrintMessage(60);
+	setInputTypeNum(std::bind(&U3Misc::handItemCallback1, this), 2);
+
+	return false;
+}
+
+bool U3Misc::handItemCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin("\n");
+	if (m_input_num == 0)
+	{
+		return false;
+	}
+	short rosNum1 = m_Party[6 + m_chNum];
+	short rosNum2 = m_Party[6 + m_opnum2];
+
+	if (m_input_num > m_Player[rosNum1][m_opnum])
+	{
+		m_scrollArea->UPrintMessage(55);
+		return false;
+	}
+
+	if (m_input_num + m_Player[rosNum2][m_opnum] > 99)
+	{
+		m_scrollArea->UPrintMessage(56);
+		return false;
+	}
+
+	m_Player[rosNum1][m_opnum] -= m_input_num;
+	m_Player[rosNum2][m_opnum] += m_input_num;
+	if (m_Player[rosNum2][m_opnum] > 99)
+	{
+		m_Player[rosNum2][m_opnum] = 99;
+	}
+
+	m_scrollArea->UPrintMessage(57);
+
+	return false;
 }

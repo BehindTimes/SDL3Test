@@ -12,10 +12,11 @@ public:
 
 	void resizeButton(int m_blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font);
 	void CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x = 0, int y = 0);
+	void CreateImageButton(int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height);
 	void forceCapture();
 	void click();
 	void render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY);
-	void render(SDL_Renderer* renderer, int blockSize, int x, int y);
+	void render(SDL_Renderer* renderer, int blockSize, int x, int y, bool adjust = false);
 	void setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int blockSize, int x, int y, int width, int height, bool has_clicked, bool has_disabled);
 	void setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY);
 	void setMouseCapture(int capture, float mouse_x, float mouse_y);
@@ -25,8 +26,9 @@ public:
 	void updateLocationCentered(SDL_FRect fillRect);
 	SDL_Texture* getDefaultTexture() { return m_texDefault; }
 	SDL_Texture* getPushedTexture() { return m_texPushed; }
-	float getWidth() { return m_width; }
-	float getHeight() { return m_height; }
+	float getWidth() const { return m_width; }
+	float getHeight() const { return m_height; }
+	bool isCaptured() const { return m_captureMouse; }
 
 	int m_x;
 	int m_y;

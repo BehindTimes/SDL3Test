@@ -176,6 +176,9 @@ public:
 	void CreatePartyNames();
 	void CleanupPartyNames();
 	void GenerateZStatImage(int rosNum);
+	void createZStatButtons();
+
+	void DrawZStatButtons();
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -187,8 +190,10 @@ public:
 
 	TTF_Font* m_font; // block size font
 	TTF_Font* m_font_9; // 9 point font
+	TTF_Font* m_font_10; // 10 point font
 	TTF_Font* m_font_11; // 11 point font
 	TTF_Font* m_font_12; // 12 point font
+	TTF_Font* m_font_18; // 12 point font
 
 	Uint64 m_delta_time;
 	float m_font_y_offset;
@@ -223,6 +228,7 @@ public:
 	SDL_Texture* m_texRaceClass;
 	SDL_Texture* m_texCharacterRecord;
 	bool m_fullUpdate;
+	std::vector< U3Button> m_zstatbuttons;
 
 private:
 	void LoadResource(std::string strFile);
@@ -253,6 +259,8 @@ private:
 	void AlertCallback();
 	SDL_FRect GetTileRectForIndex(short index);
 	void DrawPortrait(char charNum);
+	void zStatDistributeCallback(int button);
+	void zStatJoinGold(int button);
 
 	static constexpr std::string_view FontLoc = "Fonts";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -300,11 +308,14 @@ private:
 
 	SDL_Texture* m_texDistributeFood;
 	SDL_Texture* m_texGatherGold;
+	SDL_Texture* m_texDistributeFoodPushed;
+	SDL_Texture* m_texGatherGoldPushed;
 
 	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
 	std::vector< short> m_currentButtons;
+	
 
 	int m_exodusWidth;
 	int m_exodusHeight;

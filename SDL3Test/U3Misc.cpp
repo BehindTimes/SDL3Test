@@ -67,7 +67,8 @@ U3Misc::U3Misc() :
 	m_freezeAnimation(false),
 	m_currentEvent(0),
 	m_gWhirlCtr(0),
-	m_partyFormed(false)
+	m_partyFormed(false),
+	m_surpressTextDisplay(false)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -982,6 +983,7 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 	case InputType::GetDirection:
 		HandleDircetionKeyPress(key.key);
 		break;
+	case InputType::ZStats:
 	case InputType::AnyKey:
 		HandleAnyKey();
 		break;
@@ -1544,6 +1546,27 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		break;
 	default:
 		break;
+	}
+
+	if (updateMouse)
+	{
+		if (m_inputType == InputType::ZStats)
+		{
+			bool isCaptured = false;
+
+			if (m_resources->m_zstatbuttons.size() > 0)
+			{
+				for (auto& curButton : m_resources->m_zstatbuttons)
+				{
+					curButton.setMouseCapture(mouseState, event.motion.x, event.motion.y);
+					isCaptured |= curButton.isCaptured();
+				}
+			}
+			if (mouseState == 1 && !isCaptured)
+			{
+				HandleAnyKey();
+			}
+		}
 	}
 	return retVal;
 }
@@ -3442,12 +3465,16 @@ bool U3Misc::JoinGoldCallback()
 
 void U3Misc::JoinGold(short chnum)
 {
-	std::string strOutVal = std::to_string(chnum);
-	strOutVal += '\n';
-	m_scrollArea->UPrintWin(strOutVal);
+	chnum++;
+	if (!m_surpressTextDisplay)
+	{
+		std::string strOutVal = std::to_string(chnum);
+		strOutVal += '\n';
+		m_scrollArea->UPrintWin(strOutVal);
+	}
 	short x, mainRosNum, rosNum, total, gold, transfer;
 
-	mainRosNum = m_Party[6 + chnum];
+	mainRosNum = m_Party[5 + chnum];
 	total = ((m_Player[mainRosNum][35]) * 256) + m_Player[mainRosNum][36];
 	for (x = 1; x < 5; x++)
 	{

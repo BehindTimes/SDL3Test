@@ -1207,12 +1207,14 @@ bool U3Misc::StatsCallback()
 	short x;
 	if (!classic)
 	{
+		m_surpressTextDisplay = true;
 		m_resources->m_overrideImage = 9;
-		m_inputType = InputType::AnyKeyEscape;
+		m_inputType = InputType::ZStats;
 		m_callbackStack.push(std::bind(&U3Misc::StatsCallback2, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 		m_rosNum = m_Party[6 + m_chNum];
 		m_resources->GenerateZStatImage(m_rosNum);
+		m_resources->createZStatButtons();
 	}
 	else
 	{
@@ -1263,7 +1265,9 @@ bool U3Misc::StatsCallback2()
 	{
 		m_callbackStack.pop();
 	}
+	m_resources->m_zstatbuttons.clear();
 	m_resources->m_overrideImage = -1;
+	m_surpressTextDisplay = false;
 	return false;
 }
 

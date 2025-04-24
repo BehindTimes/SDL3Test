@@ -59,8 +59,10 @@ U3Resources::U3Resources() :
 	m_blockSize(32),
 	m_font(nullptr),
 	m_font_9(nullptr),
+	m_font_10(nullptr),
 	m_font_11(nullptr),
 	m_font_12(nullptr),
+	m_font_18(nullptr),
 	m_demoptr(0),
 	m_curTickScroll(0),
 	m_elapsedTimeScroll(0),
@@ -98,7 +100,9 @@ U3Resources::U3Resources() :
 	m_characterRecordWidth(0),
 	m_characterRecordHeight(0),
 	m_texDistributeFood(nullptr),
-	m_texGatherGold(nullptr)
+	m_texGatherGold(nullptr),
+	m_texDistributeFoodPushed(nullptr),
+	m_texGatherGoldPushed(nullptr)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -161,6 +165,18 @@ U3Resources::~U3Resources()
 	{
 		SDL_DestroyTexture(m_texGatherGold);
 		m_texGatherGold = nullptr;
+	}
+
+	if (m_texDistributeFoodPushed)
+	{
+		SDL_DestroyTexture(m_texDistributeFoodPushed);
+		m_texDistributeFoodPushed = nullptr;
+	}
+
+	if (m_texGatherGoldPushed)
+	{
+		SDL_DestroyTexture(m_texGatherGoldPushed);
+		m_texGatherGoldPushed = nullptr;
 	}
 
 	if (m_texSosariaMap)
@@ -279,6 +295,11 @@ U3Resources::~U3Resources()
 		TTF_CloseFont(m_font_9);
 		m_font_9 = nullptr;
 	}
+	if (m_font_10)
+	{
+		TTF_CloseFont(m_font_10);
+		m_font_10 = nullptr;
+	}
 	if (m_font_11)
 	{
 		TTF_CloseFont(m_font_11);
@@ -288,6 +309,11 @@ U3Resources::~U3Resources()
 	{
 		TTF_CloseFont(m_font_12);
 		m_font_12 = nullptr;
+	}
+	if (m_font_18)
+	{
+		TTF_CloseFont(m_font_18);
+		m_font_18 = nullptr;
 	}
 
 	TTF_Quit();
@@ -483,6 +509,12 @@ bool U3Resources::createFont()
 		return false;
 	}
 
+	m_font_10 = TTF_OpenFont(currentPath.string().c_str(), 10.0f * scaler);
+	if (!m_font_10)
+	{
+		return false;
+	}
+
 	m_font_11 = TTF_OpenFont(currentPath.string().c_str(), 11.0f * scaler);
 	if (!m_font_11)
 	{
@@ -491,6 +523,12 @@ bool U3Resources::createFont()
 
 	m_font_12 = TTF_OpenFont(currentPath.string().c_str(), 12.0f * scaler);
 	if (!m_font_12)
+	{
+		return false;
+	}
+
+	m_font_18 = TTF_OpenFont(currentPath.string().c_str(), 18.0f * scaler);
+	if (!m_font_18)
 	{
 		return false;
 	}
@@ -533,6 +571,11 @@ void U3Resources::CalculateBlockSize()
 		TTF_CloseFont(m_font_9);
 		m_font_9 = nullptr;
 	}
+	if (m_font_10)
+	{
+		TTF_CloseFont(m_font_10);
+		m_font_10 = nullptr;
+	}
 	if (m_font_11)
 	{
 		TTF_CloseFont(m_font_11);
@@ -542,6 +585,11 @@ void U3Resources::CalculateBlockSize()
 	{
 		TTF_CloseFont(m_font_12);
 		m_font_12 = nullptr;
+	}
+	if (m_font_18)
+	{
+		TTF_CloseFont(m_font_18);
+		m_font_18 = nullptr;
 	}
 	createFont();
 
@@ -567,6 +615,12 @@ void U3Resources::CalculateBlockSize()
 		SDL_DestroyTexture(m_texStats);
 	}
 	loadButtons();
+
+	if (m_zstatbuttons.size() > 0)
+	{
+		createZStatButtons();
+	}
+
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
 	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
 	m_fullUpdate = true;
@@ -735,6 +789,65 @@ void U3Resources::loadButtons()
 	}
 }
 
+void U3Resources::DrawZStatButtons()
+{
+	if (m_zstatbuttons.size() == 2)
+	{
+		int hOff = (m_blockSize / 2) - m_blockSize;
+		int vOff = (short)(m_blockSize * 1.5f);
+		float scaler = (float)m_blockSize / 16.0f;
+
+		m_zstatbuttons[0].render(m_renderer, m_blockSize, (int)(260 * scaler) + hOff, (int)(300 * scaler) + vOff, true);
+		m_zstatbuttons[1].render(m_renderer, m_blockSize, (int)(260 * scaler) + hOff, (int)(323 * scaler) + vOff, true);
+	}
+}
+
+void U3Resources::zStatDistributeCallback([[maybe_unused]] int button)
+{
+	short i;
+	short num;
+	int longVal = 0;
+
+	for (i = 1; i <= m_misc->m_Party[1]; i++)
+	{
+		num = (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100) + m_misc->m_Player[m_misc->m_Party[5 + i]][33];
+		longVal += num;
+	}
+	for (i = 1; i <= m_misc->m_Party[1]; i++)
+	{
+		num = longVal;
+		if (i < m_misc->m_Party[1])
+		{
+			num = (longVal / (m_misc->m_Party[1] - (i - 1)));
+		}
+		m_misc->m_Player[m_misc->m_Party[5 + i]][32] = num / 100;
+		m_misc->m_Player[m_misc->m_Party[5 + i]][33] = num - (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100);
+		longVal -= num;
+	}
+	GenerateZStatImage(m_misc->m_rosNum);
+}
+
+void U3Resources::zStatJoinGold([[maybe_unused]] int button)
+{
+	m_misc->JoinGold(m_misc->m_chNum);
+	GenerateZStatImage(m_misc->m_rosNum);
+}
+
+void U3Resources::createZStatButtons()
+{
+	float scaler = (float)m_blockSize / 16.0f;
+	m_zstatbuttons.clear();
+
+	m_zstatbuttons.resize(2);
+
+	m_zstatbuttons[0].CreateImageButton(m_blockSize, m_renderer, m_texDistributeFood, m_texDistributeFoodPushed, (int)(scaler * 96), (int)(scaler * 19));
+	m_zstatbuttons[1].CreateImageButton(m_blockSize, m_renderer, m_texGatherGold, m_texGatherGoldPushed, (int)(scaler * 96), (int)(scaler * 19));
+	m_zstatbuttons[0].setVisible(true);
+	m_zstatbuttons[1].setVisible(true);
+	m_zstatbuttons[0].SetButtonCallback(std::bind(&U3Resources::zStatDistributeCallback, this, std::placeholders::_1));
+	m_zstatbuttons[1].SetButtonCallback(std::bind(&U3Resources::zStatJoinGold, this, std::placeholders::_1));
+}
+
 void U3Resources::loadImages()
 {
 	float w, h;
@@ -876,6 +989,18 @@ void U3Resources::loadImages()
 	currentPath /= ImagesLoc;
 	currentPath /= "GatherGold.png";
 	m_texGatherGold = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "DistributeFoodPushed.png";
+	m_texDistributeFoodPushed = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= ImagesLoc;
+	currentPath /= "GatherGoldPushed.png";
+	m_texGatherGoldPushed = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
 	m_dungeon->loadGraphics();
 }
@@ -3959,8 +4084,6 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		(int)(((34 * scaler) + hOff)) + (int)(32 * scaler),
 		(int)(((41 * scaler) + vOff)) + (int)(32 * scaler));
 
-	TTF_Font* font18 = TTF_OpenFont(currentPath.string().c_str(), 18 * scaler);
-	TTF_Font* font10 = TTF_OpenFont(currentPath.string().c_str(), 10 * scaler);
 	std::string strName;
 	for (int index = 0; index < 13; ++index)
 	{
@@ -3971,17 +4094,17 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		strName += (char)m_misc->m_Player[rosNum][index];
 	}
 
-	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[value], NULL, &toRect);
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[value], NULL, &toRect);
 	sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 127;
-	renderDisplayString(font18, strName, (int)((83 * scaler) + hOff), (int)((55 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_18, strName, (int)((83 * scaler) + hOff), (int)((55 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	sdl_text_color.r = sdl_text_color.g = sdl_text_color.b = 0;
-	renderDisplayString(font18, strName, (int)((82 * scaler) + hOff), (int)((54 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_18, strName, (int)((82 * scaler) + hOff), (int)((54 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	sdl_text_color.r = 235;
 	sdl_text_color.g = sdl_text_color.b = 255;
-	renderDisplayString(font18, strName, (int)((80 * scaler) + hOff), (int)((52 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_18, strName, (int)((80 * scaler) + hOff), (int)((52 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	sdl_text_color.r = 0;
 	sdl_text_color.g = sdl_text_color.b = 192;
-	renderDisplayString(font18, strName, (int)((81 * scaler) + hOff), (int)((53 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_18, strName, (int)((81 * scaler) + hOff), (int)((53 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	std::string outStr;
 	std::string tempStr;
@@ -3997,14 +4120,14 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		outStr += ' ';
 		dispString = m_plistMap["Messages"][173 + index];
 		outStr += dispString;
-		renderDisplayString(font10, outStr, (int)((36 * scaler) + hOff), (int)(((121 + (18 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, outStr, (int)((36 * scaler) + hOff), (int)(((121 + (18 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	}
 
 	// Magic, HP, Exp, Food, Gold labels
 	for (int index = 0; index < 5; ++index)
 	{
 		outStr = m_plistMap["MoreMessages"][69 + index];
-		renderDisplayString(font10, outStr, (int)((125 * scaler) + hOff), (int)(((121 + (14 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, outStr, (int)((125 * scaler) + hOff), (int)(((121 + (14 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	}
 
 	// Display current magic value / max value
@@ -4021,7 +4144,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	{
 		outStr = m_plistMap["MoreMessages"][74];
 	}
-	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((121 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)((196 * scaler) + hOff), (int)((121 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	// Display current hit points / max value
 	tempNum = (m_misc->m_Player[rosNum][26] * 256) + m_misc->m_Player[rosNum][27];
@@ -4029,22 +4152,22 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	outStr += '/';
 	tempNum = (m_misc->m_Player[rosNum][28] * 256) + m_misc->m_Player[rosNum][29];
 	outStr += std::to_string(tempNum);
-	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((135 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)((196 * scaler) + hOff), (int)((135 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	// experience
 	tempNum = (m_misc->m_Player[rosNum][30] * 256) + m_misc->m_Player[rosNum][31];
 	outStr = std::to_string(tempNum);
-	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((149 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)((196 * scaler) + hOff), (int)((149 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	// food
 	tempNum = (m_misc->m_Player[rosNum][32] * 100) + m_misc->m_Player[rosNum][33];
 	outStr = std::to_string(tempNum);
-	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((163 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)((196 * scaler) + hOff), (int)((163 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	// gold
 	tempNum = (m_misc->m_Player[rosNum][35] * 256) + m_misc->m_Player[rosNum][36];
 	outStr = std::to_string(tempNum);
-	renderDisplayString(font10, outStr, (int)((196 * scaler) + hOff), (int)((177 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)((196 * scaler) + hOff), (int)((177 * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 
 	// draw weapons list
 	short cx = 36;
@@ -4062,7 +4185,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		if (tempNum)
 		{
 			tempStr = std::to_string(tempNum);
-			renderDisplayString(font10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			outStr = std::string("(");
 			outStr += (char)('A' + value);
@@ -4075,10 +4198,10 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			{
 				sdl_text_color = sdl_text_color_black;
 			}
-			renderDisplayString(font10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			tempStr = m_plistMap["WeaponsArmour"][value];
-			renderDisplayString(font10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			cy += 11;
 			if (cy > 285)
@@ -4106,7 +4229,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		if (tempNum)
 		{
 			tempStr = std::to_string(tempNum);
-			renderDisplayString(font10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, tempStr, (int)((cx * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			outStr = std::string("(");
 			outStr += (char)('A' + value);
@@ -4119,10 +4242,10 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			{
 				sdl_text_color = sdl_text_color_black;
 			}
-			renderDisplayString(font10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			tempStr = m_plistMap["WeaponsArmour"][value + 16];
-			renderDisplayString(font10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+			renderDisplayString(m_font_10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			cy += 11;
 		}
@@ -4135,25 +4258,25 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	if (m_misc->m_Player[rosNum][14] & 0x08)
 	{
 		tempStr = m_plistMap["MoreMessages"][75];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x02)
 	{
 		tempStr = m_plistMap["MoreMessages"][76];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x01)
 	{
 		tempStr = m_plistMap["MoreMessages"][77];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x04)
 	{
 		tempStr = m_plistMap["MoreMessages"][78];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	// marks
@@ -4162,25 +4285,25 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	if (m_misc->m_Player[rosNum][14] & 0x10)
 	{
 		tempStr = m_plistMap["MoreMessages"][79];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x20)
 	{
 		tempStr = m_plistMap["MoreMessages"][80];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x40)
 	{
 		tempStr = m_plistMap["MoreMessages"][81];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 	if (m_misc->m_Player[rosNum][14] & 0x80)
 	{
 		tempStr = m_plistMap["MoreMessages"][82];
-		renderDisplayString(font10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
 
@@ -4189,25 +4312,25 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][83];
 	outStr += tempStr;
-	renderDisplayString(font10, outStr, (int)(((280) * scaler) + hOff), (int)((104 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280) * scaler) + hOff), (int)((104 * scaler) + vOff), sdl_text_color, 0, false);
 	// Powders
 	tempNum = m_misc->m_Player[rosNum][37];
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][84];
 	outStr += tempStr;
-	renderDisplayString(font10, outStr, (int)(((280) * scaler) + hOff), (int)((118 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280) * scaler) + hOff), (int)((118 * scaler) + vOff), sdl_text_color, 0, false);
 	// Gems
 	tempNum = m_misc->m_Player[rosNum][38];
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][85];
 	outStr += tempStr;
-	renderDisplayString(font10, outStr, (int)(((280)* scaler) + hOff), (int)((132 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280)* scaler) + hOff), (int)((132 * scaler) + vOff), sdl_text_color, 0, false);
 	// Keys
 	tempNum = m_misc->m_Player[rosNum][39];
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][86];
 	outStr += tempStr;
-	renderDisplayString(font10, outStr, (int)(((280)* scaler) + hOff), (int)((146 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280)* scaler) + hOff), (int)((146 * scaler) + vOff), sdl_text_color, 0, false);
 
 	// Small text
 	outStr = m_plistMap["MoreMessages"][61];
@@ -4226,7 +4349,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		}
 	}
 	outStr += tempStr;
-	renderDisplayString(font10, outStr, (int)(((82)* scaler) + hOff), (int)((64 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((82)* scaler) + hOff), (int)((64 * scaler) + vOff), sdl_text_color, 0, false);
 
 	// Draw boxed overall health, race, and gender.
 	if (m_misc->m_Player[rosNum][17] == 'G')
@@ -4258,7 +4381,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		sdl_text_color.b = 255;
 	}
 	outStr = m_plistMap["MoreMessages"][62 + value];
-	renderDisplayString(font10, outStr, (int)(((252) * scaler) + hOff), (int)((42 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((252) * scaler) + hOff), (int)((42 * scaler) + vOff), sdl_text_color, 0, false);
 
 	sdl_text_color = sdl_text_color_black;
 
@@ -4270,7 +4393,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			break;
 		}
 	}
-	renderDisplayString(font10, outStr, (int)(((252)* scaler) + hOff), (int)((55 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((252)* scaler) + hOff), (int)((55 * scaler) + vOff), sdl_text_color, 0, false);
 
 	if (m_misc->m_Player[rosNum][24] == 'F')
 	{
@@ -4285,7 +4408,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		value = 2;
 	}
 	outStr = m_plistMap["MoreMessages"][66 + value];
-	renderDisplayString(font10, outStr, (int)(((252) * scaler) + hOff), (int)((68 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((252) * scaler) + hOff), (int)((68 * scaler) + vOff), sdl_text_color, 0, false);
 
 	sdl_text_color.r = 0;
 	sdl_text_color.g = 0;
@@ -4304,6 +4427,4 @@ void U3Resources::GenerateZStatImage(int rosNum)
 
 	SDL_SetRenderTarget(m_renderer, nullptr);
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
-	TTF_CloseFont(font10);
-	TTF_CloseFont(font18);
 }

@@ -1,4 +1,7 @@
 #include "U3Button.h"
+#include "U3Resources.h"
+
+extern std::unique_ptr<U3Resources> m_resources;
 
 U3Button::U3Button() :
 	m_texDefault(nullptr),
@@ -56,6 +59,48 @@ void U3Button::resizeButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngin
 		m_texDisabled = NULL;
 	}
 	CreateTextButton(blockSize, renderer, engine_surface, font, m_text, m_x, m_y);
+}
+
+void U3Button::CreateImageButton(int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height)
+{
+	if (m_texDefault)
+	{
+		SDL_DestroyTexture(m_texDefault);
+		m_texDefault = NULL;
+	}
+	if (m_texPushed)
+	{
+		SDL_DestroyTexture(m_texPushed);
+		m_texPushed = NULL;
+	}
+	if (m_texDisabled)
+	{
+		SDL_DestroyTexture(m_texDisabled);
+		m_texDisabled = NULL;
+	}
+
+	float xSize;
+	float ySize;
+
+	SDL_GetTextureSize(buttonImage, &xSize, &ySize);
+
+	m_width = (float)width;
+	m_height = (float)height;
+
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+	m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)width, (int)height);
+	SDL_SetRenderTarget(renderer, m_texDefault);
+	SDL_RenderClear(renderer);
+	SDL_RenderTexture(renderer, buttonImage, NULL, NULL);
+
+	m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)width, (int)height);
+	SDL_SetRenderTarget(renderer, m_texPushed);
+	SDL_RenderClear(renderer);
+	SDL_RenderTexture(renderer, buttonPushedImage, NULL, NULL);
+
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+	SDL_SetRenderTarget(renderer, NULL);
 }
 
 void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x, int y)
@@ -165,7 +210,7 @@ void U3Button::renderCentered(SDL_Renderer* renderer)
 	}
 }
 
-void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y)
+void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, bool adjust)
 {
 	if (!m_visible)
 	{
@@ -177,6 +222,11 @@ void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y)
 	m_renderRect.y = (float)y;
 	m_renderRect.h = (float)m_height;
 	m_renderRect.w = (float)m_width;
+
+	if (adjust)
+	{
+		m_resources->adjustRect(m_renderRect);
+	}
 
 	if (m_showPushed)
 	{

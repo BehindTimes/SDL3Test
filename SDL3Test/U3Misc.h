@@ -46,6 +46,7 @@ enum class InputType
 	GuildVendor,
 	NumImmediate,
 	LetterImmediate,
+	ZStats
 };
 
 class U3Misc
@@ -208,6 +209,7 @@ public:
 	bool m_freezeAnimation;
 	SDL_Event m_currentEvent;
 	bool m_partyFormed;
+	bool m_surpressTextDisplay;
 
 private:
 	void Attack();

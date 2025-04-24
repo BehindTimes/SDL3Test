@@ -996,6 +996,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
     if (m_resources->m_overrideImage >= 0)
     {
         m_resources->ImageDisplay();     
+        m_resources->DrawZStatButtons();
     }
     else
     {

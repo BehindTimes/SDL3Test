@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 
 void DoSplashScreen()
 {
-    m_misc->GetMiscStuff(false);
+    m_misc->GetMiscStuff(true);
     m_misc->GetRoster();
     m_misc->GetParty();
    /* OpenChannel();

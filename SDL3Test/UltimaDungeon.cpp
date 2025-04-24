@@ -120,7 +120,7 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 	switch (key)
 	{
 	case SDLK_C:
-		NotDngCmd();
+		//NotDngCmd();
 		break;
 	case SDLK_D:
 		Descend();
@@ -141,10 +141,10 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		Klimb();
 		break;
 	case SDLK_M:
-		NotDngCmd();
+		//NotDngCmd();
 		break;
 	case SDLK_N:
-		NotDngCmd();
+		//NotDngCmd();
 		break;
 	case SDLK_O:
 		m_misc->OtherCommand(0);
@@ -153,10 +153,10 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		PeerGem();
 		break;
 	case SDLK_R:
-		NotDngCmd();
+		m_misc->ReadyWeapon();
 		break;
 	case SDLK_W:
-		NotDngCmd();
+		m_misc->WearArmor();
 		break;
 	case SDLK_Y:
 		m_misc->Yell();

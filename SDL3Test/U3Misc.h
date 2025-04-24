@@ -95,6 +95,8 @@ public:
 	void SouthWest();
 	void NorthEast();
 	void NorthWest();
+	void ReadyWeapon();
+	void WearArmor();
 	void ZStats();
 
 	void GetChest(short spell, short chnum);
@@ -225,6 +227,7 @@ private:
 	void Steal();
 	void Transact();
 	void Unlock();
+	
 	
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
@@ -380,6 +383,8 @@ private:
 	bool CommandSteal();
 	bool CommandUnlock();
 	bool CommandOther();
+	bool CommandReadyWeapon();
+	bool CommandWearArmor();
 	bool CommandYell();
 	bool CommandZStats();
 	
@@ -407,6 +412,12 @@ private:
 	bool StatsCallback();
 	bool StatsCallback1();
 	bool StatsCallback2();
+	void WearArmour(short chnum, char armour, bool preset);
+	bool WearArmourCallback();
+	bool WearArmourCallback1();
+	void ReadyWeapon(short chnum, char weapon, bool preset);
+	bool ReadyWeaponCallback();
+	bool ReadyWeaponCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

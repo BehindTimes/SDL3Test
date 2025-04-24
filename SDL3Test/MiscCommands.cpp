@@ -72,7 +72,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		//QuitSave
 		break;
 	case SDLK_R:
-		//ReadyWeapon
+		ReadyWeapon();
 		break;
 	case SDLK_S:
 		Steal();
@@ -86,7 +86,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	case SDLK_V:
 		break;
 	case SDLK_W:
-		//WearArmor
+		WearArmor();
 		break;
 	case SDLK_X:
 		Exit();
@@ -1553,4 +1553,224 @@ bool U3Misc::StatsCallback1()
 		m_scrollArea->UPrintWin("\n");
 	}
 	return false;
+}
+
+void U3Misc::WearArmour(short chnum, char armour, bool preset)
+{
+	short typeNum;
+	short x;
+
+	m_rosNum = m_Party[6 + chnum];
+
+	typeNum = 0;
+	for (x = 0; x < 12; x++)
+	{
+		if (m_Player[m_rosNum][23] == m_careerTable[x])
+		{
+			typeNum = x;
+		}
+	}
+	if (armour != 'H' && armour >= m_armUseTable[typeNum])
+	{
+		m_scrollArea->UPrintMessage(82);
+		return;
+	}
+	armour -= 'A';
+	if ((armour > 0) && (m_Player[m_rosNum][armour + 40] < 1))
+	{
+		m_scrollArea->UPrintMessage(81);
+		return;
+	}
+	m_Player[m_rosNum][40] = armour;
+	if (!preset)
+	{
+		m_scrollArea->UPrintWin("\n");
+		std::string outStr = m_resources->m_plistMap["WeaponsArmour"][armour + 16];
+		std::string readyStr = m_resources->m_plistMap["Messages"][82];
+		outStr += readyStr;
+		m_scrollArea->UPrintWin(outStr);
+	}
+}
+
+bool U3Misc::WearArmourCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	m_scrollArea->UPrintMessage(101);
+	m_inputType = InputType::LetterImmediate;
+	m_callbackStack.push(std::bind(&U3Misc::WearArmourCallback1, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::WearArmourCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin(m_input);
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input.empty())
+	{
+		return false;
+	}
+	else if (m_input[0] < 'A' || m_input[0] > 'H')
+	{
+		m_scrollArea->UPrintMessage(81);
+		return false;
+	}
+
+	WearArmour(m_chNum, m_input[0], false);
+
+	return false;
+}
+
+bool U3Misc::CommandWearArmor()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(100);
+	m_inputType = InputType::Transact;
+	m_scrollArea->blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::WearArmourCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+void U3Misc::WearArmor()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandWearArmor, this));
+}
+///////////////////////////////////////////////////////////////////////////
+void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
+{
+	short typeNum;
+	short x;
+
+	m_rosNum = m_Party[6 + chnum];
+
+	typeNum = 0;
+	for (x = 0; x < 12; x++)
+	{
+		if (m_Player[m_rosNum][23] == m_careerTable[x])
+		{
+			typeNum = x;
+		}
+	}
+	if (weapon != 'P' && weapon >= m_wpnUseTable[typeNum])
+	{
+		m_scrollArea->UPrintMessage(82);
+		return;
+	}
+	weapon -= 'A';
+	if ((weapon > 0) && (m_Player[m_rosNum][weapon + 48] < 1))
+	{
+		m_scrollArea->UPrintMessage(81);
+		return;
+	}
+	m_Player[m_rosNum][48] = weapon;
+	if (!preset)
+	{
+		m_scrollArea->UPrintWin("\n");
+		std::string outStr = m_resources->m_plistMap["WeaponsArmour"][weapon];
+		std::string readyStr = m_resources->m_plistMap["Messages"][82];
+		outStr += readyStr;
+		m_scrollArea->UPrintWin(outStr);
+	}
+}
+
+bool U3Misc::ReadyWeaponCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	m_scrollArea->UPrintMessage(80);
+	m_inputType = InputType::LetterImmediate;
+	m_callbackStack.push(std::bind(&U3Misc::ReadyWeaponCallback1, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::ReadyWeaponCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin(m_input);
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input.empty())
+	{
+		return false;
+	}
+	else if (m_input[0] < 'A' || m_input[0] > 'P')
+	{
+		m_scrollArea->UPrintMessage(81);
+		return false;
+	}
+
+	ReadyWeapon(m_chNum, m_input[0], false);
+
+	return false;
+}
+
+bool U3Misc::CommandReadyWeapon()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(79);
+	m_inputType = InputType::Transact;
+	m_scrollArea->blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::ReadyWeaponCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+void U3Misc::ReadyWeapon()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandReadyWeapon, this));
 }

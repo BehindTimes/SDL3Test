@@ -134,7 +134,7 @@ void U3Misc::OpenRstr()
 		"Sosaria Current.ult",
 		"MainResources.rsrc_PRTY_500_Party.bin",
 		"Party.ult",
-		"MainResources.rsrc_MISC_400_Moongate Locations.bin",
+		/*"MainResources.rsrc_MISC_400_Moongate Locations.bin",
 		"Moongate Locations.ult",
 		"MainResources.rsrc_MISC_401_Type Initial Table.bin",
 		"Type Initial Table.ult",
@@ -145,7 +145,7 @@ void U3Misc::OpenRstr()
 		"MainResources.rsrc_MISC_404_Location Table.bin",
 		"Location Table.ult",
 		"MainResources.rsrc_MISC_405_Experience Table.bin",
-		"Experience Table.ult",
+		"Experience Table.ult",*/
 		"MainResources.rsrc_ROST_500_Roster.bin",
 		"Roster.ult"
 	};
@@ -207,6 +207,7 @@ void U3Misc::OpenRstr()
 	return;
 }
 
+// TO DO: Are we even changing these files?  If not, why the copy?
 void U3Misc::GetMiscStuff(bool defaultData)
 {
 	std::vector<std::string> orig_files = {

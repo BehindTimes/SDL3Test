@@ -68,7 +68,8 @@ U3Misc::U3Misc() :
 	m_currentEvent(0),
 	m_gWhirlCtr(0),
 	m_partyFormed(false),
-	m_surpressTextDisplay(false)
+	m_surpressTextDisplay(false),
+	m_gTimeNegate(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (21 * 65));
@@ -1710,7 +1711,11 @@ bool U3Misc::FinishAll() // $79DD
 			return false;
 		}
 	}
-
+	if (m_gTimeNegate != 0)
+	{
+		m_gTimeNegate--;
+		return false;
+	}
 	
 
 	short temp = GetXYVal(m_xpos, m_ypos);
@@ -1726,13 +1731,6 @@ bool U3Misc::FinishAll() // $79DD
 		GoWhirlPool();
 	}
 
-	/*if (gTimeNegate != 0)
-	{
-		gTimeNegate--;
-		return;
-	}
-	SpawnMonster();*/
-	//MoveMonsters();
 	return false;
 }
 
@@ -3908,6 +3906,7 @@ bool U3Misc::ResurrectCallback()
 
 	m_ox = m_xpos - 1;
 	m_oy = m_ypos - 1;
+	m_gTimeNegate = 0;
 
 	m_scrollArea->UPrintWin("\n\n\n\n\n\n\n\n");
 	m_scrollArea->blockPrompt(false);

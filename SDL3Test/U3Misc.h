@@ -95,6 +95,9 @@ public:
 	void SouthWest();
 	void NorthEast();
 	void NorthWest();
+
+	void ModifyOrder();
+	void NegateTime();
 	void ReadyWeapon();
 	void WearArmor();
 	void ZStats();
@@ -212,6 +215,7 @@ public:
 	SDL_Event m_currentEvent;
 	bool m_partyFormed;
 	bool m_surpressTextDisplay;
+	short m_gTimeNegate;
 
 private:
 	void Attack();
@@ -377,6 +381,8 @@ private:
 	bool CommandIgnite();
 	bool CommandKlimb();
 	bool CommandLook();
+	bool CommandModifyOrder();
+	bool CommandNegateTime();
 	bool CommandPass();
 	bool CommandPeerGem();
 	bool CommandTransact();
@@ -418,6 +424,10 @@ private:
 	void ReadyWeapon(short chnum, char weapon, bool preset);
 	bool ReadyWeaponCallback();
 	bool ReadyWeaponCallback1();
+	bool NegateTimeCallback();
+	void NegateTime(short chnum);
+	bool ModifyOrderCallback();
+	bool ModifyOrderCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

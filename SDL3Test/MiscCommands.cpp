@@ -57,10 +57,10 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Look();
 		break;
 	case SDLK_M:
-		//ModifyOrder
+		ModifyOrder();
 		break;
 	case SDLK_N:
-		//NegateTime
+		NegateTime();
 		break;
 	case SDLK_O:
 		OtherCommand();
@@ -1664,7 +1664,7 @@ void U3Misc::WearArmor()
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
 	m_callbackStack.push(std::bind(&U3Misc::CommandWearArmor, this));
 }
-///////////////////////////////////////////////////////////////////////////
+
 void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
 {
 	short typeNum;
@@ -1773,4 +1773,141 @@ void U3Misc::ReadyWeapon()
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
 	m_callbackStack.push(std::bind(&U3Misc::CommandReadyWeapon, this));
+}
+
+bool U3Misc::NegateTimeCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+
+	NegateTime(m_chNum);
+
+	return false;
+}
+
+void U3Misc::NegateTime(short chnum)
+{
+	short rosNum;
+
+	rosNum = m_Party[6 + chnum];
+	if (m_Player[rosNum][39] < 1)
+	{
+		m_scrollArea->UPrintMessage(67);
+		return;
+	}
+	m_Player[rosNum][39]--;
+	m_gTimeNegate = 10;
+}
+
+bool U3Misc::CommandNegateTime()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(74);
+	m_inputType = InputType::Transact;
+	m_scrollArea->blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::NegateTimeCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+void U3Misc::NegateTime()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandNegateTime, this));
+}
+
+bool U3Misc::CommandModifyOrder()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(70);
+	m_inputType = InputType::Transact;
+	m_scrollArea->blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::ModifyOrderCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::ModifyOrderCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_chNum = m_input_num;
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintMessage(71);
+		return false;
+	}
+
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+	m_scrollArea->UPrintMessage(72);
+
+	m_inputType = InputType::Transact;
+	m_callbackStack.push(std::bind(&U3Misc::ModifyOrderCallback1, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::ModifyOrderCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	if (m_input_num < 0 || m_input_num > 3 || m_input_num == m_chNum || m_Party[6 + m_input_num] == 0)
+	{
+		m_scrollArea->UPrintMessage(71);
+		return false;
+	}
+
+	std::string dispString(std::to_string(m_input_num + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+
+	unsigned char temp;
+	temp = m_Party[6 + m_chNum];
+	m_Party[6 + m_chNum] = m_Party[6 + m_input_num];
+	m_Party[6 + m_input_num] = temp;
+
+	return false;
+}
+
+void U3Misc::ModifyOrder()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandModifyOrder, this));
 }

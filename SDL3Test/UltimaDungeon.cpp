@@ -141,10 +141,10 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		Klimb();
 		break;
 	case SDLK_M:
-		//NotDngCmd();
+		m_misc->ModifyOrder();
 		break;
 	case SDLK_N:
-		//NotDngCmd();
+		m_misc->NegateTime();
 		break;
 	case SDLK_O:
 		m_misc->OtherCommand(0);

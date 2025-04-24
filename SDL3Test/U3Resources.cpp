@@ -2,7 +2,7 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 #include <iostream>
-
+#include <libxml/xmlwriter.h>
 #include "U3Resources.h"
 #include "U3Misc.h"
 #include "U3ScrollArea.h"
@@ -36,6 +36,97 @@ constexpr int MINITILES_NUM_Y = 1;
 constexpr int NUM_PORTRAITS = 40;
 
 void backToMenu(int button);
+
+bool U3Resources::loadPreferences()
+{
+	LIBXML_TEST_VERSION
+
+	bool valid = true;
+	xmlDocPtr docPtr = nullptr;
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= SaveLoc;
+	currentPath /= "settings.xml";
+
+	if (!std::filesystem::exists(currentPath))
+	{
+		xmlTextWriterPtr writer;
+		writer = xmlNewTextWriterFilename(currentPath.string().c_str(), 0);
+		xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+		xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST  "0");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST  "Standard");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST  "0");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST  "1");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST  "0");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST  "0");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "sound_inactive", BAD_CAST  "1");
+		xmlTextWriterEndElement(writer);
+		xmlTextWriterEndDocument(writer);
+		xmlFreeTextWriter(writer);
+	}
+	if (!std::filesystem::exists(currentPath))
+	{
+		return false;
+	}
+
+	docPtr = xmlReadFile(currentPath.string().c_str(), NULL, 0);
+
+	if (docPtr == nullptr)
+	{
+		return false;;
+	}
+
+	auto curMap = processSettingsDoc(docPtr);
+	xmlFreeDoc(docPtr);
+
+	try
+	{
+		if (curMap.find("FullScreen") != curMap.end())
+		{
+			int val = std::stoi(curMap["FullScreen"]);
+			m_preferences.full_screen = (val != 0);
+		}
+		if (curMap.find("auto_save") != curMap.end())
+		{
+			int val = std::stoi(curMap["auto_save"]);
+			m_preferences.auto_save = (val != 0);
+		}
+		if (curMap.find("include_wind") != curMap.end())
+		{
+			int val = std::stoi(curMap["include_wind"]);
+			m_preferences.include_wind = (val != 0);
+		}
+		if (curMap.find("classic_appearance") != curMap.end())
+		{
+			int val = std::stoi(curMap["classic_appearance"]);
+			m_preferences.classic_appearance = (val != 0);
+		}
+		if (curMap.find("allow_diagonal") != curMap.end())
+		{
+			int val = std::stoi(curMap["allow_diagonal"]);
+			m_preferences.allow_diagonal = (val != 0);
+		}
+		if (curMap.find("sound_inactive") != curMap.end())
+		{
+			int val = std::stoi(curMap["sound_inactive"]);
+			m_preferences.sound_inactive = (val != 0);
+		}
+		if (curMap.find("Theme") != curMap.end())
+		{
+			m_preferences.theme = curMap["Theme"];
+		}
+	}
+	catch ([[maybe_unused]]const std::exception& e)
+	{
+	}
+
+	return true;
+}
+
+void U3Resources::savePreferences()
+{
+}
 
 U3Resources::U3Resources() :
 	m_renderer(nullptr),
@@ -422,9 +513,10 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
 	{
 		m_standardGraphics = &m_allGraphics[std::string(Standard)];
-		m_currentGraphics = m_standardGraphics; // 6
+		m_currentGraphics = m_standardGraphics;
 	}
-	CalculateBlockSize();
+
+	//CalculateBlockSize();
 	//changeMode(1);
 	return true;
 }
@@ -626,17 +718,26 @@ void U3Resources::CalculateBlockSize()
 	m_fullUpdate = true;
 }
 
-
-void U3Resources::changeMode(int mode)
+void U3Resources::changeTheme(std::string theme)
 {
-	if (mode == 2)
+	if (m_allGraphics.find(theme) != m_allGraphics.end())
+	{
+		m_currentGraphics = &m_allGraphics[theme];
+	}
+	m_scrollArea->forceRedraw();
+	m_graphics->setForceRedraw();
+}
+
+void U3Resources::changeTheme(int theme)
+{
+	if (theme == 2)
 	{
 		m_graphics->ChangeClassic();
 		m_scrollArea->forceRedraw();
 		m_graphics->setForceRedraw();
 		return;
 	}
-	if (mode == 6)
+	if (theme == 6)
 	{
 		m_currentGraphics = &m_allGraphics["Standard"];
 		m_scrollArea->forceRedraw();
@@ -644,9 +745,9 @@ void U3Resources::changeMode(int mode)
 		return;
 	}
 
-	if (mode >= 0 && mode < m_modes.size())
+	if (theme >= 0 && theme < m_themes.size())
 	{
-		std::string strMode = m_modes[mode];
+		std::string strMode = m_themes[theme];
 		if (m_allGraphics.find(strMode) != m_allGraphics.end())
 		{
 			m_currentGraphics = &m_allGraphics[strMode];
@@ -683,6 +784,44 @@ xmlNodePtr U3Resources::findNodeByName(xmlNodePtr rootnode, const xmlChar* noden
 		node = node->next;
 	}
 	return nullptr;
+}
+
+std::map<std::string, std::string> U3Resources::processSettingsDoc(xmlDocPtr docPtr)
+{
+	std::map<std::string, std::string> retMap;
+
+	xmlNode* root_element = nullptr;
+	root_element = xmlDocGetRootElement(docPtr);
+	if (nullptr == root_element) // something's wrong
+	{
+		return retMap;
+	}
+	xmlNodePtr nodeArray = findNodeByName(root_element, (xmlChar*)"U3LW_Settings");
+	if (nodeArray != nullptr)
+	{
+		xmlNode* childNode = nodeArray->children;
+		while (childNode != nullptr)
+		{
+			if (childNode->type == xmlElementType::XML_ELEMENT_NODE)
+			{
+				if (childNode->children)
+				{
+					if (childNode->children->type == xmlElementType::XML_TEXT_NODE)
+					{
+						xmlChar* data = xmlNodeGetContent(childNode->children);
+						if (data)
+						{
+							auto value = reinterpret_cast<const char*>(data);
+							auto name = reinterpret_cast<const char*>(childNode->name);
+							retMap[name] = std::string(value);
+						}
+					}
+				}
+			}
+			childNode = childNode->next;
+		}
+	}
+	return retMap;
 }
 
 void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec)
@@ -724,7 +863,7 @@ bool U3Resources::loadPLists()
 {
 	LIBXML_TEST_VERSION
 
-		bool valid = true;
+	bool valid = true;
 	xmlDocPtr docPtr = nullptr;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -930,7 +1069,6 @@ void U3Resources::loadImages()
 	currentPath /= "Credits.png";
 
 	m_texCredits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
-	m_dungeon->loadGraphics();
 
 	//////////////////////////////////////////////////
 
@@ -1150,11 +1288,11 @@ void U3Resources::loadGraphics()
 		if (m_allGraphics.find(mode) == m_allGraphics.end())
 		{
 			m_allGraphics.emplace(mode, ModeGraphics());
-			m_modes.emplace_back(mode);
+			m_themes.emplace_back(mode);
 
 			if (mode == Standard)
 			{
-				m_defaultMode = m_modes.size() - 1;
+				m_defaultMode = m_themes.size() - 1;
 			}
 		}
 		int numX = 0;
@@ -1736,6 +1874,11 @@ void U3Resources::DrawMoongates()
 
 void U3Resources::DrawWind()
 {
+	if (!m_preferences.include_wind)
+	{
+		return;
+	}
+
 	SDL_FRect myRect;
 
 	m_graphics->DrawFramePiece(12, 6, 23);

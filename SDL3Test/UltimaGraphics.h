@@ -96,7 +96,6 @@ private:
 	static constexpr Uint64 DungeonBlink = 300;
 	bool m_fading;
 
-	bool m_classic;
 	Uint64 m_startTickCount;
 	Uint64 m_fadeTime;
 	

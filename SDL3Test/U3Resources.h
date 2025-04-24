@@ -22,22 +22,22 @@ enum class U3PreferencesType
 
 struct U3Preferences
 {
-	U3Preferences()
+	U3Preferences() :
+		auto_save(false),
+		include_wind(true),
+		classic_appearance(false),
+		full_screen(false),
+		theme("Standard"),
+		allow_diagonal(false),
+		sound_inactive(false)
 	{
-		auto_save = false;
-		include_wind = true;
-		classic_appearance = false;
-		full_screen = false;
-		mode = 0;
-		allow_diagonal = false;
-		sound_inactive = false;
 	}
 
 	bool auto_save;
 	bool include_wind;
 	bool classic_appearance;
 	bool full_screen;
-	int mode;
+	std::string theme;
 	bool allow_diagonal;
 	bool sound_inactive;
 };
@@ -105,6 +105,9 @@ public:
 
 	void displayFPS(int fps);
 
+	bool loadPreferences();
+	void savePreferences();
+
 	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
 	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
 	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0, bool pretty_print = false);
@@ -115,7 +118,8 @@ public:
 	void drawExodus(Uint8 alpha);
 	void drawUltimaLogo(Uint8 alpha);
 	void drawBy();
-	void changeMode(int mode);
+	void changeTheme(int theme);
+	void changeTheme(std::string theme);
 	void loadSignatureData();
 	void PlotSig(int x, int y);
 	void WriteLordBritish(Uint64 curPass);
@@ -229,6 +233,7 @@ public:
 	SDL_Texture* m_texCharacterRecord;
 	bool m_fullUpdate;
 	std::vector< U3Button> m_zstatbuttons;
+	U3Preferences m_preferences;
 
 private:
 	void LoadResource(std::string strFile);
@@ -251,6 +256,7 @@ private:
 	void drawImage(SDL_Texture* texture, float x, float y, float width, float height);
 
 	void processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec);
+	std::map<std::string, std::string> processSettingsDoc(xmlDocPtr docPtr);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
 	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
@@ -283,7 +289,7 @@ private:
 	static constexpr Uint64 DelayWind = 2560;
 
 	std::map<std::string, ModeGraphics> m_allGraphics;
-	std::vector<std::string> m_modes;
+	std::vector<std::string> m_themes;
 	
 	std::unique_ptr<U3Dialog> m_AlertDlg;
 
@@ -311,7 +317,6 @@ private:
 	SDL_Texture* m_texDistributeFoodPushed;
 	SDL_Texture* m_texGatherGoldPushed;
 
-	U3Preferences m_preferences;
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
 	std::vector< short> m_currentButtons;

@@ -16,7 +16,6 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 
 U3Graphics::U3Graphics() :
-    m_classic(false),
     m_startTickCount(0),
     m_fadeTime(2400),
     m_curMode(U3GraphicsMode::Map),
@@ -69,7 +68,7 @@ void U3Graphics::InitializeStartTicks()
 
 void U3Graphics::CreateIntroData()
 {
-    m_resources->SetPreference(U3PreferencesType::Classic_Appearance, m_classic);
+    //m_resources->SetPreference(U3PreferencesType::Classic_Appearance, m_classic);
     m_resources->loadSignatureData();
     InitializeStartTicks();
 }
@@ -151,8 +150,6 @@ void U3Graphics::DrawFrame(short which)
         }
         if (m_misc->m_gameMode == GameStateMode::Map)
         {
-            bool hasWind;
-            m_resources->GetPreference(U3PreferencesType::Include_Wind, hasWind);
             DrawMoonGateStuff();
         }
         if (m_misc->m_gameMode == GameStateMode::Dungeon)
@@ -367,14 +364,19 @@ void U3Graphics::DrawDemoScreen(Uint64 curTick)
 
 void U3Graphics::ChangeClassic()
 {
-    m_classic = !m_classic;
-    m_resources->SetPreference(U3PreferencesType::Classic_Appearance, m_classic);
+    bool classic;
+    m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
+    classic = !classic;
+    m_resources->SetPreference(U3PreferencesType::Classic_Appearance, classic);
 }
 
 void U3Graphics::DrawMenu()
 {
+    bool classic;
+    m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
+
     m_resources->drawExodus(255);
-    if (m_classic)
+    if (classic)
     {
         m_resources->CenterMessage(27, 11);    // From the depths of hell
         m_resources->CenterMessage(28, 12);    // he comes for vengeance!@#
@@ -388,7 +390,7 @@ void U3Graphics::DrawMenu()
     // The copyright message is displayed in "modern" appearance no matter what.
     m_resources->SetPreference(U3PreferencesType::Classic_Appearance, false);
     m_resources->CenterMessage(26, 22);
-    m_resources->SetPreference(U3PreferencesType::Classic_Appearance, m_classic);
+    m_resources->SetPreference(U3PreferencesType::Classic_Appearance, classic);
 
     m_resources->DrawButtons({0, 1, 2, 8});
 }

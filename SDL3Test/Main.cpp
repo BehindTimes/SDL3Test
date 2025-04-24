@@ -16,7 +16,6 @@
 
 SDL_Window* window;
 SDL_Renderer* renderer;
-bool isFullScreen = false;
 short screenOffsetX = 0;
 short screenOffsetY = 0;
 TTF_TextEngine* engine_surface = NULL;
@@ -35,7 +34,7 @@ std::unique_ptr<U3Utilities> m_utilities;
 std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 std::unique_ptr<UltimaDungeon> m_dungeon;
 
-void DoSplashScreen();
+bool DoSplashScreen();
 void MainLoop();
 void Intro();
 void Demo();
@@ -82,12 +81,10 @@ int main(int argc, char* argv[])
 
     if (valid)
     {
-        ToolBoxInit();
-
-        WindowInit(0);
-
-        DoSplashScreen();
-        MainLoop();
+        if (DoSplashScreen())
+        {
+            MainLoop();
+        }
     }
 
     SDL_SetRenderTarget(renderer, NULL);
@@ -111,11 +108,17 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void DoSplashScreen()
+bool DoSplashScreen()
 {
+    m_resources->loadPreferences();
     m_misc->GetMiscStuff(true);
     m_misc->GetRoster();
     m_misc->GetParty();
+
+    m_resources->changeTheme(m_resources->m_preferences.theme);
+    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+
+    m_resources->CalculateBlockSize();
    /* OpenChannel();
     SetUpFont();
     DisableMenus();
@@ -131,6 +134,7 @@ void DoSplashScreen()
     InitMacro();
     InitCursor();
     ObscureCursor();*/
+    return true;
 }
 
 void CreateButtonCallbacks()
@@ -424,8 +428,8 @@ void MainMenu()
             {
                 if (event.key.key == SDLK_RETURN)
                 {
-                    isFullScreen = !isFullScreen;
-                    SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
                     SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
@@ -433,7 +437,7 @@ void MainMenu()
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources->changeMode(mode);
+                    m_resources->changeTheme(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -511,8 +515,8 @@ void Demo()
             {
                 if (event.key.key == SDLK_RETURN)
                 {
-                    isFullScreen = !isFullScreen;
-                    SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
                     SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
@@ -520,7 +524,7 @@ void Demo()
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources->changeMode(mode);
+                    m_resources->changeTheme(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -585,8 +589,8 @@ void Intro()
             {
 				if (event.key.key == SDLK_RETURN)
 				{
-					isFullScreen = !isFullScreen;
-					SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
 					SDL_SyncWindow(window);
 
 					m_resources->CalculateBlockSize();
@@ -594,7 +598,7 @@ void Intro()
 				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
-					m_resources->changeMode(mode);
+					m_resources->changeTheme(mode);
 				}
 			}
 			else if (event.key.key == SDLK_ESCAPE)
@@ -661,8 +665,8 @@ void Organize()
             {
                 if (event.key.key == SDLK_RETURN)
                 {
-                    isFullScreen = !isFullScreen;
-                    SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
                     bool blah = SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
@@ -670,7 +674,7 @@ void Organize()
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources->changeMode(mode);
+                    m_resources->changeTheme(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -832,8 +836,8 @@ void JourneyOnward()
             {
                 if (event.key.key == SDLK_RETURN)
                 {
-                    isFullScreen = !isFullScreen;
-                    SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
                     SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
@@ -841,7 +845,7 @@ void JourneyOnward()
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources->changeMode(mode);
+                    m_resources->changeTheme(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)
@@ -949,8 +953,8 @@ void Game()
             {
                 if (event.key.key == SDLK_RETURN)
                 {
-                    isFullScreen = !isFullScreen;
-                    SDL_SetWindowFullscreen(window, isFullScreen);
+                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
                     SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
@@ -958,7 +962,7 @@ void Game()
                 if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
                 {
                     int mode = event.key.key - SDLK_0;
-                    m_resources->changeMode(mode);
+                    m_resources->changeTheme(mode);
                 }
             }
             else if (event.key.key == SDLK_ESCAPE)

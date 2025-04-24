@@ -121,7 +121,7 @@ public:
 	void AgeChars();
 	bool FinishTurnCallback();
 	bool AgeCallback();
-	bool FinishAll();
+	bool FinishAge();
 	void AddProcessEvent();
 	void AddInverse();
 	void GetChest();
@@ -361,6 +361,7 @@ private:
 	bool FinishEatFood();
 	void EatFood(short member, short amount, std::function<bool()> callback);
 	bool EatFoodCallback();
+	bool EndTurnPoisonCallback();
 	void HPAdd(short member, short amount);
 	bool EndTurnCallback();
 	bool InverseCallback();

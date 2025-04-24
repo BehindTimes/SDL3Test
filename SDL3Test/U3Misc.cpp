@@ -1663,7 +1663,7 @@ void U3Misc::Routine6E35()
 			Routine6E6B();
 		}
 	}
-	m_callbackStack.push(std::bind(&U3Misc::FinishAll, this));
+	m_callbackStack.push(std::bind(&U3Misc::FinishAge, this));
 	AgeChars();
 	//ShowChars(false);
 	
@@ -1695,7 +1695,7 @@ void U3Misc::Routine6E35()
 	*/
 }
 
-bool U3Misc::FinishAll() // $79DD
+bool U3Misc::FinishAge() // $79DD
 {
 	if (m_callbackStack.size() > 0)
 	{
@@ -4576,6 +4576,7 @@ void U3Misc::GetChest(short spell, short chnum)
 	{
 		m5BDC = true;
 		m_scrollArea->UPrintMessage(40);
+		m_scrollArea->blockPrompt(true);
 		m_inputType = InputType::Transact;
 		m_callbackStack.push(std::bind(&U3Misc::GetChestCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
@@ -4593,6 +4594,7 @@ bool U3Misc::GetChestCallback()
 	if (m_input_num < 0 || m_input_num > 3)
 	{
 		m_scrollArea->UPrintWin("\n");
+		m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
@@ -4601,11 +4603,13 @@ bool U3Misc::GetChestCallback()
 	{
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
+		m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	if (CheckAlive(m_input_num) == false)
 	{
 		m_scrollArea->UPrintMessage(126);
+		m_scrollArea->blockPrompt(false);
 		return false;
 	}
 
@@ -4626,6 +4630,7 @@ void U3Misc::GetChest1(short chnum)
 		if ((tile < 0x24) || (tile > 0x27)) // izzit not a chest?
 		{
 			NotHere();
+			m_scrollArea->blockPrompt(false);
 			return;
 		}
 		tile = (tile & 0x3) * 4;
@@ -4640,6 +4645,7 @@ void U3Misc::GetChest1(short chnum)
 		if (m_spellCombat->GetXYDng(m_xpos, m_ypos) != 0x40)
 		{
 			NotHere();
+			m_scrollArea->blockPrompt(false);
 			return;
 		}
 		m_spellCombat->PutXYDng(0, m_xpos, m_ypos);
@@ -4710,6 +4716,7 @@ void U3Misc::GetChest1(short chnum)
 		{
 			BombTrap();
 			m_dungeon->setForceRedraw();
+			m_scrollArea->blockPrompt(false);
 			return;
 		}
 		break;
@@ -4831,6 +4838,7 @@ void U3Misc::GetChestBooty()
 	int rngNum = m_utilities->getRandom(0, 255);
 	if (rngNum > 63)
 	{
+		m_scrollArea->blockPrompt(false);
 		return;
 	}
 	wpn = m_utilities->getRandom(0, 255);
@@ -4848,6 +4856,7 @@ void U3Misc::GetChestBooty()
 
 			m_scrollArea->UPrintWin(str1);
 			AddItem(m_rosNum, 48 + wpn, 1);
+			m_scrollArea->blockPrompt(false);
 			return;
 		}
 	}
@@ -4866,9 +4875,11 @@ void U3Misc::GetChestBooty()
 
 			m_scrollArea->UPrintWin(str1);
 			AddItem(m_rosNum, 48 + arm, 1);
+			m_scrollArea->blockPrompt(false);
 			return;
 		}
 	}
+	m_scrollArea->blockPrompt(false);
 }
 
 void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
@@ -4895,17 +4906,17 @@ void U3Misc::AgeChars() // $7470
 		m_gTime[0]--;
 		if (m_gTime[0] > 0)
 		{
-			//return;
+			return;
 		}
 		else
 		{
-			m_gTime[1]--;
-			if (m_gTime[1] < 0)
-			{
-				m_gTime[1] = 9;
-			}
 			m_gTime[0] = 4;
 		}
+	}
+	m_gTime[1]--;
+	if (m_gTime[1] < 0)
+	{
+		m_gTime[1] = 9;
 	}
 	
 	m_chNum = 3;
@@ -5044,6 +5055,18 @@ bool U3Misc::FinishEatFood()
 	else
 	{
 		m_callbackStack.push(std::bind(&U3Misc::FinishTurnCallback, this));
+
+		if (m_Player[m_rosNum][17] == 'P')
+		{
+			HPSubtract(m_rosNum, 1);
+			m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+			m_resources->setInversed(true);
+			m_scrollArea->UPrintMessage(183);
+			InverseCharDetails(m_chNum, true);
+			m_resources->m_inverses.elapsedTileTime = 0;
+			m_resources->m_inverses.inverseTileTime = damage_time;
+		}
+		
 	}
 	return false;
 }

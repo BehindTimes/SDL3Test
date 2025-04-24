@@ -82,6 +82,5 @@ private:
 	int m_cursorPos;
 	int m_curCursor;
 	bool m_block;
-	bool m_promptStash;
 };
 

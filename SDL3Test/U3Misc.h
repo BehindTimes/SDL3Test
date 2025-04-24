@@ -318,6 +318,7 @@ private:
 	bool oracleFinishCallback();
 	bool horseVendorCallback();
 	bool MoveMonsters();
+	bool ExodusCastleCallback();
 	void GetMonsterDir(short monNum);
 	char GetHeading(short value);
 	bool moveshoot(int offset);
@@ -412,6 +413,7 @@ private:
 	bool GoWhirlPoolCallback1();
 	bool GoWhirlPoolCallback2();
 	bool FinishAll1();
+	bool FinishAll2();
 	bool EnterShrineCallback();
 	void Shrine(short chnum);
 	short ShrineRace(short race);

@@ -509,7 +509,7 @@ void U3Misc::BlockExodus()
 	{
 		bool allowDiagonols;
 		m_resources->GetPreference(U3PreferencesType::Allow_Diagonal, allowDiagonols);
-		if (allowDiagonols)
+		if (!allowDiagonols)
 		{
 			PutXYVal(0x84, 0x09, 0x35);
 			PutXYVal(0x84, 0x0B, 0x35);
@@ -1702,6 +1702,59 @@ bool U3Misc::FinishAge() // $79DD
 		m_callbackStack.pop();
 	}
 
+	short temp = GetXYVal(m_xpos, m_ypos);
+
+	m_callbackStack.push(std::bind(&U3Misc::FinishAll2, this));
+	m_callbackStack.push(std::bind(&U3Misc::ExodusCastleCallback, this));
+	// These two never compete with each other
+	if (temp == 136)
+	{
+		HandleMoonStep();
+	}
+	else if (temp == 48)
+	{
+		GoWhirlPool();
+	}
+
+	return false;
+}
+
+bool U3Misc::ExodusCastleCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	if (m_spellCombat->ExodusCastle() == 0)
+	{
+		m_gTimeNegate = 0;
+		m_xs = m_utilities->getRandom(0, 11);
+		m_ys = m_utilities->getRandom(0, 11);
+		m_gBallTileBackground = GetXYTile(m_xs, m_ys);
+		if (m_xs == 5 && m_ys == 5)
+		{
+			PutXYTile(0x7A, m_xs, m_ys);
+			BombTrap();
+		}
+		else
+		{
+			if (m_gBallTileBackground == 0x10)
+			{
+				PutXYTile(0x7A, m_xs, m_ys);
+			}
+		}
+	}
+
+	return false;
+}
+
+bool U3Misc::FinishAll2()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
 	//m_tx = 0x18;
 	//m_ty = 0x17;
 	if (m_Party[0] == 0x14 || m_Party[0] == 0x16)
@@ -1717,20 +1770,10 @@ bool U3Misc::FinishAge() // $79DD
 		m_gTimeNegate--;
 		return false;
 	}
-	
-
-	short temp = GetXYVal(m_xpos, m_ypos);
+	// Spawn Monsters
 
 	m_callbackStack.push(std::bind(&U3Misc::FinishAll1, this));
 	m_callbackStack.push(std::bind(&U3Misc::MoveMonsters, this));
-	if (temp == 136)
-	{
-		HandleMoonStep();
-	}
-	if (temp == 48)
-	{
-		GoWhirlPool();
-	}
 
 	return false;
 }

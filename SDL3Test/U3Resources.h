@@ -161,6 +161,7 @@ public:
 	void ScrollThings();
 	void AnimateTiles();
 	void TwiddleFlags();
+	void ExodusLights();
 
 	void updateTime(Uint64 curTick);
 	void RenderCharStats(short ch, SDL_FRect rect);
@@ -355,5 +356,6 @@ private:
 	
 	bool m_updateWind;
 	int m_alertReturn;
+	unsigned char m_exoduslitez;
 };
 

@@ -193,7 +193,8 @@ U3Resources::U3Resources() :
 	m_texDistributeFood(nullptr),
 	m_texGatherGold(nullptr),
 	m_texDistributeFoodPushed(nullptr),
-	m_texGatherGoldPushed(nullptr)
+	m_texGatherGoldPushed(nullptr),
+	m_exoduslitez(0)
 {
 	memset(m_texIntro, NULL, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -3254,45 +3255,8 @@ void U3Resources::updateTime(Uint64 deltaTime)
 	ScrollThings();
 	AnimateTiles();
 	TwiddleFlags();
+	ExodusLights();
 	DoWind();
-
-	/*if (!m_scrollArea->isUpdating() && !m_misc->m_checkDead && m_misc->m_inputType == InputType::Default)
-	{
-		if (!isInversed())
-		{
-			m_elapsedWindTime += deltaTime;
-			if (m_elapsedWindTime > DelayWind)
-			{
-				m_updateWind = true;
-				m_elapsedWindTime %= DelayWind;
-			}
-		}
-
-		if (m_wasMove)
-		{
-			m_wasMove = false;
-			m_elapsedMoveTime = 0;
-			m_misc->Routine6E35();
-
-			m_elapsedWindTime += deltaTime;
-		}
-		else
-		{
-			if (!isInversed())
-			{
-				m_elapsedMoveTime += m_delta_time;
-				if (m_elapsedMoveTime > MoveTime)
-				{
-					m_elapsedMoveTime %= m_delta_time;
-					m_misc->Pass();
-					m_misc->Routine6E35();
-					m_misc->FinishAll();
-				}
-			}
-		}
-	}
-
-	m_fullUpdate = false;*/
 }
 
 void U3Resources::ShowChars(bool force) /* $7338 methinx */
@@ -4570,4 +4534,28 @@ void U3Resources::GenerateZStatImage(int rosNum)
 
 	SDL_SetRenderTarget(m_renderer, nullptr);
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+}
+
+void U3Resources::ExodusLights()
+{
+	if (m_numUpdateAnimate > 0)
+	{
+		m_animFlag[2]++;
+		if (m_animFlag[2] > 1)
+		{
+			m_animFlag[2] = 0;
+		}
+		else
+		{
+			return;
+		}
+
+
+		m_exoduslitez++;
+		m_exoduslitez %= 4;
+
+		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[47]);
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[80 + (3 - m_exoduslitez)], NULL, NULL);
+		SDL_SetRenderTarget(m_renderer, NULL);
+	}
 }

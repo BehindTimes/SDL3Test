@@ -233,8 +233,6 @@ private:
 	void Steal();
 	void Transact();
 	void Unlock();
-	
-	
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
@@ -380,6 +378,7 @@ private:
 	bool CommandDescend();
 	bool CommandEnter();
 	bool CommandExit();
+	bool CommandFire();
 	bool CommandFinishTurn();
 	bool CommandGetChest();
 	bool CommandHandEquip();
@@ -443,9 +442,14 @@ private:
 	bool handGoldCallback();
 	bool handItemCallback();
 	bool handItemCallback1();
+	bool FireCallback();
+	bool fireloopCallback();
+	void firehit();
+	bool showHitCallback();
 
 	void SpawnMonster();
 	void AttackCode(short whichMon);
+	bool fireloop();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

@@ -57,23 +57,31 @@ void UltimaSpellCombat::ShowHit(short x, short y, unsigned char hitType, unsigne
     m_resources->GetPreference(U3PreferencesType::Sound_Inactive, sound_inactive);
     if (sound_inactive)
     {
+        m_misc->m_inputType = InputType::Default;
         return;
     }
-    //if (prefs.soundActive) return;
-    m_origValue = m_misc->GetXYTile(m_x, m_y);
+    m_x = x;
+    m_y = y;
+
+    m_origValue = m_misc->GetXYTile(x, y);
     m_misc->m_gBallTileBackground = tileUnder;
-    m_misc->PutXYTile(hitType, m_x, m_y);
+    m_misc->PutXYTile(hitType, x, y);
     m_resources->SwapShape(hitType);
     m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::ShowHitCallback, this));
     m_hitType = hitType;
-    m_x = x;
-    m_y = y;
+    
 }
 
 bool UltimaSpellCombat::ShowHitCallback()
 {
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
+
     m_resources->SwapShape(m_hitType);
     m_misc->PutXYTile(m_origValue, m_x, m_y);
+    m_misc->m_inputType = InputType::Default;
 
     return false;
 }

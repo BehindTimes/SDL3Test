@@ -36,7 +36,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Enter();
 		break;
 	case SDLK_F:
-		//Fire();
+		Fire();
 		break;
 	case SDLK_G:
 		GetChest();
@@ -636,6 +636,11 @@ bool U3Misc::LookCallback()
 	{
 		m_callbackStack.pop();
 	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
 
 	short temp;
 	short mon;
@@ -774,6 +779,11 @@ bool U3Misc::TransactCallback2()
 	if (m_callbackStack.size() > 0)
 	{
 		m_callbackStack.pop();
+	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
 	}
 
 	short monNum;
@@ -2333,6 +2343,11 @@ bool U3Misc::AttackCallback()
 	{
 		m_callbackStack.pop();
 	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
 	short monNum;
 	monNum = MonsterHere(m_xs, m_ys);
 	if (monNum == 255)
@@ -2341,5 +2356,145 @@ bool U3Misc::AttackCallback()
 		return false;
 	}
 	AttackCode(monNum);
+	return false;
+}
+
+void U3Misc::Fire()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandFire, this));
+}
+
+bool U3Misc::CommandFire()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_scrollArea->UPrintMessage(38);
+	/*if (m_Party[0] != 0x16)
+	{
+		What2();
+	}
+	else*/
+	{
+		m_scrollArea->blockPrompt(true);
+		m_scrollArea->UPrintMessage(39);
+		m_inputType = InputType::GetDirection;
+		m_callbackStack.push(std::bind(&U3Misc::FireCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	}
+
+	return false;
+}
+
+bool U3Misc::FireCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	m_xs = m_xpos;
+	m_ys = m_ypos;
+	m_opnum = 4;
+
+	m_callbackStack.push(std::bind(&U3Misc::fireloop, this));
+
+	return false;
+}
+
+bool U3Misc::fireloop()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->blockPrompt(true);
+	m_opnum--;
+	if (m_opnum < 1)
+	{
+		m_inputType = InputType::Default;
+		return false;
+	}
+	m_xs = m_graphics->MapConstrain(m_xs + m_dx);
+	m_ys = m_graphics->MapConstrain(m_ys + m_dy);
+
+	m_opnum2 = MonsterHere(m_xs, m_ys);
+	if (m_opnum2 < 128)
+	{
+		firehit();
+		return false;
+	}
+	m_opnum2 = GetXYVal(m_xs, m_ys);
+	if (m_opnum2 >= 0x24 && m_opnum2 < 0x28)
+	{
+		m_gBallTileBackground = (m_opnum2 & 0x3) * 2;    // It's a chest, use whatever tile the chest is on.
+	}
+	else
+	{
+		m_gBallTileBackground = m_opnum2 / 2;
+	}
+	PutXYVal(0xF4, m_xs, m_ys);
+	DelayGame(80, std::bind(&U3Misc::fireloopCallback, this));
+	
+	return false;
+}
+
+void U3Misc::firehit()
+{
+	m_inputType = InputType::Default;
+	unsigned char value = GetXYVal(m_xs, m_ys);
+	short monster = MonsterHere(m_xs, m_ys);
+	m_gBallTileBackground = (monster == 255) ? value : m_Monsters[monster + TILEON] / 2;
+	PutXYVal(0xF4, m_xs, m_ys);
+	int rngNum = m_utilities->getRandom(0, 255);
+	// This seems a little redundant
+	if (m_Monsters[m_opnum2] == 0x3C && rngNum < 128)
+	{
+		PutXYVal(value, m_xs, m_ys);
+	}
+	else if (rngNum < 128)
+	{
+		PutXYVal(value, m_xs, m_ys);
+	}
+	else
+	{
+		m_callbackStack.push(std::bind(&U3Misc::showHitCallback, this));
+		m_spellCombat->ShowHit(m_xs - m_xpos + 5, m_ys - m_ypos + 5, 0x7A, m_Monsters[m_opnum2 + TILEON] / 2);
+	}
+}
+
+bool U3Misc::showHitCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	PrintMonster(m_Monsters[m_opnum2] / 2, true, m_Monsters[m_opnum2 + VARMON]);
+	m_scrollArea->UPrintMessage(117);
+	PutXYVal(m_Monsters[m_opnum2 + TILEON], m_xs, m_ys);
+	m_Monsters[m_opnum2] = 0;
+
+	return false;
+}
+
+bool U3Misc::fireloopCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	PutXYVal((unsigned char)m_opnum2, m_xs, m_ys);
+
+	m_callbackStack.push(std::bind(&U3Misc::fireloop, this));
+
 	return false;
 }

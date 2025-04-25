@@ -2189,7 +2189,7 @@ void U3Resources::SwapShape(short shape)
 
 	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
 	SDL_RenderClear(m_renderer);
-	if (m_shapeSwap[realTile])
+	if (!m_shapeSwap[realTile])
 	{
 		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile + 16], NULL, NULL);
 	}

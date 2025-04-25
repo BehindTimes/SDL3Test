@@ -1038,10 +1038,12 @@ void U3Misc::HandleTransactPress(SDL_Keycode key)
 void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 {
 	short dirgot = false;
+	m_input_num = -1;
 
 	switch (key)
 	{
 	case SDLK_UP:
+		m_input_num = 0;
 		m_xs = m_xpos;
 		m_ys = m_ypos - 1;
 		m_dx = 0;
@@ -1050,6 +1052,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		m_scrollArea->UPrintMessage(24);
 		break;
 	case SDLK_DOWN:
+		m_input_num = 0;
 		m_xs = m_xpos;
 		m_ys = m_ypos + 1;
 		m_dx = 0;
@@ -1058,6 +1061,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		m_scrollArea->UPrintMessage(25);
 		break;
 	case SDLK_LEFT:
+		m_input_num = 0;
 		m_xs = m_xpos - 1;
 		m_ys = m_ypos;
 		m_dx = -1;
@@ -1066,12 +1070,17 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		m_scrollArea->UPrintMessage(27);
 		break;
 	case SDLK_RIGHT:
+		m_input_num = 0;
 		m_xs = m_xpos + 1;
 		m_ys = m_ypos;
 		m_dx = 1;
 		m_dy = 0;
 		dirgot = true;
 		m_scrollArea->UPrintMessage(26);
+		break;
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		dirgot = true;
 		break;
 	default:
 		break;
@@ -3423,10 +3432,6 @@ bool U3Misc::MoveMonsters() // $7A81
 	return false;
 }
 
-void U3Misc::Fire()
-{
-}
-
 bool U3Misc::IgniteCallback()
 {
 	if (m_callbackStack.size() > 0)
@@ -3605,6 +3610,11 @@ bool U3Misc::StealCallback1()
 	{
 		m_callbackStack.pop();
 	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
 
 	short byte = 0;
 
@@ -3681,6 +3691,11 @@ bool U3Misc::UnlockCallback()
 	if (m_callbackStack.size() > 0)
 	{
 		m_callbackStack.pop();
+	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
 	}
 	if ((m_ys != m_ypos) && (m_xs == m_xpos))
 	{
@@ -4151,6 +4166,11 @@ bool U3Misc::InsertCallback()
 	{
 		m_callbackStack.pop();
 	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
 	if (GetXYVal(m_xs, m_ys) != 0x7C)
 	{
 		NotHere();
@@ -4430,7 +4450,7 @@ bool U3Misc::SleepCallback()
 	m_elapsedSleepTime += m_resources->m_delta_time;
 	if (m_elapsedSleepTime < m_sleepCheckTime)
 	{
-		m_inputType = InputType::SleepCallback;
+		m_inputType = InputType::None;
 		return true;
 	}
 	if (m_callbackStack.size() > 0)
@@ -4498,6 +4518,11 @@ bool U3Misc::BribeCallback()
 	if (m_callbackStack.size() > 0)
 	{
 		m_callbackStack.pop();
+	}
+	if (m_input_num < 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
 	}
 	short object;
 	short gold;
@@ -4897,7 +4922,7 @@ void U3Misc::GetChestBooty()
 			str1 += '\n';
 
 			m_scrollArea->UPrintWin(str1);
-			AddItem(m_rosNum, 48 + arm, 1);
+			AddItem(m_rosNum, 40 + arm, 1);
 			m_scrollArea->blockPrompt(false);
 			return;
 		}
@@ -4916,10 +4941,12 @@ void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
 
 void U3Misc::DelayGame(Uint64 delay_time, std::function<bool()> callback)
 {
-	m_inputType = InputType::SleepCallback;
+	m_elapsedSleepTime = 0;
+	m_sleepCheckTime = delay_time;
+	m_inputType = InputType::None;
 	m_callbackStack.push(callback);
 	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
-	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	//m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 }
 
 void U3Misc::AgeChars() // $7470

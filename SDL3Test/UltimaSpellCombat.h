@@ -14,8 +14,14 @@ public:
 	unsigned char CombatCharacterHere(short x, short y);
 	unsigned char CombatMonsterHere(short x, short y);
 	unsigned char ExodusCastle();
+	void Spell(short chnum, short spellnum);
+
+	char m_g5521;
 private:
+	void Failed();
 	bool ShowHitCallback();
+	void BigDeath(short damage, short chnum);
+
 	unsigned char m_hitType;
 	unsigned char m_origValue;
 	short m_x;

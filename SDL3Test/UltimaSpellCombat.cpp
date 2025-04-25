@@ -16,13 +16,19 @@ UltimaSpellCombat::UltimaSpellCombat() :
     m_origValue(0),
     m_x(0),
     m_y(0),
-    m_g835E(0)
+    m_g835E(0),
+    m_g5521(0)
 {
 }
 
 void UltimaSpellCombat::Incap()
 {
 	m_scrollArea->UPrintMessage(126);
+}
+
+void UltimaSpellCombat::Failed() // $586E
+{
+    m_scrollArea->UPrintMessage(86);
 }
 
 unsigned char UltimaSpellCombat::GetXYDng(short x, short y)
@@ -253,4 +259,109 @@ unsigned char UltimaSpellCombat::ExodusCastle() // $6F43
         return 0xFF;
     }
     return 0;    // In Exodus Castle!
+}
+
+void UltimaSpellCombat::BigDeath(short damage, short chnum) // $5600
+{
+    if (m_misc->m_Party[2] != 0x80)
+    {
+        Failed();
+        return;
+    }
+}
+
+void UltimaSpellCombat::Spell(short chnum, short spellnum)
+{
+    short rosNum;
+    int rngNum;
+
+    rosNum = m_misc->m_Party[6 + chnum];
+    switch (spellnum)
+    {
+    case 0: // Repond
+        if ((m_misc->m_Party[2] != 0x80) || (m_misc->m_gMonType != 0x30) || (m_g5521 != 0))
+        {
+            Failed();
+            return;
+        }
+        m_g5521 = 0xFF;
+        rngNum = m_utilities->getRandom(0, 255);
+        if (rngNum < 128)
+        {
+            Failed();
+            return;
+        }
+        BigDeath(255, chnum);
+        break;
+    case 1: // Mittar
+        break;
+    case 2: // Lorum
+        break;
+    case 3: // Dor Acron
+        break;
+    case 4: // Sur Acron
+        break;
+    case 5: // Fulgar
+        break;
+    case 6: // Dag Acron
+        break;
+    case 7: // Mentar
+        break;
+    case 8: // Dag Lorum
+        break;
+    case 9: // Fal Divi
+        break;
+    case 10: // Noxum
+        break;
+    case 11: // Decorp
+        break;
+    case 12: // Altair
+        break;
+    case 13: // Dag Mentar
+        break;
+    case 14: // Necorp
+        break;
+    case 15: // nameless
+        break;
+    case 16: // Pontori
+        break;
+    case 17: // Appar Unem
+        break;
+    case 18: // Sanctu
+        break;
+    case 19: // Luminae
+        break;
+    case 20: // Rec Su
+        break;
+    case 21: // Rec Du
+        break;
+    case 22: // Lib Rec
+        break;
+    case 23: // Alcort
+        break;
+    case 24: // Sequitu
+        break;
+    case 25: // Sominae
+        break;
+    case 26: // Sanctu Mani
+        break;
+    case 27: // Vieda
+        break;
+    case 28: // Excuun
+        break;
+    case 29: // Surmandum
+        break;
+    case 30: // ZXKUQYB
+        break;
+    case 31: // Anju Sermani
+        break;
+    case 32: // Terramorph
+        break;
+    case 33: // Armageddon
+        break;
+    case 34: // Flotellum
+        break;
+    default:
+        break;
+    }
 }

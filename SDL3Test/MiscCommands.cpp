@@ -27,7 +27,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Board();
 		break;
 	case SDLK_C:
-		//Cast();
+		Cast();
 		break;
 	case SDLK_D:
 		Descend();
@@ -1457,7 +1457,7 @@ bool U3Misc::StatsCallback1()
 		std::string dispString = m_resources->m_plistMap["WeaponsArmour"][m_Player[m_rosNum][48]];
 		m_scrollArea->UPrintWin(std::string(dispString));
 	}
-		break;
+	break;
 	case 17:
 	{
 		m_scrollArea->UPrintWin(std::string(ArmorString));
@@ -1505,7 +1505,7 @@ bool U3Misc::StatsCallback1()
 			skip = true;
 		}
 	}
-		break;
+	break;
 	case 34:
 		m_scrollArea->UPrintWin(std::string(NoWeaponsString));
 		skip = true;
@@ -2249,7 +2249,7 @@ bool U3Misc::handItemCallback()
 		return false;
 	}
 	m_opnum = 0;
-	
+
 	if (m_input_num == 0) // T
 	{
 		m_opnum = 15;
@@ -2442,7 +2442,7 @@ bool U3Misc::fireloop()
 	}
 	PutXYVal(0xF4, m_xs, m_ys);
 	DelayGame(80, std::bind(&U3Misc::fireloopCallback, this));
-	
+
 	return false;
 }
 
@@ -2495,6 +2495,259 @@ bool U3Misc::fireloopCallback()
 	PutXYVal((unsigned char)m_opnum2, m_xs, m_ys);
 
 	m_callbackStack.push(std::bind(&U3Misc::fireloop, this));
+
+	return false;
+}
+
+void U3Misc::Cast()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandCast, this));
+}
+
+bool U3Misc::CommandCast()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(119);
+	m_inputType = InputType::Transact;
+	m_scrollArea->blockPrompt(true);
+	m_callbackStack.push(std::bind(&U3Misc::CastCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	return false;
+}
+
+bool U3Misc::CastCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_chNum = m_input_num;
+
+	if (m_chNum < 0 || m_chNum > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	if (m_Party[6 + m_chNum] == 0)
+	{
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+	if (CheckAlive(m_chNum) == false)
+	{
+		m_spellCombat->Incap();
+		return false;
+	}
+
+	char classType;
+	short spellnum;
+
+	m_rosNum = m_Party[6 + m_chNum];
+	classType = m_Player[m_rosNum][23];
+	spellnum = -1;
+
+	if (classType == m_careerTable[1] ||
+		classType == m_careerTable[4] ||
+		classType == m_careerTable[7])
+	{
+		m_callbackStack.push(std::bind(&U3Misc::ProcessMagic, this));
+		m_callbackStack.push(std::bind(&U3Misc::ClericChoose, this));
+	}
+	else if (classType == m_careerTable[2] ||
+		classType == m_careerTable[6] ||
+		classType == m_careerTable[9])
+	{
+		m_callbackStack.push(std::bind(&U3Misc::ProcessMagic, this));
+		m_callbackStack.push(std::bind(&U3Misc::WizardChoose, this));
+	}
+	else if (classType == m_careerTable[8] ||
+		classType == m_careerTable[10])
+	{
+		m_callbackStack.push(std::bind(&U3Misc::ProcessMagic, this));
+		m_callbackStack.push(std::bind(&U3Misc::EitherChoose, this));
+	}
+	else
+	{
+		m_scrollArea->UPrintMessage(121);
+	}
+
+	return false;
+}
+
+bool U3Misc::ClericChoose()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(124);
+
+	m_opnum = 'Q';
+	setInputTypeRestricted(std::bind(&U3Misc::ClericChooseCallback, this), 'A');
+	return false;
+}
+
+bool U3Misc::ClericChooseCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->setInputString(m_input);
+	m_scrollArea->setInput(false);
+	m_inputType = InputType::Default;
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input_num < 0)
+	{
+		m_input_num = -2;
+	}
+	else
+	{
+		m_input_num += 16;
+	}
+	return false;
+}
+
+bool U3Misc::WizardChoose()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(125);
+
+	m_opnum = 'Q';
+	if (m_Party[15] != 0)
+	{
+		m_opnum = 'T';
+	}
+	setInputTypeRestricted(std::bind(&U3Misc::WizardChooseCallback, this), 'A');
+	return false;
+}
+
+bool U3Misc::WizardChooseCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->setInputString(m_input);
+	m_scrollArea->setInput(false);
+	m_inputType = InputType::Default;
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input_num < 0)
+	{
+		m_input_num = -2;
+	}
+	if (m_input_num > 15)
+	{
+		m_input_num += 16;
+	}
+	return false;
+}
+
+bool U3Misc::EitherChoose()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintMessage(123);
+	m_inputType = InputType::ChooseWizardCleric;
+	m_callbackStack.push(std::bind(&U3Misc::EitherChooseCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+	return false;
+}
+
+bool U3Misc::EitherChooseCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_scrollArea->UPrintWin(m_input);
+	m_scrollArea->UPrintWin("\n");
+
+	if (m_input_num == 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::ClericChoose, this));
+	}
+	else if (m_input_num == 1)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::WizardChoose, this));
+	}
+	else
+	{
+		m_input_num = -2;
+	}
+
+	return false;
+}
+
+bool U3Misc::ProcessMagic()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (m_input_num <  0)
+	{
+		m_scrollArea->UPrintMessage(120);
+	}
+	m_rosNum = m_Party[6 + m_chNum];
+	short spellnum = m_input_num;
+
+	short magicreq = (spellnum & 0x0F) * 5;
+	if (spellnum == 32)
+	{
+		magicreq = 10;
+	}
+	else if (spellnum == 33)
+	{
+		magicreq = 85;
+	}
+	else if (spellnum == 34)
+	{
+		magicreq = 90;
+	}
+	magicreq = 0;
+	if (magicreq > m_Player[m_rosNum][25])
+	{
+		m_scrollArea->UPrintMessage(122);
+		return false;
+	}
+	m_Player[m_rosNum][25] -= magicreq;
+	m_scrollArea->UPrintWin("\n");
+	if (spellnum < 32)
+	{
+		std::string dispString = m_resources->m_plistMap["Spells"][spellnum];
+		m_scrollArea->UPrintWin(dispString);
+	}
+	else
+	{
+		if (spellnum == 32)
+		{
+			m_scrollArea->UPrintWin("TERRAFORM");
+		}
+		else if (spellnum == 33)
+		{
+			m_scrollArea->UPrintWin("ARMAGEDDON");
+		}
+		else if (spellnum == 34)
+		{
+			m_scrollArea->UPrintWin("FLOTELLUM");
+		}
+	}
+	m_scrollArea->UPrintWin("\n\n");
+	m_spellCombat->Spell(m_chNum, spellnum);
 
 	return false;
 }

@@ -46,6 +46,7 @@ enum class InputType
 	GuildVendor,
 	NumImmediate,
 	LetterImmediate,
+	ChooseWizardCleric,
 	ZStats
 };
 
@@ -96,6 +97,7 @@ public:
 	void NorthEast();
 	void NorthWest();
 
+	void Cast();
 	void ModifyOrder();
 	void NegateTime();
 	void ReadyWeapon();
@@ -261,6 +263,7 @@ private:
 	void HandleInputGuild(SDL_Keycode key);
 	void HandleInputRestricted(SDL_Keycode key);
 	void HandleInputYesNo(SDL_Keycode key);
+	void HandleInputChooseWizardCleric(SDL_Keycode key);
 	void HandleInputBuySell(SDL_Keycode key);
 	void HandleInputText(SDL_KeyboardEvent key);
 	bool HandleDefaultKeyPress(SDL_Keycode key);
@@ -375,6 +378,7 @@ private:
 	bool CommandNorthWest();
 	bool CommandAttack();
 	bool CommandBoard();
+	bool CommandCast();
 	bool CommandDescend();
 	bool CommandEnter();
 	bool CommandExit();
@@ -446,6 +450,14 @@ private:
 	bool fireloopCallback();
 	void firehit();
 	bool showHitCallback();
+	bool CastCallback();
+	bool ProcessMagic();
+	bool ClericChoose();
+	bool ClericChooseCallback();
+	bool WizardChoose();
+	bool WizardChooseCallback();
+	bool EitherChoose();
+	bool EitherChooseCallback();
 
 	void SpawnMonster();
 	void AttackCode(short whichMon);

@@ -976,6 +976,9 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 	case InputType::YesNo:
 		HandleInputYesNo(key.key);
 		break;
+	case InputType::ChooseWizardCleric:
+		HandleInputChooseWizardCleric(key.key);
+		break;
 	case InputType::InputText:
 		HandleInputText(key);
 		break;
@@ -1208,6 +1211,43 @@ void U3Misc::HandleInputYesNo(SDL_Keycode key)
 	case SDLK_SPACE:
 		m_input_num = -1;
 		m_input = std::string("N");
+		handled = true;
+		break;
+	default:
+		m_input_num = 0;
+		break;
+	}
+	if (handled)
+	{
+		m_inputType = InputType::Default;
+		m_scrollArea->setInputString(m_input);
+		m_scrollArea->setInput(false);
+		if (m_callbackStack.size() > 0)
+		{
+			m_callbackStack.pop();
+		}
+	}
+}
+
+void U3Misc::HandleInputChooseWizardCleric(SDL_Keycode key)
+{
+	bool handled = false;
+	switch (key)
+	{
+	case SDLK_W:
+		m_input_num = 1;
+		m_input = std::string("W");
+		handled = true;
+		break;
+	case SDLK_C:
+		m_input_num = 0;
+		m_input = std::string("C");
+		handled = true;
+		break;
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		m_input_num = -1;
+		m_input = std::string("");
 		handled = true;
 		break;
 	default:

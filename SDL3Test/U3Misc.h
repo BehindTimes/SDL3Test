@@ -128,6 +128,7 @@ public:
 	void Yell();
 	void AddFinishTurn();
 	void WhirlPool();
+	void Combat();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -362,7 +363,6 @@ private:
 	bool FinishEatFood();
 	void EatFood(short member, short amount, std::function<bool()> callback);
 	bool EatFoodCallback();
-	bool EndTurnPoisonCallback();
 	void HPAdd(short member, short amount);
 	bool EndTurnCallback();
 	bool InverseCallback();
@@ -375,6 +375,7 @@ private:
 	bool CommandSouthWest();
 	bool CommandNorthEast();
 	bool CommandNorthWest();
+	bool CommandAttack();
 	bool CommandBoard();
 	bool CommandDescend();
 	bool CommandEnter();
@@ -444,6 +445,7 @@ private:
 	bool handItemCallback1();
 
 	void SpawnMonster();
+	void AttackCode(short whichMon);
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

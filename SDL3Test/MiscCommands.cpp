@@ -21,7 +21,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 	switch (key)
 	{
 	case SDLK_A:
-		//Attack();
+		Attack();
 		break;
 	case SDLK_B:
 		Board();
@@ -2303,5 +2303,43 @@ bool U3Misc::handItemCallback1()
 
 	m_scrollArea->UPrintMessage(57);
 
+	return false;
+}
+
+void U3Misc::Attack()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandAttack, this));
+}
+
+bool U3Misc::CommandAttack()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_scrollArea->UPrintMessage(28);
+	m_inputType = InputType::GetDirection;
+	m_callbackStack.push(std::bind(&U3Misc::AttackCallback, this));
+	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
+
+	return false;
+}
+
+bool U3Misc::AttackCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	short monNum;
+	monNum = MonsterHere(m_xs, m_ys);
+	if (monNum == 255)
+	{
+		NotHere();
+		return false;
+	}
+	AttackCode(monNum);
 	return false;
 }

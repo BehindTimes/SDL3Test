@@ -1878,7 +1878,8 @@ void U3Misc::Speak(short perNum, short shnum)
 	while (m_Talk[tlkptr] != 0 && tlkptr < 256)
 	{
 		talk = m_Talk[tlkptr];
-		if (talk == 0xFF) {
+		if (talk == 0xFF)
+		{
 			outStr += '\n';
 			speechStr += ' ';
 		}
@@ -3341,7 +3342,7 @@ bool U3Misc::moveoutside(int offset)
 	GetMonsterDir(offset);
 	if (m_xpos == m_xs && m_ypos == m_ys)
 	{
-		//AttackCode(offset);
+		AttackCode(offset);
 		return false;
 	}
 	return true;
@@ -3419,31 +3420,6 @@ bool U3Misc::MoveMonsters() // $7A81
 			}
 		}
 	}
-	return false;
-}
-
-void U3Misc::Attack()
-{
-	m_scrollArea->UPrintMessage(28);
-	m_inputType = InputType::GetDirection;
-	m_callbackStack.push(std::bind(&U3Misc::AttackCallback, this));
-	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
-}
-
-bool U3Misc::AttackCallback()
-{
-	if (m_callbackStack.size() > 0)
-	{
-		m_callbackStack.pop();
-	}
-	short monNum;
-	monNum = MonsterHere(m_xs, m_ys);
-	if (monNum == 255)
-	{
-		NotHere();
-		return false;
-	}
-	//AttackCode(monNum);
 	return false;
 }
 
@@ -5778,4 +5754,32 @@ void U3Misc::SpawnMonster() // $7A0C
 		PutXYVal(m_Monsters[offset], m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
 		break;
 	}
+}
+
+void U3Misc::AttackCode(short whichMon) // $52B3
+{
+	unsigned char tileon;
+	m_xs = m_Monsters[whichMon + XMON];
+	m_ys = m_Monsters[whichMon + YMON];
+	tileon = m_Monsters[whichMon + TILEON];
+	if (tileon != 0)
+	{
+		tileon = ((tileon / 4) & 0x03) + 0x24;
+	}
+	PutXYVal(tileon, m_xs, m_ys);
+	m_gMonType = m_Monsters[whichMon] / 2;
+	m_gMonVarType = m_Monsters[VARMON + whichMon];
+	m_Monsters[whichMon] = 0;
+	if (m_gMonType == 0x1E) // Pirate
+	{
+		if (m_Party[0] != 0x16)
+		{
+			PutXYVal(0x2C, m_xs, m_ys);
+		}
+	}
+	Combat();
+}
+
+void U3Misc::Combat()
+{
 }

@@ -126,11 +126,9 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		break;
 	case SDLK_G:
 		m_misc->GetChest();
-		//m_misc->GetChest(0, 0);
 		break;
 	case SDLK_H:
 		m_misc->HandEquip();
-		//NotDngCmd();
 		break;
 	case SDLK_I:
 		m_misc->Ignite();
@@ -161,7 +159,6 @@ void UltimaDungeon::LetterCommand(SDL_Keycode key)
 		break;
 	case SDLK_Y:
 		m_misc->Yell();
-		//m_misc->Yell(0);
 		break;
 	case SDLK_Z:
 		m_misc->ZStats();
@@ -1484,6 +1481,7 @@ bool UltimaDungeon::FinishAge()
 	value += 0x18;
 	m_misc->m_gMonType = value * 2;
 	m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
+	m_misc->Combat();
 
 	return false;
 }

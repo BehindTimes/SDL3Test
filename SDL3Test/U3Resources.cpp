@@ -1868,7 +1868,8 @@ void U3Resources::DrawMoongates()
 		m_misc->PutXYVal(12, m_misc->m_LocationX[8], m_misc->m_LocationY[8]);
 	}    // or forest
 	short x;
-	for (x = 0; x < 8; x++) {
+	for (x = 0; x < 8; x++)
+	{
 		m_misc->PutXYVal(4, m_misc->m_MoonXTable[x], m_misc->m_MoonYTable[x]);
 	}
 	x = m_misc->m_gMoonDisp[0] - '0';

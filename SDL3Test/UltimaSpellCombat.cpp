@@ -11,13 +11,21 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 
+void UltimaSpellCombat::Combat()
+{
+}
+
+
+
 UltimaSpellCombat::UltimaSpellCombat() :
     m_hitType(0),
     m_origValue(0),
     m_x(0),
     m_y(0),
     m_g835E(0),
-    m_g5521(0)
+    m_g5521(0),
+    m_chNum(0),
+    m_damage(0)
 {
 }
 
@@ -261,6 +269,13 @@ unsigned char UltimaSpellCombat::ExodusCastle() // $6F43
     return 0;    // In Exodus Castle!
 }
 
+void UltimaSpellCombat::Flashriek() // $5885
+{
+    short SpellSound[34] = { 0, 1, 2, 3, 4, 1, 5, 1, 2, 7, 0, 1, 7, 0, 0, 0, 0, 7, 6, 2, 4, 3, 5, 6, 5, 2, 6, 7, 1, 6, 0, 6, 7, 0 };
+    m_misc->InverseTiles(true);
+}
+
+
 void UltimaSpellCombat::BigDeath(short damage, short chnum) // $5600
 {
     if (m_misc->m_Party[2] != 0x80)
@@ -268,6 +283,101 @@ void UltimaSpellCombat::BigDeath(short damage, short chnum) // $5600
         Failed();
         return;
     }
+    m_damage = damage;
+    m_chNum = chnum;
+    m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::BigDeathCallback, this));
+    Flashriek();
+}
+
+bool UltimaSpellCombat::BigDeathCallback()
+{
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
+    for (short mon = 7; mon >= 0; mon--)
+    {
+        m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::BigDeathCallback1, this));
+    }
+    m_misc->m_opnum = 7;
+    return false;
+}
+
+bool UltimaSpellCombat::BigDeathCallback1()
+{
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
+    int rngNum = m_utilities->getRandom(0, 255);
+    if (m_misc->m_MonsterHP[m_misc->m_opnum] != 0)
+    {
+        m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
+        m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_misc->m_opnum];
+        m_misc->PutXYTile(0x78, m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
+        ShowHit(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum], 0x78, m_misc->m_MonsterTile[m_misc->m_opnum]);
+        m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
+        return false;
+    }
+    m_misc->m_opnum--;
+    return false;
+}
+
+void UltimaSpellCombat::AddExp(short chnum, short amount) // $7091
+{
+    short rosNum, experience;
+    rosNum = m_misc->m_Party[6 + chnum];
+    experience = (m_misc->m_Player[rosNum][30] * 100) + m_misc->m_Player[rosNum][31];
+    int oldLvl = (experience / 100);
+    experience += amount;
+    if (experience > 9899)
+    {
+        experience = 9899;
+    }
+    int newLvl = (experience / 100);
+    m_misc->m_Player[rosNum][30] = experience / 100;
+    m_misc->m_Player[rosNum][31] = experience - (m_misc->m_Player[rosNum][30] * 100);
+}
+
+void UltimaSpellCombat::DamageMonster(short which, short damage, short chnum)
+{
+    short expnum;
+    std::string numStr;
+
+    if (m_misc->m_gMonType != 0x26) // not Lord British, har har
+    {
+        if ((m_misc->m_MonsterHP[which] - damage) < 1)
+        {
+            std::string dispString = m_resources->m_plistMap["Messages"][130];
+
+            expnum = ((m_misc->m_gMonType / 2) & 0x0F);
+            numStr = std::to_string((int)m_misc->m_Experience[expnum]);
+            dispString += numStr;
+            dispString += '\n';
+            m_scrollArea->UPrintWin(dispString);
+            AddExp(chnum, m_misc->m_Experience[expnum]);
+            m_misc->PutXYTile(m_misc->m_MonsterTile[which], m_misc->m_MonsterX[which], m_misc->m_MonsterY[which]);
+            m_misc->m_MonsterHP[which] = 0;
+        }
+        else
+        {
+            m_misc->m_MonsterHP[which] -= damage;
+        }
+    }
+}
+
+bool UltimaSpellCombat::BigDeathCallback2()
+{
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
+
+    m_misc->PutXYTile(m_misc->m_opnum2, m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
+    DamageMonster(m_misc->m_opnum, m_damage, m_chNum);
+
+    m_misc->m_opnum--;
+    return false;
 }
 
 void UltimaSpellCombat::Spell(short chnum, short spellnum)
@@ -284,7 +394,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
             Failed();
             return;
         }
-        m_g5521 = 0xFF;
+        m_g5521 = (unsigned char)0xFF;
         rngNum = m_utilities->getRandom(0, 255);
         if (rngNum < 128)
         {
@@ -365,3 +475,4 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
         break;
     }
 }
+

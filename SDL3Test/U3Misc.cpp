@@ -1970,10 +1970,10 @@ void U3Misc::InverseChnum(char which, bool value)
 	m_resources->m_inverses.character_num[which] = value;
 }
 
-void U3Misc::InverseTiles(bool value)
+void U3Misc::InverseTiles(bool value, Uint64 tileTime)
 {
 	m_resources->m_inverses.tiles = value;
-	m_resources->m_inverses.inverseTileTime = 1000;
+	m_resources->m_inverses.inverseTileTime = tileTime;
 	m_resources->m_inverses.elapsedTileTime = 0;
 	m_resources->setInversed(true);
 	if (!value)
@@ -5852,9 +5852,5 @@ void U3Misc::AttackCode(short whichMon) // $52B3
 			PutXYVal(0x2C, m_xs, m_ys);
 		}
 	}
-	Combat();
-}
-
-void U3Misc::Combat()
-{
+	m_spellCombat->Combat();
 }

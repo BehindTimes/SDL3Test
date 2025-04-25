@@ -1481,7 +1481,7 @@ bool UltimaDungeon::FinishAge()
 	value += 0x18;
 	m_misc->m_gMonType = value * 2;
 	m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
-	m_misc->Combat();
+	m_spellCombat->Combat();
 
 	return false;
 }

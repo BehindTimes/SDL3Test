@@ -77,7 +77,7 @@ public:
 	short MaxMana(char rosNum);
 	bool ProcessEvent(SDL_Event event);
 	bool ProcessAnyEvent(SDL_Event event);
-	void InverseTiles(bool value);
+	void InverseTiles(bool value, Uint64 tileTime = 1000);
 	void InverseCharDetails(short num, bool value);
 	void HandleCallback(bool sleeping);
 	void OtherCommand(short yell);
@@ -130,7 +130,6 @@ public:
 	void Yell();
 	void AddFinishTurn();
 	void WhirlPool();
-	void Combat();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];

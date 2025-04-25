@@ -2373,11 +2373,11 @@ bool U3Misc::CommandFire()
 	}
 
 	m_scrollArea->UPrintMessage(38);
-	/*if (m_Party[0] != 0x16)
+	if (m_Party[0] != 0x16)
 	{
 		What2();
 	}
-	else*/
+	else
 	{
 		m_scrollArea->blockPrompt(true);
 		m_scrollArea->UPrintMessage(39);

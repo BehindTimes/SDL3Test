@@ -56,7 +56,7 @@ U3Misc::U3Misc() :
 	m_wx(0),
 	m_wy(0),
 	m_YellStat(false),
-	m_lastCard(0),
+	m_lastCard(0x1E),
 	m_checkDead(false),
 	m_elapsedSleepTime(0),
 	m_sleepCheckTime(0),
@@ -4024,7 +4024,7 @@ bool U3Misc::OtherCallback()
 		return false;
 	}
 	m_rosNum = m_Party[6 + m_chNum];
-	if (CheckAlive(m_rosNum) == false)
+	if (CheckAlive(m_chNum) == false)
 	{
 		m_scrollArea->UPrintMessage(126);
 		return false;
@@ -4170,11 +4170,11 @@ bool U3Misc::InsertCallback()
 	{
 		m_callbackStack.pop();
 	}
-	/*if (GetXYVal(m_xs, m_ys) != 0x7C)
+	if (GetXYVal(m_xs, m_ys) != 0x7C)
 	{
 		NotHere();
-		return;
-	}*/
+		return false;
+	}
 	m_scrollArea->UPrintMessage(240);
 	m_inputType = InputType::LetterImmediate;
 	m_callbackStack.push(std::bind(&U3Misc::InsertCallback1, this));
@@ -4228,7 +4228,6 @@ bool U3Misc::InsertCallback1()
 	if (m_xs != object || object != m_lastCard)
 	{
 		InverseCharDetails(m_chNum, true);
-		//m_resources->m_inverses.func = std::bind(&U3Misc::InsertCallback2, this);
 		m_resources->m_inverses.elapsedTileTime = 0;
 		m_resources->m_inverses.inverseTileTime = 250;
 		m_resources->setInversed(true);
@@ -4240,7 +4239,6 @@ bool U3Misc::InsertCallback1()
 	m_gBallTileBackground = 0x3E; // Exodus
 
 	m_scrollArea->blockPrompt(true);
-	//m_inputType = InputType::Callback;
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback1, this));
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
@@ -4290,8 +4288,16 @@ bool U3Misc::ExodusDieCallback1()
 	}
 
 	PutXYVal(0x20, m_xs, m_ys);
-	//exodus_death
+
 	m_inputType = InputType::Default;
+
+	if (m_lastCard != 0x22)
+	{
+		m_scrollArea->blockPrompt(false);
+		return false;
+	}
+
+	//exodus_death
 
 	m_Party[15] = 1;
 	bool classic;
@@ -4328,7 +4334,6 @@ bool U3Misc::ExodusDieCallback1()
 	m_resources->m_inverses.elapsedTileTime = 0;
 	m_resources->m_inverses.inverseTileTime = screen_flicker_time;
 	m_resources->setInversed(true);
-	//m_resources->m_inverses.func = std::bind(&U3Misc::ExodusDieCallback3, this);
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback3, this));
 	m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 
@@ -4351,13 +4356,11 @@ bool U3Misc::ExodusDieCallback3()
 	m_resources->setInversed(true);
 	if (m_input_num > 6)
 	{
-		//m_resources->m_inverses.func = std::bind(&U3Misc::ExodusDieCallback4, this);
 		m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback4, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 	}
 	else
 	{
-		//m_resources->m_inverses.func = std::bind(&U3Misc::ExodusDieCallback3, this);
 		m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback3, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 	}
@@ -4374,7 +4377,6 @@ bool U3Misc::ExodusDieCallback4()
 	m_resources->m_inverses.additive = false;
 	m_graphics->setForceRedraw();
 	m_graphics->m_queuedMode = U3GraphicsMode::WinScreen;
-	//m_graphics->m_curMode = U3GraphicsMode::WinScreen;
 	m_graphics->setFade(false);
 
 	return false;
@@ -4423,7 +4425,6 @@ bool U3Misc::BombTrapCallback()
 		if (CheckAlive(m_input_num))
 		{
 			InverseCharDetails(m_input_num, true);
-			//m_resources->m_inverses.func = std::bind(&U3Misc::BombTrapCallback, this);
 			m_resources->m_inverses.elapsedTileTime = 0;
 			m_resources->m_inverses.inverseTileTime = damage_time;
 			m_resources->setInversed(true);
@@ -4456,8 +4457,6 @@ bool U3Misc::SleepCallback()
 		m_callbackStack.pop();
 	}
 	m_elapsedSleepTime = 0;
-	//m_inputType = InputType::Callback;
-	//m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
 	return false;
 }
@@ -4507,9 +4506,9 @@ bool U3Misc::InsertCallback2()
 	{
 		m_callbackStack.pop();
 	}
-	m_Player[m_rosNum + 1][26] = 0;
-	m_Player[m_rosNum + 1][27] = 1;
-	HPSubtract(m_rosNum + 1, 255);
+	m_Player[m_rosNum][26] = 0;
+	m_Player[m_rosNum ][27] = 1;
+	HPSubtract(m_rosNum, 255);
 	return false;
 }
 
@@ -4949,6 +4948,7 @@ void U3Misc::AgeChars() // $7470
 		m_gTime[0]--;
 		if (m_gTime[0] > 0)
 		{
+			m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
 			return;
 		}
 		else

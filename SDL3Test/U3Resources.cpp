@@ -3208,18 +3208,21 @@ void U3Resources::updateGameTime(Uint64 deltaTime)
 	}
 	else
 	{
-		m_elapsedMoveTime += m_delta_time;
-		if (m_elapsedMoveTime > MoveTime)
+		if (m_misc->m_inputType == InputType::Default)
 		{
-			m_elapsedMoveTime %= m_delta_time;
-			m_misc->Pass();
-		}
+			m_elapsedMoveTime += m_delta_time;
+			if (m_elapsedMoveTime > MoveTime)
+			{
+				m_elapsedMoveTime %= m_delta_time;
+				m_misc->Pass();
+			}
 
-		m_elapsedWindTime += deltaTime;
-		if (m_elapsedWindTime > DelayWind)
-		{
-			m_updateWind = true;
-			m_elapsedWindTime %= DelayWind;
+			m_elapsedWindTime += deltaTime;
+			if (m_elapsedWindTime > DelayWind)
+			{
+				m_updateWind = true;
+				m_elapsedWindTime %= DelayWind;
+			}
 		}
 	}
 }

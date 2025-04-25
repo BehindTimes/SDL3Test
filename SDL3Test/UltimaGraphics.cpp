@@ -912,6 +912,7 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade)
 
     bool returnToGame = m_misc->ProcessAnyEvent(event);
 
+
     if (returnToGame)
     {
         if (m_blinkElapsed >= WinFade)
@@ -962,7 +963,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
     if (returnToGame)
     {
         m_forceRedraw = true;
-        m_curMode = U3GraphicsMode::Map;
+         m_curMode = U3GraphicsMode::Map;
         m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }

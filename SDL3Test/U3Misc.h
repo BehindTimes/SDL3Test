@@ -443,6 +443,8 @@ private:
 	bool handItemCallback();
 	bool handItemCallback1();
 
+	void SpawnMonster();
+
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view BinLoc = "Bin";

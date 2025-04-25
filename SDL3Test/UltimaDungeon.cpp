@@ -41,7 +41,6 @@ UltimaDungeon::UltimaDungeon() :
 	m_forceRedraw(true),
 	m_texDungeonPort(nullptr),
 	m_gExitDungeon(false),
-	m_dimDungeon(false),
 	m_isChunk0Wall0(false)
 {
 	m_HeadX[0] = 0;
@@ -792,7 +791,7 @@ void UltimaDungeon::RenderDungeon()
 
 	DrawSecretMessage();
 
-	if (m_dimDungeon)
+	if (m_misc->m_gTorch < 3)
 	{
 		SDL_SetRenderDrawBlendMode(m_resources->m_renderer, SDL_BLENDMODE_BLEND);
 		SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 128);
@@ -1445,18 +1444,50 @@ void UltimaDungeon::createTextureSecrets()
 
 void UltimaDungeon::dungeonmech()
 {
+	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::FinishAge, this));
+	m_misc->AgeChars();
+}
+
+bool UltimaDungeon::FinishAge()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_forceRedraw = true;
+
 	m_resources->m_newMove = true;
 	m_misc->m_wx = 0x18;
 	m_misc->m_wy = 0x17;
 	m_misc->m_xs = m_misc->m_xpos;
 	m_misc->m_ys = m_misc->m_ypos;
+	if (m_misc->m_gTorch > 0)
+	{
+		m_misc->m_gTorch--;
+	}
 	short value = GetXYDng(m_misc->m_xs, m_misc->m_ys);
 	if (value != 0)
 	{
 		dngnotcombat(value);
+		return false;
 	}
-	m_forceRedraw = true;
+	int rngVal = m_utilities->getRandom(0, 0x82 + m_dungeonLevel);
+	if (rngVal < 128)
+	{
+		return false;
+	}
+	value = m_utilities->getRandom(0, m_dungeonLevel + 2);
+	if (value > 6)
+	{
+		value = 6;
+	}
+	value += 0x18;
+	m_misc->m_gMonType = value * 2;
+	m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
+
+	return false;
 }
+
 
 void UltimaDungeon::dngnotcombat(short value)
 {

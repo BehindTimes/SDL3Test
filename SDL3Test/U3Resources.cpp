@@ -1218,12 +1218,14 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 
 	//m_texExodusFade = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_exodusWidth, m_exodusHeight);
 	// Forcing the tiles to be 128x128.  This will allow for consistent smooth scrolling on super small tiles.
-	curGraphics.tiles_width = 128;
-	curGraphics.tiles_height = 128;
+	int tempWidth = 128;
+	int tempHeight = 128;
+	curGraphics.tiles_width = (float)tempWidth;
+	curGraphics.tiles_height = (float)tempHeight;
 	for (size_t index = 0; index < TILES_NUM_X * TILES_NUM_Y; ++index)
 	{
-		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 128, 128);
-		curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 128, 128);
+		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+		curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
 		SDL_SetTextureScaleMode(curGraphics.tiles[index], SDL_SCALEMODE_NEAREST);
 		SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
 	}

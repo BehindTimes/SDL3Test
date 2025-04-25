@@ -79,6 +79,7 @@ private:
 	bool CommandRetreat();
 	bool CommandLeft();
 	bool CommandRight();
+	bool FinishAge();
 
 	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texSecrets[21];
@@ -102,7 +103,6 @@ private:
 	bool m_forceRedraw;
 	char m_HeadX[4];
 	char m_HeadY[4];
-	bool m_dimDungeon;
 	bool m_isChunk0Wall0;
 };
 

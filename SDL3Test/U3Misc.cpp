@@ -201,7 +201,7 @@ void U3Misc::OpenRstr()
 			}
 		}
 	}
-	catch ([[maybe_unused]]const std::exception& e)
+	catch ([[maybe_unused]] const std::exception& e)
 	{
 		return;
 	}
@@ -1456,7 +1456,7 @@ bool U3Misc::InputNumCallback()
 	{
 		m_input_num = std::stoi(m_input);
 	}
-	catch ([[maybe_unused]]const std::exception& e)
+	catch ([[maybe_unused]] const std::exception& e)
 	{
 		m_input_num = 0;
 	}
@@ -1594,8 +1594,11 @@ void U3Misc::NoEffect()
 	m_scrollArea->UPrintMessage(248);
 }
 
+int movenum = 0;
 void U3Misc::IncMoves() // $3AF
 {
+	long curNumberOfMoves = m_Party[13] * 1000000 + m_Party[12] * 10000 + m_Party[11] * 100 + m_Party[10];
+	movenum++;
 	m_Party[10] += m_Party[1];
 	if (m_Party[10] > 99)
 	{
@@ -1663,10 +1666,11 @@ void U3Misc::Routine6E35()
 			Routine6E6B();
 		}
 	}
+	m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::FinishAge, this));
 	AgeChars();
 	//ShowChars(false);
-	
+
 	/*if (ExodusCastle() == 0)
 	{
 		gTimeNegate = 0;
@@ -1771,6 +1775,7 @@ bool U3Misc::FinishAll2()
 		return false;
 	}
 	// Spawn Monsters
+	SpawnMonster();
 
 	m_callbackStack.push(std::bind(&U3Misc::FinishAll1, this));
 	m_callbackStack.push(std::bind(&U3Misc::MoveMonsters, this));
@@ -4507,7 +4512,7 @@ bool U3Misc::InsertCallback2()
 		m_callbackStack.pop();
 	}
 	m_Player[m_rosNum][26] = 0;
-	m_Player[m_rosNum ][27] = 1;
+	m_Player[m_rosNum][27] = 1;
 	HPSubtract(m_rosNum, 255);
 	return false;
 }
@@ -4948,7 +4953,6 @@ void U3Misc::AgeChars() // $7470
 		m_gTime[0]--;
 		if (m_gTime[0] > 0)
 		{
-			m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
 			return;
 		}
 		else
@@ -4961,11 +4965,10 @@ void U3Misc::AgeChars() // $7470
 	{
 		m_gTime[1] = 9;
 	}
-	
+
 	m_chNum = 3;
 	m_scrollArea->blockPrompt(true);
 	m_freezeAnimation = true;
-	m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
@@ -4992,7 +4995,7 @@ bool U3Misc::EndTurnCallback()
 			m_gameMode = GameStateMode::Dungeon;
 		}
 		m_graphics->m_queuedMode = U3GraphicsMode::None;
-		
+
 	}
 	else
 	{
@@ -5109,7 +5112,7 @@ bool U3Misc::FinishEatFood()
 			m_resources->m_inverses.elapsedTileTime = 0;
 			m_resources->m_inverses.inverseTileTime = damage_time;
 		}
-		
+
 	}
 	return false;
 }
@@ -5435,7 +5438,7 @@ bool U3Misc::GoWhirlPoolCallback1()
 	{
 		m_callbackStack.pop();
 	}
-	
+
 	bool classic;
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 	if (classic)
@@ -5509,7 +5512,7 @@ bool U3Misc::HandleMoonStepCallback()
 			value = GetXYVal(m_xpos, m_ypos);
 		}
 	}
-	
+
 	m_callbackStack.push(std::bind(&U3Misc::HandleMoonStepCallback1, this));
 	InverseTiles(true);
 	m_resources->m_inverses.stayInversed = false;
@@ -5696,4 +5699,83 @@ short U3Misc::ShrineRace(short race)
 		}
 	}
 	return result;
+}
+
+void U3Misc::SpawnMonster() // $7A0C
+{
+	const char              MonTypes[14] = { 24,23,25,20,26,27,13,28,22,14,15,29,30,24 };
+	const char              MonBegin[13] = { 4,4,4,4,4,4,0,4,4,0,0,4,4 };
+	bool allFirst;
+	long hpmax;
+	short type, chnum;
+	if (m_Party[2] != 0)
+	{
+		return;
+	}
+	int rngNum = m_utilities->getRandom(0, 134);
+	if (rngNum < 128)
+	{
+		return;
+	}
+	for (int offset = 32; offset >= 0; offset--)
+	{
+		if (m_Monsters[offset] != 0)
+		{
+			continue;
+		}
+		allFirst = true;
+		for (chnum = 0; chnum < 4; chnum++)   // is everyone hpmax = 150?
+		{
+			hpmax = m_Player[m_Party[chnum + 6]][28] * 256 + m_Player[m_Party[chnum + 6]][29];
+			if (hpmax > 150)
+			{
+				allFirst = false;
+			}
+		}
+		if (allFirst)
+		{
+			type = m_utilities->getRandom(0, 2); // then only thiefs/orx/skeletons
+		}
+		else
+		{
+			rngNum = m_utilities->getRandom(0, 12);
+			type = m_utilities->getRandom(0, 12);
+			type &= rngNum;
+		}
+		rngNum = m_utilities->getRandom(0, m_mapSize - 1);
+		m_Monsters[offset] = MonTypes[type] * 4;
+		m_Monsters[offset + TILEON] = MonBegin[type];
+		m_Monsters[offset + XMON] = rngNum;
+		if (m_Monsters[offset + XMON] == m_xpos)
+		{
+			m_Monsters[offset] = 0;
+			continue;
+		}
+		rngNum = m_utilities->getRandom(0, m_mapSize - 1);
+		m_Monsters[offset + YMON] = rngNum;
+		if (m_Monsters[offset + YMON] == m_xpos)
+		{
+			m_Monsters[offset] = 0;
+			continue;
+		}
+		if (GetXYVal(m_Monsters[offset + XMON], m_Monsters[offset + YMON]) != m_Monsters[offset + TILEON])
+		{
+			m_Monsters[offset] = 0;
+			continue;
+		}
+		m_Monsters[offset + HPMON] = 0xC0;
+		unsigned char var = 0;
+		rngNum = m_utilities->getRandom(0, 1);
+		if (rngNum)
+		{
+			var = m_utilities->getRandom(1, 2);
+		}
+		m_Monsters[offset + VARMON] = var;
+		if (m_Party[15] != 0 && m_Monsters[offset] != 0x3C)
+		{
+			m_Monsters[offset + HPMON] = 0x40;
+		}
+		PutXYVal(m_Monsters[offset], m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
+		break;
+	}
 }

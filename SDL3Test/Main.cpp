@@ -918,6 +918,7 @@ void Game()
     m_misc->m_Player[4][32] = 0;*/
     //m_misc->m_xpos = 10;
     //m_misc->m_ypos = 10;
+    m_misc->m_Player[1][14] = 0xFF;
     m_misc->m_Player[1][15] = 50;
     m_misc->m_Player[1][37] = 50;
 

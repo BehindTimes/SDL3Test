@@ -4566,13 +4566,13 @@ void U3Misc::Yell(short mode)
 		OtherCommand(1);
 		return;
 	}
-	if (!m_YellStat)
+	if (m_YellStat)
 	{
 		NoEffect();
 		return;
 	}
 
-	chnum = mode - 1;
+	chnum = mode - 2;
 	rosNum = m_Party[6 + chnum];
 	if ((m_Player[rosNum][14] & 0x40) == 0)
 	{
@@ -4594,7 +4594,15 @@ void U3Misc::Yell(short mode)
 		return;
 	}
 	m_ypos = oy;
-	ClearTiles();
+	m_resources->m_inverses.color.r = 0;
+	m_resources->m_inverses.color.g = 0;
+	m_resources->m_inverses.color.b = 0;
+	m_resources->m_inverses.color.a = 255;
+	m_resources->m_inverses.fill = true;
+	m_resources->m_inverses.elapsedTileTime = 0;
+	m_resources->m_inverses.inverseTileTime = 1000;
+	m_resources->setInversed(true);
+	m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 }
 
 void U3Misc::ClearTiles()

@@ -1818,7 +1818,7 @@ void U3Resources::DrawMoongates()
 		std::string strX;
 		strX += (char)m_misc->m_gMoonDisp[0];
 		std::string strY;
-		strY += (char)m_misc->m_gMoonDisp[0];
+		strY += (char)m_misc->m_gMoonDisp[1];
 		UPrint(strX, 10, 0, true);
 		UPrint(strY, 13, 0, true);
 	}
@@ -1845,8 +1845,8 @@ void U3Resources::DrawMoongates()
 		std::string strY = std::string("(");
 		strY += (char)m_misc->m_gMoonDisp[1] + std::string(")");
 
-		m_graphics->DrawFramePiece(34 + (m_misc->m_gMoonDisp[0] - '0'), 8, 0);
-		m_graphics->DrawFramePiece(42 + (m_misc->m_gMoonDisp[1] - '0'), 12, 0);
+		m_graphics->DrawFramePiece(33 + (m_misc->m_gMoonDisp[0] - '0'), 8, 0);
+		m_graphics->DrawFramePiece(41 + (m_misc->m_gMoonDisp[1] - '0'), 12, 0);
 
 		int xPos = (int)(10.5f * m_blockSize);
 		int yPos = (int)(14.5f * m_blockSize);

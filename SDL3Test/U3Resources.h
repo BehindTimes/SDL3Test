@@ -235,6 +235,7 @@ public:
 	bool m_fullUpdate;
 	std::vector< U3Button> m_zstatbuttons;
 	U3Preferences m_preferences;
+	std::vector<std::array<unsigned char, 200>> m_cons_data;
 
 private:
 	void LoadResource(std::string strFile);
@@ -248,6 +249,7 @@ private:
 	void loadButtons();
 	bool loadDemo();
 	bool loadPLists();
+	bool loadCons();
 
 	void HideMonsters();
 	void ShowMonsters();

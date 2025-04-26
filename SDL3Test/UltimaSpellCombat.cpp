@@ -5,6 +5,7 @@
 #include "U3Resources.h"
 #include "U3Utilities.h"
 #include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
@@ -15,9 +16,99 @@ extern std::unique_ptr<U3Graphics> m_graphics;
 
 void UltimaSpellCombat::Combat()
 {
+    unsigned char monhpstart[16] = { 0x20, 0x20, 0xF0, 0xF0, 0xC0, 0x60, 0xA0, 0x80, 0x30, 0x50, 0x70, 0xA0, 0xC0, 0xE0, 0xF0, 0xF0 };
     m_scrollArea->blockPrompt(true);
     m_graphics->m_lastMode = m_graphics->m_curMode;
     m_graphics->m_queuedMode = U3GraphicsMode::Combat;
+
+    m_g5521 = m_g56E7 = 0;
+
+    for (short mon = 31; mon >= 0; mon--)
+    {
+        if (m_misc->m_Monsters[mon] == 0x4C || m_misc->m_Monsters[mon] == 0x48)
+        {
+            m_misc->m_Monsters[mon + HPMON] = 0xC0;
+        }
+    }
+    m_scrollArea->UPrintMessage(133);
+    short numMon = HowMany();
+    PrintMonster(m_misc->m_gMonType, (numMon > 0), m_misc->m_gMonVarType);
+    m_scrollArea->UPrintWin("\n\n");
+    GetScreen(BackGround(m_misc->m_gMonType));
+    m_g835E = m_misc->m_Party[2];
+    m_misc->m_Party[2] = 0x80;
+    short health;
+    short mon;
+
+    for (short chnum = m_misc->m_Party[1] - 1; chnum >= 0; chnum--)
+    {
+        health = m_misc->m_Player[m_misc->m_Party[6 + chnum]][17];
+        if (health == 'G' || health == 'P')
+        {
+            m_misc->m_CharShape[chnum] = DetermineShape(m_misc->m_Player[m_misc->m_Party[6 + chnum]][23]);
+            m_misc->m_CharTile[chnum] = m_misc->GetXYTile(m_misc->m_CharX[chnum], m_misc->m_CharY[chnum]);
+            m_misc->PutXYTile(m_misc->m_CharShape[chnum], m_misc->m_CharX[chnum], m_misc->m_CharY[chnum]);
+        }
+        else
+        {
+            m_misc->m_CharX[chnum] = 0xFF;
+            m_misc->m_CharY[chnum] = 0xFF;
+        }
+        for (mon = 7; mon >= 0; mon--)
+        {
+            m_misc->m_MonsterHP[mon] = 0;
+        }
+        while (numMon >= 0)
+        {
+            mon = m_utilities->getRandom(0, 7);
+            if (m_misc->m_MonsterHP[mon] == 0)
+            {
+                health = (m_misc->m_gMonType / 2) & 0x0F;
+                int rngVal = m_utilities->getRandom(0, monhpstart[health]);
+                m_misc->m_MonsterHP[mon] = rngVal | 0x0F;
+                m_misc->m_MonsterTile[mon] = m_misc->GetXYTile(m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
+                unsigned char tileValue = (unsigned char)m_misc->m_gMonType;
+                if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
+                {
+                    tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
+                }
+                m_misc->PutXYTile(tileValue, m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
+                numMon--;
+            }
+        }
+    }
+
+}
+
+void UltimaSpellCombat::GetScreen(short resid)
+{
+    memcpy(m_resources->m_TileArray, m_resources->m_cons_data[resid].data(), sizeof(unsigned char) * 121);
+    memcpy(m_misc->m_MonsterX, m_resources->m_cons_data[resid].data() + 0x80, sizeof(unsigned char) * 8);
+    memcpy(m_misc->m_MonsterY, m_resources->m_cons_data[resid].data() + 0x88, sizeof(unsigned char) * 8);
+    memcpy(m_misc->m_MonsterTile, m_resources->m_cons_data[resid].data() + 0x90, sizeof(unsigned char) * 8);
+    memcpy(m_misc->m_MonsterHP, m_resources->m_cons_data[resid].data() + 0x98, sizeof(unsigned char) * 8);
+    memcpy(m_misc->m_CharX, m_resources->m_cons_data[resid].data() + 0xA0, sizeof(unsigned char) * 4);
+    memcpy(m_misc->m_CharY, m_resources->m_cons_data[resid].data() + 0xA4, sizeof(unsigned char) * 4);
+    memcpy(m_misc->m_CharTile, m_resources->m_cons_data[resid].data() + 0xA8, sizeof(unsigned char) * 4);
+    memcpy(m_misc->m_CharShape, m_resources->m_cons_data[resid].data() + 0xAC, sizeof(unsigned char) * 4);
+}
+
+void UltimaSpellCombat::drawCombat()
+{
+    SDL_FRect theRect;
+
+    if (!m_graphics->m_texMap)
+    {
+        return;
+    }
+
+    theRect.x = (float)m_resources->m_blockSize;
+    theRect.y = (float)m_resources->m_blockSize;
+    theRect.w = (float)m_resources->m_blockSize * 22;
+    theRect.h = (float)m_resources->m_blockSize * 22;
+    m_resources->adjustRect(theRect);
+    SDL_RenderTexture(m_resources->m_renderer, m_graphics->m_texMap, NULL, &theRect);
+    m_resources->DrawTiles();
 }
 
 
@@ -30,7 +121,8 @@ UltimaSpellCombat::UltimaSpellCombat() :
     m_g835E(0),
     m_g5521(0),
     m_chNum(0),
-    m_damage(0)
+    m_damage(0),
+    m_g56E7(0)
 {
 }
 
@@ -42,6 +134,24 @@ void UltimaSpellCombat::Incap()
 void UltimaSpellCombat::Failed() // $586E
 {
     m_scrollArea->UPrintMessage(86);
+}
+
+/* monster name depended upon player's x and y location.
+even y locations contain the normal name (Thief, Orc, Skeleton, Giant ...)
+odd y locations indicate a variant.
+if x is even, it's variant one (Brigand, Goblin, Ghoul, Golem ...)
+if x is odd, it's variant two (Cutpurse, Troll, Zombie, Titan ...)
+*/
+void UltimaSpellCombat::PrintMonster(short which, bool plural, char variant) // $8457
+{
+    if (which > 44 && variant > 0)   // Ö2 = >23
+    {
+        m_misc->PrintTile((which - 46) + 63 + variant, plural);
+    }
+    else
+    {
+        m_misc->PrintTile(which / 2, plural);
+    }
 }
 
 unsigned char UltimaSpellCombat::GetXYDng(short x, short y)
@@ -272,6 +382,96 @@ unsigned char UltimaSpellCombat::ExodusCastle() // $6F43
         return 0xFF;
     }
     return 0;    // In Exodus Castle!
+}
+
+unsigned char UltimaSpellCombat::HowMany() // $80DE
+{
+    if (m_misc->m_gMonType == 0x26)
+    {
+        return 0;
+    }
+    if (m_misc->m_gMonType == 0x24)
+    {
+        return 7;
+    }
+    if (ExodusCastle() == 0)
+    {
+        return 7;
+    }
+    int rngNum = m_utilities->getRandom(0, 7);
+    if (m_misc->m_Party[2] < 2)
+    {
+        return rngNum;    // Party[2]'s were g835E, which wasn't set yet!
+    }
+    if (m_misc->m_Party[2] > 3)
+    {
+        return rngNum;
+    }
+    return 0;
+}
+
+short UltimaSpellCombat::BackGround(short montype) // A, +1=B, +2=C, +3=F, +4=G, +5=M, +6=Q, +7=R, +8=S
+{
+    short tile;
+    if (m_misc->m_Party[2] == 1)
+    {
+        return 2;
+    }
+    if (montype == 0x10)
+    {
+        return 2;    // fighting floor on floor
+    }
+    if (montype == 0x02)
+    {
+        return 4;    // fighting grass on grass [pass the bong!]
+    }
+    if (montype == 0x1E)       // Frigate filled with
+    {
+        m_misc->m_gMonType = 0x2E;    // Thieves
+        if (m_misc->m_Party[0] == 0x16)
+        {
+            return 8;
+        }
+        return 0;
+    }
+    if (m_misc->m_Party[0] == 0x16)
+    {
+        if (montype < 0x20)
+        {
+            return 6;
+        }
+        return 7;
+    }
+    if ((montype < 0x20) && (montype > 0x14))
+    {
+        return 5;
+    }
+    tile = m_misc->GetXYVal(m_misc->m_xpos, m_misc->m_ypos) / 2;
+    if (tile == 0x02)
+    {
+        return 4;
+    }
+    if (tile == 0x04)
+    {
+        return 1;
+    }
+    if (tile == 0x06)
+    {
+        return 3;
+    }
+    if (tile == 0x10)
+    {
+        return 2;
+    }
+    if (tile == 0x40)
+    {
+        return 2;
+    }
+    if (tile == 0x42)
+    {
+        return 2;
+    }
+    return 4;
 }
 
 void UltimaSpellCombat::Flashriek() // $5885

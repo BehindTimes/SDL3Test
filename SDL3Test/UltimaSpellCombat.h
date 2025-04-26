@@ -16,6 +16,7 @@ public:
 	unsigned char ExodusCastle();
 	void Spell(short chnum, short spellnum);
 	void Combat();
+	void drawCombat();
 
 	unsigned char m_g5521;
 private:
@@ -28,12 +29,17 @@ private:
 	bool BigDeathCallback2();
 	void DamageMonster(short which, short damage, short chnum);
 	void AddExp(short chnum, short amount);
+	short BackGround(short montype);
+	unsigned char HowMany();
+	void PrintMonster(short which, bool plural, char variant);
+	void GetScreen(short resid);
 
 	unsigned char m_hitType;
 	unsigned char m_origValue;
 	short m_x;
 	short m_y;
 	unsigned char m_g835E;
+	unsigned char m_g56E7;
 
 	short m_chNum;
 	short m_damage;

@@ -1015,7 +1015,7 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     {
         m_dungeon->DngInfo();
     }
-
+    m_spellCombat->drawCombat();
 }
 
 void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)

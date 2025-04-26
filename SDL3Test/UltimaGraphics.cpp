@@ -932,7 +932,7 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade)
             {
                 m_forceRedraw = true;
                 m_curMode = U3GraphicsMode::Map;
-                m_scrollArea->blockPrompt(false);
+                //m_scrollArea->blockPrompt(false);
                 m_scrollArea->UPrintWin("\n");
                 m_misc->m_inputType = InputType::Default;
                 m_misc->SafeExodus();
@@ -970,7 +970,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
     {
         m_forceRedraw = true;
          m_curMode = U3GraphicsMode::Map;
-        m_scrollArea->blockPrompt(false);
+        //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }
 }
@@ -993,7 +993,7 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
     {
         m_forceRedraw = true;
         m_curMode = U3GraphicsMode::Dungeon;
-        m_scrollArea->blockPrompt(false);
+        //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }
 }
@@ -1014,6 +1014,74 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     if (m_misc->m_gameMode == GameStateMode::Dungeon)
     {
         m_dungeon->DngInfo();
+    }
+    if (m_spellCombat->m_combatStart)
+    {
+        m_spellCombat->combatstart();
+        m_spellCombat->m_combatStart = false;
+    }
+
+    unsigned char chnum;
+    unsigned char count;
+    std::string dispString;
+
+    if (m_spellCombat->m_newMove)
+    {
+        m_spellCombat->m_newMove = false;
+        chnum = m_spellCombat->m_g835D;
+        m_misc->InverseChnum(chnum, true);
+
+        if (m_misc->CheckAlive(chnum))
+        {
+            count = 0x2F;
+            m_scrollArea->UPrintMessage(134);
+            dispString = std::to_string(chnum + 1);
+            m_scrollArea->UPrintWin(dispString);
+            m_misc->m_wx++;
+            m_scrollArea->UPrintMessage(135);
+            
+        }
+    }
+
+    if (m_scrollArea->isUpdating() || !m_scrollArea->MessageQueueEmpty())
+    {
+        updateGame = false;
+    }
+    else
+    {
+        while (m_misc->m_callbackStack.size() > 0)
+        {
+            updateGame = false;
+            auto curCallback = m_misc->m_callbackStack.top();
+            bool resumeRendering = curCallback();
+            if (resumeRendering)
+            {
+                // Resume rendering (i.e. we're waiting on a function)
+                break;
+            }
+        }
+    }
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        updateGame = false;
+    }
+
+    if (m_staydead)
+    {
+        updateGame = false;
+    }
+    if (updateGame)
+    {
+        m_scrollArea->blockPrompt(false);
+    }
+    else
+    {
+        m_scrollArea->blockPrompt(true);
+    }
+
+    if (m_scrollArea->isPrompt())
+    {
+        m_resources->DrawPrompt();
     }
     m_spellCombat->drawCombat();
 }
@@ -1055,6 +1123,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
     {
         while (m_misc->m_callbackStack.size() > 0)
         {
+            updateGame = false;
             auto curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
@@ -1077,8 +1146,13 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
 
     if (updateGame)
     {
+        m_scrollArea->blockPrompt(false);
         m_misc->ProcessEvent(event);
         m_resources->updateGameTime(deltaTime);
+    }
+    else
+    {
+        m_scrollArea->blockPrompt(true);
     }
 
     if (m_scrollArea->isPrompt())
@@ -1110,16 +1184,17 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
             m_resources->m_newMove = false;
             m_misc->CheckAllDead();
 
-            if (!m_misc->m_checkDead && m_queuedMode == U3GraphicsMode::None)
+            /*if (!m_misc->m_checkDead && m_queuedMode == U3GraphicsMode::None)
             {
                 m_scrollArea->blockPrompt(false);
-            }
+            }*/
 
             if (m_misc->m_gTorch == 0 && !m_misc->m_checkDead)
             {
                 m_scrollArea->UPrintMessage(150);
-                m_scrollArea->blockPrompt(false);
+                
             }
+            //m_scrollArea->blockPrompt(false);
         }
         //if (!m_misc->m_freezeAnimation)
         {
@@ -1139,6 +1214,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     {
         while (m_misc->m_callbackStack.size() > 0)
         {
+            updateGame = false;
             auto curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
@@ -1159,93 +1235,33 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
         updateGame = false;
     }
 
+    if (m_queuedMode != U3GraphicsMode::None && m_scrollArea->MessageQueueEmpty())
+    {
+        m_curMode = m_queuedMode;
+        m_queuedMode = U3GraphicsMode::None;
+
+        if (m_curMode == U3GraphicsMode::Dungeon)
+        {
+            // This was being placed before the battle started.  In the original version,
+            // they control the graphic updates
+            m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
+        }
+        updateGame = false;
+    }
+
     if (updateGame)
     {
+        m_scrollArea->blockPrompt(false);
         m_misc->ProcessEvent(event);
         m_resources->updateGameTime(deltaTime);
-
-        if (m_queuedMode != U3GraphicsMode::None && m_scrollArea->MessageQueueEmpty())
-        {
-            m_curMode = m_queuedMode;
-            m_queuedMode = U3GraphicsMode::None;
-
-            if (m_curMode == U3GraphicsMode::Dungeon)
-            {
-                // This was being placed before the battle started.  In the original version,
-                // they control the graphic updates
-                m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
-            }
-        }
+    }
+    else
+    {
+        m_scrollArea->blockPrompt(true);
     }
 
     if (m_scrollArea->isPrompt())
     {
         m_resources->DrawPrompt();
     }
-
-    /*if (m_dungeon->m_gExitDungeon)
-    {
-        m_dungeon->Routine6E6B();
-        return;
-    }
-    DrawFrame(1);
-    
-    m_resources->ShowChars(true);
-    if (!m_resources->isInversed())
-    {
-        if (m_resources->m_newMove)
-        {
-            m_resources->m_newMove = false;
-            m_misc->CheckAllDead();
-        }
-    }
-
-    if (m_resources->m_overrideImage >= 0)
-    {
-        m_resources->ImageDisplay();
-        m_resources->DrawInverses(deltaTime);
-    }
-    else
-    {
-        m_dungeon->DrawDungeon();
-        m_resources->DrawInverses(deltaTime);
-    }
-
-    m_scrollArea->render(deltaTime);
-
-    bool alertValid = m_resources->HandleAlert(event);
-    if (!alertValid)
-    {
-        if (!m_staydead)
-        {
-            if (m_misc->m_inputType == InputType::Callback || m_misc->m_inputType == InputType::SleepCallback)
-            {
-                if (!m_scrollArea->isUpdating())
-                {
-                    m_misc->HandleCallback(m_misc->m_inputType == InputType::SleepCallback);
-                }
-            }
-            else
-            {
-                if (!m_scrollArea->isUpdating() && !m_resources->isInversed())
-                {
-                    m_misc->ProcessEvent(event);
-                    if (m_resources->m_wasMove)
-                    {
-                        m_dungeon->dungeonmech();
-                    }
-                    if (m_queuedMode != U3GraphicsMode::None && m_scrollArea->MessageQueueEmpty())
-                    {
-                        m_curMode = m_queuedMode;
-                        m_queuedMode = U3GraphicsMode::None;
-                    }
-                }
-
-                if (m_scrollArea->isPrompt())
-                {
-                    m_resources->DrawPrompt();
-                }
-            }
-        }
-    }*/
 }

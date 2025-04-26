@@ -131,6 +131,7 @@ public:
 	void AddFinishTurn();
 	void WhirlPool();
 	void PrintTile(short tile, bool plural);
+	void InverseChnum(char which, bool value);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -270,8 +271,6 @@ private:
 	void HandleDircetionKeyPress(SDL_Keycode key);
 	void HandleTransactPress(SDL_Keycode key);
 	void PrintMonster(short which, bool plural, char variant);
-	
-	void InverseChnum(char which, bool value);
 	
 	void Shop(short shopNum, short chnum);
 	bool tavernCallback();

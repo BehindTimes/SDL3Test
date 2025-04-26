@@ -171,7 +171,7 @@ public:
 	bool isInversed() { return m_isInversed; }
 	void setInversed(bool isInversed);
 	int GetRealTile(int tilenum);
-	int AlertReturn()
+	int AlertReturn() const
 	{
 		return m_alertReturn;
 	}

@@ -553,7 +553,7 @@ bool U3Misc::CommandEnter()
 		m_scrollArea->UPrintWin(dispString);
 
 		m_inputType = InputType::Transact;
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_callbackStack.push(std::bind(&U3Misc::EnterShrineCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
@@ -724,7 +724,7 @@ bool U3Misc::CommandTransact()
 	m_storedir = 0;
 	m_scrollArea->UPrintMessageRewrapped(88);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::TransactCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 	return false;
@@ -834,11 +834,11 @@ bool U3Misc::TransactCallback2()
 			{
 				m_scrollArea->UPrintMessage(89);
 			}
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return false;
 		}
 		Speak(perNum, m_Monsters[monNum] / 4);
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	m_scrollArea->UPrintMessage(90);
@@ -882,7 +882,7 @@ bool U3Misc::TransactCallback2()
 	m_Player[m_rosNum][29] = hpmax - (m_Player[m_rosNum][28] * 256);
 	m_scrollArea->UPrintMessage(94);
 	InverseTiles(true);
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 
 	return false;
 }
@@ -1182,7 +1182,7 @@ void U3Misc::Stats(short mode, short chnum)
 	{
 		m_scrollArea->UPrintMessage(105);
 		m_inputType = InputType::Transact;
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_callbackStack.push(std::bind(&U3Misc::StatsCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 	}
@@ -1662,7 +1662,7 @@ bool U3Misc::CommandWearArmor()
 	}
 	m_scrollArea->UPrintMessage(100);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::WearArmourCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
@@ -1772,7 +1772,7 @@ bool U3Misc::CommandReadyWeapon()
 	}
 	m_scrollArea->UPrintMessage(79);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::ReadyWeaponCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
@@ -1834,7 +1834,7 @@ bool U3Misc::CommandNegateTime()
 	}
 	m_scrollArea->UPrintMessage(74);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::NegateTimeCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
@@ -1855,7 +1855,7 @@ bool U3Misc::CommandModifyOrder()
 	}
 	m_scrollArea->UPrintMessage(70);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::ModifyOrderCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
@@ -2379,7 +2379,7 @@ bool U3Misc::CommandFire()
 	}
 	else
 	{
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_scrollArea->UPrintMessage(39);
 		m_inputType = InputType::GetDirection;
 		m_callbackStack.push(std::bind(&U3Misc::FireCallback, this));
@@ -2415,7 +2415,7 @@ bool U3Misc::fireloop()
 	{
 		m_callbackStack.pop();
 	}
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_opnum--;
 	if (m_opnum < 1)
 	{
@@ -2513,7 +2513,7 @@ bool U3Misc::CommandCast()
 	}
 	m_scrollArea->UPrintMessage(119);
 	m_inputType = InputType::Transact;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::CastCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 	return false;

@@ -2309,7 +2309,7 @@ void U3Misc::GuildGive(short rosNum, short item, short amount)
 
 void U3Misc::WeaponList()
 {
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_scrollArea->UPrintMessage(237);
 	m_weaponsList.push(1);
 	m_weaponsList.push(2);
@@ -2336,7 +2336,7 @@ void U3Misc::WeaponList()
 
 void U3Misc::ArmorsList()
 {
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_scrollArea->UPrintMessage(237);
 	m_weaponsList.push(1);
 	m_weaponsList.push(2);
@@ -2500,14 +2500,14 @@ bool U3Misc::armorsListCallback()
 void U3Misc::weaponsBuyOrSell()
 {
 	m_scrollArea->UPrintMessage(207);
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	setInputTypeBuySell(std::bind(&U3Misc::weaponsBuySellCallback, this));
 }
 
 void U3Misc::armorsBuyOrSell()
 {
 	m_scrollArea->UPrintMessage(207);
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	setInputTypeBuySell(std::bind(&U3Misc::armorsBuySellCallback, this));
 }
 
@@ -2779,7 +2779,7 @@ bool U3Misc::weaponsBuyCallback()
 			m_scrollArea->UPrintMessage(260);
 			m_scrollArea->UPrintWin("\n\n");
 			m_scrollArea->setInput(false);
-			m_scrollArea->blockPrompt(true);
+			//m_scrollArea->blockPrompt(true);
 			setInputTypeRestricted(std::bind(&U3Misc::weaponsBuyCallback, this), 'B');
 			m_scrollArea->UPrintMessageRewrapped(208);
 			return false;
@@ -2796,7 +2796,7 @@ bool U3Misc::weaponsBuyCallback()
 
 		m_scrollArea->UPrintMessageRewrapped(210);
 		m_scrollArea->setInput(false);
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_input_num = 1;
 		setInputTypeRestricted(std::bind(&U3Misc::weaponsBuyCallback, this), 'B');
 		m_scrollArea->UPrintMessageRewrapped(208);
@@ -2907,7 +2907,7 @@ bool U3Misc::armorsBuyCallback()
 			m_scrollArea->UPrintMessage(260);
 			m_scrollArea->UPrintWin("\n\n");
 			m_scrollArea->setInput(false);
-			m_scrollArea->blockPrompt(true);
+			//m_scrollArea->blockPrompt(true);
 			setInputTypeRestricted(std::bind(&U3Misc::armorsBuyCallback, this), 'B');
 			m_scrollArea->UPrintMessageRewrapped(208);
 			return false;
@@ -2924,7 +2924,7 @@ bool U3Misc::armorsBuyCallback()
 
 		m_scrollArea->UPrintMessageRewrapped(210);
 		m_scrollArea->setInput(false);
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		setInputTypeRestricted(std::bind(&U3Misc::armorsBuyCallback, this), 'B');
 		m_scrollArea->UPrintMessageRewrapped(208);
 	}
@@ -2989,7 +2989,7 @@ void U3Misc::weaponsBuyPoor()
 {
 	m_scrollArea->UPrintMessageRewrapped(209);
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 }
@@ -2998,7 +2998,7 @@ void U3Misc::armorsBuyPoor()
 {
 	m_scrollArea->UPrintMessageRewrapped(209);
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 }
@@ -3007,7 +3007,7 @@ void U3Misc::weaponsSellMissing()
 {
 	m_scrollArea->UPrintMessageRewrapped(212);
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 }
@@ -3016,7 +3016,7 @@ void U3Misc::armorsSellMissing()
 {
 	m_scrollArea->UPrintMessageRewrapped(212);
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 }
@@ -3030,7 +3030,7 @@ bool U3Misc::weaponsBuySellFinishedCallback()
 	}
 
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 	m_scrollArea->UPrintMessageRewrapped(215);
@@ -3046,7 +3046,7 @@ bool U3Misc::armorsBuySellFinishedCallback()
 	}
 
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_scrollArea->setInput(false);
 	InverseChnum(m_transactNum, false);
 	m_scrollArea->UPrintMessageRewrapped(215);
@@ -3079,7 +3079,7 @@ bool U3Misc::healingCallback()
 	default:
 		InverseChnum(m_transactNum, false);
 		m_scrollArea->UPrintWin("\n");
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	m_opnum = m_input_num;
@@ -3113,7 +3113,7 @@ bool U3Misc::healingPayCallback()
 		m_scrollArea->UPrintWin("\n\n");
 		m_scrollArea->UPrintMessageRewrapped(233);
 		InverseChnum(m_transactNum, false);
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 
@@ -3140,7 +3140,7 @@ bool U3Misc::healingPayCallback()
 		m_scrollArea->blockPrompt(false);
 		return false;
 	}
-	m_scrollArea->setInput(true);
+	//m_scrollArea->setInput(true);
 	m_inputType = InputType::Transact;
 	m_callbackStack.push(std::bind(&U3Misc::healingCallback2, this));
 	m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
@@ -3190,7 +3190,7 @@ bool U3Misc::FinalizeHealingCallback()
 	default:
 		break;
 	}
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	InverseChnum(m_transactNum, false);
 	return false;
 }
@@ -3591,7 +3591,7 @@ bool U3Misc::PeerGemCallback()
 	}
 	else
 	{
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_scrollArea->UPrintWin(strRosNum);
 		m_Player[rosnum][37]--;
 		m_scrollArea->forceRedraw();
@@ -3827,7 +3827,7 @@ void U3Misc::CheckAllDead() // $71B4
 		m_checkDead = true;
 		m_wx = 25;
 		m_wy = 23;
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_scrollArea->UPrintMessage(109);    // ALL PLAYERS OUT!
 		m_resources->m_overrideImage = -1;
 
@@ -3989,7 +3989,7 @@ bool U3Misc::ResurrectCallback()
 	m_gTimeNegate = 0;
 
 	m_scrollArea->UPrintWin("\n\n\n\n\n\n\n\n");
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	m_checkDead = false;
 	m_resources->m_elapsedMoveTime = 0;
 	//m_graphics->m_curMode = U3GraphicsMode::Map;
@@ -4279,7 +4279,7 @@ bool U3Misc::InsertCallback1()
 	m_lastCard++;
 	m_gBallTileBackground = 0x3E; // Exodus
 
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback1, this));
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback, this));
@@ -4334,7 +4334,7 @@ bool U3Misc::ExodusDieCallback1()
 
 	if (m_lastCard != 0x22)
 	{
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 
@@ -4647,7 +4647,7 @@ void U3Misc::Yell(short mode)
 
 void U3Misc::ClearTiles()
 {
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_resources->m_inverses.color.r = 0;
 	m_resources->m_inverses.color.g = 0;
 	m_resources->m_inverses.color.b = 0;
@@ -4672,7 +4672,7 @@ void U3Misc::GetChest(short spell, short chnum)
 	{
 		m5BDC = true;
 		m_scrollArea->UPrintMessage(40);
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_inputType = InputType::Transact;
 		m_callbackStack.push(std::bind(&U3Misc::GetChestCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
@@ -4690,7 +4690,7 @@ bool U3Misc::GetChestCallback()
 	if (m_input_num < 0 || m_input_num > 3)
 	{
 		m_scrollArea->UPrintWin("\n");
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
@@ -4699,13 +4699,13 @@ bool U3Misc::GetChestCallback()
 	{
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	if (CheckAlive(m_input_num) == false)
 	{
 		m_scrollArea->UPrintMessage(126);
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 
@@ -4726,7 +4726,7 @@ void U3Misc::GetChest1(short chnum)
 		if ((tile < 0x24) || (tile > 0x27)) // izzit not a chest?
 		{
 			NotHere();
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return;
 		}
 		tile = (tile & 0x3) * 4;
@@ -4741,7 +4741,7 @@ void U3Misc::GetChest1(short chnum)
 		if (m_spellCombat->GetXYDng(m_xpos, m_ypos) != 0x40)
 		{
 			NotHere();
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return;
 		}
 		m_spellCombat->PutXYDng(0, m_xpos, m_ypos);
@@ -4812,7 +4812,7 @@ void U3Misc::GetChest1(short chnum)
 		{
 			BombTrap();
 			m_dungeon->setForceRedraw();
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return;
 		}
 		break;
@@ -4934,7 +4934,7 @@ void U3Misc::GetChestBooty()
 	int rngNum = m_utilities->getRandom(0, 255);
 	if (rngNum > 63)
 	{
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 		return;
 	}
 	wpn = m_utilities->getRandom(0, 255);
@@ -4952,7 +4952,7 @@ void U3Misc::GetChestBooty()
 
 			m_scrollArea->UPrintWin(str1);
 			AddItem(m_rosNum, 48 + wpn, 1);
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return;
 		}
 	}
@@ -4971,11 +4971,11 @@ void U3Misc::GetChestBooty()
 
 			m_scrollArea->UPrintWin(str1);
 			AddItem(m_rosNum, 40 + arm, 1);
-			m_scrollArea->blockPrompt(false);
+			//m_scrollArea->blockPrompt(false);
 			return;
 		}
 	}
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 }
 
 void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
@@ -5018,7 +5018,7 @@ void U3Misc::AgeChars() // $7470
 	}
 
 	m_chNum = 3;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_freezeAnimation = true;
 	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::AgeCallback, this));
@@ -5037,7 +5037,7 @@ bool U3Misc::EndTurnCallback()
 
 	if (m_graphics->m_queuedMode != U3GraphicsMode::None)
 	{
-		m_scrollArea->blockPrompt(true);
+		//m_scrollArea->blockPrompt(true);
 		m_graphics->m_curMode = m_graphics->m_queuedMode;
 
 		if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)
@@ -5050,7 +5050,7 @@ bool U3Misc::EndTurnCallback()
 	}
 	else
 	{
-		m_scrollArea->blockPrompt(false);
+		//m_scrollArea->blockPrompt(false);
 	}
 
 	return false;
@@ -5374,7 +5374,7 @@ void U3Misc::GoWhirlPool() // 772D
 	m_elapsedSleepTime = 0;
 	m_sleepCheckTime = whirlpool_time;
 	m_inputType = InputType::SleepCallback;
-	m_scrollArea->blockPrompt(true);
+	//m_scrollArea->blockPrompt(true);
 	m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
 }
@@ -5479,7 +5479,7 @@ bool U3Misc::GoWhirlPoolCallback2()
 	}
 	m_scrollArea->UPrintMessage(115);
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	return false;
 }
 
@@ -5501,7 +5501,7 @@ bool U3Misc::GoWhirlPoolCallback1()
 		m_scrollArea->UPrintMessageRewrapped(258);
 	}
 	m_inputType = InputType::Default;
-	m_scrollArea->blockPrompt(false);
+	//m_scrollArea->blockPrompt(false);
 	return false;
 }
 

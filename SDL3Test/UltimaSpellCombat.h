@@ -17,8 +17,12 @@ public:
 	void Spell(short chnum, short spellnum);
 	void Combat();
 	void drawCombat();
+	void combatstart();
 
 	unsigned char m_g5521;
+	unsigned char m_g835D;
+	bool m_newMove;
+	bool m_combatStart;
 private:
 	void Failed();
 	bool ShowHitCallback();

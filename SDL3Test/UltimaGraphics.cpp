@@ -6,6 +6,7 @@
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
 #include "U3ScrollArea.h"
+#include "UltimaSpellCombat.h"
 #include "UltimaDungeon.h"
 
 extern short blkSiz;
@@ -14,6 +15,7 @@ extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
+extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 
 U3Graphics::U3Graphics() :
     m_startTickCount(0),
@@ -21,6 +23,7 @@ U3Graphics::U3Graphics() :
     m_curMode(U3GraphicsMode::Map),
     m_texMap(nullptr),
     m_queuedMode(U3GraphicsMode::None),
+    m_lastMode(U3GraphicsMode::None),
     m_blockSize(0),
     m_forceRedraw(true),
     m_fading(true),
@@ -834,6 +837,9 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
 {
     switch (m_curMode)
     {
+    case U3GraphicsMode::Combat:
+        renderCombat(event, deltaTime);
+        break;
     case U3GraphicsMode::Map:
         renderGameMap(event, deltaTime);
         break;
@@ -992,6 +998,26 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
     }
 }
 
+void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
+{
+    m_misc->m_currentEvent = event;
+    DrawFrame(1);
+    m_resources->ShowChars(true);
+    m_resources->DrawInverses(deltaTime);
+    m_scrollArea->render(deltaTime);
+    bool updateGame = true;
+
+    if (m_misc->m_gameMode == GameStateMode::Map)
+    {
+        DrawMoonGateStuff();
+    }
+    if (m_misc->m_gameMode == GameStateMode::Dungeon)
+    {
+        m_dungeon->DngInfo();
+    }
+
+}
+
 void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
 {
     m_misc->m_currentEvent = event;
@@ -1079,9 +1105,15 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     {
         if (m_resources->m_newMove)
         {
+            m_dungeon->setForceRedraw();
             //m_scrollArea->blockPrompt(false);
             m_resources->m_newMove = false;
             m_misc->CheckAllDead();
+
+            if (!m_misc->m_checkDead && m_queuedMode == U3GraphicsMode::None)
+            {
+                m_scrollArea->blockPrompt(false);
+            }
 
             if (m_misc->m_gTorch == 0 && !m_misc->m_checkDead)
             {
@@ -1136,6 +1168,13 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
         {
             m_curMode = m_queuedMode;
             m_queuedMode = U3GraphicsMode::None;
+
+            if (m_curMode == U3GraphicsMode::Dungeon)
+            {
+                // This was being placed before the battle started.  In the original version,
+                // they control the graphic updates
+                m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
+            }
         }
     }
 

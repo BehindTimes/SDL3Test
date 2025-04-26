@@ -18,7 +18,8 @@ enum class U3GraphicsMode
 	PauseScreen,
 	BlackScreen,
 	WinScreen,
-	Dungeon
+	Dungeon,
+	Combat
 };
 
 enum class OrganizeBottomScreen
@@ -70,6 +71,7 @@ public:
 
 	unsigned char m_maskRestoreArray[128];
 	unsigned char m_maskArray[128];
+	U3GraphicsMode m_lastMode;
 	U3GraphicsMode m_curMode;
 	U3GraphicsMode m_queuedMode;
 	Uint64 m_winElapsed;
@@ -84,6 +86,7 @@ private:
 	void renderMiniMap();
 	void renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime);
 	void DrawMoonGateStuff();
+	void renderCombat(SDL_Event event, Uint64 deltaTime);
 	void renderGameMap(SDL_Event event, Uint64 deltaTime);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
 	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade);

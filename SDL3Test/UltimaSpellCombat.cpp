@@ -4,15 +4,20 @@
 #include "UltimaDungeon.h"
 #include "U3Resources.h"
 #include "U3Utilities.h"
+#include "UltimaGraphics.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
+extern std::unique_ptr<U3Graphics> m_graphics;
 
 void UltimaSpellCombat::Combat()
 {
+    m_scrollArea->blockPrompt(true);
+    m_graphics->m_lastMode = m_graphics->m_curMode;
+    m_graphics->m_queuedMode = U3GraphicsMode::Combat;
 }
 
 

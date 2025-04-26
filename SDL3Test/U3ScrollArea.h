@@ -52,8 +52,6 @@ public:
 	bool isPrompt();
 	void setInputString(std::string strValue);
 	void blockPrompt(bool block);
-	void stashPrompt();
-	void popPrompt();
 	float m_top;
 	float m_maxTop;
 private:

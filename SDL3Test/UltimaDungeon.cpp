@@ -511,9 +511,6 @@ void UltimaDungeon::DngInfo()
 {
     m_graphics->DrawFramePiece(12, 8, 0);
     m_graphics->DrawFramePiece(13, 15, 0);
-    m_graphics->DrawFramePiece(12, 6, 23);
-    m_graphics->DrawFramePiece(13, 17, 23);
-    m_graphics->DrawFramePiece(10, 5, 23);
     m_graphics->DrawFramePiece(10, 7, 0);
     m_graphics->DrawFramePiece(10, 16, 0);
 
@@ -529,39 +526,46 @@ void UltimaDungeon::DngInfo()
 	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 255);
 	SDL_RenderFillRect(m_resources->m_renderer, &myRect);
 
-	myRect.x = (float)(7 * m_resources->m_blockSize);
-	myRect.y = (float)(23 * m_resources->m_blockSize);
-	myRect.w = (float)(10 * m_resources->m_blockSize);
-	m_resources->adjustRect(myRect);
-	SDL_RenderFillRect(m_resources->m_renderer, &myRect);
-
 	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 
 	std::string dispString = m_resources->m_plistMap["MoreMessages"][47];
 	dispString += std::to_string(m_dungeonLevel + 1);
 
 	m_resources->renderString(dispString, 9, 0);
-	dispString = m_resources->m_plistMap["MoreMessages"][48];
-	m_resources->renderString(dispString, 7, 23);
-	std::string strHeading;
-	switch (m_misc->m_heading)
+
+	if (m_graphics->m_curMode != U3GraphicsMode::Combat)
 	{
-	case 0:
-		strHeading = m_resources->m_plistMap["MoreMessages"][49];
-		break;
-	case 1:
-		strHeading = m_resources->m_plistMap["MoreMessages"][50];
-		break;
-	case 2:
-		strHeading = m_resources->m_plistMap["MoreMessages"][51];
-		break;
-	case 3:
-		strHeading = m_resources->m_plistMap["MoreMessages"][52];
-		break;
-	default:
-		break;
+		m_graphics->DrawFramePiece(12, 6, 23);
+		m_graphics->DrawFramePiece(13, 17, 23);
+
+		myRect.x = (float)(7 * m_resources->m_blockSize);
+		myRect.y = (float)(23 * m_resources->m_blockSize);
+		myRect.w = (float)(10 * m_resources->m_blockSize);
+		m_resources->adjustRect(myRect);
+		SDL_RenderFillRect(m_resources->m_renderer, &myRect);
+
+		dispString = m_resources->m_plistMap["MoreMessages"][48];
+		m_resources->renderString(dispString, 7, 23);
+		std::string strHeading;
+		switch (m_misc->m_heading)
+		{
+		case 0:
+			strHeading = m_resources->m_plistMap["MoreMessages"][49];
+			break;
+		case 1:
+			strHeading = m_resources->m_plistMap["MoreMessages"][50];
+			break;
+		case 2:
+			strHeading = m_resources->m_plistMap["MoreMessages"][51];
+			break;
+		case 3:
+			strHeading = m_resources->m_plistMap["MoreMessages"][52];
+			break;
+		default:
+			break;
+		}
+		m_resources->renderString(strHeading, 12, 23);
 	}
-	m_resources->renderString(strHeading, 12, 23);
 }
 
 void UltimaDungeon::Chunk2() // $183A
@@ -1087,7 +1091,6 @@ bool UltimaDungeon::CommandForward()
 	}
 	m_misc->m_xpos = m_misc->m_xs;
 	m_misc->m_ypos = m_misc->m_ys;
-	m_forceRedraw = true;
 
 	return false;
 }
@@ -1117,7 +1120,6 @@ bool UltimaDungeon::CommandRetreat()
 	}
 	m_misc->m_xpos = m_misc->m_xs;
 	m_misc->m_ypos = m_misc->m_ys;
-	m_forceRedraw = true;
 
 	return false;
 }
@@ -1142,7 +1144,6 @@ bool UltimaDungeon::CommandLeft()
 	{
 		m_misc->m_heading += 4;
 	}
-	m_forceRedraw = true;
 
 	return false;
 }
@@ -1167,7 +1168,6 @@ bool UltimaDungeon::CommandRight()
 	{
 		m_misc->m_heading -= 4;
 	}
-	m_forceRedraw = true;
 
 	return false;
 }
@@ -1231,7 +1231,6 @@ bool UltimaDungeon::CommandKlimb() // $8EF1
 	m_dungeonLevel--;
 	if (m_dungeonLevel >= 0 && m_dungeonLevel < 8)
 	{
-		m_forceRedraw = true;
 		return false;
 	}
 	m_dungeonLevel = 0;
@@ -1264,7 +1263,6 @@ bool UltimaDungeon::CommandDescend() // $8F0C
 		return false;
 	}
 	m_dungeonLevel++;
-	m_forceRedraw = true;
 	return false;
 }
 
@@ -1452,8 +1450,7 @@ bool UltimaDungeon::FinishAge()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	m_forceRedraw = true;
-
+	
 	m_resources->m_newMove = true;
 	m_misc->m_wx = 0x18;
 	m_misc->m_wy = 0x17;
@@ -1481,7 +1478,6 @@ bool UltimaDungeon::FinishAge()
 	}
 	value += 0x18;
 	m_misc->m_gMonType = value * 2;
-	m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
 	m_spellCombat->Combat();
 
 	return false;

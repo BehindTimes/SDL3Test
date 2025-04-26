@@ -138,7 +138,7 @@ bool DoSplashScreen()
     return true;
 }
 
-void CreateButtonCallbacks()
+static void CreateButtonCallbacks()
 {
     m_resources->SetButtonCallback(3, createCharacterChooseSlot);
     m_resources->SetButtonCallback(4, terminateCharacter);
@@ -212,25 +212,25 @@ void MainLoop()
     }
 }
 
-void returnToView([[maybe_unused]]int button)
+static void returnToView([[maybe_unused]]int button)
 {
     changeMode = true;
     newMode = GameMode::Demo;
 }
 
-void organizeParty([[maybe_unused]] int button)
+static void organizeParty([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::Organize;
 }
 
-void changeOptions([[maybe_unused]] int button)
+static void changeOptions([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::Options;
 }
 
-void journeyOnward([[maybe_unused]] int button)
+static void journeyOnward([[maybe_unused]] int button)
 {
     changeMode = true;
     newMode = GameMode::JourneyOnward;
@@ -1036,7 +1036,8 @@ void updateGame(Uint64 deltaTime)
         count = 0;
     }
 
-    if (m_graphics->m_curMode == U3GraphicsMode::Map)
+    if (m_graphics->m_curMode == U3GraphicsMode::Map ||
+        m_graphics->m_curMode == U3GraphicsMode::Combat)
     {
         m_resources->updateTime(deltaTime);
     }

@@ -217,7 +217,7 @@ U3Resources::~U3Resources()
 
 	CleanupPartyNames();
 
-	for (auto mode : m_allGraphics)
+	for (auto& mode : m_allGraphics)
 	{
 		if (mode.second.font)
 		{
@@ -411,7 +411,7 @@ U3Resources::~U3Resources()
 	TTF_Quit();
 }
 
-void U3Resources::displayFPS(int fps)
+void U3Resources::displayFPS(int fps) const
 {
 	std::string strFPS = std::to_string(fps);
 
@@ -430,7 +430,7 @@ void U3Resources::CreateAlertMessage(int message, DialogType type)
 		m_blockSize, message, type, std::bind(&U3Resources::AlertCallback, this));
 }
 
-void U3Resources::GetPreference(U3PreferencesType type, bool& value)
+void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 {
 	switch (type)
 	{
@@ -1204,7 +1204,7 @@ void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
 	float xSize;
 	float ySize;
 
-	curGraphics.mini_tiles.resize(MINITILES_NUM_X * MINITILES_NUM_Y);
+	curGraphics.mini_tiles.resize(static_cast<size_t>(MINITILES_NUM_X) * MINITILES_NUM_Y);
 
 	SDL_Texture* curTexture = nullptr;
 
@@ -1214,7 +1214,7 @@ void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
 	float tileXSize = xSize / MINITILES_NUM_X;
 	float tileYSize = ySize / MINITILES_NUM_Y;
 
-	for (size_t index = 0; index < MINITILES_NUM_X * MINITILES_NUM_Y; ++index)
+	for (size_t index = 0; index < static_cast<size_t>(MINITILES_NUM_X) * MINITILES_NUM_Y; ++index)
 	{
 		curGraphics.mini_tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 10, 10);
 		SDL_SetTextureScaleMode(curGraphics.mini_tiles[index], SDL_SCALEMODE_NEAREST);
@@ -1250,8 +1250,8 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	float xSize;
 	float ySize;
 
-	curGraphics.tiles.resize(TILES_NUM_X * TILES_NUM_Y);
-	curGraphics.tile_target.resize(TILES_NUM_X * TILES_NUM_Y);
+	curGraphics.tiles.resize(static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y);
+	curGraphics.tile_target.resize(static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y);
 
 	SDL_Texture* curTexture = nullptr;
 
@@ -1267,7 +1267,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	int tempHeight = 128;
 	curGraphics.tiles_width = (float)tempWidth;
 	curGraphics.tiles_height = (float)tempHeight;
-	for (size_t index = 0; index < TILES_NUM_X * TILES_NUM_Y; ++index)
+	for (size_t index = 0; index < static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y; ++index)
 	{
 		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
 		curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
@@ -1384,7 +1384,7 @@ void U3Resources::loadGraphics()
 
 			if (numX > 0 && numY > 0)
 			{
-				SDL_FPoint size;
+				SDL_FPoint size(0);
 				SDL_GetTextureSize(*curTexture, &size.x, &size.y);
 				*xSize = size.x / numX;
 				*ySize = size.y / numY;
@@ -1402,12 +1402,13 @@ void U3Resources::adjustRect(SDL_FRect& myRect)
 int U3Resources::renderString(std::string curString, int x, int y, bool autoadjust, int offsetX, int offsetY, bool pretty_print)
 {
 	SDL_Color sdl_text_color = { 255, 255, 255 };
-	SDL_FRect frameRect, myRect;
+	SDL_FRect frameRect(0);
+	SDL_FRect myRect(0);
 	int text_extent = 0;
 
 	if (m_preferences.classic_appearance)
 	{
-		text_extent = (int)((x * m_blockSize) + (m_blockSize * curString.size()) + offsetX);
+		text_extent = (int)((static_cast<size_t>(x) * m_blockSize) + (m_blockSize * curString.size()) + offsetX);
 
 		for (size_t index = 0; index < curString.size(); ++index)
 		{
@@ -1498,7 +1499,7 @@ int U3Resources::renderString(std::string curString, int x, int y, bool autoadju
 
 			if (autoadjust)
 			{
-				text_extent = (int)(x * m_blockSize + screenOffsetX + tempOffset + offsetX + w);
+				text_extent = (int)(static_cast<size_t>(x) * m_blockSize + screenOffsetX + tempOffset + offsetX + w);
 				TTF_DrawRendererText(text_obj, (float)x * m_blockSize + screenOffsetX + tempOffset + offsetX, (float)y * m_blockSize + screenOffsetY + offsetY);
 			}
 			else
@@ -1560,7 +1561,7 @@ void U3Resources::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Colo
 	}
 }
 
-void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align, bool autoadjust)
+void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align, bool autoadjust) const
 {
 	TTF_Text* text_obj = NULL;
 	text_obj = TTF_CreateText(engine_surface, font, curString.c_str(), 0);
@@ -1612,7 +1613,7 @@ void U3Resources::renderDisplayString(TTF_Font* font, std::string curString, int
 	}
 }
 
-int U3Resources::getTextWidth(std::string str)
+int U3Resources::getTextWidth(std::string str) const
 {
 	int w, h;
 	TTF_Text* text_obj = NULL;
@@ -1631,7 +1632,8 @@ int U3Resources::getTextWidth(std::string str)
 
 void U3Resources::DrawFramePieceReal(int part, int x, int y, bool adjust)
 {
-	SDL_FRect frameRect, myRect;
+	SDL_FRect frameRect(0);
+	SDL_FRect myRect(0);
 
 	myRect.x = (float)(x);
 	myRect.y = (float)(y);
@@ -1668,7 +1670,8 @@ void U3Resources::DrawFramePieceReal(int part, int x, int y, bool adjust)
 
 void U3Resources::renderUI(int part, int x, int y, bool adjust, int offsetX, int offsetY)
 {
-	SDL_FRect frameRect, myRect;
+	SDL_FRect frameRect(0);
+	SDL_FRect myRect(0);
 
 	myRect.x = (float)(x * m_blockSize) + offsetX;
 	myRect.y = (float)(y * m_blockSize) + offsetY;
@@ -1710,7 +1713,7 @@ void U3Resources::renderStalagtites()
 
 void U3Resources::drawIntro(int shape, int offset)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	float scaler = (float)m_blockSize / 16.0f;
 
@@ -1734,7 +1737,7 @@ void U3Resources::drawImage(SDL_Texture* texture, float x, float y, float width,
 		return;
 	}
 
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	myRect.x = x;
 	myRect.y = y;
@@ -1838,7 +1841,7 @@ void U3Resources::loadSignatureData()
 
 void U3Resources::DrawMoongates()
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	bool classic;
 	GetPreference(U3PreferencesType::Classic_Appearance, classic);
@@ -1928,7 +1931,7 @@ void U3Resources::DrawWind()
 		return;
 	}
 
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	m_graphics->DrawFramePiece(12, 6, 23);
 	m_graphics->DrawFramePiece(13, 17, 23);
@@ -1951,7 +1954,7 @@ void U3Resources::DrawWind()
 		winddir = 0;
 	}
 
-	dispString = m_plistMap["MoreMessages"][42 + winddir];
+	dispString = m_plistMap["MoreMessages"][static_cast<size_t>(42 + winddir)];
 	renderString(dispString, 7, 23);
 }
 
@@ -1981,7 +1984,7 @@ void U3Resources::DoWind()
 	m_misc->m_WindDir = newDir;
 }
 
-void U3Resources::PlotSig(int x, int y)
+void U3Resources::PlotSig(int x, int y) const
 {
 	float sScaler = m_blockSize / 16.0f;
 
@@ -1990,7 +1993,7 @@ void U3Resources::PlotSig(int x, int y)
 	x = (int)truncf((float)x * sScaler);
 	y = (int)truncf((float)y * sScaler);
 
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	myRect.x = (float)x;
 	myRect.y = (float)y;
@@ -2093,7 +2096,7 @@ void U3Resources::DrawCredits()
 
 void U3Resources::CenterMessage(std::string message, short xStart, short xEnd, short y)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	int difference = xEnd * m_blockSize - xStart * m_blockSize;
 	int startTile = difference / 2;
 	myRect.x = (float)(xStart * m_blockSize);
@@ -2110,7 +2113,7 @@ void U3Resources::CenterMessage(std::string message, short xStart, short xEnd, s
 
 void U3Resources::CenterMessage(short which, short y)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	which--;
 	if (m_plistMap.contains("MoreMessages"))
@@ -2191,7 +2194,7 @@ void U3Resources::UpdateButtons(float xPos, float yPos, int mouseState)
 	}
 }
 
-void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect)
+void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect) const
 {
 	int yPos = tileNum % TILES_NUM_Y;
 	int xPos = (tileNum / TILES_NUM_Y) * 2;
@@ -2207,7 +2210,7 @@ void U3Resources::ScrollShape(int tilenum, float offset)
 	int tileX = ((tilenum / 2) / TILES_NUM_Y) * 2;
 	int realTile = tileX * TILES_NUM_Y + tileY;
 
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	myRect.x = 0;
 	myRect.y = m_currentGraphics->tiles_height * offset;
 	myRect.w = m_currentGraphics->tiles_width;
@@ -2236,7 +2239,7 @@ void U3Resources::SwapShape(short shape)
 	SDL_RenderClear(m_renderer);
 	if (!m_shapeSwap[realTile])
 	{
-		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile + 16], NULL, NULL);
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[static_cast<size_t>(realTile + 16)], NULL, NULL);
 	}
 	else
 	{
@@ -2360,10 +2363,10 @@ void U3Resources::DemoUpdate(Uint64 curTick)
 	while (numUpdate > 0)
 	{
 		bool tempUpdate = false;
-		if (m_demoData.size() > m_demoptr + 512)
+		if (m_demoData.size() > static_cast<size_t>(m_demoptr + 512))
 		{
 			unsigned char where = m_demoData[m_demoptr];
-			unsigned char what = m_demoData[m_demoptr + 512];
+			unsigned char what = m_demoData[static_cast<size_t>(m_demoptr + 512)];
 			unsigned char repet;
 
 			if (where != 255)
@@ -2392,8 +2395,8 @@ void U3Resources::DemoUpdate(Uint64 curTick)
 
 void U3Resources::DrawDemo(Uint64 curTick)
 {
-	SDL_FRect shapeRect;
-	SDL_FRect myRect;
+	SDL_FRect shapeRect(0);
+	SDL_FRect myRect(0);
 
 	short demoffset, lastTile, shapSize;
 	shapSize = m_blockSize * 2;
@@ -2604,7 +2607,7 @@ void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
 	}
 }
 
-void U3Resources::UpdateCreateCharacter(float xPos, float yPos, int mouseState)
+void U3Resources::UpdateCreateCharacter(float xPos, float yPos, int mouseState) const
 {
 	if (m_CreateCharacterDlg)
 	{
@@ -2668,7 +2671,7 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 
 void U3Resources::DrawOrganizePartyRect()
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	short offx, offy, x, y;
 	//unsigned char c;
 
@@ -2905,9 +2908,9 @@ void U3Resources::LoadResource(std::string strFile)
 {
 }
 
-SDL_FRect U3Resources::GetTileRectForIndex(short index)
+SDL_FRect U3Resources::GetTileRectForIndex(short index) const
 {
-	SDL_FRect theRect;
+	SDL_FRect theRect(0);
 
 	theRect.y = (float)((index % 16) * (m_blockSize * 2));
 	theRect.h = (float)(m_blockSize * 2);
@@ -2931,9 +2934,9 @@ int U3Resources::GetRealTile(int tilenum)
 
 void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned short y)
 {
-	short shapSize;
-	SDL_FRect FromRect;
-	SDL_FRect ToRect;
+	short shapSize(0);
+	SDL_FRect FromRect(0);
+	SDL_FRect ToRect(0);
 
 	shapSize = m_blockSize * 2;
 	int realTile = GetRealTile(shape);
@@ -2955,9 +2958,9 @@ void U3Resources::DrawTiles()
 {
 	unsigned char offset;
 	short lastTile, final, shapSize;
-	SDL_FRect shapeRect;
-	SDL_FRect myRect;
-	SDL_FRect offRect;
+	SDL_FRect shapeRect(0);
+	SDL_FRect myRect(0);
+	SDL_FRect offRect(0);
 
 
 	SDL_SetRenderTarget(m_renderer, m_texDisplay);
@@ -3314,7 +3317,7 @@ void U3Resources::ShowChars(bool force) /* $7338 methinx */
 {
 	bool somethingChanged = false;
 	short i, num, ros;
-	SDL_FRect rect;
+	SDL_FRect rect(0);
 	static short oldStatus[4], oldHP[4], oldMaxHP[4], oldMana[4], oldFood[4], oldExp[4];
 
 	for (i = 0; i < 4; i++)
@@ -3373,9 +3376,9 @@ void U3Resources::ShowChars(bool force) /* $7338 methinx */
 
 void U3Resources::DrawPortrait(char charNum)
 {
-	SDL_FRect fromRect;
-	SDL_FRect toRect;
-	SDL_FRect offRect;
+	SDL_FRect fromRect(0);
+	SDL_FRect toRect(0);
+	SDL_FRect offRect(0);
 	short rosNum, value;
 	short rce = 0;
 	short sx;
@@ -3444,8 +3447,8 @@ void U3Resources::DrawPortrait(char charNum)
 
 void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 {
-	SDL_FRect fromRect;
-	SDL_FRect barRect;
+	SDL_FRect fromRect(0);
+	SDL_FRect barRect(0);
 
 	SDL_SetRenderTarget(m_renderer, m_texStats);
 	SDL_RenderClear(m_renderer);
@@ -3534,7 +3537,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 				SDL_SetRenderDrawColor(m_renderer, bar_color.r, bar_color.g, bar_color.b, 255);
 				SDL_RenderFillRect(m_renderer, &barRect);
 				// Highlight line
-				SDL_FRect markRect;
+				SDL_FRect markRect(0);
 				bar_color.r = 255;
 				bar_color.g = 128;
 				bar_color.b = 128;
@@ -3613,7 +3616,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 				SDL_RenderFillRect(m_renderer, &barRect);
 
 				// Highlight line
-				SDL_FRect markRect;
+				SDL_FRect markRect(0);
 				bar_color.r = 0;
 				bar_color.g = 255;
 				bar_color.b = 255;
@@ -3697,7 +3700,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 				SDL_RenderFillRect(m_renderer, &barRect);
 
 				// Highlight line
-				SDL_FRect markRect;
+				SDL_FRect markRect(0);
 				bar_color.r = 255;
 				bar_color.g = 255;
 				bar_color.b = 128;
@@ -3800,7 +3803,7 @@ void U3Resources::DrawPrompt()
 
 void U3Resources::DrawInverses(Uint64 delta_time)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	bool incrementTime = false;
 
 	SDL_BlendMode blendmode_sub = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_SUBTRACT,
@@ -3951,7 +3954,7 @@ void U3Resources::ImageDisplay()
 	}
 	if (curTexture != nullptr)
 	{
-		SDL_FRect myRect;
+		SDL_FRect myRect(0);
 		myRect.x = (float)(1 * m_blockSize);
 		myRect.y = (float)(1 * m_blockSize);
 		myRect.w = (float)m_blockSize * 22;
@@ -4193,8 +4196,8 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	short hOff;
 	short vOff;
 	short value;
-	SDL_FRect myRect;
-	SDL_FRect toRect;
+	SDL_FRect myRect(0);
+	SDL_FRect toRect(0);
 	myRect.x = (float)(0);
 	myRect.y = (float)(0);
 	myRect.w = (float)352.0f * scaler;
@@ -4273,10 +4276,10 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	// Strength, Dexterity, Intelligence, Wisdom
 	for (int index = 0; index < 4; ++index)
 	{
-		tempNum = m_misc->m_Player[rosNum][18 + index];
+		tempNum = m_misc->m_Player[rosNum][static_cast<size_t>(18 + index)];
 		outStr = std::to_string(tempNum);
 		outStr += ' ';
-		dispString = m_plistMap["Messages"][173 + index];
+		dispString = m_plistMap["Messages"][static_cast<size_t>(173 + index)];
 		outStr += dispString;
 		renderDisplayString(m_font_10, outStr, (int)((36 * scaler) + hOff), (int)(((121 + (18 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	}
@@ -4284,7 +4287,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	// Magic, HP, Exp, Food, Gold labels
 	for (int index = 0; index < 5; ++index)
 	{
-		outStr = m_plistMap["MoreMessages"][69 + index];
+		outStr = m_plistMap["MoreMessages"][static_cast<size_t>(69 + index)];
 		renderDisplayString(m_font_10, outStr, (int)((125 * scaler) + hOff), (int)(((121 + (14 * index)) * scaler) + vOff) - m_blockSize, sdl_text_color, 0, false);
 	}
 
@@ -4402,7 +4405,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			}
 			renderDisplayString(m_font_10, outStr, (int)(((cx + 16) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
-			tempStr = m_plistMap["WeaponsArmour"][value + 16];
+			tempStr = m_plistMap["WeaponsArmour"][static_cast<size_t>(value + 16)];
 			renderDisplayString(m_font_10, tempStr, (int)(((cx + 34) * scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 
 			cy += 11;
@@ -4538,7 +4541,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		sdl_text_color.g = 255;
 		sdl_text_color.b = 255;
 	}
-	outStr = m_plistMap["MoreMessages"][62 + value];
+	outStr = m_plistMap["MoreMessages"][static_cast<size_t>(62 + value)];
 	renderDisplayString(m_font_10, outStr, (int)(((252) * scaler) + hOff), (int)((42 * scaler) + vOff), sdl_text_color, 0, false);
 
 	sdl_text_color = sdl_text_color_black;
@@ -4565,7 +4568,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	{
 		value = 2;
 	}
-	outStr = m_plistMap["MoreMessages"][66 + value];
+	outStr = m_plistMap["MoreMessages"][static_cast<size_t>(66 + value)];
 	renderDisplayString(m_font_10, outStr, (int)(((252) * scaler) + hOff), (int)((68 * scaler) + vOff), sdl_text_color, 0, false);
 
 	sdl_text_color.r = 0;
@@ -4606,7 +4609,8 @@ void U3Resources::ExodusLights()
 		m_exoduslitez %= 4;
 
 		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[47]);
-		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[80 + (3 - m_exoduslitez)], NULL, NULL);
+		size_t tile_size = 80 + static_cast<size_t>(3 - m_exoduslitez);
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[tile_size], NULL, NULL);
 		SDL_SetRenderTarget(m_renderer, NULL);
 	}
 }

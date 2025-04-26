@@ -1,4 +1,7 @@
 #pragma once
+
+#include <SDL3/SDL.h>
+
 class UltimaSpellCombat
 {
 public:
@@ -13,19 +16,22 @@ public:
 	unsigned char DetermineShape(short type);
 	unsigned char CombatCharacterHere(short x, short y);
 	unsigned char CombatMonsterHere(short x, short y);
-	unsigned char ExodusCastle();
+	unsigned char ExodusCastle() const;
 	void Spell(short chnum, short spellnum);
 	void Combat();
 	void drawCombat();
 	void combatstart();
+	bool HandleDefaultKeyPress(SDL_Keycode key);
 
 	unsigned char m_g5521;
 	unsigned char m_g835D;
 	bool m_newMove;
 	bool m_combatStart;
+	unsigned char m_count;
+	unsigned char m_count2;
 private:
 	void Failed();
-	bool ShowHitCallback();
+	bool ShowHitCallback() const;
 	void BigDeath(short damage, short chnum);
 	void Flashriek();
 	bool BigDeathCallback();
@@ -34,7 +40,7 @@ private:
 	void DamageMonster(short which, short damage, short chnum);
 	void AddExp(short chnum, short amount);
 	short BackGround(short montype);
-	unsigned char HowMany();
+	unsigned char HowMany() const;
 	void PrintMonster(short which, bool plural, char variant);
 	void GetScreen(short resid);
 

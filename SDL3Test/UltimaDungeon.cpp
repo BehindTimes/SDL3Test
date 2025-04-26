@@ -428,7 +428,8 @@ void UltimaDungeon::createDoorPolygons()
 					 147, 148, 148, 147, 149, 143, 143, 143, 143, 143, 143, 143, 137, 134, 134, 137 };
 
 	std::vector<unsigned char> canvas;
-	canvas.resize(600 * 512 * 4);
+	size_t canvas_size = 1228800; // 600 * 512 * 4;
+	canvas.resize(canvas_size);
 
 	for (int index = 0; index < 32; ++index)
 	{
@@ -481,6 +482,7 @@ void UltimaDungeon::Routine6E6B()
 	m_misc->m_ypos = m_misc->m_zp[0xE4];
 	m_graphics->m_curMode = U3GraphicsMode::Map;
 	m_misc->m_gameMode = GameStateMode::Map;
+	m_resources->m_wasMove = true;
 	m_misc->m_Party[2] = 0;    // back to surface
 
 	if (!m_misc->m_checkDead)
@@ -507,14 +509,14 @@ void UltimaDungeon::Routine6E6B()
 	}
 }
 
-void UltimaDungeon::DngInfo()
+void UltimaDungeon::DngInfo() const
 {
     m_graphics->DrawFramePiece(12, 8, 0);
     m_graphics->DrawFramePiece(13, 15, 0);
     m_graphics->DrawFramePiece(10, 7, 0);
     m_graphics->DrawFramePiece(10, 16, 0);
 
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	myRect.x = (float)(9 * m_resources->m_blockSize);
 	myRect.y = 0;
@@ -805,7 +807,7 @@ void UltimaDungeon::RenderDungeon()
 	SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 }
 
-unsigned char UltimaDungeon::GetXYDng(short x, short y) // $93DE
+unsigned char UltimaDungeon::GetXYDng(short x, short y) const // $93DE
 {
 	if (y < 0)
 	{
@@ -887,8 +889,8 @@ short UltimaDungeon::DungeonBlock(short location)
 
 short UltimaDungeon::DrawWall(short location) // $19B4
 {
-	SDL_FRect FromRect;
-	SDL_FRect ToRect;
+	SDL_FRect FromRect(0);
+	SDL_FRect ToRect(0);
 	if (location > 31)
 	{
 		DrawDoor(location - 32);
@@ -914,7 +916,7 @@ short UltimaDungeon::DrawWall(short location) // $19B4
 	return location;
 }
 
-void UltimaDungeon::DrawDoor(short location)
+void UltimaDungeon::DrawDoor(short location) const
 {
 	if (m_texDungeonDoors[location])
 	{
@@ -949,8 +951,8 @@ void UltimaDungeon::DrawChest(short location) // $1A5A
 
 void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 {
-	SDL_FRect FromRect;
-	SDL_FRect ToRect;
+	SDL_FRect FromRect(0);
+	SDL_FRect ToRect(0);
 
 	short lleft, ltop, lright, lbottom, swap, side;
 	short width, height, base, rung, half, shape;
@@ -1032,7 +1034,7 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 
 void UltimaDungeon::DrawDungeonBackGround()
 {
-	SDL_FRect theRect;
+	SDL_FRect theRect(0);
 	theRect.x = 1800;
 	theRect.y = 0;
 	theRect.w = (float)600;
@@ -1042,7 +1044,7 @@ void UltimaDungeon::DrawDungeonBackGround()
 
 void UltimaDungeon::DrawDungeon()
 {
-	SDL_FRect theRect;
+	SDL_FRect theRect(0);
 
 	if (m_forceRedraw)
 	{
@@ -1066,7 +1068,7 @@ void UltimaDungeon::DrawDungeon()
 	SDL_RenderTexture(m_resources->m_renderer, m_texDungeonPort, NULL, &theRect);
 }
 
-bool UltimaDungeon::CommandForward()
+bool UltimaDungeon::CommandForward() const
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
@@ -1095,7 +1097,7 @@ bool UltimaDungeon::CommandForward()
 	return false;
 }
 
-bool UltimaDungeon::CommandRetreat()
+bool UltimaDungeon::CommandRetreat() const
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
@@ -1124,7 +1126,7 @@ bool UltimaDungeon::CommandRetreat()
 	return false;
 }
 
-bool UltimaDungeon::CommandLeft()
+bool UltimaDungeon::CommandLeft() const
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
@@ -1148,7 +1150,7 @@ bool UltimaDungeon::CommandLeft()
 	return false;
 }
 
-bool UltimaDungeon::CommandRight()
+bool UltimaDungeon::CommandRight() const
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
@@ -1347,15 +1349,15 @@ void UltimaDungeon::DrawSecretMessage()
 	}
 }
 
-bool UltimaDungeon::ShowSecret(short which)
+bool UltimaDungeon::ShowSecret(short which) const
 {
 	if (which >= 0 && which < 21)
 	{
 		SDL_Texture* tex = m_texSecrets[which];
 		if (tex != nullptr)
 		{
-			SDL_FRect frameRect;
-			SDL_FPoint size;
+			SDL_FRect frameRect(0);
+			SDL_FPoint size(0);
 			SDL_GetTextureSize(tex, &size.x, &size.y);
 			frameRect.w = size.x;
 			frameRect.h = size.y;
@@ -1376,7 +1378,8 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 	m_texSecrets[texId] = SDL_CreateTexture(m_resources->m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, surf->w, surf->h);
 	SDL_SetTextureScaleMode(m_texSecrets[texId], SDL_SCALEMODE_NEAREST);
 	std::vector<unsigned char> canvas;
-	canvas.resize(surf->w * surf->h * 4);
+	size_t canvasSize = static_cast<size_t>(surf->w) * static_cast<size_t>(surf->h) * 4;
+	canvas.resize(canvasSize);
 	std::fill(canvas.begin(), canvas.end(), 0);
 	char* pixels = (char*)surf->pixels;
 	// Worry about this later.  For right now, just assuming it's index8
@@ -1397,27 +1400,34 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 				{
 					if (*(start + (indexX - 1)) == 0)
 					{
-						canvas[indexY * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+						unsigned char curByte = indexY * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+						canvas[curByte] = 0x80;
 					}
 					else if (*(start + (indexX + 1)) == 0)
 					{
-						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 0] = 0x80;
-						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 1] = 0x80;
-						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 2] = 0x80;
-						canvas[indexY * (surf->w * 4) + ((indexX + 1) * 4) + 3] = 0x80;
+						unsigned char curByte = indexY * (surf->w * 4) + ((indexX + 1) * 4) + 0;
+						canvas[curByte] = 0x80;
+						curByte++;
+						canvas[curByte] = 0x80;
+						curByte++;
+						canvas[curByte] = 0x80;
+						curByte++;
+						canvas[curByte] = 0x80;
 					}
 					if (indexY < surf->h - 1)
 					{
 						if (*((start + surf->pitch) + indexX) == 0)
 						{
-							canvas[(indexY + 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+							unsigned char curByte = (indexY + 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+							canvas[curByte] = 0x80;
 						}
 					}
 					else if (indexY > 0)
 					{
 						if (*((start - surf->pitch) + indexX) == 0)
 						{
-							canvas[(indexY - 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte] = 0x80;
+							unsigned char curByte = (indexY - 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+							canvas[curByte] = 0x80;
 						}
 					}
 				}

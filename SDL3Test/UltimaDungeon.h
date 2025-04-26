@@ -12,14 +12,14 @@ public:
 	~UltimaDungeon();
 
 	void DungeonStart(short mode);
-	void DngInfo();
+	void DngInfo() const;
 	bool loadGraphics();
 	void DrawDungeon();
 	void setForceRedraw()
 	{
 		m_forceRedraw = true;
 	}
-	unsigned char GetXYDng(short x, short y);
+	unsigned char GetXYDng(short x, short y) const;
 	bool HandleDefaultKeyPress(SDL_Keycode key);
 
 	unsigned char m_dungeonLevel;
@@ -42,7 +42,7 @@ private:
 	void Chunk6();
 	void Chunk7();
 	void DrawLadder(short location, short direction);
-	void DrawDoor(short location);
+	void DrawDoor(short location) const;
 	void DrawChest(short location);
 
 	void LetterCommand(SDL_Keycode key);
@@ -62,7 +62,7 @@ private:
 	short getLeftMost(unsigned char* canvas, short startX, short endX);
 	short getRightMost(unsigned char* canvas, short startX, short endX);
 	void DrawSecretMessage();
-	bool ShowSecret(short which);
+	bool ShowSecret(short which) const;
 	void createTextureSecrets();
 	void createOutlineText(std::string dispString, int texId);
 	void dngnotcombat(short value);
@@ -75,10 +75,10 @@ private:
 	bool CommandDescend();
 	bool CommandKlimb();
 	bool CommandPeerGem();
-	bool CommandForward();
-	bool CommandRetreat();
-	bool CommandLeft();
-	bool CommandRight();
+	bool CommandForward() const;
+	bool CommandRetreat() const;
+	bool CommandLeft() const;
+	bool CommandRight() const;
 	bool FinishAge();
 
 	SDL_Texture* m_texDungeonDoors[32];

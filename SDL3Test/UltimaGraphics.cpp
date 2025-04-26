@@ -324,7 +324,7 @@ void U3Graphics::FadeOnExodusUltima(Uint64 curTick)
     }
 }
 
-void U3Graphics::WriteLordBritish(Uint64 curTick)
+void U3Graphics::WriteLordBritish(Uint64 curTick) const
 {
     const int RENDERTIME = 3850;
     bool showCredits = false;
@@ -490,7 +490,7 @@ short U3Graphics::MapConstrain(short value)
 
 void U3Graphics::renderMiniMap()
 {
-    SDL_FRect outRect;
+    SDL_FRect outRect(0);
     unsigned char value;
 
     if (m_misc->m_mapSize <= 0)
@@ -647,7 +647,7 @@ void U3Graphics::renderMiniMapDungeon()
 
 void U3Graphics::DrawMiniMapDungeon()
 {
-    SDL_FRect theRect;
+    SDL_FRect theRect(0);
 
     if (m_forceRedraw)
     {
@@ -675,7 +675,7 @@ void U3Graphics::DrawMiniMapDungeon()
 
 void U3Graphics::DrawMiniMap()
 {
-    SDL_FRect theRect;
+    SDL_FRect theRect(0);
 
     if (m_forceRedraw)
     {
@@ -860,7 +860,7 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
     }
 }
 
-void U3Graphics::renderWinScreen()
+void U3Graphics::renderWinScreen() const
 {
     SDL_SetRenderTarget(m_resources->m_renderer, m_texMap);
     SDL_RenderClear(m_resources->m_renderer);
@@ -881,7 +881,7 @@ void U3Graphics::renderWinScreen()
 
 void U3Graphics::DrawWinScreen(float ratio)
 {
-    SDL_FRect theRect;
+    SDL_FRect theRect(0);
 
     if (m_forceRedraw)
     {
@@ -932,6 +932,7 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade)
             {
                 m_forceRedraw = true;
                 m_curMode = U3GraphicsMode::Map;
+                m_resources->m_wasMove = true;
                 //m_scrollArea->blockPrompt(false);
                 m_scrollArea->UPrintWin("\n");
                 m_misc->m_inputType = InputType::Default;
@@ -970,6 +971,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
     {
         m_forceRedraw = true;
          m_curMode = U3GraphicsMode::Map;
+         m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }
@@ -993,6 +995,7 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
     {
         m_forceRedraw = true;
         m_curMode = U3GraphicsMode::Dungeon;
+        m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }
@@ -1022,7 +1025,6 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     }
 
     unsigned char chnum;
-    unsigned char count;
     std::string dispString;
 
     if (m_spellCombat->m_newMove)
@@ -1033,13 +1035,16 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
 
         if (m_misc->CheckAlive(chnum))
         {
-            count = 0x2F;
+            m_spellCombat->m_count = 0x2F;
             m_scrollArea->UPrintMessage(134);
             dispString = std::to_string(chnum + 1);
             m_scrollArea->UPrintWin(dispString);
             m_misc->m_wx++;
             m_scrollArea->UPrintMessage(135);
-            
+            m_misc->m_dx = m_misc->m_dy = 0;
+            m_misc->m_xs = m_misc->m_CharX[chnum];
+            m_misc->m_ys = m_misc->m_CharY[chnum];
+            m_spellCombat->m_count2 = 0xC0;
         }
     }
 
@@ -1052,7 +1057,7 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
         while (m_misc->m_callbackStack.size() > 0)
         {
             updateGame = false;
-            auto curCallback = m_misc->m_callbackStack.top();
+            std::function<bool()> curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
             {
@@ -1073,6 +1078,8 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     if (updateGame)
     {
         m_scrollArea->blockPrompt(false);
+        m_misc->ProcessEvent(event);
+        m_resources->updateGameTime(deltaTime);
     }
     else
     {
@@ -1124,7 +1131,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
         while (m_misc->m_callbackStack.size() > 0)
         {
             updateGame = false;
-            auto curCallback = m_misc->m_callbackStack.top();
+            std::function<bool()> curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
             {
@@ -1215,7 +1222,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
         while (m_misc->m_callbackStack.size() > 0)
         {
             updateGame = false;
-            auto curCallback = m_misc->m_callbackStack.top();
+            std::function<bool()> curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
             {
@@ -1238,6 +1245,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     if (m_queuedMode != U3GraphicsMode::None && m_scrollArea->MessageQueueEmpty())
     {
         m_curMode = m_queuedMode;
+        m_resources->m_wasMove = true;
         m_queuedMode = U3GraphicsMode::None;
 
         if (m_curMode == U3GraphicsMode::Dungeon)

@@ -103,7 +103,7 @@ public:
 	bool init(SDL_Renderer* renderer);
 	void CalculateBlockSize();
 
-	void displayFPS(int fps);
+	void displayFPS(int fps) const;
 
 	bool loadPreferences();
 	void savePreferences();
@@ -111,7 +111,7 @@ public:
 	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
 	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
 	int renderString(std::string curString, int x, int y, bool autoadjust = true, int offsetX = 0, int offsetY = 0, bool pretty_print = false);
-	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
+	void renderDisplayString(TTF_Font* font, std::string curString, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true) const;
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color, int align = 0, bool autoadjust = true);
 	void renderStalagtites();
 	void drawIntro(int shape, int offset);
@@ -121,18 +121,18 @@ public:
 	void changeTheme(int theme);
 	void changeTheme(std::string theme);
 	void loadSignatureData();
-	void PlotSig(int x, int y);
+	void PlotSig(int x, int y) const;
 	void WriteLordBritish(Uint64 curPass);
 	void DrawCredits();
 	void CenterMessage(short which, short y);
 	void CenterMessage(std::string message, short xStart, short xEnd, short y);
 	void SetPreference(U3PreferencesType type, bool value);
-	void GetPreference(U3PreferencesType type, bool& value);
+	void GetPreference(U3PreferencesType type, bool& value) const;
 	void UpdateButtons(float xPos, float yPos, int mouseState);
 	void UpdateFormParty(float xPos, float yPos, int mouseState);
 	void UpdateTerminateCharacter(float xPos, float yPos, int mouseState);
 	void UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mouseState);
-	void UpdateCreateCharacter(float xPos, float yPos, int mouseState);
+	void UpdateCreateCharacter(float xPos, float yPos, int mouseState) const;
 	void DrawButtons(std::vector<short> buttons);
 	void SetButtonCallback(short button, std::function<void(int)> func);
 	void SetButtonVisibility(short button, bool visible);
@@ -167,8 +167,8 @@ public:
 	void RenderCharStats(short ch, SDL_FRect rect);
 	void DrawPrompt();
 	void adjustRect(SDL_FRect& myRect);
-	int getTextWidth(std::string str);
-	bool isInversed() { return m_isInversed; }
+	int getTextWidth(std::string str) const;
+	bool isInversed() const { return m_isInversed; }
 	void setInversed(bool isInversed);
 	int GetRealTile(int tilenum);
 	int AlertReturn() const
@@ -261,12 +261,12 @@ private:
 	void processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec);
 	std::map<std::string, std::string> processSettingsDoc(xmlDocPtr docPtr);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
-	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect);
+	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect) const;
 	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
 	void ScrollShape(int tilenum, float offset);
 	
 	void AlertCallback();
-	SDL_FRect GetTileRectForIndex(short index);
+	SDL_FRect GetTileRectForIndex(short index) const;
 	void DrawPortrait(char charNum);
 	void zStatDistributeCallback(int button);
 	void zStatJoinGold(int button);

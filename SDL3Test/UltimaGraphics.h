@@ -50,7 +50,7 @@ public:
 	void DrawFramePiece(short which, short x, short y, bool adjust = true);
 	void DrawFramePieceScroll(short which, short x, short y, int offsetX = 0, int offsetY = 0);
 	void FadeOnExodusUltima(Uint64 curTick);
-	void WriteLordBritish(Uint64 curTick);
+	void WriteLordBritish(Uint64 curTick) const;
 	void FightScene(Uint64 curTick);
 	void DrawDemoScreen(Uint64 curTick);
 	void DrawMenu();
@@ -91,7 +91,7 @@ private:
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
 	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade);
 	void DrawWinScreen(float ratio);
-	void renderWinScreen();
+	void renderWinScreen() const;
 	void renderDungeon(SDL_Event event, Uint64 deltaTime);
 
 	static constexpr Uint64 DelayScroll = 700;

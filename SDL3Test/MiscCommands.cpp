@@ -1521,10 +1521,10 @@ bool U3Misc::StatsCallback1()
 		if (m_Player[m_rosNum][x + 40])
 		{
 			m_scrollArea->UPrintWin("\n");
-			std::string dispString = m_utilities->GetPaddedNum(m_Player[m_rosNum][x + 40], 2);
+			std::string dispString = m_utilities->GetPaddedNum(m_Player[m_rosNum][(x + 40) & 65], 2);
 			m_scrollArea->UPrintWin(dispString);
 			m_scrollArea->UPrintWin("-");
-			dispString = m_resources->m_plistMap["WeaponsArmour"][x + 16];
+			dispString = m_resources->m_plistMap["WeaponsArmour"][static_cast<size_t>(x) + 16];
 			m_scrollArea->UPrintWin(dispString);
 			m_scrollArea->UPrintWin("(");
 			dispString.clear();

@@ -14,6 +14,39 @@ extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<U3Graphics> m_graphics;
 
+bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
+{
+	/*if (key >= SDLK_A && key <= SDLK_Z)
+	{
+		LetterCommand(key);
+	}
+	else
+	{
+		switch (key)
+		{
+		case SDLK_UP:
+			Forward();
+			break;
+		case SDLK_DOWN:
+			Retreat();
+			break;
+		case SDLK_LEFT:
+			Left();
+			break;
+		case SDLK_RIGHT:
+			Right();
+			break;
+		case SDLK_SPACE:
+			m_misc->Pass();
+			break;
+		default:
+			break;
+		}
+	}*/
+	return true;
+}
+
+
 UltimaSpellCombat::UltimaSpellCombat() :
 	m_hitType(0),
 	m_origValue(0),
@@ -26,7 +59,9 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_g56E7(0),
 	m_newMove(true),
 	m_g835D(0),
-	m_combatStart(true)
+	m_combatStart(true),
+	m_count(0),
+	m_count2(0)
 {
 }
 
@@ -37,6 +72,7 @@ void UltimaSpellCombat::drawCombat()
 
 void UltimaSpellCombat::combatstart()
 {
+	m_resources->m_wasMove = true;
 	m_newMove = true;
 	m_g835D = 0;
 	m_misc->AgeChars();
@@ -48,6 +84,7 @@ void UltimaSpellCombat::Combat()
 	unsigned char monhpstart[16] = { 0x20, 0x20, 0xF0, 0xF0, 0xC0, 0x60, 0xA0, 0x80, 0x30, 0x50, 0x70, 0xA0, 0xC0, 0xE0, 0xF0, 0xF0 };
 	m_graphics->m_lastMode = m_graphics->m_curMode;
 	m_graphics->m_queuedMode = U3GraphicsMode::Combat;
+	m_misc->m_gameMode = GameStateMode::Combat;
 
 	m_g5521 = m_g56E7 = 0;
 
@@ -203,7 +240,7 @@ void UltimaSpellCombat::ShowHit(short x, short y, unsigned char hitType, unsigne
 
 }
 
-bool UltimaSpellCombat::ShowHitCallback()
+bool UltimaSpellCombat::ShowHitCallback() const
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
@@ -363,7 +400,7 @@ unsigned char UltimaSpellCombat::CombatMonsterHere(short x, short y) // $7D24
 	return (unsigned char)result;
 }
 
-unsigned char UltimaSpellCombat::ExodusCastle() // $6F43
+unsigned char UltimaSpellCombat::ExodusCastle() const // $6F43
 {
 	short value;
 	value = m_misc->m_Party[2];
@@ -386,7 +423,7 @@ unsigned char UltimaSpellCombat::ExodusCastle() // $6F43
 	return 0;    // In Exodus Castle!
 }
 
-unsigned char UltimaSpellCombat::HowMany() // $80DE
+unsigned char UltimaSpellCombat::HowMany() const // $80DE
 {
 	if (m_misc->m_gMonType == 0x26)
 	{

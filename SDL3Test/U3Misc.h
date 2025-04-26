@@ -27,7 +27,8 @@ struct SosariaHandle
 enum class GameStateMode
 {
 	Map,
-	Dungeon
+	Dungeon,
+	Combat
 };
 
 enum class InputType
@@ -62,7 +63,7 @@ public:
 	bool GetRoster();
 	bool GetParty();
 	bool GetSosaria();
-	bool PutRoster();
+	bool PutRoster() const;
 	bool PutParty();
 	bool PutSosaria();
 
@@ -70,11 +71,11 @@ public:
 	unsigned char GetXYVal(int x, int y);
 	void PutXYVal(unsigned char value, unsigned char x, unsigned char y);
 	void PutXYTile(short value, short x, short y);
-	bool CheckAlive(short member);
+	bool CheckAlive(short member) const;
 	void LoadUltimaMap(int map);
 	void BlockExodus();
-	short MonsterHere(short x, short y);
-	short MaxMana(char rosNum);
+	short MonsterHere(short x, short y) const;
+	short MaxMana(char rosNum) const;
 	bool ProcessEvent(SDL_Event event);
 	bool ProcessAnyEvent(SDL_Event event);
 	void InverseTiles(bool value, Uint64 tileTime = 1000);
@@ -109,8 +110,8 @@ public:
 	void Ignite();
 	void JoinGold();
 	void JoinGold(short chnum);
-	void Speak(short perNum, short shnum);
-	bool StealDisarmFail(short rosNum);
+	void Speak(short perNum, short shnum) const;
+	bool StealDisarmFail(short rosNum) const;
 
 	void NoGo();
 	void BombTrap();
@@ -239,7 +240,7 @@ private:
 
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
-	bool ValidTrans(char value);
+	bool ValidTrans(char value) const;
 	bool ValidDir(unsigned char value);
 
 	bool LookCallback();

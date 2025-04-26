@@ -72,7 +72,7 @@ U3Misc::U3Misc() :
 	m_gTimeNegate(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
-	memset(m_Player, NULL, sizeof(char) * (21 * 65));
+	memset(m_Player, NULL, sizeof(char) * (1365)); // 21 * 65
 	m_saved_map.reset();
 	m_gMoonDisp[0] = 4;
 	m_gMoonDisp[1] = 4;
@@ -277,7 +277,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	for (byte = 0; byte < 8; byte++)
 	{
 		m_MoonXTable[byte] = dummy[byte];
-		m_MoonYTable[byte] = dummy[byte + 8];
+		m_MoonYTable[byte] = dummy[static_cast<size_t>(byte + 8)];
 	}
 
 	file_size = std::filesystem::file_size(typeFile);
@@ -339,7 +339,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	for (byte = 0; byte < 20; byte++)
 	{
 		m_LocationX[byte] = dummy[byte];
-		m_LocationY[byte] = dummy[byte + 32];
+		m_LocationY[byte] = dummy[static_cast<size_t>(byte + 32)];
 	}
 
 	file_size = std::filesystem::file_size(experienceFile);
@@ -358,7 +358,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	}
 }
 
-bool U3Misc::PutRoster()
+bool U3Misc::PutRoster() const
 {
 	std::filesystem::path rosterPath = std::filesystem::current_path();
 	rosterPath /= ResourceLoc;
@@ -700,10 +700,10 @@ void U3Misc::LoadUltimaMap(int map)
 			}
 			if (map == 19)
 			{
-				m_WhirlX = map_data[mapLength + 1];
-				m_WhirlY = map_data[mapLength + 2];
-				m_WhirlDX = map_data[mapLength + 3];
-				m_WhirlDY = map_data[mapLength + 4];
+				m_WhirlX = map_data[static_cast<size_t>(mapLength + 1)];
+				m_WhirlY = map_data[static_cast<size_t>(mapLength + 2)];
+				m_WhirlDX = map_data[static_cast<size_t>(mapLength + 3)];
+				m_WhirlDY = map_data[static_cast<size_t>(mapLength + 4)];
 			}
 		}
 		if (map < 19 || map == 21) // "<419" *was* "<420", big mistake.
@@ -743,7 +743,7 @@ void U3Misc::LoadUltimaMap(int map)
 	}
 }
 
-short U3Misc::MonsterHere(short x, short y)
+short U3Misc::MonsterHere(short x, short y) const
 {
 	for (int index = 32; index >= 0; --index)
 	{
@@ -800,7 +800,7 @@ void U3Misc::PutXYTile(short value, short x, short y)
 	m_resources->m_TileArray[y * 11 + x] = (unsigned char)value;
 }
 
-bool U3Misc::CheckAlive(short member) // $75BA
+bool U3Misc::CheckAlive(short member) const // $75BA
 {
 	short rosNum;
 	rosNum = m_Party[member + 6];
@@ -817,7 +817,7 @@ bool U3Misc::CheckAlive(short member) // $75BA
 
 // 0123456789A
 // FCWTPBLIDAR
-short U3Misc::MaxMana(char rosNum)
+short U3Misc::MaxMana(char rosNum) const
 {
 	short value, tempNum;
 
@@ -858,7 +858,7 @@ short U3Misc::MaxMana(char rosNum)
 	return tempNum;
 }
 
-bool U3Misc::ValidTrans(char value)
+bool U3Misc::ValidTrans(char value) const
 {
 	if (m_Party[15])
 	{
@@ -1006,6 +1006,10 @@ bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
 		else if (m_gameMode == GameStateMode::Dungeon)
 		{
 			m_dungeon->HandleDefaultKeyPress(key.key);
+		}
+		else if (m_gameMode == GameStateMode::Combat)
+		{
+			m_spellCombat->HandleDefaultKeyPress(key.key);
 		}
 		return true;
 	}
@@ -1908,7 +1912,7 @@ void U3Misc::PrintMonster(short which, bool plural, char variant) // $8457
 	}
 }
 
-void U3Misc::Speak(short perNum, short shnum)
+void U3Misc::Speak(short perNum, short shnum) const
 {
 	short talk;
 	std::string speechStr;
@@ -2363,7 +2367,7 @@ void U3Misc::PrintWeaponList(short weapon)
 		dispString += 's';
 	}
 	strWeapon += dispString;
-	dispString = m_resources->m_plistMap["WeaponsArmour"][weapon + 24];
+	dispString = m_resources->m_plistMap["WeaponsArmour"][static_cast<size_t>(weapon + 24)];
 	dispString += std::string("gp");
 	dispString += std::string("\n");
 	std::string strSpaces;
@@ -2386,7 +2390,7 @@ void U3Misc::PrintArmorList(short armor)
 		dispString += 's';
 	}
 	strWeapon += dispString;
-	dispString = m_resources->m_plistMap["WeaponsArmour"][armor + 40];
+	dispString = m_resources->m_plistMap["WeaponsArmour"][static_cast<size_t>(armor) + 40];
 	dispString += std::string("gp");
 	dispString += std::string("\n");
 	std::string strSpaces;
@@ -3262,7 +3266,7 @@ void U3Misc::GetMonsterDir(short monNum) // $7C37
 	m_zp[0xFB] += m_utilities->Absolute(m_zp[0xF6]);
 }
 
-unsigned char ValidMonsterDir(short tile, short montype) // $7C0C
+static unsigned char ValidMonsterDir(short tile, short montype) // $7C0C
 {
 	if (montype > 0x28 && montype < 0x40) // pirate/sea monster
 	{
@@ -3695,7 +3699,7 @@ bool U3Misc::StealCallback1()
 	return false;
 }
 
-bool U3Misc::StealDisarmFail(short rosNum) // $75CF - result true = failed
+bool U3Misc::StealDisarmFail(short rosNum) const // $75CF - result true = failed
 {
 	short classType, factor;
 	bool result;
@@ -5039,11 +5043,16 @@ bool U3Misc::EndTurnCallback()
 	{
 		//m_scrollArea->blockPrompt(true);
 		m_graphics->m_curMode = m_graphics->m_queuedMode;
+		m_resources->m_wasMove = true;
 
 		if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)
 		{
 			m_dungeon->DungeonStart(1);
 			m_gameMode = GameStateMode::Dungeon;
+		}
+		else if (m_graphics->m_curMode == U3GraphicsMode::Combat)
+		{
+			m_gameMode = GameStateMode::Combat;
 		}
 		m_graphics->m_queuedMode = U3GraphicsMode::None;
 

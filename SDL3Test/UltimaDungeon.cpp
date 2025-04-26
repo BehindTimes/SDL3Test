@@ -34,10 +34,6 @@ short   chSide[21] = { 0,2,1,1,0,2,2,2,1,1,1,1,0,2,2,0,2,2,1,1,0 };
 UltimaDungeon::UltimaDungeon() :
 	m_dungeonLevel(0),
 	m_texDungeonShapes(nullptr),
-	m_texFountain(nullptr),
-	m_texTimeLord(nullptr),
-	m_texRod(nullptr),
-	m_texShrine(nullptr),
 	m_forceRedraw(true),
 	m_texDungeonPort(nullptr),
 	m_gExitDungeon(false),
@@ -91,26 +87,6 @@ UltimaDungeon::~UltimaDungeon()
 	{
 		SDL_DestroyTexture(m_texDungeonShapes);
 		m_texDungeonShapes = nullptr;
-	}
-	if (m_texFountain)
-	{
-		SDL_DestroyTexture(m_texFountain);
-		m_texFountain = nullptr;
-	}
-	if (m_texTimeLord)
-	{
-		SDL_DestroyTexture(m_texTimeLord);
-		m_texTimeLord = nullptr;
-	}
-	if (m_texRod)
-	{
-		SDL_DestroyTexture(m_texRod);
-		m_texRod = nullptr;
-	}
-	if (m_texShrine)
-	{
-		SDL_DestroyTexture(m_texShrine);
-		m_texShrine = nullptr;
 	}
 }
 
@@ -201,7 +177,7 @@ bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 	return true;
 }
 
-void UltimaDungeon::loadGraphics()
+bool UltimaDungeon::loadGraphics()
 {
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -209,14 +185,22 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= "DungeonShapes.png";
 
 	m_texDungeonShapes = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
+	if (!m_texDungeonShapes)
+	{
+		return false;
+	}
 	SDL_SetTextureScaleMode(m_texDungeonShapes, SDL_SCALEMODE_NEAREST);
 
-	currentPath = std::filesystem::current_path();
+	/*currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Fountain.jpg";
 
 	m_texFountain = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
+	if (!m_texFountain)
+	{
+		return false;
+	}
 	SDL_SetTextureScaleMode(m_texFountain, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -225,6 +209,10 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= "Shrine.jpg";
 
 	m_texShrine = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
+	if (!m_texShrine)
+	{
+		return false;
+	}
 	SDL_SetTextureScaleMode(m_texShrine, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -233,6 +221,11 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= "TimeLord.jpg";
 
 	m_texTimeLord = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
+	if (!m_texTimeLord)
+	{
+		return false;
+	}
+
 	SDL_SetTextureScaleMode(m_texTimeLord, SDL_SCALEMODE_NEAREST);
 
 	currentPath = std::filesystem::current_path();
@@ -241,12 +234,20 @@ void UltimaDungeon::loadGraphics()
 	currentPath /= "Rod.jpg";
 
 	m_texRod = IMG_LoadTexture(m_resources->m_renderer, currentPath.string().c_str());
-	SDL_SetTextureScaleMode(m_texRod, SDL_SCALEMODE_NEAREST);
+
+	if (!m_texRod)
+	{
+		return false;
+	}
+
+	SDL_SetTextureScaleMode(m_texRod, SDL_SCALEMODE_NEAREST);*/
 
 	m_texDungeonPort = SDL_CreateTexture(m_resources->m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 600, 512);
 
 	createDoorPolygons();
 	createTextureSecrets();
+
+	return true;
 }
 
 void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2)

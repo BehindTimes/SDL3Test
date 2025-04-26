@@ -244,9 +244,9 @@ private:
 	bool loadFont();
 	bool createFont();
 	void loadGraphics();
-	void loadImages();
+	bool loadImages();
 	void loadButtons();
-	void loadDemo();
+	bool loadDemo();
 	bool loadPLists();
 
 	void HideMonsters();

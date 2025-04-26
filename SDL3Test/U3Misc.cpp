@@ -114,7 +114,7 @@ U3Misc::~U3Misc()
 	m_saved_map.reset();
 }
 
-void U3Misc::OpenRstr()
+bool U3Misc::OpenRstr()
 {
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -159,7 +159,7 @@ void U3Misc::OpenRstr()
 			bool valid = std::filesystem::create_directory(currentPath);
 			if (!valid)
 			{
-				return;
+				return false;
 			}
 
 		}
@@ -176,7 +176,7 @@ void U3Misc::OpenRstr()
 			std::string strTemp = m_utilities->PathToSDLString(monsterFile);
 			if (strTemp.empty())
 			{
-				return;
+				return false;
 			}
 			SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
 			SDL_WriteIO(file, dummy.data(), dummy.size());
@@ -188,7 +188,7 @@ void U3Misc::OpenRstr()
 			strTemp = m_utilities->PathToSDLString(preferencesFile);
 			if (strTemp.empty())
 			{
-				return;
+				return false;
 			}
 			file = SDL_IOFromFile(strTemp.c_str(), "wb");
 			SDL_WriteIO(file, dummy.data(), dummy.size());
@@ -203,9 +203,9 @@ void U3Misc::OpenRstr()
 	}
 	catch ([[maybe_unused]] const std::exception& e)
 	{
-		return;
+		return false;
 	}
-	return;
+	return true;
 }
 
 // TO DO: Are we even changing these files?  If not, why the copy?

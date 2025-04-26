@@ -57,7 +57,7 @@ public:
 	~U3Misc();
 
 	void CheckAllDead();
-	void OpenRstr();
+	bool OpenRstr();
 	void GetMiscStuff(bool defaultData);
 	bool GetRoster();
 	bool GetParty();

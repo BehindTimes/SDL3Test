@@ -494,6 +494,9 @@ void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 
 bool U3Resources::init(SDL_Renderer* renderer)
 {
+	if (!renderer)
+	{
+	}
 	m_renderer = renderer;
 	m_scrollArea->setRenderer(m_renderer);
 	if (!loadFont())
@@ -505,24 +508,49 @@ bool U3Resources::init(SDL_Renderer* renderer)
 		return false;
 	}
 	loadGraphics();
-	loadImages();
+	if (!loadImages())
+	{
+		return false;
+	}
 
 	loadButtons();
-	loadDemo();
-	m_misc->OpenRstr();
+	if (!loadDemo())
+	{
+		return false;
+	}
+	if (!m_misc->OpenRstr())
+	{
+		return false;
+	}
+
+	std::vector<std::string> graphic_keys;
+	for (const auto& pair : m_allGraphics)
+	{
+		graphic_keys.push_back(pair.first);
+	}
+	// Remove all themes which don't have tiles
+	for (const auto& key : graphic_keys)
+	{
+		if (m_allGraphics[key].tiles.empty())
+		{
+			m_allGraphics.erase(key);
+		}
+	}
 
 	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
 	{
 		m_standardGraphics = &m_allGraphics[std::string(Standard)];
 		m_currentGraphics = m_standardGraphics;
 	}
+	else
+	{
+		return false;
+	}
 
-	//CalculateBlockSize();
-	//changeMode(1);
 	return true;
 }
 
-void U3Resources::loadDemo()
+bool U3Resources::loadDemo()
 {
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -532,12 +560,12 @@ void U3Resources::loadDemo()
 	std::string strTemp = m_utilities->PathToSDLString(currentPath);
 	if (strTemp.empty())
 	{
-		return;
+		return false;
 	}
 	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
 	if (!file)
 	{
-		return;
+		return false;
 	}
 	Sint64 fSize = SDL_GetIOSize(file);
 	if (fSize > 0)
@@ -547,9 +575,16 @@ void U3Resources::loadDemo()
 	}
 	SDL_CloseIO(file);
 
+	if (fSize != 1280)
+	{
+		return false;
+	}
+
 	memcpy(m_TileArray, m_demoData.data() + 1024, sizeof(unsigned char) * 128);
 	memcpy(m_demoBgndTiles, m_TileArray, sizeof(unsigned char) * 114);
 	m_demoBgndTiles[62] = 0;    // ship should be water.
+
+	return true;
 }
 
 void U3Resources::SetButtonCallback(short button, std::function<void(int)> func)
@@ -894,6 +929,26 @@ bool U3Resources::loadPLists()
 	// Cleanup function for the XML library.
 	xmlCleanupParser();
 
+	std::vector<std::string> pListFiles = { "Classes", "Female", "Intersex", "Male", "Messages", "MoreMessages", "Pub", "Races", "Radrion",
+	"Spells", "Tiles", "TilesPlural", "TilesVoices", "WeaponsArmour" };
+
+	std::vector<size_t> pListFileSize = { 11, 228, 66, 219, 264, 99, 10, 5, 10, 32, 80, 80, 24, 48 };
+
+	for (size_t index = 0; index < pListFiles.size(); ++index)
+	{
+		auto curIter = m_plistMap.find(pListFiles[index]);
+		if (curIter == m_plistMap.end())
+		{
+			valid = false;
+			break;
+		}
+		if (curIter->second.size() != pListFileSize[index])
+		{
+			valid = false;
+			break;
+		}
+	}
+
 	return valid;
 }
 
@@ -988,7 +1043,7 @@ void U3Resources::createZStatButtons()
 	m_zstatbuttons[1].SetButtonCallback(std::bind(&U3Resources::zStatJoinGold, this, std::placeholders::_1));
 }
 
-void U3Resources::loadImages()
+bool U3Resources::loadImages()
 {
 	float w, h;
 
@@ -998,6 +1053,10 @@ void U3Resources::loadImages()
 	currentPath /= "Stalagtites.png";
 
 	m_texStalagtites = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+	if (!m_texStalagtites)
+	{
+		return false;
+	}
 	SDL_SetTextureScaleMode(m_texStalagtites, SDL_SCALEMODE_NEAREST);
 
 	std::string introNames[] = { "Opening_Anim_1.png", "Opening_Anim_2.png" , "Opening_Anim_3.png" , "Opening_Anim_4.png" , "Opening_Anim_5.png" };
@@ -1009,6 +1068,11 @@ void U3Resources::loadImages()
 		currentPath /= introNames[index];
 
 		m_texIntro[index] = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+		if (!m_texIntro[index])
+		{
+			return false;
+		}
 	}
 
 	currentPath = std::filesystem::current_path();
@@ -1017,6 +1081,11 @@ void U3Resources::loadImages()
 	currentPath /= "Exodus.png";
 
 	m_texExodus = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texExodus)
+	{
+		return false;
+	}
 
 	SDL_GetTextureSize(m_texExodus, &w, &h);
 	m_exodusWidth = (int)w;
@@ -1028,12 +1097,24 @@ void U3Resources::loadImages()
 	currentPath /= "Portraits.png";
 
 	m_texPortraits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texPortraits)
+	{
+		return false;
+	}
+
 	SDL_GetTextureSize(m_texPortraits, &w, &h);
 	m_portraitWidth = (int)w / NUM_PORTRAITS;
 	m_portraitHeight = (int)h;
 	SDL_SetTextureScaleMode(m_texPortraits, SDL_SCALEMODE_NEAREST);
 
 	m_texExodusFade = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_exodusWidth, m_exodusHeight);
+
+	if (!m_texExodusFade)
+	{
+		return false;
+	}
+
 	unsigned char* pixels = NULL;
 	int pitch;
 	SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
@@ -1047,11 +1128,21 @@ void U3Resources::loadImages()
 
 	m_texUltimaLogo = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texUltimaLogo)
+	{
+		return false;
+	}
+
 	SDL_GetTextureSize(m_texUltimaLogo, &w, &h);
 	m_ultimaLogoWidth = (int)w;
 	m_ultimaLogoHeight = (int)h;
 
 	m_texUltimaLogoFade = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, m_ultimaLogoWidth, m_ultimaLogoHeight);
+
+	if (!m_texUltimaLogoFade)
+	{
+		return false;
+	}
 
 	SDL_LockTexture(m_texUltimaLogoFade, NULL, (void**)&pixels, &pitch);
 	memset(pixels, 0, sizeof(char) * pitch * m_ultimaLogoHeight);
@@ -1064,12 +1155,22 @@ void U3Resources::loadImages()
 
 	m_texBy = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texBy)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Credits.png";
 
 	m_texCredits = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texCredits)
+	{
+		return false;
+	}
 
 	//////////////////////////////////////////////////
 
@@ -1079,11 +1180,21 @@ void U3Resources::loadImages()
 	currentPath /= "SosariaMap.jpg";
 	m_texSosariaMap = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texSosariaMap)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Fountain.jpg";
 	m_texFountain = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texFountain)
+	{
+		return false;
+	}
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -1091,11 +1202,21 @@ void U3Resources::loadImages()
 	currentPath /= "Rod.jpg";
 	m_texRod = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texRod)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Shrine.jpg";
 	m_texShrine = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texShrine)
+	{
+		return false;
+	}
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -1103,11 +1224,21 @@ void U3Resources::loadImages()
 	currentPath /= "TimeLord.jpg";
 	m_texTimeLord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texTimeLord)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "CharacterRecord.jpg";
 	m_texCharacterRecord = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texCharacterRecord)
+	{
+		return false;
+	}
 
 	SDL_GetTextureSize(m_texCharacterRecord, &m_characterRecordWidth, &m_characterRecordHeight);
 
@@ -1117,11 +1248,21 @@ void U3Resources::loadImages()
 	currentPath /= "RaceClassInfo.gif";
 	m_texRaceClass = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texRaceClass)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "DistributeFood.png";
 	m_texDistributeFood = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texDistributeFood)
+	{
+		return false;
+	}
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -1129,11 +1270,21 @@ void U3Resources::loadImages()
 	currentPath /= "GatherGold.png";
 	m_texGatherGold = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
+	if (!m_texGatherGold)
+	{
+		return false;
+	}
+
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "DistributeFoodPushed.png";
 	m_texDistributeFoodPushed = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
+
+	if (!m_texDistributeFoodPushed)
+	{
+		return false;
+	}
 
 	currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -1141,7 +1292,16 @@ void U3Resources::loadImages()
 	currentPath /= "GatherGoldPushed.png";
 	m_texGatherGoldPushed = IMG_LoadTexture(m_renderer, currentPath.string().c_str());
 
-	m_dungeon->loadGraphics();
+	if (!m_texGatherGoldPushed)
+	{
+		return false;
+	}
+
+	if (!m_dungeon->loadGraphics())
+	{
+		return false;
+	}
+	return true;
 }
 
 void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)

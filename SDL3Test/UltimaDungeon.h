@@ -13,7 +13,7 @@ public:
 
 	void DungeonStart(short mode);
 	void DngInfo();
-	void loadGraphics();
+	bool loadGraphics();
 	void DrawDungeon();
 	void setForceRedraw()
 	{
@@ -84,10 +84,6 @@ private:
 	SDL_Texture* m_texDungeonDoors[32];
 	SDL_Texture* m_texSecrets[21];
 	SDL_Texture* m_texDungeonShapes;
-	SDL_Texture* m_texFountain;
-	SDL_Texture* m_texTimeLord;
-	SDL_Texture* m_texRod;
-	SDL_Texture* m_texShrine;
 	SDL_Texture* m_texDungeonPort;
 
 	std::vector < std::pair<SDL_FRect, SDL_FRect>> m_ladderRect; // A hack to render ladders

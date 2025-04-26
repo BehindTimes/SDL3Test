@@ -35,7 +35,7 @@ U3Graphics::U3Graphics() :
 
 U3Graphics::~U3Graphics()
 {
-    if (!m_texMap)
+    if (m_texMap)
     {
         SDL_DestroyTexture(m_texMap);
         m_texMap = nullptr;

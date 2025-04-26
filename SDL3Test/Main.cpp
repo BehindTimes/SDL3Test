@@ -98,8 +98,9 @@ int main(int argc, char* argv[])
     m_graphics.reset();
     m_misc.reset();
     m_resources.reset();
-    auto blah = SDL_GetError();
-    std::cout << "Error = " << blah << std::endl;
+    auto errorValue = SDL_GetError();
+    // For debugging purposes.  Shouldn't display anything
+    std::cout << "Error = " << errorValue << std::endl;
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -667,7 +668,7 @@ void Organize()
                 {
                     m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
                     SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    bool blah = SDL_SyncWindow(window);
+                    SDL_SyncWindow(window);
 
                     m_resources->CalculateBlockSize();
                 }

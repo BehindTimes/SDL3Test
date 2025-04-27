@@ -100,7 +100,7 @@ void UltimaSpellCombat::Combat()
 			// but for now, just finish
 			int charTile = DetermineShape(m_misc->m_Player[m_misc->m_Party[6 + chnum]][23]);
 			int offset = (charTile % 16);
-			m_misc->m_CharShape[chnum] = charTile + offset;
+			m_misc->m_CharShape[chnum] = (unsigned char)(charTile + offset);
 			m_misc->m_CharTile[chnum] = m_misc->GetXYTile(m_misc->m_CharX[chnum], m_misc->m_CharY[chnum]);
 			m_misc->PutXYTile(m_misc->m_CharShape[chnum], m_misc->m_CharX[chnum], m_misc->m_CharY[chnum]);
 		}
@@ -116,17 +116,17 @@ void UltimaSpellCombat::Combat()
 	}
 	while (numMon >= 0)
 	{
-		mon = m_utilities->getRandom(0, 7);
+		mon = (short)m_utilities->getRandom(0, 7);
 		if (m_misc->m_MonsterHP[mon] == 0)
 		{
 			health = (m_misc->m_gMonType / 2) & 0x0F;
 			int rngVal = m_utilities->getRandom(0, monhpstart[health]);
-			m_misc->m_MonsterHP[mon] = rngVal | 0x0F;
+			m_misc->m_MonsterHP[mon] = (unsigned char)(rngVal | 0x0F);
 			m_misc->m_MonsterTile[mon] = m_misc->GetXYTile(m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
 			unsigned char tileValue = (unsigned char)m_misc->m_gMonType;
 			if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
 			{
-				tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
+				tileValue = (unsigned char)((((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2);
 			}
 			m_misc->PutXYTile(tileValue, m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
 			numMon--;
@@ -272,7 +272,7 @@ void UltimaSpellCombat::Pilfer(short chnum) // $881F
 	if (rngNum < 128)
 	{
 		rngNum = m_utilities->getRandom(0, 15);
-		item = rngNum;
+		item = (short)rngNum;
 		if (item == 0)
 		{
 			return;
@@ -286,7 +286,7 @@ void UltimaSpellCombat::Pilfer(short chnum) // $881F
 	else
 	{
 		rngNum = m_utilities->getRandom(0, 7);
-		item = rngNum;
+		item = (short)rngNum;
 		if (item == 0)
 		{
 			return;
@@ -421,7 +421,7 @@ unsigned char UltimaSpellCombat::HowMany() const // $80DE
 	{
 		return 7;
 	}
-	int rngNum = m_utilities->getRandom(0, 7);
+	unsigned char rngNum = (unsigned char)m_utilities->getRandom(0, 7);
 	if (m_misc->m_Party[2] < 2)
 	{
 		return rngNum;    // Party[2]'s were g835E, which wasn't set yet!
@@ -537,7 +537,7 @@ bool UltimaSpellCombat::BigDeathCallback1()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	int rngNum = m_utilities->getRandom(0, 255);
+	//unsigned char rngNum = (unsigned char)m_utilities->getRandom(0, 255);
 	if (m_misc->m_MonsterHP[m_misc->m_opnum] != 0)
 	{
 		m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
@@ -556,15 +556,15 @@ void UltimaSpellCombat::AddExp(short chnum, short amount) // $7091
 	short rosNum, experience;
 	rosNum = m_misc->m_Party[6 + chnum];
 	experience = (m_misc->m_Player[rosNum][30] * 100) + m_misc->m_Player[rosNum][31];
-	int oldLvl = (experience / 100);
+	//int oldLvl = (experience / 100);
 	experience += amount;
 	if (experience > 9899)
 	{
 		experience = 9899;
 	}
-	int newLvl = (experience / 100);
-	m_misc->m_Player[rosNum][30] = experience / 100;
-	m_misc->m_Player[rosNum][31] = experience - (m_misc->m_Player[rosNum][30] * 100);
+	//int newLvl = (experience / 100);
+	m_misc->m_Player[rosNum][30] = (unsigned char)(experience / 100);
+	m_misc->m_Player[rosNum][31] = (unsigned char)(experience - (m_misc->m_Player[rosNum][30] * 100));
 }
 
 void UltimaSpellCombat::DamageMonster(short which, short damage, short chnum)
@@ -589,7 +589,7 @@ void UltimaSpellCombat::DamageMonster(short which, short damage, short chnum)
 		}
 		else
 		{
-			m_misc->m_MonsterHP[which] -= damage;
+			m_misc->m_MonsterHP[which] -= (unsigned char)damage;
 		}
 	}
 }
@@ -715,8 +715,8 @@ bool UltimaSpellCombat::CommandHandleMove() // $828D
 		return false;
 	}
 	m_misc->PutXYTile(m_misc->m_CharTile[m_activePlayer], m_misc->m_CharX[m_activePlayer], m_misc->m_CharY[m_activePlayer]);
-	m_misc->m_CharX[m_activePlayer] = m_misc->m_xs;
-	m_misc->m_CharY[m_activePlayer] = m_misc->m_ys;
+	m_misc->m_CharX[m_activePlayer] = (unsigned char)m_misc->m_xs;
+	m_misc->m_CharY[m_activePlayer] = (unsigned char)m_misc->m_ys;
 	m_misc->m_CharTile[m_activePlayer] = m_misc->GetXYTile(m_misc->m_xs, m_misc->m_ys);
 	m_misc->PutXYTile(m_misc->m_CharShape[m_activePlayer], m_misc->m_xs, m_misc->m_ys);
 
@@ -907,7 +907,7 @@ void UltimaSpellCombat::monlb() // $8672
 	unsigned char tileValue = (unsigned char)m_misc->m_gMonType;
 	if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
 	{
-		tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
+		tileValue = (unsigned char)((((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2);
 	}
 	m_misc->PutXYTile(tileValue, m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
 }
@@ -1008,7 +1008,7 @@ void UltimaSpellCombat::c8777()
 	temp = ((m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][28] * 256) + m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][29]) / 100;
 	temp = ((monhpstart[(m_misc->m_gMonType / 2) & 0x0F] / 8) + temp) | 1;
 	int rngNum = m_utilities->getRandom(0, temp) + 1;
-	temp = rngNum;
+	temp = (short)rngNum;
 	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], temp);
 	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], (m_g835E & 3) * 16);
 
@@ -1248,7 +1248,7 @@ bool UltimaSpellCombat::CombatAttackCallback2()
 	short damage;
 	m_misc->PutXYTile(m_misc->m_gMonType, m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
 	
-	damage = m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_rosNum][18] | 1);
+	damage = (short)m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_rosNum][18] | 1);
 	damage += m_misc->m_Player[m_misc->m_rosNum][18] / 2;
 	damage += m_misc->m_Player[m_misc->m_rosNum][48] * 3;
 	damage += 4;
@@ -1402,7 +1402,7 @@ bool UltimaSpellCombat::ProjectileCallback2()
 void UltimaSpellCombat::Spell(short chnum, short spellnum)
 {
 	short rosNum;
-	int rngNum;
+	short rngNum;
 
 	rosNum = m_misc->m_Party[6 + chnum];
 	switch (spellnum)
@@ -1414,7 +1414,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 			return;
 		}
 		m_g5521 = (unsigned char)0xFF;
-		rngNum = m_utilities->getRandom(0, 255);
+		rngNum = (short)m_utilities->getRandom(0, 255);
 		if (rngNum < 128)
 		{
 			Failed();
@@ -1423,7 +1423,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(255, chnum);
 		break;
 	case 1: // Mittar
-		rngNum = m_utilities->getRandom(0, 255) | 0x10;
+		rngNum = (short)m_utilities->getRandom(0, 255) | 0x10;
 		Projectile(chnum, rngNum);
 		break;
 	case 2: // Lorum

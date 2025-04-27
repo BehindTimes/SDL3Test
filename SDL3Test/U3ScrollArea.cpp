@@ -130,15 +130,14 @@ void U3ScrollArea::redraw()
 	SDL_SetRenderTarget(m_renderer, m_texDisplay);
 	SDL_RenderClear(m_renderer);
 
-	auto tempMessages = m_messages;
+	std::deque<std::pair<sTextFlags, std::string>> tempMessages = m_messages;
 
-	float startPos = 23.0f * m_blockSize;
-	int tempIndex = 6;
+	short tempIndex = 6;
 	bool drawInput = true;
 
 	while(!tempMessages.empty())
 	{
-		auto curPair = tempMessages.back();
+		std::pair<sTextFlags, std::string> curPair = tempMessages.back();
 		tempMessages.pop_back();
 		if (curPair.first.prompt)
 		{
@@ -198,7 +197,7 @@ bool U3ScrollArea::updateQueue()
 	if (m_queueBegin)
 	{
 		m_queueBegin = false;
-		auto curStr = m_messageQueue.front();
+		std::pair<sTextFlags, std::string> curStr = m_messageQueue.front();
 		if (curStr.second == std::string("\n"))
 		{
 			m_forceRedraw = true;
@@ -240,7 +239,7 @@ bool U3ScrollArea::updateQueue()
 	m_forceRedraw = true;
 	m_update = true;
 	bool updated = false;
-	auto curStr = m_messageQueue.front();
+	std::pair<sTextFlags, std::string> curStr = m_messageQueue.front();
 	if (curStr.second == std::string("\n"))
 	{
 		m_messages.push_back(std::make_pair(sTextFlags(), ""));
@@ -335,12 +334,12 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 		m_forceRedraw = false;
 	}
 
-	SDL_FRect fromRect;
+	SDL_FRect fromRect(0);
 	fromRect.x = (float)(0.0f * m_blockSize);
 	fromRect.y = (float)(0.0f * m_blockSize) + yOffset;
 	fromRect.w = (float)17.0f * m_blockSize;
 	fromRect.h = (float)7.0f * m_blockSize;
-	SDL_FRect toRect;
+	SDL_FRect toRect(0);
 	toRect.x = (float)(24.0f * m_blockSize);
 	toRect.y = (float)(17.0f * m_blockSize);
 	toRect.w = (float)17.0f * m_blockSize;
@@ -402,7 +401,6 @@ std::string U3ScrollArea::RewrapString(std::string str)
 {
 	std::string strMessage;
 	int textLen;
-	TTF_Text* text_obj = NULL;
 	int maxSize = 12 * m_blockSize; // leave room for a prompt
 	int totalMaxSize = 12 * m_blockSize;
 	bool emptyBackString = true;
@@ -427,7 +425,7 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	}
 	if (m_messageQueue.size() > 0)
 	{
-		auto tempQueue = m_messageQueue;
+		std::queue<std::pair<sTextFlags, std::string>> tempQueue = m_messageQueue;
 		while(!tempQueue.empty())
 		{
 			lastElementDeque.push_back(tempQueue.front());
@@ -459,7 +457,6 @@ std::string U3ScrollArea::RewrapString(std::string str)
 	}
 
 	size_t start_index = 0;
-	size_t end_index = tokens.size() - 1;
 	for (start_index = 0; start_index < tokens.size(); ++start_index)
 	{
 		std::string tempString = tokens[start_index];

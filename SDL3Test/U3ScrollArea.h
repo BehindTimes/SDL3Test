@@ -28,7 +28,7 @@ class U3ScrollArea
 public:
 	explicit U3ScrollArea();
 	~U3ScrollArea();
-	const bool isUpdating()
+	bool isUpdating() const
 	{
 		return m_updating;
 	}

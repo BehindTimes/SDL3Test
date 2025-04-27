@@ -68,11 +68,11 @@ public:
 	bool PutSosaria();
 
 	unsigned char GetXYTile(short x, short y);
-	unsigned char GetXYVal(int x, int y);
+	unsigned char GetXYVal(short x, short y);
 	void PutXYVal(unsigned char value, unsigned char x, unsigned char y);
 	void PutXYTile(short value, short x, short y);
 	bool CheckAlive(short member) const;
-	void LoadUltimaMap(int map);
+	void LoadUltimaMap(short map);
 	void BlockExodus();
 	short MonsterHere(short x, short y) const;
 	short MaxMana(char rosNum) const;
@@ -99,12 +99,12 @@ public:
 	void NorthEast();
 	void NorthWest();
 
-	void Cast(int chNum);
+	void Cast(short chNum);
 	void ModifyOrder();
 	void NegateTime();
-	void ReadyWeapon(int chnum);
+	void ReadyWeapon(short chnum);
 	void WearArmor();
-	void ZStats(int mode, short chnum);
+	void ZStats(short mode, short chnum);
 
 	void GetChest(short spell, short chnum);
 	void HandEquip();
@@ -144,11 +144,11 @@ public:
 	short m_mapSize;
 	int m_mapOffset;
 	std::vector<unsigned char> m_map;
-	int m_xpos;
-	int m_ypos;
+	short m_xpos;
+	short m_ypos;
 
-	int m_oy;
-	int m_ox;
+	short m_oy;
+	short m_ox;
 
 	short m_stx;
 	short m_sty;
@@ -188,17 +188,17 @@ public:
 	short m_zp[255];
 	short m_gMoonDisp[2];
 	InputType m_inputType;
-	int m_wx;
-	int m_wy;
+	short m_wx;
+	short m_wy;
 	bool m_checkDead;
 	bool m5BDC;
 	GameStateMode m_gameMode;
 	GameStateMode m_lastMode;
 	short m_heading;
-	int m_xs;
-	int m_ys;
-	int m_dx;
-	int m_dy;
+	short m_xs;
+	short m_ys;
+	short m_dx;
+	short m_dy;
 
 	bool m_numOnly;
 	short m_opnum;
@@ -213,8 +213,8 @@ public:
 
 	std::stack<std::function<bool()>> m_callbackStack;
 	std::string m_input;
-	int m_input_num;
-	int m_maxInputLength;
+	short m_input_num;
+	short m_maxInputLength;
 	std::queue<int> m_weaponsList;
 	bool m_YellStat;
 	Uint64 m_elapsedSleepTime;
@@ -328,9 +328,9 @@ private:
 	bool ExodusCastleCallback();
 	void GetMonsterDir(short monNum);
 	
-	bool moveshoot(int offset);
-	void move7AAA(int offset);
-	bool moveoutside(int offset);
+	bool moveshoot(short offset);
+	void move7AAA(short offset);
+	bool moveoutside(short offset);
 	bool AttackCallback();
 	bool IgniteCallback();
 	bool JoinGoldCallback();
@@ -411,7 +411,7 @@ private:
 
 	bool ProcessEventCallback();
 	void Whirl1();
-	void Whirl2(int newx, int newy);
+	void Whirl2(short newx, short newy);
 	void Whirl3();
 	void GoWhirlPool();
 	void MoonGateUpdate();

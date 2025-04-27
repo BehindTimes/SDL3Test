@@ -263,7 +263,7 @@ private:
 	std::map<std::string, std::string> processSettingsDoc(xmlDocPtr docPtr);
 	xmlNodePtr findNodeByName(xmlNodePtr rootnode, const xmlChar* nodename);
 	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect) const;
-	void GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
+	void GetTileRectForIndex(int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y);
 	void ScrollShape(int tilenum, float offset);
 	
 	void AlertCallback();

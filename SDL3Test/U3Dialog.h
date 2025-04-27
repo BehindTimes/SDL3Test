@@ -4,7 +4,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <string>
-#include <vector>
 #include "U3Theme.h"
 #include "U3Button.h"
 
@@ -34,7 +33,7 @@ public:
 struct U3TextBox
 {
 public:
-	U3TextBox(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize, int x, int y, int width);
+	U3TextBox(int blockSize, int x, int y, int width);
 	~U3TextBox();
 
 	void U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize);
@@ -165,7 +164,7 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void HandleEvent(SDL_Event& event);
-	const int ReturnValue() { return m_retVal; }
+	int ReturnValue() const { return m_retVal; }
 
 private:
 	void RewrapMessage(std::string& strMesssage);

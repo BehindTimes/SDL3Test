@@ -59,8 +59,8 @@ private:
 	void fillDoorPoly(unsigned char* canvas, short minX, short maxX, short minY, short maxY);
 	void createDoorPoly(unsigned char* canvas, short dx1, short dy1, short dx2, short dy2, short dy3, short dy4);
 	void renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2);
-	short getLeftMost(unsigned char* canvas, short startX, short endX);
-	short getRightMost(unsigned char* canvas, short startX, short endX);
+	int getLeftMost(unsigned char* canvas, int startX, int endX);
+	int getRightMost(unsigned char* canvas, int startX, int endX);
 	void DrawSecretMessage();
 	bool ShowSecret(short which) const;
 	void createTextureSecrets();

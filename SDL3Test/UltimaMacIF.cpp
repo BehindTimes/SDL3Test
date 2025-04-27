@@ -18,7 +18,7 @@ void ToolBoxInit()
 {
 }
 
-void WindowInit(short which)
+void WindowInit([[maybe_unused]]short which)
 {
     
 }

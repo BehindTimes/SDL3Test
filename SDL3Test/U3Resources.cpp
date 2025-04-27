@@ -74,7 +74,7 @@ bool U3Resources::loadPreferences()
 
 	if (docPtr == nullptr)
 	{
-		return false;;
+		return false;
 	}
 
 	auto curMap = processSettingsDoc(docPtr);
@@ -121,7 +121,7 @@ bool U3Resources::loadPreferences()
 	{
 	}
 
-	return true;
+	return valid;
 }
 
 void U3Resources::savePreferences()
@@ -795,8 +795,8 @@ void U3Resources::CalculateBlockSize()
 		m_blockSize = width;
 	}
 
-	screenOffsetX = (windowWidth - m_blockSize * 40) / 2;
-	screenOffsetY = (windowHeight - m_blockSize * 24) / 2;
+	screenOffsetX = (short)((windowWidth - m_blockSize * 40) / 2);
+	screenOffsetY = (short)((windowHeight - m_blockSize * 24) / 2);
 
 	m_scrollArea->setBlockSize(m_blockSize);
 	m_graphics->setBlockSize(m_blockSize);
@@ -1028,7 +1028,7 @@ bool U3Resources::loadCons()
 
 	for (size_t index = 0; index < cons_files.size(); ++index)
 	{
-		std::filesystem::path currentPath = std::filesystem::current_path();
+		currentPath = std::filesystem::current_path();
 		currentPath /= ResourceLoc;
 		currentPath /= BinLoc;
 		currentPath /= cons_files[index];
@@ -1066,8 +1066,6 @@ bool U3Resources::loadPLists()
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= PListLoc;
-
-	xmlTextReaderPtr readerPtr = nullptr;
 
 	for (const std::filesystem::directory_entry& dirEntry : std::filesystem::recursive_directory_iterator(currentPath))
 	{
@@ -1172,13 +1170,13 @@ void U3Resources::zStatDistributeCallback([[maybe_unused]] int button)
 	}
 	for (i = 1; i <= m_misc->m_Party[1]; i++)
 	{
-		num = longVal;
+		num = (short)longVal;
 		if (i < m_misc->m_Party[1])
 		{
-			num = (longVal / (m_misc->m_Party[1] - (i - 1)));
+			num = (short)(longVal / (m_misc->m_Party[1] - (i - 1)));
 		}
-		m_misc->m_Player[m_misc->m_Party[5 + i]][32] = num / 100;
-		m_misc->m_Player[m_misc->m_Party[5 + i]][33] = num - (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100);
+		m_misc->m_Player[m_misc->m_Party[5 + i]][32] = (unsigned char)(num / 100);
+		m_misc->m_Player[m_misc->m_Party[5 + i]][33] = (unsigned char)(num - (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100));
 		longVal -= num;
 	}
 	GenerateZStatImage(m_misc->m_rosNum);
@@ -1297,7 +1295,7 @@ bool U3Resources::loadImages()
 	return true;
 }
 
-void U3Resources::GetTileRectForIndex(SDL_Texture* curTexture, int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
+void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect, float tileXSize, float tileYSize, int num_tiles_y)
 {
 	int yPos = tileNum % num_tiles_y;
 	int xPos = (tileNum / num_tiles_y);
@@ -1335,7 +1333,7 @@ void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
 	{
 		for (int indexY = 0; indexY < MINITILES_NUM_Y; ++indexY)
 		{
-			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize, 1);
+			GetTileRectForIndex(curVecPos, frameRect, tileXSize, tileYSize, 1);
 			SDL_SetRenderTarget(m_renderer, curGraphics.mini_tiles[curVecPos]);
 			SDL_RenderClear(m_renderer);
 			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
@@ -1390,7 +1388,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	{
 		for (int indexY = 0; indexY < TILES_NUM_Y; ++indexY)
 		{
-			GetTileRectForIndex(curTexture, curVecPos, frameRect, tileXSize, tileYSize, TILES_NUM_Y);
+			GetTileRectForIndex(curVecPos, frameRect, tileXSize, tileYSize, TILES_NUM_Y);
 			SDL_SetRenderTarget(m_renderer, curGraphics.tiles[curVecPos]);
 			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
 			SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
@@ -1871,7 +1869,7 @@ void U3Resources::drawExodus(Uint8 alpha)
 
 	unsigned char* pixels = NULL;
 	int pitch;
-	bool works = SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
+	SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
 	for (int indexY = 0; indexY < m_exodusHeight; ++indexY)
 	{
 		for (int indexX = 0; indexX < m_exodusWidth * 4; indexX += 4)
@@ -1900,7 +1898,7 @@ void U3Resources::drawUltimaLogo(Uint8 alpha)
 
 	unsigned char* pixels = NULL;
 	int pitch;
-	bool works = SDL_LockTexture(m_texUltimaLogoFade, NULL, (void**)&pixels, &pitch);
+	SDL_LockTexture(m_texUltimaLogoFade, NULL, (void**)&pixels, &pitch);
 	for (int indexY = 0; indexY < m_ultimaLogoHeight; ++indexY)
 	{
 		for (int indexX = 0; indexX < m_ultimaLogoWidth * 4; indexX += 4)
@@ -2089,7 +2087,7 @@ void U3Resources::DoWind()
 			newDir -= 4;
 		}
 	}
-	m_misc->m_WindDir = newDir;
+	m_misc->m_WindDir = (char)newDir;
 }
 
 void U3Resources::PlotSig(int x, int y) const
@@ -2206,7 +2204,6 @@ void U3Resources::CenterMessage(std::string message, short xStart, short xEnd, s
 {
 	SDL_FRect myRect(0);
 	int difference = xEnd * m_blockSize - xStart * m_blockSize;
-	int startTile = difference / 2;
 	myRect.x = (float)(xStart * m_blockSize);
 	myRect.y = (float)y * m_blockSize;
 	myRect.h = (float)m_blockSize;
@@ -2415,8 +2412,9 @@ void U3Resources::AnimateTiles()
 			SwapShape(temp);
 			if (temp >= 0x2E && temp <= 0x3C)    // need to swap variants too
 			{
-				char var = ((temp / 2) - 23) * 2 + 80;
-				SwapShape(var++ * 2);
+				unsigned char var = (unsigned char)(((temp / 2) - 23) * 2 + 80);
+				SwapShape(var * 2);
+				var++;
 				SwapShape(var * 2);
 			}
 		}
@@ -2507,7 +2505,7 @@ void U3Resources::DrawDemo(Uint64 curTick)
 	SDL_FRect myRect(0);
 
 	short demoffset, lastTile, shapSize;
-	shapSize = m_blockSize * 2;
+	shapSize = (short)(m_blockSize * 2);
 	lastTile = 255;
 
 	shapeRect.h = (float)shapSize;
@@ -2757,7 +2755,6 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 
 		if (mouseState == 2 && m_selectedFormRect >= 0 && m_selectedFormRect < 20)
 		{
-			float scaler = (float)m_blockSize / 16.0f;
 			float ratio = m_characterRecordHeight / m_characterRecordWidth;
 			float addheight = 336.0f * ratio;
 			float addheight1 = 336.0f * (34.0f / 400.0f);
@@ -2838,8 +2835,6 @@ void U3Resources::DrawOrganizePartyRect()
 
 	if (m_selectedFormRect >= 0)
 	{
-		float tempX = (float)4 * scaler + (offx * scaler);
-		float tempY = (230.0f * scaler) + screenOffsetY;
 		float yOffset = 0;
 		float xOffset = 0;
 		int tempYPos = m_selectedFormRect;
@@ -3046,7 +3041,7 @@ void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned sh
 	SDL_FRect FromRect(0);
 	SDL_FRect ToRect(0);
 
-	shapSize = m_blockSize * 2;
+	shapSize = (short)(m_blockSize * 2);
 	int realTile = GetRealTile(shape);
 
 	FromRect = GetTileRectForIndex(shape / 2);
@@ -3077,8 +3072,8 @@ void U3Resources::DrawTiles()
 
 	offset = 0;
 	lastTile = 255;
-	final = m_blockSize * 22;
-	shapSize = m_blockSize * 2;
+	final = (short)(m_blockSize * 22);
+	shapSize = (short)(m_blockSize * 2);
 
 	shapeRect.w = shapSize;
 	shapeRect.h = shapSize;
@@ -3216,7 +3211,7 @@ void U3Resources::HideMonsters()
 				{
 					m_graphics->m_maskRestoreArray[offset] = (unsigned char)value;
 					m_graphics->m_maskArray[offset] = (unsigned char)value;
-					int mon = m_misc->MonsterHere(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5);
+					mon = m_misc->MonsterHere(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5);
 					short neighbor = (mon < 255) ? m_misc->m_Monsters[(mon + TILEON) % 256] / 2 : m_misc->GetXYVal(m_misc->m_xpos + xm - 6, m_misc->m_ypos + ym - 5) / 2;
 					if (neighbor > 0x10)
 					{
@@ -3332,7 +3327,7 @@ void U3Resources::ShowMonsters()
 				unsigned char tileValue = (unsigned char)m_misc->m_gMonType;    // tile * 2
 				if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
 				{
-					tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
+					tileValue = (unsigned char)((((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2);
 				}
 				value = m_misc->GetXYTile(xm, ym);
 				if (value != 0x78 && value != 0x7A)
@@ -4318,8 +4313,8 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	myRect.w = (float)352.0f * scaler;
 	myRect.h = (float)37.0f * scaler;
 
-	hOff = (m_blockSize / 2) - m_blockSize;
-	vOff = (short)(m_blockSize * 1.5f) - m_blockSize;
+	hOff = (short)((m_blockSize / 2) - m_blockSize);
+	vOff = (short)((m_blockSize * 1.5f) - m_blockSize);
 
 	SDL_Color sdl_text_color = { 0, 0, 0 };
 	SDL_Color sdl_text_color_red = { 255, 0, 0 };
@@ -4407,7 +4402,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	}
 
 	// Display current magic value / max value
-	tempNum = m_misc->MaxMana(rosNum);
+	tempNum = m_misc->MaxMana((char)rosNum);
 	if (tempNum != 0)
 	{
 		std::string maxMana = std::to_string(tempNum);

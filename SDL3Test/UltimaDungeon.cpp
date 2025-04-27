@@ -252,13 +252,13 @@ bool UltimaDungeon::loadGraphics()
 
 void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short x2, short y2)
 {
-	int pitch = 2400;
+	short pitch = 2400;
 
 	if (x1 != x2)
 	{
 		if (x2 < x1)
 		{
-			int temp = y1;
+			short temp = y1;
 			y1 = y2;
 			y2 = temp;
 
@@ -269,16 +269,16 @@ void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short 
 
 		float d = (float)(y2 - y1) / (float)(x2 - x1);
 		float fy1 = y1;
-		for (int i = x1; i < x2; i++)
+		for (short i = x1; i < x2; i++)
 		{
-			if (x1 >= 600 || (int)fy1 >= 512)
+			if (x1 >= 600 || (short)fy1 >= 512)
 			{
 				x1++;
 				fy1 +=d;
 				continue;
 			}
 
-			canvas[(pitch * (int)fy1) + (x1 * 4) + ((std::endian::native == std::endian::big) ? 3 : 0)] = 0xFF;
+			canvas[(pitch * (short)fy1) + (x1 * 4) + ((std::endian::native == std::endian::big) ? 3 : 0)] = 0xFF;
 			x1++;
 			fy1 += d;
 		}
@@ -287,11 +287,11 @@ void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short 
 	{
 		if (y2 < y1)
 		{
-			int temp = y1;
+			short temp = y1;
 			y1 = y2;
 			y2 = temp;
 		}
-		for (int i = y1; i < y2; i++)
+		for (short i = y1; i < y2; i++)
 		{
 			if (y1 >= 512 || x2 >= 600)
 			{
@@ -303,7 +303,7 @@ void UltimaDungeon::renderLine(unsigned char* canvas, short x1, short y1, short 
 	}
 }
 
-short UltimaDungeon::getLeftMost(unsigned char* canvas, short startX, short endX)
+int UltimaDungeon::getLeftMost(unsigned char* canvas, int startX, int endX)
 {
 	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
 	for (int index = (startX * 4); index < (endX * 4); index += 4)
@@ -316,7 +316,7 @@ short UltimaDungeon::getLeftMost(unsigned char* canvas, short startX, short endX
 	return -1;
 }
 
-short UltimaDungeon::getRightMost(unsigned char* canvas, short startX, short endX)
+int UltimaDungeon::getRightMost(unsigned char* canvas, int startX, int endX)
 {
 	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
 	for (int index = (startX * 4); index >= (endX * 4); index -= 4)
@@ -331,9 +331,9 @@ short UltimaDungeon::getRightMost(unsigned char* canvas, short startX, short end
 
 void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, short minY, short maxY)
 {
-	int endianbyte = std::endian::native == std::endian::big ? 3 : 0;
-	int pitch = 2400;
-	int drawMode = 0;
+	short endianbyte = std::endian::native == std::endian::big ? 3 : 0;
+	short pitch = 2400;
+	short drawMode = 0;
 	if (maxX >= 600)
 	{
 		drawMode = 1; // Just draw right
@@ -342,7 +342,7 @@ void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, 
 	{
 		drawMode = 2; // Just draw left
 	}
-	for (int index = minY; index <= maxY; ++index)
+	for (short index = minY; index <= maxY; ++index)
 	{
 		if (index >= 512)
 		{
@@ -352,10 +352,10 @@ void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, 
 		{
 			if (minX < 600)
 			{
-				short startPos = getLeftMost(canvas + (pitch * index), minX, maxX);
+				short startPos = (short)getLeftMost(canvas + (pitch * index), minX, maxX);
 				if (startPos >= 0)
 				{
-					for (int tempIndex = startPos; tempIndex < 600; ++tempIndex)
+					for (short tempIndex = startPos; tempIndex < 600; ++tempIndex)
 					{
 						canvas[(pitch * index) + (tempIndex * 4) + endianbyte] = 0xFF;
 					}
@@ -364,7 +364,7 @@ void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, 
 		}
 		else if (drawMode == 2)
 		{
-			short endPos = getRightMost(canvas + (pitch * index), maxX, minX);
+			short endPos = (short)getRightMost(canvas + (pitch * index), maxX, minX);
 			for (int tempIndex = endPos; tempIndex >= 0; --tempIndex)
 			{
 				canvas[(pitch * index) + (tempIndex * 4) + endianbyte] = 0xFF;
@@ -372,8 +372,8 @@ void UltimaDungeon::fillDoorPoly(unsigned char* canvas, short minX, short maxX, 
 		}
 		else
 		{
-			short startPos = getLeftMost(canvas + (pitch * index), minX, maxX);
-			short endPos = getRightMost(canvas + (pitch * index), maxX, minX);
+			short startPos = (short)getLeftMost(canvas + (pitch * index), minX, maxX);
+			short endPos = (short)getRightMost(canvas + (pitch * index), maxX, minX);
 
 			if (startPos >= 0 && endPos >= 0)
 			{
@@ -490,8 +490,8 @@ void UltimaDungeon::Routine6E6B()
 		m_scrollArea->UPrintMessage(182);
 	}
 
-	m_misc->m_Party[3] = m_misc->m_xpos;
-	m_misc->m_Party[4] = m_misc->m_ypos;
+	m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
+	m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
 
 	bool autosave;
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
@@ -1400,12 +1400,12 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 				{
 					if (*(start + (indexX - 1)) == 0)
 					{
-						unsigned char curByte = indexY * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+						int curByte = (indexY * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte);
 						canvas[curByte] = 0x80;
 					}
 					else if (*(start + (indexX + 1)) == 0)
 					{
-						unsigned char curByte = indexY * (surf->w * 4) + ((indexX + 1) * 4) + 0;
+						int curByte = (indexY * (surf->w * 4) + ((indexX + 1) * 4) + 0);
 						canvas[curByte] = 0x80;
 						curByte++;
 						canvas[curByte] = 0x80;
@@ -1418,7 +1418,7 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 					{
 						if (*((start + surf->pitch) + indexX) == 0)
 						{
-							unsigned char curByte = (indexY + 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+							int curByte = (indexY + 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
 							canvas[curByte] = 0x80;
 						}
 					}
@@ -1426,7 +1426,7 @@ void UltimaDungeon::createOutlineText(std::string dispString, int texId)
 					{
 						if (*((start - surf->pitch) + indexX) == 0)
 						{
-							unsigned char curByte = (indexY - 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
+							int curByte = (indexY - 1) * (surf->w * 4) + ((indexX - 1) * 4) + endianbyte;
 							canvas[curByte] = 0x80;
 						}
 					}
@@ -1481,7 +1481,7 @@ bool UltimaDungeon::FinishAge()
 	{
 		return false;
 	}
-	value = m_utilities->getRandom(0, m_dungeonLevel + 2);
+	value = (short)m_utilities->getRandom(0, m_dungeonLevel + 2);
 	if (value > 6)
 	{
 		value = 6;
@@ -1535,7 +1535,7 @@ void UltimaDungeon::dngnotcombat(short value)
 	case 6: // $92DA gremlins
 	{
 		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
-		int rngNum = m_utilities->getRandom(0, m_misc->m_Party[1] - 1);
+		short rngNum = (short)m_utilities->getRandom(0, m_misc->m_Party[1] - 1);
 		if (m_misc->CheckAlive(rngNum))
 		{
 			short rosNum = m_misc->m_Party[6 + rngNum];

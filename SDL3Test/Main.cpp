@@ -53,7 +53,7 @@ void partyFormed(int button);
 void backToOrganize(int button);
 void createCharacterChooseSlot(int button);
 
-int main(int argc, char* argv[])
+int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
 {
     m_resources = std::make_unique<U3Resources>();
     m_misc = std::make_unique<U3Misc>();
@@ -340,7 +340,7 @@ void partyFormed([[maybe_unused]] int button)
     {
         int curChar = m_resources->m_selectedCharacters[index] + 1;
         m_misc->m_Player[curChar][16] = 255;
-        m_misc->m_Party[index + 6] = curChar;
+        m_misc->m_Party[index + 6] = (unsigned char)curChar;
     }
     m_misc->m_Party[1] = (unsigned char)m_resources->m_selectedCharacters.size();
 
@@ -349,8 +349,8 @@ void partyFormed([[maybe_unused]] int button)
     m_misc->m_Party[5] = 255;    // WTF is this?
     m_misc->m_xpos = 42;
     m_misc->m_ypos = 20;
-    m_misc->m_Party[3] = m_misc->m_xpos;
-    m_misc->m_Party[4] = m_misc->m_ypos;
+    m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
+    m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
     //PutParty();
     //PutRoster();
     m_misc->ResetSosaria();
@@ -470,7 +470,7 @@ void MainMenu()
             newMode = GameMode::Unknown;
             break;
         }
-        Uint64 curTick = SDL_GetTicks();
+        //Uint64 curTick = SDL_GetTicks();
 
         SDL_SetRenderTarget(renderer, NULL);
         SDL_RenderClear(renderer);
@@ -720,7 +720,7 @@ void Organize()
             newMode = GameMode::Unknown;
             break;
         }
-        Uint64 curTick = SDL_GetTicks();
+        //Uint64 curTick = SDL_GetTicks();
 
         bool alertValid = false;
         if (m_resources->HasAlert())
@@ -802,7 +802,7 @@ void JourneyOnward()
     bool gInterrupt = false;
     bool updateMouse = false;
     SDL_Event event;
-    int mouseState = 0;
+    //int mouseState = 0;
     changeMode = false;
 
     Uint64 startTick = SDL_GetTicks();

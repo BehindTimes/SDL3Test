@@ -456,7 +456,7 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
     case OrganizeBottomScreen::CreateCharacterChooseSlot:
     {
         std::string_view tempStr = m_resources->SelectCharacterSlotStr;
-        std::string strMessage(tempStr);
+        strMessage = std::string(tempStr);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->DrawButtons({ 7 });
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
@@ -514,7 +514,7 @@ void U3Graphics::renderMiniMap()
             value = m_misc->GetXYVal(x, y) / 4;
             int minival = value;
             int multval = value / 16;
-            value += (16 * multval);
+            value += (unsigned char)(16 * multval);
             //value = m_resources->GetRealTile(value);
             outRect.x = (float)(x * minSize);
 
@@ -533,7 +533,7 @@ void U3Graphics::renderMiniMap()
                         unsigned char left = m_misc->GetXYVal(x - 1, y) / 4;
                         minival = left;
                         multval = left / 16;
-                        left += (16 * multval);
+                        left += (unsigned char)(16 * multval);
 
                         bool isLetter = false;
                         if (left < 69 || left > 106 || left == 78)
@@ -542,22 +542,22 @@ void U3Graphics::renderMiniMap()
                             unsigned char right = m_misc->GetXYVal(x + 1, y) / 4;
                             minival = right;
                             multval = right / 16;
-                            right += (16 * multval);
+                            right += (unsigned char)(16 * multval);
                             if (right < 69 || right > 106 || right == 78)
                             {
                                 // and the item above it is not a letter, turn it into a door.
                                 unsigned char above = m_misc->GetXYVal(x, y - 1) / 4;
                                 minival = above;
                                 multval = above / 16;
-                                above += (16 * multval);
+                                above += (unsigned char)(16 * multval);
                                 if (above < 69 || above > 106)
                                 {
-                                    for (int index = x - 1; index > 0; --index)
+                                    for (short index = x - 1; index > 0; --index)
                                     {
                                         unsigned char templet = m_misc->GetXYVal(index, y) / 4;
                                         minival = templet;
                                         multval = templet / 16;
-                                        templet += (16 * multval);
+                                        templet += (unsigned char)(16 * multval);
                                         if (templet != 78)
                                         {
                                             if (templet >= 69 && templet <= 106)
@@ -714,7 +714,7 @@ void U3Graphics::DrawMiniMap()
 
     m_resources->adjustRect(theRect);
 
-    SDL_SetRenderDrawColor(m_resources->m_renderer, (int)(255 * ratio), (int)(255 * ratio), (int)(255 * ratio), 255);
+    SDL_SetRenderDrawColor(m_resources->m_renderer, (Uint8)(255 * ratio), (Uint8)(255 * ratio), (Uint8)(255 * ratio), 255);
     SDL_RenderFillRect(m_resources->m_renderer, &theRect);
     SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 }
@@ -724,9 +724,13 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     const char xhide[11] = { 1, 1, 1, 1, 1, 0, -1, -1, -1, -1, -1 };
     const char yhide[11] = { 11, 11, 11, 11, 11, 0, -11, -11, -11, -11, -11 };
 
-    unsigned char xt, yt, xm, ym, offset2, value;
-
-    unsigned char offset = 0;
+    unsigned char xt(0);
+    unsigned char yt(0);
+    unsigned char xm(0);
+    unsigned char ym(0);
+    unsigned char value(0);
+    unsigned char offset2(0);
+    unsigned char offset(0);
     unsigned char numy = 11;
     for (ym = y - 5; numy > 0; ym++)
     {
@@ -759,7 +763,7 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
                         unsigned char above = m_misc->GetXYVal(xm, ym - 1);
                         if (above < 0x98 || above > 0xE4)
                         {
-                            for (int index = xm - 1; index > 0; --index)
+                            for (short index = xm - 1; index > 0; --index)
                             {
                                 unsigned char templet = m_misc->GetXYVal(index, ym);
                                 if (templet != 0xB8)
@@ -898,12 +902,12 @@ void U3Graphics::DrawWinScreen(float ratio)
     theRect.w = (float)m_blockSize * 22;
     theRect.h = (float)m_blockSize * 22;
     m_resources->adjustRect(theRect);
-    SDL_SetTextureAlphaMod(m_texMap, (int)(255 * ratio));
+    SDL_SetTextureAlphaMod(m_texMap, (Uint8)(255 * ratio));
     SDL_RenderTexture(m_resources->m_renderer, m_texMap, NULL, &theRect);
 }
 
 
-void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade)
+void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, [[maybe_unused]] bool fade)
 {
     DrawFrame(1);
     m_resources->ShowChars(true);
@@ -1162,7 +1166,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
         }
         //if (!m_misc->m_freezeAnimation)
         {
-            DrawMap(m_misc->m_xpos, m_misc->m_ypos);
+            DrawMap((unsigned char)m_misc->m_xpos, (unsigned char)m_misc->m_ypos);
         }
     }
     m_resources->ShowChars(true);

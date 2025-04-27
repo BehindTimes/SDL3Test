@@ -176,7 +176,7 @@ void U3Dialog::calculateRects()
 			fillRect.w = m_vecButtons[index]->getWidth() * hRatio;
 			m_vecButtons[index]->updateLocationCentered(fillRect);
 			fillRect.x += (m_vecButtons[index]->getWidth() * hRatio);
-			fillRect.x += 2;
+			fillRect.x += BUTTON_SPACE;
 			//fillRect.x += BUTTON_SPACE;
 		}
 	}
@@ -414,7 +414,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 	RewrapMessage(m_strMessage);
 }
 
-void U3Dialog::RewrapMessage(std::string& strMesssage)
+void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 {
 	auto newLineTokens = m_utilities->splitString(m_strMessage, '\n', true);
 	m_strMessage.clear();
@@ -730,7 +730,7 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 	}
 }
 
-U3TextBox::U3TextBox(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize, int x, int y, int width) :
+U3TextBox::U3TextBox(int blockSize, int x, int y, int width) :
 	m_ttfText(nullptr),
 	m_x(x),
 	m_y(y),
@@ -764,7 +764,6 @@ void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
 {
 	SDL_FRect myRect(0);
 	float scaler = (float)m_blockSize / 16.0f;
-	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
 
 	myRect.x = (float)x;
 	myRect.y = (float)y;
@@ -936,7 +935,7 @@ void CreateCharacterDialog::loadPresets()
 				for (int tempIndex = 1; tempIndex < 5; ++tempIndex)
 				{
 					int tempcount = std::stoi(vals[tempIndex]);
-					m_Presets[index][static_cast<size_t>(tempIndex) - 1] = tempcount;
+					m_Presets[index][static_cast<size_t>(tempIndex) - 1] = (char)tempcount;
 					totalCount += tempcount;
 				}
 				if (vals[0].size() >= 2)
@@ -996,7 +995,7 @@ void CreateCharacterDialog::loadPresets()
 	}
 }
 
-int CreateCharacterDialog::getClassIndex(char value)
+int CreateCharacterDialog::getClassIndex([[maybe_unused]]char value)
 {
 	return 0;
 }
@@ -1088,7 +1087,7 @@ void CreateCharacterDialog::init()
 	m_textBoxes[3]->setText(m_engine_surface, m_font, strClass);
 }
 
-void CreateCharacterDialog::strengthUp(int id)
+void CreateCharacterDialog::strengthUp([[maybe_unused]]int id)
 {
 	if (m_ccdData.remaining > 0 && m_ccdData.strength < 25)
 	{
@@ -1099,7 +1098,7 @@ void CreateCharacterDialog::strengthUp(int id)
 	}
 }
 
-void CreateCharacterDialog::strengthDown(int id)
+void CreateCharacterDialog::strengthDown([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining < 35 && m_ccdData.strength > 5)
 	{
@@ -1110,7 +1109,7 @@ void CreateCharacterDialog::strengthDown(int id)
 	}
 }
 
-void CreateCharacterDialog::dexterityUp(int id)
+void CreateCharacterDialog::dexterityUp([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining > 0 && m_ccdData.dexterity < 25)
 	{
@@ -1121,7 +1120,7 @@ void CreateCharacterDialog::dexterityUp(int id)
 	}
 }
 
-void CreateCharacterDialog::dexterityDown(int id)
+void CreateCharacterDialog::dexterityDown([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining < 35 && m_ccdData.dexterity > 5)
 	{
@@ -1132,7 +1131,7 @@ void CreateCharacterDialog::dexterityDown(int id)
 	}
 }
 
-void CreateCharacterDialog::intelligenceUp(int id)
+void CreateCharacterDialog::intelligenceUp([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining > 0 && m_ccdData.intelligence < 25)
 	{
@@ -1143,7 +1142,7 @@ void CreateCharacterDialog::intelligenceUp(int id)
 	}
 }
 
-void CreateCharacterDialog::intelligenceDown(int id)
+void CreateCharacterDialog::intelligenceDown([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining < 35 && m_ccdData.intelligence > 5)
 	{
@@ -1154,7 +1153,7 @@ void CreateCharacterDialog::intelligenceDown(int id)
 	}
 }
 
-void CreateCharacterDialog::wisdomUp(int id)
+void CreateCharacterDialog::wisdomUp([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining > 0 && m_ccdData.wisdom < 25)
 	{
@@ -1165,7 +1164,7 @@ void CreateCharacterDialog::wisdomUp(int id)
 	}
 }
 
-void CreateCharacterDialog::wisdomDown(int id)
+void CreateCharacterDialog::wisdomDown([[maybe_unused]] int id)
 {
 	if (m_ccdData.remaining < 35 && m_ccdData.wisdom > 5)
 	{
@@ -1176,7 +1175,7 @@ void CreateCharacterDialog::wisdomDown(int id)
 	}
 }
 
-void CreateCharacterDialog::sexUp(int id)
+void CreateCharacterDialog::sexUp([[maybe_unused]] int id)
 {
 	m_ccdData.sex++;
 	if (m_ccdData.sex > 2)
@@ -1199,7 +1198,7 @@ void CreateCharacterDialog::sexUp(int id)
 	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
 }
 
-void CreateCharacterDialog::sexDown(int id)
+void CreateCharacterDialog::sexDown([[maybe_unused]] int id)
 {
 	m_ccdData.sex--;
 	if (m_ccdData.sex < 0)
@@ -1222,7 +1221,7 @@ void CreateCharacterDialog::sexDown(int id)
 	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
 }
 
-void CreateCharacterDialog::raceUp(int id)
+void CreateCharacterDialog::raceUp([[maybe_unused]] int id)
 {
 	m_ccdData.race++;
 	if (m_ccdData.race >= m_resources->m_plistMap["Races"].size())
@@ -1236,7 +1235,7 @@ void CreateCharacterDialog::raceUp(int id)
 	}
 }
 
-void CreateCharacterDialog::raceDown(int id)
+void CreateCharacterDialog::raceDown([[maybe_unused]] int id)
 {
 	m_ccdData.race--;
 	if (m_ccdData.race < 0)
@@ -1250,7 +1249,7 @@ void CreateCharacterDialog::raceDown(int id)
 	}
 }
 
-void CreateCharacterDialog::typeUp(int id)
+void CreateCharacterDialog::typeUp([[maybe_unused]] int id)
 {
 	m_ccdData.type++;
 	if (m_ccdData.type >= m_resources->m_plistMap["Classes"].size())
@@ -1264,7 +1263,7 @@ void CreateCharacterDialog::typeUp(int id)
 	}
 }
 
-void CreateCharacterDialog::typeDown(int id)
+void CreateCharacterDialog::typeDown([[maybe_unused]] int id)
 {
 	m_ccdData.type--;
 	if (m_ccdData.type < 0)
@@ -1278,12 +1277,12 @@ void CreateCharacterDialog::typeDown(int id)
 	}
 }
 
-void CreateCharacterDialog::cancelPushed(int id)
+void CreateCharacterDialog::cancelPushed([[maybe_unused]] int id)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterAborted;
 }
 
-void CreateCharacterDialog::okPushed(int id)
+void CreateCharacterDialog::okPushed([[maybe_unused]] int id)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterDone;
 	memset(m_curPlayer, 0, sizeof(unsigned char) * 65);
@@ -1350,7 +1349,7 @@ void CreateCharacterDialog::okPushed(int id)
 	m_resources->CreatePartyNames();
 }
 
-void CreateCharacterDialog::randomNamePushed(int id)
+void CreateCharacterDialog::randomNamePushed([[maybe_unused]] int id)
 {
 	int rngVal;
 	if (m_ccdData.sex == 0)
@@ -1547,7 +1546,7 @@ void CreateCharacterDialog::addButton(std::string strLabel, int x, int y, std::f
 
 void CreateCharacterDialog::addTextBox(int x, int y, int width)
 {
-	auto curTextBox = std::make_unique<U3TextBox>(m_engine_surface, m_font, m_blockSize, x, y, width);
+	auto curTextBox = std::make_unique<U3TextBox>(m_blockSize, x, y, width);
 	m_textBoxes.push_back(std::move(curTextBox));
 }
 

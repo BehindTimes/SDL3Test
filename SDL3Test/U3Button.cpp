@@ -61,7 +61,7 @@ void U3Button::resizeButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngin
 	CreateTextButton(blockSize, renderer, engine_surface, font, m_text, m_x, m_y);
 }
 
-void U3Button::CreateImageButton(int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height)
+void U3Button::CreateImageButton([[maybe_unused]]int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height)
 {
 	if (m_texDefault)
 	{
@@ -210,7 +210,7 @@ void U3Button::renderCentered(SDL_Renderer* renderer)
 	}
 }
 
-void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, bool adjust)
+void U3Button::render(SDL_Renderer* renderer, [[maybe_unused]]int blockSize, int x, int y, bool adjust)
 {
 	if (!m_visible)
 	{
@@ -238,7 +238,7 @@ void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, bool 
 	}
 }
 
-void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, short adjustX, short adjustY)
+void U3Button::render(SDL_Renderer* renderer, [[maybe_unused]]int blockSize, int x, int y, short adjustX, short adjustY)
 {
 	if (!m_visible)
 	{
@@ -263,7 +263,7 @@ void U3Button::render(SDL_Renderer* renderer, int blockSize, int x, int y, short
 
 void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int blockSize, int x, int y, int width, int height, bool has_clicked, bool has_disabled)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 
 	if (!buttonImage)
 	{
@@ -345,13 +345,13 @@ void U3Button::SetButtonCallback(std::function<void(int)> func, int id)
 	m_id = id;
 }
 
-void U3Button::setMouseCapture(int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY)
+void U3Button::setMouseCapture([[maybe_unused]] int blockSize, int capture, float mouse_x, float mouse_y, float x, float y, short adjustX, short adjustY)
 {
 	if (!m_visible)
 	{
 		return;
 	}
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	//float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
 	m_showPushed = false;
 	bool bCallback = false;

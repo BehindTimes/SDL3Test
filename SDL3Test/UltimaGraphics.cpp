@@ -1051,6 +1051,9 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
         }
         else
         {
+            m_spellCombat->m_updateBlink = true;
+            m_spellCombat->m_cHide = false;
+            m_spellCombat->m_elapsedFlashTime = 0;
             chnum = m_spellCombat->m_g835D;
             m_spellCombat->m_gChnum = chnum;
             m_spellCombat->m_activePlayer = chnum;
@@ -1086,6 +1089,8 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
         while (m_misc->m_callbackStack.size() > 0)
         {
             updateGame = false;
+            m_spellCombat->m_updateBlink = false;
+            m_spellCombat->m_cHide = false;
             std::function<bool()> curCallback = m_misc->m_callbackStack.top();
             bool resumeRendering = curCallback();
             if (resumeRendering)
@@ -1125,6 +1130,10 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     else
     {
         m_scrollArea->blockPrompt(true);
+    }
+    if (m_spellCombat->m_updateBlink)
+    {
+        m_spellCombat->updateGameTime(deltaTime);
     }
 
     if (m_scrollArea->isPrompt())

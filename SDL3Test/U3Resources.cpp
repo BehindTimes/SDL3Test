@@ -3226,24 +3226,31 @@ void U3Resources::ShowMonsters()
 				{
 					tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
 				}
-				if (m_misc->GetXYTile(xm, ym) < 120 || m_misc->GetXYTile(xm, ym) > 122)
+				value = m_misc->GetXYTile(xm, ym);
+				if (value != 0x78 && value != 0x7A)
 				{
-					DrawMasked(tileValue, xm, ym);
+					if (m_misc->GetXYTile(xm, ym) < 120 || m_misc->GetXYTile(xm, ym) > 122)
+					{
+						DrawMasked(tileValue, xm, ym);
+					}
+					m_misc->PutXYTile(m_misc->m_gMonType, xm, ym);
 				}
-				m_misc->PutXYTile(m_misc->m_gMonType, xm, ym);
 			}
 		}
 		for (mon = 0; mon < 4; mon++)
 		{
-			if (m_misc->CheckAlive(mon) && (mon + 1) != m_misc->m_cHide)
+			if (m_misc->CheckAlive(mon))
 			{
 				xm = m_misc->m_CharX[mon];
 				ym = m_misc->m_CharY[mon];
 				value = m_misc->GetXYTile(xm, ym);
 				if (value != 0x78 && value != 0x7A)
 				{
-					DrawMasked(m_misc->m_CharShape[mon], xm, ym);
-					m_misc->PutXYTile(m_misc->m_CharShape[mon], xm, ym);
+					if ((mon) != m_spellCombat->m_activePlayer || !m_spellCombat->m_cHide)
+					{
+						DrawMasked(m_misc->m_CharShape[mon], xm, ym);
+						m_misc->PutXYTile(m_misc->m_CharShape[mon], xm, ym);
+					}
 				}
 			}
 		}

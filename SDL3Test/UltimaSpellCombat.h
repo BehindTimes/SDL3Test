@@ -24,6 +24,7 @@ public:
 	bool HandleDefaultKeyPress(SDL_Keycode key);
 	bool FinishCombatTurn();
 	void HandleMonsterMove();
+	void updateGameTime(Uint64 deltaTime);
 
 	unsigned char m_g5521;
 	unsigned char m_g835D;
@@ -36,6 +37,9 @@ public:
 	short m_mon;
 	bool m_monster_turn;
 	short m_gChnum;
+	bool m_cHide;
+	Uint64 m_elapsedFlashTime;
+	bool m_updateBlink;
 private:
 	void Failed();
 	bool ShowHitCallback() const;
@@ -78,6 +82,8 @@ private:
 	bool ShootCallback1();
 	void Victory() const;
 
+	static constexpr Uint64 CombatBlink = 300;
+
 	unsigned char m_hitType;
 	unsigned char m_origValue;
 	short m_x;
@@ -91,5 +97,6 @@ private:
 	short m_shootX;
 	short m_shootY;
 	short m_shootRet;
+	
 };
 

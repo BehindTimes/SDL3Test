@@ -38,7 +38,10 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_wpn(0),
 	m_shootX(0),
 	m_shootY(0),
-	m_shootRet(0)
+	m_shootRet(0),
+	m_cHide(false),
+	m_elapsedFlashTime(0),
+	m_updateBlink(false)
 {
 }
 
@@ -539,7 +542,7 @@ bool UltimaSpellCombat::BigDeathCallback1()
 		m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
 		m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_misc->m_opnum];
 		m_misc->PutXYTile(0x78, m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
-		m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
+		m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
 		ShowHit(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum], 0x78, m_misc->m_MonsterTile[m_misc->m_opnum]);
 		return false;
 	}
@@ -718,6 +721,8 @@ bool UltimaSpellCombat::FinishCombatTurn()
 		FinishCombatMonsterTurn();
 		return false;
 	}
+
+	m_misc->PutXYTile(m_misc->m_CharShape[m_activePlayer], m_misc->m_xs, m_misc->m_ys);
 
 	m_misc->m_inputType = InputType::Default;
 
@@ -1030,7 +1035,7 @@ void UltimaSpellCombat::monshoot2() // $86B5
 	m_misc->m_opnum = m_misc->GetXYTile(m_misc->m_xs, m_misc->m_ys);
 	m_misc->m_gBallTileBackground = (unsigned char)m_misc->m_opnum;
 	m_misc->PutXYTile(0x7A, m_misc->m_xs, m_misc->m_ys);
-	m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::monshootCallback, this));
+	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::monshootCallback, this));
 	monshoot2();
 }
 
@@ -1326,7 +1331,7 @@ bool UltimaSpellCombat::CombatAttackCallback1()
 	m_scrollArea->UPrintMessage(146);
 	m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_mon];
 	m_misc->PutXYTile(m_misc->m_zp[0x1F], m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
-	m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::CombatAttackCallback2, this));
+	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::CombatAttackCallback2, this));
 	ShowHit(m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon], 0x7A, m_misc->m_MonsterTile[m_mon]);
 	return false;
 }
@@ -1413,4 +1418,18 @@ bool UltimaSpellCombat::ShootCallback()
 	}
 	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatAttackCallback1, this));
 	return false;
+}
+
+void UltimaSpellCombat::updateGameTime(Uint64 deltaTime)
+{
+	if (m_monster_turn)
+	{
+		return;
+	}
+	m_elapsedFlashTime += deltaTime;
+	if (m_elapsedFlashTime > CombatBlink)
+	{
+		m_elapsedFlashTime %= deltaTime;
+		m_cHide = !m_cHide;
+	}
 }

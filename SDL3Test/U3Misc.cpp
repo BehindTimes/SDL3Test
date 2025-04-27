@@ -798,6 +798,7 @@ void U3Misc::PutXYTile(short value, short x, short y)
 	{
 		return;
 	}
+
 	m_resources->m_TileArray[y * 11 + x] = (unsigned char)value;
 }
 

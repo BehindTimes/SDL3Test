@@ -1006,15 +1006,16 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     m_misc->m_currentEvent = event;
     DrawFrame(1);
     m_resources->ShowChars(true);
+    m_spellCombat->drawCombat();
     m_resources->DrawInverses(deltaTime);
     m_scrollArea->render(deltaTime);
     bool updateGame = true;
 
-    if (m_misc->m_gameMode == GameStateMode::Map)
+    if (m_lastMode == U3GraphicsMode::Map)
     {
         DrawMoonGateStuff();
     }
-    if (m_misc->m_gameMode == GameStateMode::Dungeon)
+    else if (m_lastMode == U3GraphicsMode::Dungeon)
     {
         m_dungeon->DngInfo();
     }
@@ -1030,22 +1031,36 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     if (m_spellCombat->m_newMove)
     {
         m_spellCombat->m_newMove = false;
-        chnum = m_spellCombat->m_g835D;
-        m_misc->InverseChnum(chnum, true);
-
-        if (m_misc->CheckAlive(chnum))
+        if (m_spellCombat->m_monster_turn)
         {
-            m_spellCombat->m_count = 0x2F;
-            m_scrollArea->UPrintMessage(134);
-            dispString = std::to_string(chnum + 1);
-            m_scrollArea->UPrintWin(dispString);
-            m_misc->m_wx++;
-            m_scrollArea->UPrintMessage(135);
-            m_misc->m_dx = m_misc->m_dy = 0;
-            m_misc->m_xs = m_misc->m_CharX[chnum];
-            m_misc->m_ys = m_misc->m_CharY[chnum];
-            m_spellCombat->m_count2 = 0xC0;
+            m_spellCombat->m_mon++;
         }
+        else
+        {
+            chnum = m_spellCombat->m_g835D;
+            m_spellCombat->m_gChnum = chnum;
+            m_spellCombat->m_activePlayer = chnum;
+
+            if (m_misc->CheckAlive(chnum))
+            {
+                m_misc->InverseChnum(chnum, true);
+                m_spellCombat->m_count = 0x2F;
+                m_scrollArea->UPrintMessage(134);
+                dispString = std::to_string(chnum + 1);
+                m_scrollArea->UPrintWin(dispString);
+                m_misc->m_wx++;
+                m_scrollArea->UPrintMessage(135);
+                m_misc->m_dx = m_misc->m_dy = 0;
+                m_misc->m_xs = m_misc->m_CharX[chnum];
+                m_misc->m_ys = m_misc->m_CharY[chnum];
+                m_spellCombat->m_count2 = 0xC0;
+            }
+            else
+            {
+                m_misc->AddFinishTurn();
+            }
+        }
+        
     }
 
     if (m_scrollArea->isUpdating() || !m_scrollArea->MessageQueueEmpty())
@@ -1077,9 +1092,21 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     }
     if (updateGame)
     {
-        m_scrollArea->blockPrompt(false);
-        m_misc->ProcessEvent(event);
-        m_resources->updateGameTime(deltaTime);
+        if (m_spellCombat->m_monster_turn)
+        {
+            m_scrollArea->blockPrompt(true);
+            m_misc->AddFinishTurn();
+            if (m_misc->m_MonsterHP[m_spellCombat->m_mon] != 0)
+            {
+                m_spellCombat->HandleMonsterMove();
+            }
+        }
+        else
+        {
+            m_scrollArea->blockPrompt(false);
+            m_misc->ProcessEvent(event);
+            m_resources->updateGameTime(deltaTime);
+        }
     }
     else
     {
@@ -1090,7 +1117,6 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     {
         m_resources->DrawPrompt();
     }
-    m_spellCombat->drawCombat();
 }
 
 void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)

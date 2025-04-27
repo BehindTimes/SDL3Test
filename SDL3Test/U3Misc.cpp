@@ -3950,6 +3950,9 @@ bool U3Misc::ResurrectCallback()
 	char chNum;
 	char byte;
 	m_inputType = InputType::Default;
+	m_graphics->m_curMode = U3GraphicsMode::Map;
+	m_graphics->m_queuedMode = U3GraphicsMode::None;
+	m_gameMode = GameStateMode::Map;
 
 	for (chNum = 0; chNum < 4; chNum++)
 	{

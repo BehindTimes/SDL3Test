@@ -14,38 +14,6 @@ extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<U3Graphics> m_graphics;
 
-bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
-{
-	/*if (key >= SDLK_A && key <= SDLK_Z)
-	{
-		LetterCommand(key);
-	}
-	else
-	{
-		switch (key)
-		{
-		case SDLK_UP:
-			Forward();
-			break;
-		case SDLK_DOWN:
-			Retreat();
-			break;
-		case SDLK_LEFT:
-			Left();
-			break;
-		case SDLK_RIGHT:
-			Right();
-			break;
-		case SDLK_SPACE:
-			m_misc->Pass();
-			break;
-		default:
-			break;
-		}
-	}*/
-	return true;
-}
-
 
 UltimaSpellCombat::UltimaSpellCombat() :
 	m_hitType(0),
@@ -61,7 +29,12 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_g835D(0),
 	m_combatStart(true),
 	m_count(0),
-	m_count2(0)
+	m_count2(0),
+	m_activePlayer(0),
+	m_g835F(0),
+	m_mon(0),
+	m_monster_turn(false),
+	m_gChnum(0)
 {
 }
 
@@ -76,6 +49,8 @@ void UltimaSpellCombat::combatstart()
 	m_newMove = true;
 	m_g835D = 0;
 	m_misc->AgeChars();
+	m_monster_turn = false;
+	m_mon = -1;
 }
 
 
@@ -720,3 +695,436 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 	}
 }
 
+void UltimaSpellCombat::FinishCombatMonsterTurn()
+{
+	if (m_mon >= 7)
+	{
+		combatstart();
+		return;
+	}
+}
+
+bool UltimaSpellCombat::FinishCombatTurn()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_newMove = true;
+
+	if (m_monster_turn)
+	{
+		FinishCombatMonsterTurn();
+		return false;
+	}
+
+	if (m_g835F == 7)
+	{
+		m_misc->m_gTimeNegate = 0;
+	}
+
+	m_misc->InverseChnum(m_activePlayer, false);
+	m_activePlayer++;
+	m_activePlayer %= 4;
+
+	short value = 1;
+	for (unsigned char mon = 0; mon < 8; mon++)
+	{
+		if (m_misc->m_MonsterHP[mon] != 0)
+		{
+			value = 0;
+			break;
+		}
+	}
+	if (value == 1) {
+		//Victory();
+		return false;
+	}
+
+	m_misc->m_wy = 0x17;
+	m_misc->m_wx = 0x18;
+	m_g835D++;
+
+	if (m_g835D < m_misc->m_Party[1])
+	{
+		return false;
+	}
+
+	if (m_misc->m_gTimeNegate != 0)
+	{
+		m_misc->m_gTimeNegate--;
+		combatstart();
+	}
+	m_monster_turn = true;
+	return false;
+}
+
+void UltimaSpellCombat::HandleMove()
+{
+	m_misc->AddFinishTurn();
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CommandHandleMove, this));
+}
+
+bool UltimaSpellCombat::CommandHandleMove() // $828D
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	short value;
+	m_misc->m_xs = m_misc->m_CharX[m_activePlayer] + m_misc->m_dx;
+	if (m_misc->m_xs < 0 || m_misc->m_xs > 10)
+	{
+		m_scrollArea->UPrintMessage(116);
+		return false;
+	}
+	m_misc->m_ys = m_misc->m_CharY[m_activePlayer] + m_misc->m_dy;
+	if (m_misc->m_ys < 0 || m_misc->m_ys > 10)
+	{
+		m_scrollArea->UPrintMessage(116);
+		return false;
+	}
+	value = ValidMove(m_misc->GetXYTile(m_misc->m_xs, m_misc->m_ys));
+	if (value != 0)
+	{
+		m_scrollArea->UPrintMessage(116);
+		return false;
+	}
+	m_misc->PutXYTile(m_misc->m_CharTile[m_activePlayer], m_misc->m_CharX[m_activePlayer], m_misc->m_CharY[m_activePlayer]);
+	m_misc->m_CharX[m_activePlayer] = m_misc->m_xs;
+	m_misc->m_CharY[m_activePlayer] = m_misc->m_ys;
+	m_misc->m_CharTile[m_activePlayer] = m_misc->GetXYTile(m_misc->m_xs, m_misc->m_ys);
+	m_misc->PutXYTile(m_misc->m_CharShape[m_activePlayer], m_misc->m_xs, m_misc->m_ys);
+
+	return false;
+}
+
+unsigned char UltimaSpellCombat::ValidMove(short value) // $7E5B
+{
+	switch (value)
+	{
+	case 2:
+	case 4:
+	case 6:
+	case 0x10:
+		return 0;
+	default:
+		return 0xFF;
+	}
+}
+
+void UltimaSpellCombat::LetterCommand(SDL_Keycode key)
+{
+
+}
+
+bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
+{
+	if (key >= SDLK_A && key <= SDLK_Z)
+	{
+		LetterCommand(key);
+	}
+	else
+	{
+		switch (key)
+		{
+		case SDLK_UP:
+			m_scrollArea->UPrintMessage(24);
+			m_misc->m_dy = -1;
+			HandleMove();
+			break;
+		case SDLK_DOWN:
+			m_scrollArea->UPrintMessage(25);
+			m_misc->m_dy = 1;
+			HandleMove();
+			break;
+		case SDLK_LEFT:
+			m_scrollArea->UPrintMessage(27);
+			m_misc->m_dx = -1;
+			HandleMove();
+			break;
+		case SDLK_RIGHT:
+			m_scrollArea->UPrintMessage(26);
+			m_misc->m_dx = 1;
+			HandleMove();
+			break;
+		case SDLK_SPACE:
+			m_misc->Pass();
+			break;
+		default:
+			break;
+		}
+	}
+	return true;
+}
+
+void UltimaSpellCombat::HandleMonsterMove()
+{
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::HandleMonsterMoveCallback, this));
+}
+
+bool UltimaSpellCombat::HandleMonsterMoveCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	int rngNum;
+	m_gChnum = FigureNewMonPosition(m_mon);
+	m_misc->m_zp[0x1F] = 0x7A;
+	if (m_misc->m_zp[0xD0] == 0)
+	{
+		afternext();
+		return false;
+	}
+	if (m_gChnum >= 0)
+	{
+		rngNum = m_utilities->getRandom(0, 255);
+		if (rngNum < 128)
+		{
+			if (m_misc->m_gMonType == 0x3A)
+			{
+				monshoot();
+				return false;
+			}
+		}
+	}
+	rngNum = m_utilities->getRandom(0, 0xC0);
+	switch (m_misc->m_gMonType)
+	{
+	case 0x1A:
+	case 0x1C:
+	case 0x2C:
+	case 0x36:
+	case 0x3A:
+	case 0x3C:
+		monmagic();
+		return false;
+	case 0x26:
+		monlb();
+		return false;
+	default:
+		break;
+	}
+	nextplr();
+
+	return false;
+}
+
+void UltimaSpellCombat::nextplr()
+{
+	if (m_misc->m_zp[0xD0] >= 0 && m_misc->m_zp[0xD0] < 0x80)
+	{
+		monlb();
+	}
+}
+
+void UltimaSpellCombat::monmagic() // $864A
+{
+}
+
+void UltimaSpellCombat::monlb() // $8672
+{
+	m_misc->PutXYTile(m_misc->m_MonsterTile[m_mon], m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
+	m_misc->m_MonsterX[m_mon] = (unsigned char)m_misc->m_zp[0xF7];
+	m_misc->m_MonsterY[m_mon] = (unsigned char)m_misc->m_zp[0xF8];
+	m_misc->m_MonsterTile[m_mon] = m_misc->GetXYTile(m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
+	unsigned char tileValue = (unsigned char)m_misc->m_gMonType;
+	if (m_misc->m_gMonVarType && m_misc->m_gMonType >= 46 && m_misc->m_gMonType <= 63)
+	{
+		tileValue = (((m_misc->m_gMonType / 2) - 23) * 2 + 79 + m_misc->m_gMonVarType) * 2;
+	}
+	m_misc->PutXYTile(tileValue, m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
+}
+
+void UltimaSpellCombat::monshoot() // $86A4
+{
+}
+
+void UltimaSpellCombat::afternext()
+{
+	if (m_misc->m_gMonType == 0x1C || m_misc->m_gMonType == 0x3C || m_misc->m_gMonType == 0x38)
+	{
+		Poison(m_gChnum);
+	}
+	else
+	{
+		if (m_misc->m_gMonType == 0x2E)
+		{
+			Pilfer(m_gChnum);
+		}
+	}
+	m_scrollArea->UPrintMessage(141);
+	std::string dispString = std::to_string(m_gChnum + 1);
+	m_scrollArea->UPrintWin(dispString);
+	m_misc->m_wx++;
+
+	// If in Exodus Castle and the character is not wearing Exotic, it's an automatic hit.
+	if (m_g835E == 3 && m_misc->m_Party[3] == m_misc->m_LocationX[1] && m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][40] != 7)
+	{
+		plrhit();
+		return;
+	}
+	// Random from 0 to armour+16 -- less than 8 is a hit.
+	int rngNum = m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][40] + 0x10);
+	if (rngNum < 8)
+	{
+		plrhit();
+		return;
+	}
+	m_scrollArea->UPrintMessage(142);    // Missed
+}
+
+void UltimaSpellCombat::plrhit() // $876D
+{
+	m_scrollArea->UPrintMessage(143);    // Hit
+	c8777();
+}
+
+void UltimaSpellCombat::c8777()
+{
+	unsigned char monhpstart[16] = { 0x20, 0x20, 0xF0, 0xF0, 0xC0, 0x60, 0xA0, 0x80, 0x30, 0x50, 0x70, 0xA0, 0xC0, 0xE0, 0xF0, 0xF0 };
+
+	short temp;
+
+	temp = ((m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][28] * 256) + m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][29]) / 100;
+	temp = ((monhpstart[(m_misc->m_gMonType / 2) & 0x0F] / 8) + temp) | 1;
+	int rngNum = m_utilities->getRandom(0, temp) + 1;
+	temp = rngNum;
+	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], temp);
+	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], (m_g835E & 3) * 16);
+
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::c8777Callback, this));
+
+	m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
+	m_resources->m_inverses.elapsedTileTime = 0;
+	m_resources->setInversed(true);
+	m_misc->InverseCharDetails(m_gChnum, true);
+	m_misc->AddInverse();
+	m_misc->m_gBallTileBackground = m_misc->m_CharTile[m_gChnum];
+	m_misc->PutXYTile(m_misc->m_zp[0x1F], m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum]);
+	ShowHit(m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum], 0x7A, m_misc->m_CharTile[m_gChnum]);
+}
+
+bool UltimaSpellCombat::c8777Callback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_misc->PutXYTile(m_misc->m_CharShape[m_gChnum], m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum]);
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][17] == 'D')
+	{
+		m_scrollArea->UPrintMessage(144);
+		m_misc->PutXYTile(m_misc->m_CharTile[m_gChnum], m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum]);
+		m_misc->m_CharX[m_gChnum] = 0xFF;
+		m_misc->m_CharY[m_gChnum] = 0xFF;
+		m_misc->CheckAllDead();
+		if (!m_misc->m_checkDead)
+		{
+			return false;
+		}
+	}
+
+	m_misc->m_wx = 0x18;
+	m_misc->m_wy = 0x17;
+
+	return false;
+}
+
+short UltimaSpellCombat::FigureNewMonPosition(short mon) // $7E85
+{
+	short newx;
+	short newy;
+	short health;
+	short rosNum;
+	m_misc->m_zp[0xD0] = 0xFF;
+	short plrTarget = 0xFF;
+	short plrNum = -1;
+ 
+	for (plrNum = 0; plrNum < m_misc->m_Party[1]; ++plrNum)
+	{
+		rosNum = m_misc->m_Party[6 + plrNum];
+		health = m_misc->m_Player[rosNum][17];
+		if (health == 'D' || health == 'A')
+		{
+			continue;
+		}
+		m_misc->m_dx = m_misc->m_CharX[plrNum] - m_misc->m_MonsterX[mon];
+		m_misc->m_zp[0xD1] = m_utilities->Absolute(m_misc->m_dx);
+		m_misc->m_dy = m_misc->m_CharY[plrNum] - m_misc->m_MonsterY[mon];
+		m_misc->m_zp[0xD2] = m_utilities->Absolute(m_misc->m_dy);
+
+		if ((m_misc->m_zp[0xD2] < 2) && (m_misc->m_zp[0xD1] < 2))
+		{
+			// $7F44
+			m_misc->m_zp[0xD0] = 0;
+			plrTarget = plrNum;
+			if (m_misc->m_zp[0xD1] + m_misc->m_zp[0xD2] < 2)
+			{
+				break;
+			}
+			continue;
+		}
+		if ((m_misc->m_zp[0xD1] + m_misc->m_zp[0xD2]) >= m_misc->m_zp[0xD0])
+		{
+			continue;
+		}
+		m_misc->m_zp[0xD1] += m_misc->m_zp[0xD2];
+		m_misc->m_dx = m_misc->GetHeading(m_misc->m_dx);
+		newx = m_misc->m_MonsterX[mon] + m_misc->m_dx;
+		m_misc->m_dy = m_misc->GetHeading(m_misc->m_dy);
+		newy = m_misc->m_MonsterY[mon] + m_misc->m_dy;
+
+		if (CombatValidMove(m_misc->GetXYTile(newx, newy)) != 0)
+		{
+			newx = m_misc->m_MonsterX[mon];
+			newy = m_misc->m_MonsterY[mon] + m_misc->m_dy;
+			if (CombatValidMove(m_misc->GetXYTile(newx, newy)) != 0)
+			{
+				newx = m_misc->m_MonsterX[mon] + m_misc->m_dx;
+				newy = m_misc->m_MonsterY[mon];
+				if (CombatValidMove(m_misc->GetXYTile(newx, newy)) != 0)
+				{
+					continue;
+				}
+			}
+		}
+		plrTarget = plrNum;
+		m_misc->m_zp[0xD0] = m_misc->m_zp[0xD1];
+		m_misc->m_zp[0xF7] = newx;
+		m_misc->m_zp[0xF8] = newy;
+		m_misc->m_zp[0xF5] = m_misc->m_dx;
+		m_misc->m_zp[0xF6] = m_misc->m_dy;
+	}
+	plrNum = plrTarget;
+	return plrNum;
+}
+
+unsigned char UltimaSpellCombat::CombatValidMove(short value) // $7E31
+{
+	if (m_misc->m_gMonType < 0x16 || m_misc->m_gMonType >= 0x20)
+	{
+		switch (value)
+		{
+		case 2:
+		case 4:
+		case 6:
+		case 0x10:
+			return 0;
+		default:
+			return 0xFF;
+		}
+	}
+	else
+	{
+		if (value == 0)
+		{
+			return 0;
+		}
+		return 0xFF;
+	}
+}

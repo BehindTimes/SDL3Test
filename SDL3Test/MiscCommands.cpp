@@ -370,6 +370,10 @@ bool U3Misc::CommandFinishTurn()
 	{
 		m_dungeon->dungeonmech();
 	}
+	else if (m_graphics->m_curMode == U3GraphicsMode::Combat)
+	{
+		m_spellCombat->FinishCombatTurn();
+	}
 	else
 	{
 		Routine6E35();

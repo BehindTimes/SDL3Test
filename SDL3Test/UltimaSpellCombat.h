@@ -22,13 +22,20 @@ public:
 	void drawCombat();
 	void combatstart();
 	bool HandleDefaultKeyPress(SDL_Keycode key);
+	bool FinishCombatTurn();
+	void HandleMonsterMove();
 
 	unsigned char m_g5521;
 	unsigned char m_g835D;
+	unsigned char m_g835F;
 	bool m_newMove;
 	bool m_combatStart;
 	unsigned char m_count;
 	unsigned char m_count2;
+	unsigned char m_activePlayer;
+	short m_mon;
+	bool m_monster_turn;
+	short m_gChnum;
 private:
 	void Failed();
 	bool ShowHitCallback() const;
@@ -43,6 +50,22 @@ private:
 	unsigned char HowMany() const;
 	void PrintMonster(short which, bool plural, char variant);
 	void GetScreen(short resid);
+	void LetterCommand(SDL_Keycode key);
+	void HandleMove();
+	bool CommandHandleMove();
+	unsigned char ValidMove(short value);
+	void FinishCombatMonsterTurn();
+	short FigureNewMonPosition(short mon);
+	unsigned char CombatValidMove(short value);
+	void afternext();
+	void monshoot();
+	void monlb();
+	void monmagic();
+	void nextplr();
+	void plrhit();
+	void c8777();
+	bool HandleMonsterMoveCallback();
+	bool c8777Callback();
 
 	unsigned char m_hitType;
 	unsigned char m_origValue;
@@ -50,6 +73,7 @@ private:
 	short m_y;
 	unsigned char m_g835E;
 	unsigned char m_g56E7;
+	
 
 	short m_chNum;
 	short m_damage;

@@ -133,6 +133,7 @@ public:
 	void WhirlPool();
 	void PrintTile(short tile, bool plural);
 	void InverseChnum(char which, bool value);
+	char GetHeading(short value);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -322,7 +323,7 @@ private:
 	bool MoveMonsters();
 	bool ExodusCastleCallback();
 	void GetMonsterDir(short monNum);
-	char GetHeading(short value);
+	
 	bool moveshoot(int offset);
 	void move7AAA(int offset);
 	bool moveoutside(int offset);

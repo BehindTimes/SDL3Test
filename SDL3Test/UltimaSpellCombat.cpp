@@ -771,6 +771,7 @@ void UltimaSpellCombat::Victory() const
 	m_misc->m_Party[2] = m_g835E;
 	m_graphics->m_queuedMode = m_graphics->m_lastMode;
 	m_misc->m_gameMode = m_misc->m_lastMode;
+	m_dungeon->setForceRedraw();
 }
 
 void UltimaSpellCombat::HandleMove()
@@ -1269,7 +1270,7 @@ bool UltimaSpellCombat::CombatAttackCallback()
 	{
 		return false;
 	}
-	if (!(m_wpn == 3 || m_wpn == 5 || m_wpn == 9 || m_wpn == 13))
+	if ((m_wpn == 3 || m_wpn == 5 || m_wpn == 9 || m_wpn == 13))
 	{
 		m_shootX = m_misc->m_CharX[m_activePlayer];
 		m_shootY = m_misc->m_CharY[m_activePlayer];

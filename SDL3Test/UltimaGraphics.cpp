@@ -490,7 +490,7 @@ short U3Graphics::MapConstrain(short value)
 
 void U3Graphics::renderMiniMap()
 {
-    SDL_FRect outRect(0);
+    SDL_FRect outRect{};
     unsigned char value;
 
     if (m_misc->m_mapSize <= 0)
@@ -647,7 +647,7 @@ void U3Graphics::renderMiniMapDungeon()
 
 void U3Graphics::DrawMiniMapDungeon()
 {
-    SDL_FRect theRect(0);
+    SDL_FRect theRect{};
 
     if (m_forceRedraw)
     {
@@ -675,7 +675,7 @@ void U3Graphics::DrawMiniMapDungeon()
 
 void U3Graphics::DrawMiniMap()
 {
-    SDL_FRect theRect(0);
+    SDL_FRect theRect{};
 
     if (m_forceRedraw)
     {
@@ -885,7 +885,7 @@ void U3Graphics::renderWinScreen() const
 
 void U3Graphics::DrawWinScreen(float ratio)
 {
-    SDL_FRect theRect(0);
+    SDL_FRect theRect{};
 
     if (m_forceRedraw)
     {

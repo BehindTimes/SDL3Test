@@ -14,7 +14,7 @@ U3Button::U3Button() :
 	m_callbackFunction(nullptr),
 	m_visible(false),
 	m_forcecapture(false),
-	m_renderRect(0),
+	m_renderRect(),
 	m_id(0),
 	m_hasFocus(false),
 	m_x(0),
@@ -263,7 +263,7 @@ void U3Button::render(SDL_Renderer* renderer, [[maybe_unused]]int blockSize, int
 
 void U3Button::setRect(SDL_Renderer* renderer, SDL_Texture* buttonImage, int blockSize, int x, int y, int width, int height, bool has_clicked, bool has_disabled)
 {
-	SDL_FRect myRect(0);
+	SDL_FRect myRect{};
 
 	if (!buttonImage)
 	{
@@ -351,7 +351,7 @@ void U3Button::setMouseCapture([[maybe_unused]] int blockSize, int capture, floa
 	{
 		return;
 	}
-	SDL_FRect myRect(0);
+	SDL_FRect myRect{};
 	//float mult = (float)blockSize / 64.0f;    // blkSiz normally 16, but buttons are 4x
 	m_showPushed = false;
 	bool bCallback = false;

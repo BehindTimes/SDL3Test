@@ -24,8 +24,8 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	m_font(nullptr),
 	m_blockSize(blockSize),
 	m_message(message - 1),
-	m_titleRect(0),
-	m_messageRect(0),
+	m_titleRect(),
+	m_messageRect(),
 	m_numblocksW(0),
 	m_numblocksH(0),
 	m_text_obj_title(nullptr),
@@ -562,8 +562,8 @@ void U3Dialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color c
 
 void U3Dialog::DrawFramePiece(int part, int x, int y)
 {
-	SDL_FRect frameRect(0);
-	SDL_FRect myRect(0);
+	SDL_FRect frameRect{};
+	SDL_FRect myRect{};
 
 	myRect.x = (float)(x);
 	myRect.y = (float)(y);
@@ -665,7 +665,7 @@ bool U3Dialog::display()
 
 	if (m_icon)
 	{
-		SDL_FRect frameRect(0);
+		SDL_FRect frameRect{};
 		frameRect.x = m_dialogRect.x + (((m_numblocksW - 1) / 2.0f) * m_blockSize);
 		frameRect.y = m_dialogRect.y;
 		frameRect.w = (float)m_blockSize;
@@ -762,7 +762,7 @@ void U3TextBox::U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, in
 
 void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
 {
-	SDL_FRect myRect(0);
+	SDL_FRect myRect{};
 	float scaler = (float)m_blockSize / 16.0f;
 
 	myRect.x = (float)x;
@@ -845,7 +845,7 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 	m_renderer(renderer),
 	m_engine_surface(engine_surface),
 	m_blockSize(32),
-	m_Rect(NULL),
+	m_Rect(),
 	m_font(nullptr),
 	m_curPlayer(nullptr)
 {
@@ -1443,8 +1443,8 @@ bool CreateCharacterDialog::display()
 	{
 		return false;
 	}
-	SDL_FRect myRect(0);
-	SDL_FRect fromRect(0);
+	SDL_FRect myRect{};
+	SDL_FRect fromRect{};
 	float scaler = (float)m_blockSize / 16.0f;
 	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
 

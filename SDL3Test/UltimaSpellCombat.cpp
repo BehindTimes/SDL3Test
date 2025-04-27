@@ -1398,6 +1398,103 @@ bool UltimaSpellCombat::ProjectileCallback2()
 	return false;
 }
 
+void UltimaSpellCombat::RelocateDungeon() // $572B
+{
+	short value;
+	value = -1;
+	while (value != 0)
+	{
+		m_misc->m_xs = (short)m_utilities->getRandom(0, 16);
+		m_misc->m_ys = (short)m_utilities->getRandom(0, 16);
+		value = GetXYDng(m_misc->m_xs, m_misc->m_ys);
+	}
+	m_misc->m_xpos = m_misc->m_xs;
+	m_misc->m_ypos = m_misc->m_ys;
+}
+
+void UltimaSpellCombat::DownLevel()
+{
+	if (m_misc->m_Party[2] != 1)
+	{
+		Failed();
+		return;
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::DownLevelCallback, this));
+	Flashriek();
+}
+
+
+bool UltimaSpellCombat::DownLevelCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	if (m_dungeon->m_dungeonLevel > 6)
+	{
+		Failed();
+		return false;
+	}
+	m_dungeon->m_dungeonLevel++;
+	RelocateDungeon();
+	return false;
+}
+
+void UltimaSpellCombat::UpLevel()
+{
+	if (m_misc->m_Party[2] != 1)
+	{
+		Failed();
+		return;
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::UpLevelCallback, this));
+	Flashriek();
+}
+
+bool UltimaSpellCombat::UpLevelCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_dungeon->m_dungeonLevel--;
+	if (m_dungeon->m_dungeonLevel < 0)
+	{
+		m_dungeon->m_dungeonLevel = 0;
+		m_dungeon->m_gExitDungeon = true;
+
+		return false;
+	}
+	RelocateDungeon();
+	return false;
+}
+
+bool UltimaSpellCombat::DagAcronCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	if ((m_misc->m_Party[2] != 0) || (m_misc->m_Party[0] == 0x16 && m_misc->m_Party[15] == 0))
+	{
+		Failed();
+		return false;
+	}
+	int matchValue = (m_misc->m_Party[0] == 0x16) ? 0 : 4;
+	short value = -1;
+	while (value != matchValue)
+	{
+		short rngNum = (short)m_utilities->getRandom(0, m_misc->m_mapSize - 1);
+		m_misc->m_xs = rngNum;
+		rngNum = (short)m_utilities->getRandom(0, m_misc->m_mapSize - 1);
+		m_misc->m_ys = rngNum;
+		value = m_misc->GetXYVal(m_misc->m_xs, m_misc->m_ys);
+	}
+	m_misc->m_xpos = m_misc->m_xs;
+	m_misc->m_ypos = m_misc->m_ys;
+	return false;
+}
+
 
 void UltimaSpellCombat::Spell(short chnum, short spellnum)
 {
@@ -1427,44 +1524,86 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Projectile(chnum, rngNum);
 		break;
 	case 2: // Lorum
+		m_misc->m_gTorch = 10;
+		Flashriek();
 		break;
 	case 3: // Dor Acron
+		DownLevel();
 		break;
 	case 4: // Sur Acron
+		UpLevel();
 		break;
 	case 5: // Fulgar
+		Projectile(chnum, 75);
 		break;
 	case 6: // Dag Acron
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::DagAcronCallback, this));
+		Flashriek();
 		break;
 	case 7: // Mentar
+		Projectile(chnum, m_misc->m_Player[rosNum][20]);
 		break;
 	case 8: // Dag Lorum
+		m_misc->m_gTorch = 250;
+		Flashriek();
 		break;
 	case 9: // Fal Divi
 		break;
 	case 10: // Noxum
+		BigDeath(75, chnum);
 		break;
 	case 11: // Decorp
+		Projectile(chnum, 255);
 		break;
 	case 12: // Altair
+		m_misc->m_gTimeNegate = 20;
 		break;
 	case 13: // Dag Mentar
+		BigDeath(m_misc->m_Player[rosNum][20] * 2, chnum);
 		break;
 	case 14: // Necorp
 		break;
 	case 15: // nameless
+		BigDeath(255, chnum);
 		break;
 	case 16: // Pontori
+		if (m_misc->m_Party[3] != 0x80)
+		{
+			Failed();
+			return;
+		}
+		if (m_misc->m_gMonType != 0x32)
+		{
+			Failed();
+			return;
+		}
+		if (m_g56E7 != 0)
+		{
+			Failed();
+			return;
+		}
+		m_g56E7 = 0xFF;
+		rngNum = (short)m_utilities->getRandom(0, 255);
+		if (rngNum < 128)
+		{
+			Failed();
+			return;
+		}
+		BigDeath(255, chnum);
 		break;
 	case 17: // Appar Unem
 		break;
 	case 18: // Sanctu
 		break;
 	case 19: // Luminae
+		m_misc->m_gTorch = 10;
+		Flashriek();
 		break;
 	case 20: // Rec Su
+		UpLevel();
 		break;
 	case 21: // Rec Du
+		DownLevel();
 		break;
 	case 22: // Lib Rec
 		break;
@@ -1473,16 +1612,20 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 	case 24: // Sequitu
 		break;
 	case 25: // Sominae
+		m_misc->m_gTorch = 250;
+		Flashriek();
 		break;
 	case 26: // Sanctu Mani
 		break;
 	case 27: // Vieda
 		break;
 	case 28: // Excuun
+		Projectile(chnum, 255);
 		break;
 	case 29: // Surmandum
 		break;
 	case 30: // ZXKUQYB
+		BigDeath(255, chnum);
 		break;
 	case 31: // Anju Sermani
 		break;

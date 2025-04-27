@@ -22,7 +22,7 @@ public:
 	unsigned char GetXYDng(short x, short y) const;
 	bool HandleDefaultKeyPress(SDL_Keycode key);
 
-	unsigned char m_dungeonLevel;
+	char m_dungeonLevel;
 	bool m_gExitDungeon;
 	void Routine6E6B();
 	void dungeonmech();

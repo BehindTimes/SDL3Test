@@ -85,6 +85,12 @@ private:
 	bool ProjectileCallback();
 	bool ProjectileCallback1();
 	bool ProjectileCallback2();
+	void DownLevel();
+	bool DownLevelCallback();
+	void RelocateDungeon();
+	void UpLevel();
+	bool UpLevelCallback();
+	bool DagAcronCallback();
 
 	static constexpr Uint64 CombatBlink = 300;
 

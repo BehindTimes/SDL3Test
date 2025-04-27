@@ -73,7 +73,7 @@ U3Misc::U3Misc() :
 	m_lastMode(GameStateMode::Map)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
-	memset(m_Player, NULL, sizeof(char) * (1365)); // 21 * 65
+	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
 	m_saved_map.reset();
 	m_gMoonDisp[0] = 4;
 	m_gMoonDisp[1] = 4;

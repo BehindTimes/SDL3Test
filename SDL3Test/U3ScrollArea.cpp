@@ -334,12 +334,12 @@ void U3ScrollArea::render(Uint64 currentTickCount)
 		m_forceRedraw = false;
 	}
 
-	SDL_FRect fromRect(0);
+	SDL_FRect fromRect{};
 	fromRect.x = (float)(0.0f * m_blockSize);
 	fromRect.y = (float)(0.0f * m_blockSize) + yOffset;
 	fromRect.w = (float)17.0f * m_blockSize;
 	fromRect.h = (float)7.0f * m_blockSize;
-	SDL_FRect toRect(0);
+	SDL_FRect toRect{};
 	toRect.x = (float)(24.0f * m_blockSize);
 	toRect.y = (float)(17.0f * m_blockSize);
 	toRect.w = (float)17.0f * m_blockSize;

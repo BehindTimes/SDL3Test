@@ -516,7 +516,7 @@ void UltimaDungeon::DngInfo() const
     m_graphics->DrawFramePiece(10, 7, 0);
     m_graphics->DrawFramePiece(10, 16, 0);
 
-	SDL_FRect myRect(0);
+	SDL_FRect myRect{};
 
 	myRect.x = (float)(9 * m_resources->m_blockSize);
 	myRect.y = 0;
@@ -889,8 +889,8 @@ short UltimaDungeon::DungeonBlock(short location)
 
 short UltimaDungeon::DrawWall(short location) // $19B4
 {
-	SDL_FRect FromRect(0);
-	SDL_FRect ToRect(0);
+	SDL_FRect FromRect{};
+	SDL_FRect ToRect{};
 	if (location > 31)
 	{
 		DrawDoor(location - 32);
@@ -951,8 +951,8 @@ void UltimaDungeon::DrawChest(short location) // $1A5A
 
 void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 {
-	SDL_FRect FromRect(0);
-	SDL_FRect ToRect(0);
+	SDL_FRect FromRect{};
+	SDL_FRect ToRect{};
 
 	short lleft, ltop, lright, lbottom, swap, side;
 	short width, height, base, rung, half, shape;
@@ -1034,7 +1034,7 @@ void UltimaDungeon::DrawLadder(short location, short direction) // $1AAB
 
 void UltimaDungeon::DrawDungeonBackGround()
 {
-	SDL_FRect theRect(0);
+	SDL_FRect theRect{};
 	theRect.x = 1800;
 	theRect.y = 0;
 	theRect.w = (float)600;
@@ -1044,7 +1044,7 @@ void UltimaDungeon::DrawDungeonBackGround()
 
 void UltimaDungeon::DrawDungeon()
 {
-	SDL_FRect theRect(0);
+	SDL_FRect theRect{};
 
 	if (m_forceRedraw)
 	{
@@ -1356,8 +1356,8 @@ bool UltimaDungeon::ShowSecret(short which) const
 		SDL_Texture* tex = m_texSecrets[which];
 		if (tex != nullptr)
 		{
-			SDL_FRect frameRect(0);
-			SDL_FPoint size(0);
+			SDL_FRect frameRect{};
+			SDL_FPoint size{};
 			SDL_GetTextureSize(tex, &size.x, &size.y);
 			frameRect.w = size.x;
 			frameRect.h = size.y;

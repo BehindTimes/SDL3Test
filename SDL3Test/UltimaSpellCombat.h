@@ -81,6 +81,10 @@ private:
 	bool ShootCallback();
 	bool ShootCallback1();
 	void Victory() const;
+	void Projectile(short chnum, short damage);
+	bool ProjectileCallback();
+	bool ProjectileCallback1();
+	bool ProjectileCallback2();
 
 	static constexpr Uint64 CombatBlink = 300;
 
@@ -97,6 +101,7 @@ private:
 	short m_shootX;
 	short m_shootY;
 	short m_shootRet;
+	short m_hit;
 	
 };
 

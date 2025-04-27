@@ -41,7 +41,8 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_shootRet(0),
 	m_cHide(false),
 	m_elapsedFlashTime(0),
-	m_updateBlink(false)
+	m_updateBlink(false),
+	m_hit(0)
 {
 }
 
@@ -605,102 +606,6 @@ bool UltimaSpellCombat::BigDeathCallback2()
 
 	m_misc->m_opnum--;
 	return false;
-}
-
-void UltimaSpellCombat::Spell(short chnum, short spellnum)
-{
-	short rosNum;
-	int rngNum;
-
-	rosNum = m_misc->m_Party[6 + chnum];
-	switch (spellnum)
-	{
-	case 0: // Repond
-		if ((m_misc->m_Party[2] != 0x80) || (m_misc->m_gMonType != 0x30) || (m_g5521 != 0))
-		{
-			Failed();
-			return;
-		}
-		m_g5521 = (unsigned char)0xFF;
-		rngNum = m_utilities->getRandom(0, 255);
-		if (rngNum < 128)
-		{
-			Failed();
-			return;
-		}
-		BigDeath(255, chnum);
-		break;
-	case 1: // Mittar
-		break;
-	case 2: // Lorum
-		break;
-	case 3: // Dor Acron
-		break;
-	case 4: // Sur Acron
-		break;
-	case 5: // Fulgar
-		break;
-	case 6: // Dag Acron
-		break;
-	case 7: // Mentar
-		break;
-	case 8: // Dag Lorum
-		break;
-	case 9: // Fal Divi
-		break;
-	case 10: // Noxum
-		break;
-	case 11: // Decorp
-		break;
-	case 12: // Altair
-		break;
-	case 13: // Dag Mentar
-		break;
-	case 14: // Necorp
-		break;
-	case 15: // nameless
-		break;
-	case 16: // Pontori
-		break;
-	case 17: // Appar Unem
-		break;
-	case 18: // Sanctu
-		break;
-	case 19: // Luminae
-		break;
-	case 20: // Rec Su
-		break;
-	case 21: // Rec Du
-		break;
-	case 22: // Lib Rec
-		break;
-	case 23: // Alcort
-		break;
-	case 24: // Sequitu
-		break;
-	case 25: // Sominae
-		break;
-	case 26: // Sanctu Mani
-		break;
-	case 27: // Vieda
-		break;
-	case 28: // Excuun
-		break;
-	case 29: // Surmandum
-		break;
-	case 30: // ZXKUQYB
-		break;
-	case 31: // Anju Sermani
-		break;
-	case 32: // Terramorph
-		break;
-	case 33: // Armageddon
-		break;
-	case 34: // Flotellum
-		break;
-	default:
-		break;
-	}
 }
 
 void UltimaSpellCombat::FinishCombatMonsterTurn()
@@ -1429,5 +1334,165 @@ void UltimaSpellCombat::updateGameTime(Uint64 deltaTime)
 	{
 		m_elapsedFlashTime %= deltaTime;
 		m_cHide = !m_cHide;
+	}
+}
+
+void UltimaSpellCombat::Projectile(short chnum, short damage) // $552B
+{
+	if (m_misc->m_Party[2] != 0x80)
+	{
+		Failed();
+		return;
+	}
+	m_chNum = chnum;
+	m_damage = damage;
+	m_scrollArea->UPrintMessage(85);
+	m_misc->m_inputType = InputType::GetDirection;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ProjectileCallback, this));
+	m_misc->AddProcessEvent();
+}
+
+bool UltimaSpellCombat::ProjectileCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_shootX = m_misc->m_CharX[m_chNum];
+	m_shootY = m_misc->m_CharY[m_chNum];
+
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ProjectileCallback1, this));
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::Shoot, this));
+	Flashriek();
+
+	return false;
+}
+
+bool UltimaSpellCombat::ProjectileCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_hit = m_shootRet;
+	if (m_hit > 127)
+	{
+		Failed();
+		return false;
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ProjectileCallback2, this));
+	ShowHit(m_misc->m_MonsterX[m_hit & 8], m_misc->m_MonsterY[m_hit & 8], 0x78, m_misc->m_MonsterTile[m_hit & 8]);
+
+	return false;
+}
+
+bool UltimaSpellCombat::ProjectileCallback2()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	DamageMonster(m_hit, m_damage, m_chNum);
+
+	return false;
+}
+
+
+void UltimaSpellCombat::Spell(short chnum, short spellnum)
+{
+	short rosNum;
+	int rngNum;
+
+	rosNum = m_misc->m_Party[6 + chnum];
+	switch (spellnum)
+	{
+	case 0: // Repond
+		if ((m_misc->m_Party[2] != 0x80) || (m_misc->m_gMonType != 0x30) || (m_g5521 != 0))
+		{
+			Failed();
+			return;
+		}
+		m_g5521 = (unsigned char)0xFF;
+		rngNum = m_utilities->getRandom(0, 255);
+		if (rngNum < 128)
+		{
+			Failed();
+			return;
+		}
+		BigDeath(255, chnum);
+		break;
+	case 1: // Mittar
+		rngNum = m_utilities->getRandom(0, 255) | 0x10;
+		Projectile(chnum, rngNum);
+		break;
+	case 2: // Lorum
+		break;
+	case 3: // Dor Acron
+		break;
+	case 4: // Sur Acron
+		break;
+	case 5: // Fulgar
+		break;
+	case 6: // Dag Acron
+		break;
+	case 7: // Mentar
+		break;
+	case 8: // Dag Lorum
+		break;
+	case 9: // Fal Divi
+		break;
+	case 10: // Noxum
+		break;
+	case 11: // Decorp
+		break;
+	case 12: // Altair
+		break;
+	case 13: // Dag Mentar
+		break;
+	case 14: // Necorp
+		break;
+	case 15: // nameless
+		break;
+	case 16: // Pontori
+		break;
+	case 17: // Appar Unem
+		break;
+	case 18: // Sanctu
+		break;
+	case 19: // Luminae
+		break;
+	case 20: // Rec Su
+		break;
+	case 21: // Rec Du
+		break;
+	case 22: // Lib Rec
+		break;
+	case 23: // Alcort
+		break;
+	case 24: // Sequitu
+		break;
+	case 25: // Sominae
+		break;
+	case 26: // Sanctu Mani
+		break;
+	case 27: // Vieda
+		break;
+	case 28: // Excuun
+		break;
+	case 29: // Surmandum
+		break;
+	case 30: // ZXKUQYB
+		break;
+	case 31: // Anju Sermani
+		break;
+	case 32: // Terramorph
+		break;
+	case 33: // Armageddon
+		break;
+	case 34: // Flotellum
+		break;
+	default:
+		break;
 	}
 }

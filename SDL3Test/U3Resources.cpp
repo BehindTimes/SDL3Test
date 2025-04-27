@@ -1,4 +1,4 @@
-#include <SDL_image.h>
+#include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
 #include <iostream>
@@ -492,13 +492,121 @@ void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 	}
 }
 
+bool U3Resources::checkFiles()
+{
+	std::vector<std::string> mapList = {
+		{ "MainResources.rsrc_MAPS_400" },
+		{ "MainResources.rsrc_MAPS_401" },
+		{ "MainResources.rsrc_MAPS_402" },
+		{ "MainResources.rsrc_MAPS_403" },
+		{ "MainResources.rsrc_MAPS_404" },
+		{ "MainResources.rsrc_MAPS_405" },
+		{ "MainResources.rsrc_MAPS_406" },
+		{ "MainResources.rsrc_MAPS_407" },
+		{ "MainResources.rsrc_MAPS_408" },
+		{ "MainResources.rsrc_MAPS_409" },
+		{ "MainResources.rsrc_MAPS_410" },
+		{ "MainResources.rsrc_MAPS_411" },
+		{ "MainResources.rsrc_MAPS_412" },
+		{ "MainResources.rsrc_MAPS_413" },
+		{ "MainResources.rsrc_MAPS_414" },
+		{ "MainResources.rsrc_MAPS_415" },
+		{ "MainResources.rsrc_MAPS_416" },
+		{ "MainResources.rsrc_MAPS_417" },
+		{ "MainResources.rsrc_MAPS_418" },
+		{ "MainResources.rsrc_MAPS_420" },
+		{ "MainResources.rsrc_MAPS_421" },
+	};
+
+	std::vector<std::string> monsterList = {
+		{ "MainResources.rsrc_MONS_400" },
+		{ "MainResources.rsrc_MONS_401" },
+		{ "MainResources.rsrc_MONS_402" },
+		{ "MainResources.rsrc_MONS_403" },
+		{ "MainResources.rsrc_MONS_404" },
+		{ "MainResources.rsrc_MONS_405" },
+		{ "MainResources.rsrc_MONS_406" },
+		{ "MainResources.rsrc_MONS_407" },
+		{ "MainResources.rsrc_MONS_408" },
+		{ "MainResources.rsrc_MONS_409" },
+		{ "MainResources.rsrc_MONS_410" },
+		{ "MainResources.rsrc_MONS_411" },
+		{ "MainResources.rsrc_MONS_420" },
+		{ "MainResources.rsrc_MONS_421" },
+	};
+
+	std::vector<std::string> talkList = {
+		{ "MainResources.rsrc_TLKS_400" },
+		{ "MainResources.rsrc_TLKS_401" },
+		{ "MainResources.rsrc_TLKS_402" },
+		{ "MainResources.rsrc_TLKS_403" },
+		{ "MainResources.rsrc_TLKS_404" },
+		{ "MainResources.rsrc_TLKS_405" },
+		{ "MainResources.rsrc_TLKS_406" },
+		{ "MainResources.rsrc_TLKS_407" },
+		{ "MainResources.rsrc_TLKS_408" },
+		{ "MainResources.rsrc_TLKS_409" },
+		{ "MainResources.rsrc_TLKS_410" },
+		{ "MainResources.rsrc_TLKS_411" },
+		{ "MainResources.rsrc_TLKS_412" },
+		{ "MainResources.rsrc_TLKS_413" },
+		{ "MainResources.rsrc_TLKS_414" },
+		{ "MainResources.rsrc_TLKS_415" },
+		{ "MainResources.rsrc_TLKS_416" },
+		{ "MainResources.rsrc_TLKS_417" },
+		{ "MainResources.rsrc_TLKS_418" },
+		{ "MainResources.rsrc_TLKS_421" },
+	};
+
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= BinLoc;
+
+	for (const std::string tempFile : mapList)
+	{
+		std::filesystem::path tempPath = currentPath;
+		tempPath /= tempFile;
+		tempPath += std::string(".bin");
+		if (!std::filesystem::exists(tempPath))
+		{
+			return false;
+		}
+	}
+	for (const std::string tempFile : monsterList)
+	{
+		std::filesystem::path tempPath = currentPath;
+		tempPath /= tempFile;
+		tempPath += std::string(".bin");
+		if (!std::filesystem::exists(tempPath))
+		{
+			return false;
+		}
+	}
+	for (const std::string tempFile : talkList)
+	{
+		std::filesystem::path tempPath = currentPath;
+		tempPath /= tempFile;
+		tempPath += std::string(".bin");
+		if (!std::filesystem::exists(tempPath))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 bool U3Resources::init(SDL_Renderer* renderer)
 {
 	if (!renderer)
 	{
+		return false;
 	}
 	m_renderer = renderer;
 	m_scrollArea->setRenderer(m_renderer);
+	if (!checkFiles())
+	{
+		return false;
+	}
 	if (!loadFont())
 	{
 		return false;

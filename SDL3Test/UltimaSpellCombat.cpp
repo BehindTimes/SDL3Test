@@ -722,8 +722,6 @@ bool UltimaSpellCombat::FinishCombatTurn()
 		return false;
 	}
 
-	m_misc->PutXYTile(m_misc->m_CharShape[m_activePlayer], m_misc->m_xs, m_misc->m_ys);
-
 	m_misc->m_inputType = InputType::Default;
 
 	if (m_g835F == 7)

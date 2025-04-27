@@ -1,5 +1,5 @@
 #include <filesystem>
-#include <SDL_image.h>
+#include <SDL3_image/SDL_image.h>
 #include "U3Dialog.h"
 #include "U3Button.h"
 #include "U3Utilities.h"
@@ -562,7 +562,8 @@ void U3Dialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color c
 
 void U3Dialog::DrawFramePiece(int part, int x, int y)
 {
-	SDL_FRect frameRect, myRect;
+	SDL_FRect frameRect(0);
+	SDL_FRect myRect(0);
 
 	myRect.x = (float)(x);
 	myRect.y = (float)(y);
@@ -664,7 +665,7 @@ bool U3Dialog::display()
 
 	if (m_icon)
 	{
-		SDL_FRect frameRect;
+		SDL_FRect frameRect(0);
 		frameRect.x = m_dialogRect.x + (((m_numblocksW - 1) / 2.0f) * m_blockSize);
 		frameRect.y = m_dialogRect.y;
 		frameRect.w = (float)m_blockSize;
@@ -761,7 +762,7 @@ void U3TextBox::U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, in
 
 void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
 {
-	SDL_FRect myRect;
+	SDL_FRect myRect(0);
 	float scaler = (float)m_blockSize / 16.0f;
 	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
 
@@ -935,7 +936,7 @@ void CreateCharacterDialog::loadPresets()
 				for (int tempIndex = 1; tempIndex < 5; ++tempIndex)
 				{
 					int tempcount = std::stoi(vals[tempIndex]);
-					m_Presets[index][tempIndex - 1] = tempcount;
+					m_Presets[index][static_cast<size_t>(tempIndex) - 1] = tempcount;
 					totalCount += tempcount;
 				}
 				if (vals[0].size() >= 2)
@@ -1443,8 +1444,8 @@ bool CreateCharacterDialog::display()
 	{
 		return false;
 	}
-	SDL_FRect myRect;
-	SDL_FRect fromRect;
+	SDL_FRect myRect(0);
+	SDL_FRect fromRect(0);
 	float scaler = (float)m_blockSize / 16.0f;
 	float ratio = m_resources->m_characterRecordHeight / m_resources->m_characterRecordWidth;
 

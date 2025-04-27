@@ -250,6 +250,7 @@ private:
 	bool loadDemo();
 	bool loadPLists();
 	bool loadCons();
+	bool checkFiles();
 
 	void HideMonsters();
 	void ShowMonsters();

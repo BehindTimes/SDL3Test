@@ -1,4 +1,4 @@
-#include <SDL_image.h>
+#include <SDL3_image/SDL_image.h>
 #include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
 #include "U3Misc.h"

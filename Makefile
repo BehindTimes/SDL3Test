@@ -18,7 +18,7 @@ BIN_DIR = bin
 # Find all source files
 SRCS = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(filter %.c,$(SRCS))) \
-    $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter %.cpp,$(SRCS)))
+	$(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter %.cpp,$(SRCS)))
  
 # Target executable name
 TARGET = $(BIN_DIR)/LairwareSDL3
@@ -28,26 +28,26 @@ all: dirs $(TARGET)
  
 # Create necessary directories
 dirs:
-    @mkdir -p $(OBJ_DIR) $(BIN_DIR)
+	@mkdir -p $(OBJ_DIR) $(BIN_DIR)
  
 # Link object files
 $(TARGET): $(OBJS)
-    $(CXX) -o $@ $^ $(LIBS)
+	$(CXX) -o $@ $^ $(LIBS)
  
 # Compile C source files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-    $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
  
 # Compile C++ source files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-    $(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
  
 # Clean up
 clean:
-    rm -rf $(OBJ_DIR) $(BIN_DIR)
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
  
 # Run the application
 run: all
-    $(TARGET)
+	$(TARGET)
  
 .PHONY: all dirs clean run

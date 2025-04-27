@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -128,7 +128,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\SDL3_image;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>

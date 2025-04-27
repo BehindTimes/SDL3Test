@@ -34,7 +34,11 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_g835F(0),
 	m_mon(0),
 	m_monster_turn(false),
-	m_gChnum(0)
+	m_gChnum(0),
+	m_wpn(0),
+	m_shootX(0),
+	m_shootY(0),
+	m_shootRet(0)
 {
 }
 
@@ -58,6 +62,7 @@ void UltimaSpellCombat::Combat()
 {
 	unsigned char monhpstart[16] = { 0x20, 0x20, 0xF0, 0xF0, 0xC0, 0x60, 0xA0, 0x80, 0x30, 0x50, 0x70, 0xA0, 0xC0, 0xE0, 0xF0, 0xF0 };
 	m_graphics->m_lastMode = m_graphics->m_curMode;
+	m_misc->m_lastMode = m_misc->m_gameMode;
 	m_graphics->m_queuedMode = U3GraphicsMode::Combat;
 	m_misc->m_gameMode = GameStateMode::Combat;
 
@@ -534,8 +539,8 @@ bool UltimaSpellCombat::BigDeathCallback1()
 		m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
 		m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_misc->m_opnum];
 		m_misc->PutXYTile(0x78, m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
-		ShowHit(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum], 0x78, m_misc->m_MonsterTile[m_misc->m_opnum]);
 		m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
+		ShowHit(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum], 0x78, m_misc->m_MonsterTile[m_misc->m_opnum]);
 		return false;
 	}
 	m_misc->m_opnum--;
@@ -706,10 +711,6 @@ void UltimaSpellCombat::FinishCombatMonsterTurn()
 
 bool UltimaSpellCombat::FinishCombatTurn()
 {
-	if (m_misc->m_callbackStack.size() > 0)
-	{
-		m_misc->m_callbackStack.pop();
-	}
 	m_newMove = true;
 
 	if (m_monster_turn)
@@ -717,6 +718,8 @@ bool UltimaSpellCombat::FinishCombatTurn()
 		FinishCombatMonsterTurn();
 		return false;
 	}
+
+	m_misc->m_inputType = InputType::Default;
 
 	if (m_g835F == 7)
 	{
@@ -736,8 +739,9 @@ bool UltimaSpellCombat::FinishCombatTurn()
 			break;
 		}
 	}
-	if (value == 1) {
-		//Victory();
+	if (value == 1)
+	{
+		Victory();
 		return false;
 	}
 
@@ -754,9 +758,19 @@ bool UltimaSpellCombat::FinishCombatTurn()
 	{
 		m_misc->m_gTimeNegate--;
 		combatstart();
+		return false;
 	}
 	m_monster_turn = true;
 	return false;
+}
+
+void UltimaSpellCombat::Victory() const
+{
+	m_misc->m_gTimeNegate = 0;
+	m_scrollArea->UPrintMessage(132);
+	m_misc->m_Party[2] = m_g835E;
+	m_graphics->m_queuedMode = m_graphics->m_lastMode;
+	m_misc->m_gameMode = m_misc->m_lastMode;
 }
 
 void UltimaSpellCombat::HandleMove()
@@ -816,7 +830,34 @@ unsigned char UltimaSpellCombat::ValidMove(short value) // $7E5B
 
 void UltimaSpellCombat::LetterCommand(SDL_Keycode key)
 {
-
+	switch (key)
+	{
+	case SDLK_A:
+		m_misc->AddFinishTurn();
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatAttack, this));
+		break;
+	case SDLK_C:
+		m_misc->m_zp[0x1F] = 0x78;
+		m_misc->Cast(m_activePlayer);
+		break;
+	case SDLK_N:
+		m_misc->AddFinishTurn();
+		m_scrollArea->UPrintMessage(137);
+		m_misc->NegateTime(m_activePlayer);
+		break;
+	case SDLK_R:
+		m_scrollArea->UPrintMessage(138);
+		m_misc->ReadyWeapon(m_activePlayer);
+		break;
+	case SDLK_Z:
+		m_scrollArea->UPrintMessage(139);
+		m_misc->ZStats(1, m_activePlayer);
+		break;
+	default:
+		m_misc->AddFinishTurn();
+		m_scrollArea->UPrintMessage(140);
+		break;
+	}
 }
 
 bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
@@ -853,6 +894,8 @@ bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
 			m_misc->Pass();
 			break;
 		default:
+			m_misc->AddFinishTurn();
+			m_misc->What2();
 			break;
 		}
 	}
@@ -923,6 +966,27 @@ void UltimaSpellCombat::nextplr()
 
 void UltimaSpellCombat::monmagic() // $864A
 {
+	int rngNum = m_utilities->getRandom(0, 255);
+	m_gChnum = rngNum &= 3;
+
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][17] != 'G')
+	{
+		nextplr();
+		return;
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::monmagicCallback, this));
+	m_misc->InverseTiles(true);
+}
+
+bool UltimaSpellCombat::monmagicCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->m_zp[0x1F] = 0x78;
+	afternext();
+	return false;
 }
 
 void UltimaSpellCombat::monlb() // $8672
@@ -939,8 +1003,51 @@ void UltimaSpellCombat::monlb() // $8672
 	m_misc->PutXYTile(tileValue, m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
 }
 
-void UltimaSpellCombat::monshoot() // $86A4
+void UltimaSpellCombat::monshoot2() // $86B5
 {
+	m_misc->m_xs += m_misc->m_zp[0xF5];
+	if (m_misc->m_xs > 10 || m_misc->m_xs < 0)
+	{
+		m_misc->DelayGame(80);
+		return;
+	}
+	m_misc->m_ys += m_misc->m_zp[0xF6];
+	if (m_misc->m_ys > 10 || m_misc->m_ys < 0)
+	{
+		m_misc->DelayGame(80);
+		return;
+	}
+	for (short chnum = m_misc->m_Party[1] - 1; chnum >= 0; chnum--)
+	{
+		if (m_misc->m_xs == m_misc->m_CharX[chnum] && m_misc->m_ys == m_misc->m_CharY[chnum])
+		{
+			m_gChnum = chnum;
+			c8777();
+			return;
+		}
+	}
+	m_misc->m_opnum = m_misc->GetXYTile(m_misc->m_xs, m_misc->m_ys);
+	m_misc->m_gBallTileBackground = (unsigned char)m_misc->m_opnum;
+	m_misc->PutXYTile(0x7A, m_misc->m_xs, m_misc->m_ys);
+	m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::monshootCallback, this));
+	monshoot2();
+}
+
+void UltimaSpellCombat::monshoot() const // $86A4
+{
+	m_misc->m_xs = m_misc->m_MonsterX[m_mon];
+	m_misc->m_ys = m_misc->m_MonsterY[m_mon];
+}
+
+bool UltimaSpellCombat::monshootCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_misc->PutXYTile(m_misc->m_opnum, m_misc->m_xs, m_misc->m_ys);
+	return false;
 }
 
 void UltimaSpellCombat::afternext()
@@ -1127,4 +1234,182 @@ unsigned char UltimaSpellCombat::CombatValidMove(short value) // $7E31
 		}
 		return 0xFF;
 	}
+}
+
+bool UltimaSpellCombat::CombatAttack()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_misc->m_zp[0x1F] = 0x7A;
+	m_misc->m_rosNum = m_misc->m_Party[6 + m_activePlayer];
+	m_wpn = m_misc->m_Player[m_misc->m_rosNum][48];
+
+	std::string str1 = m_resources->m_plistMap["WeaponsArmour"][m_wpn];
+	std::string str2 = m_resources->m_plistMap["Messages"][144];
+
+	str1 += str2;
+	m_scrollArea->UPrintWin(str1);
+	m_misc->m_inputType = InputType::GetDirection;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatAttackCallback, this));
+	m_misc->AddProcessEvent();
+
+	return false;
+}
+
+bool UltimaSpellCombat::CombatAttackCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	if (m_misc->m_input_num < 0)
+	{
+		return false;
+	}
+	if (!(m_wpn == 3 || m_wpn == 5 || m_wpn == 9 || m_wpn == 13))
+	{
+		m_shootX = m_misc->m_CharX[m_activePlayer];
+		m_shootY = m_misc->m_CharY[m_activePlayer];
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ShootCallback, this));
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::Shoot, this));
+		return false;
+	}
+	else
+	{
+		m_mon = CombatMonsterHere(m_misc->m_CharX[m_activePlayer] + m_misc->m_dx, m_misc->m_CharY[m_activePlayer] + m_misc->m_dy);
+		if (m_mon > 127 && m_mon != 1)
+		{
+			Missed();
+			return false;
+		}
+		if (m_mon > 127 && m_wpn == 1)   // Thrown a dagger
+		{
+			m_misc->m_Player[m_misc->m_rosNum][49]--;
+			if (m_misc->m_Player[m_misc->m_rosNum][49] < 1 || m_misc->m_Player[m_misc->m_rosNum][49] > 250)
+			{
+				m_misc->m_Player[m_misc->m_rosNum][48] = 0;
+				m_misc->m_Player[m_misc->m_rosNum][49] = 0;
+			}
+			m_shootX = m_misc->m_CharX[m_activePlayer];
+			m_shootY = m_misc->m_CharY[m_activePlayer];
+			m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ShootCallback, this));
+			m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::Shoot, this));
+			return false;
+		}
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatAttackCallback1, this));
+	return false;
+}
+
+bool UltimaSpellCombat::CombatAttackCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	if (ExodusCastle() == 0 && m_wpn != 15)
+	{
+		Missed();
+		return false;
+	}
+	int rngNum = m_utilities->getRandom(0, 255);
+	if (rngNum < 128)
+	{
+		Missed();
+		return false;
+	}
+	PrintMonster(m_misc->m_gMonType, false, m_misc->m_gMonVarType);
+	m_scrollArea->UPrintMessage(146);
+	m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_mon];
+	m_misc->PutXYTile(m_misc->m_zp[0x1F], m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
+	m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::CombatAttackCallback2, this));
+	ShowHit(m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon], 0x7A, m_misc->m_MonsterTile[m_mon]);
+	return false;
+}
+
+bool UltimaSpellCombat::CombatAttackCallback2()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	short damage;
+	m_misc->PutXYTile(m_misc->m_gMonType, m_misc->m_MonsterX[m_mon], m_misc->m_MonsterY[m_mon]);
+	
+	damage = m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_rosNum][18] | 1);
+	damage += m_misc->m_Player[m_misc->m_rosNum][18] / 2;
+	damage += m_misc->m_Player[m_misc->m_rosNum][48] * 3;
+	damage += 4;
+	DamageMonster(m_mon, damage, m_activePlayer);
+
+	return false;
+}
+
+bool UltimaSpellCombat::Shoot() // $7D41
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_shootX += m_misc->m_dx;
+	m_shootY += m_misc->m_dy;
+	if (m_shootX < 0 || m_shootX > 10 || m_shootY < 0 || m_shootY > 10)
+	{
+		m_shootRet = 255;
+		return false;
+	}
+
+	m_misc->m_opnum = CombatMonsterHere(m_shootX, m_shootY);
+	unsigned char character = CombatCharacterHere(m_shootX, m_shootY);
+	m_origValue = m_misc->GetXYTile(m_shootX, m_shootY);
+	m_misc->m_gBallTileBackground = m_origValue;
+	if (m_misc->m_opnum != 255)
+	{
+		m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_misc->m_opnum];
+	}
+	else if (character != 255)
+	{
+		m_misc->m_gBallTileBackground = m_misc->m_CharTile[character];
+	}
+	m_misc->PutXYTile(m_misc->m_zp[0x1F], m_shootX, m_shootY);
+	m_misc->DelayGame(80, std::bind(&UltimaSpellCombat::ShootCallback1, this));
+
+	return false;
+}
+
+bool UltimaSpellCombat::ShootCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->PutXYTile(m_origValue, m_shootX, m_shootY);
+	m_origValue = (unsigned char)m_misc->m_opnum;
+	if (m_origValue > 127)
+	{
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::Shoot, this));
+		return false;
+	}
+	m_shootRet = m_origValue;
+
+	return false;
+}
+
+bool UltimaSpellCombat::ShootCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_mon = m_shootRet;
+	if (m_shootRet > 127)
+	{
+		Missed();
+		return false;
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatAttackCallback1, this));
+	return false;
 }

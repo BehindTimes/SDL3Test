@@ -87,6 +87,7 @@ public:
 	void PullSosaria();
 	void PushSosaria();
 
+	void DelayGame(Uint64 delay_time);
 	void DelayGame(Uint64 delay_time, std::function<bool()> callback);
 
 	void North();
@@ -98,12 +99,12 @@ public:
 	void NorthEast();
 	void NorthWest();
 
-	void Cast();
+	void Cast(int chNum);
 	void ModifyOrder();
 	void NegateTime();
-	void ReadyWeapon();
+	void ReadyWeapon(int chnum);
 	void WearArmor();
-	void ZStats();
+	void ZStats(int mode, short chnum);
 
 	void GetChest(short spell, short chnum);
 	void HandEquip();
@@ -134,6 +135,8 @@ public:
 	void PrintTile(short tile, bool plural);
 	void InverseChnum(char which, bool value);
 	char GetHeading(short value);
+	void What2();
+	void NegateTime(short chnum);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -190,6 +193,7 @@ public:
 	bool m_checkDead;
 	bool m5BDC;
 	GameStateMode m_gameMode;
+	GameStateMode m_lastMode;
 	short m_heading;
 	int m_xs;
 	int m_ys;
@@ -249,7 +253,7 @@ private:
 	bool TransactCallback();
 	bool TransactCallback2();
 	void What();
-	void What2();
+	
 	void NotHere();
 	void NoEffect();
 	void Routine6E6B();
@@ -435,7 +439,7 @@ private:
 	bool ReadyWeaponCallback();
 	bool ReadyWeaponCallback1();
 	bool NegateTimeCallback();
-	void NegateTime(short chnum);
+	
 	bool ModifyOrderCallback();
 	bool ModifyOrderCallback1();
 	bool HandEquipCallback();

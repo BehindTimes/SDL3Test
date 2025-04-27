@@ -27,7 +27,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Board();
 		break;
 	case SDLK_C:
-		Cast();
+		Cast(-1);
 		break;
 	case SDLK_D:
 		Descend();
@@ -72,7 +72,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		//QuitSave
 		break;
 	case SDLK_R:
-		ReadyWeapon();
+		ReadyWeapon(-1);
 		break;
 	case SDLK_S:
 		Steal();
@@ -95,7 +95,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		Yell();
 		break;
 	case SDLK_Z:
-		ZStats();
+		ZStats(0, 0);
 		break;
 	default:
 		break;
@@ -1174,10 +1174,19 @@ bool U3Misc::CommandZStats()
 	return false;
 }
 
-void U3Misc::ZStats()
+void U3Misc::ZStats(int mode, short chnum)
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
-	m_callbackStack.push(std::bind(&U3Misc::CommandZStats, this));
+	if (mode == 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::CommandZStats, this));
+	}
+	else
+	{
+		m_surpressTextDisplay = true;
+		m_input_num = chnum;
+		m_callbackStack.push(std::bind(&U3Misc::StatsCallback, this));
+	}
 }
 
 void U3Misc::Stats(short mode, short chnum)
@@ -1207,7 +1216,11 @@ bool U3Misc::StatsCallback()
 		return false;
 	}
 	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
-	m_scrollArea->UPrintWin(dispString);
+	if (!m_surpressTextDisplay)
+	{
+		m_scrollArea->UPrintWin(dispString);
+	}
+	m_surpressTextDisplay = false;
 	if (m_Party[6 + m_chNum] == 0)
 	{
 		m_scrollArea->UPrintMessage(41);
@@ -1598,7 +1611,7 @@ void U3Misc::WearArmour(short chnum, char armour, bool preset)
 	m_Player[m_rosNum][40] = armour;
 	if (!preset)
 	{
-		m_scrollArea->UPrintWin("\n");
+		//m_scrollArea->UPrintWin("\n");
 		std::string outStr = m_resources->m_plistMap["WeaponsArmour"][armour + 16];
 		std::string readyStr = m_resources->m_plistMap["Messages"][82];
 		outStr += readyStr;
@@ -1708,7 +1721,7 @@ void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
 	m_Player[m_rosNum][48] = weapon;
 	if (!preset)
 	{
-		m_scrollArea->UPrintWin("\n");
+		//m_scrollArea->UPrintWin("\n");
 		std::string outStr = m_resources->m_plistMap["WeaponsArmour"][weapon];
 		std::string readyStr = m_resources->m_plistMap["Messages"][82];
 		outStr += readyStr;
@@ -1729,7 +1742,11 @@ bool U3Misc::ReadyWeaponCallback()
 		return false;
 	}
 	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
-	m_scrollArea->UPrintWin(dispString);
+	if (!m_surpressTextDisplay)
+	{
+		m_scrollArea->UPrintWin(dispString);
+	}
+	m_surpressTextDisplay = false;
 	if (m_Party[6 + m_chNum] == 0)
 	{
 		m_scrollArea->UPrintMessage(41);
@@ -1783,10 +1800,19 @@ bool U3Misc::CommandReadyWeapon()
 	return false;
 }
 
-void U3Misc::ReadyWeapon()
+void U3Misc::ReadyWeapon(int chnum)
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
-	m_callbackStack.push(std::bind(&U3Misc::CommandReadyWeapon, this));
+	if (chnum < 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::CommandReadyWeapon, this));
+	}
+	else
+	{
+		m_input_num = chnum;
+		m_callbackStack.push(std::bind(&U3Misc::ReadyWeaponCallback, this));
+		m_surpressTextDisplay = true;
+	}
 }
 
 bool U3Misc::NegateTimeCallback()
@@ -2503,10 +2529,19 @@ bool U3Misc::fireloopCallback()
 	return false;
 }
 
-void U3Misc::Cast()
+void U3Misc::Cast(int chNum)
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
-	m_callbackStack.push(std::bind(&U3Misc::CommandCast, this));
+	if (chNum < 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::CommandCast, this));
+	}
+	else
+	{
+		m_input_num = chNum;
+		m_callbackStack.push(std::bind(&U3Misc::CastCallback, this));
+		m_surpressTextDisplay = true;
+	}
 }
 
 bool U3Misc::CommandCast()
@@ -2536,8 +2571,12 @@ bool U3Misc::CastCallback()
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
-	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
-	m_scrollArea->UPrintWin(dispString);
+	if (!m_surpressTextDisplay)
+	{
+		std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
+		m_scrollArea->UPrintWin(dispString);
+	}
+	m_surpressTextDisplay = false;
 	if (m_Party[6 + m_chNum] == 0)
 	{
 		m_scrollArea->UPrintMessage(41);

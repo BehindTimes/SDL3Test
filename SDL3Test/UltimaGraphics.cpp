@@ -1003,11 +1003,25 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
 
 void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
 {
+    if (m_queuedMode != U3GraphicsMode::None)
+    {
+        m_curMode = m_queuedMode;
+        m_queuedMode = U3GraphicsMode::None;
+        return;
+    }
+
     m_misc->m_currentEvent = event;
     DrawFrame(1);
     m_resources->ShowChars(true);
-    m_spellCombat->drawCombat();
-    m_resources->DrawInverses(deltaTime);
+    if (m_resources->m_overrideImage >= 0)
+    {
+        m_resources->ImageDisplay();
+    }
+    else
+    {
+        m_spellCombat->drawCombat();
+        m_resources->DrawInverses(deltaTime);
+    }
     m_scrollArea->render(deltaTime);
     bool updateGame = true;
 
@@ -1274,7 +1288,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
         m_resources->m_wasMove = true;
         m_queuedMode = U3GraphicsMode::None;
 
-        if (m_curMode == U3GraphicsMode::Dungeon)
+        if (m_curMode == U3GraphicsMode::Combat)
         {
             // This was being placed before the battle started.  In the original version,
             // they control the graphic updates

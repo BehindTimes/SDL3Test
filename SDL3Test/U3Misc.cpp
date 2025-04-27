@@ -69,7 +69,8 @@ U3Misc::U3Misc() :
 	m_gWhirlCtr(0),
 	m_partyFormed(false),
 	m_surpressTextDisplay(false),
-	m_gTimeNegate(0)
+	m_gTimeNegate(0),
+	m_lastMode(GameStateMode::Map)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, NULL, sizeof(char) * (1365)); // 21 * 65
@@ -4992,6 +4993,14 @@ void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
 	{
 		m_Player[rosNum][item] = 99;
 	}
+}
+
+void U3Misc::DelayGame(Uint64 delay_time)
+{
+	m_elapsedSleepTime = 0;
+	m_sleepCheckTime = delay_time;
+	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+	//m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 }
 
 void U3Misc::DelayGame(Uint64 delay_time, std::function<bool()> callback)

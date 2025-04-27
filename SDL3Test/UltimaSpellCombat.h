@@ -58,7 +58,8 @@ private:
 	short FigureNewMonPosition(short mon);
 	unsigned char CombatValidMove(short value);
 	void afternext();
-	void monshoot();
+	void monshoot() const;
+	void monshoot2();
 	void monlb();
 	void monmagic();
 	void nextplr();
@@ -66,6 +67,16 @@ private:
 	void c8777();
 	bool HandleMonsterMoveCallback();
 	bool c8777Callback();
+	bool monmagicCallback();
+	bool monshootCallback();
+	bool CombatAttack();
+	bool CombatAttackCallback();
+	bool CombatAttackCallback1();
+	bool CombatAttackCallback2();
+	bool Shoot();
+	bool ShootCallback();
+	bool ShootCallback1();
+	void Victory() const;
 
 	unsigned char m_hitType;
 	unsigned char m_origValue;
@@ -73,9 +84,12 @@ private:
 	short m_y;
 	unsigned char m_g835E;
 	unsigned char m_g56E7;
-	
+	short m_wpn;
 
 	short m_chNum;
 	short m_damage;
+	short m_shootX;
+	short m_shootY;
+	short m_shootRet;
 };
 

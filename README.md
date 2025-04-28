@@ -8,7 +8,7 @@ C++20
 
 [SDL3 TTF](https://github.com/libsdl-org/SDL_ttf/releases/preview-3.1.0)
 
-[SDL3 Mixer](https://github.com/libsdl-org/SDL_ttf/releases/preview-3.1.0)
+[SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
 
 [LibXML2](https://github.com/GNOME/libxml2)
 

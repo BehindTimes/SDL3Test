@@ -101,7 +101,26 @@ private:
 	bool ApparUnemCallback();
 	void Heal(short damage);
 	bool HealCallback();
+	bool HealCallback1() const;
 	bool LibRekCallback();
+	void Alcort();
+	bool AlcortCallback();
+	bool AlcortCallback1();
+	bool SequituCallback();
+	void Surmandum();
+	bool SurmandumCallback();
+	bool SurmandumCallback1();
+	void AnjuSermani();
+	bool AnjuSermaniCallback();
+	bool AnjuSermaniCallback1();
+	void Armageddon();
+	bool ArmageddonCallback();
+	void Terramorph();
+	bool TerramorphCallback();
+	bool TerramorphCallback2();
+	bool TerramorphCallback3();
+	void Flotellum();
+	bool FlotellumCallback() const;
 
 	static constexpr Uint64 CombatBlink = 300;
 
@@ -119,6 +138,9 @@ private:
 	short m_shootY;
 	short m_shootRet;
 	short m_hit;
+
+	unsigned char m_destX;
+	unsigned char m_destY;
 	
 };
 

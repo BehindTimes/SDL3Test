@@ -139,6 +139,7 @@ public:
 	void NegateTime(short chnum);
 	void callClerickChoose();
 	void HPAdd(short member, short amount);
+	void setInputTypeNum(std::function<bool()> func, int inputLength = 2);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -287,7 +288,7 @@ private:
 	bool moreFoodCallback();
 	bool InputNumCallback();
 	bool InputTextCallback();
-	void setInputTypeNum(std::function<bool()> func, int inputLength = 2);
+	
 	void setInputTypeYesNo(std::function<bool()> func);
 	void setInputTypeBuySell(std::function<bool()> func);
 	void setInputTypeRestricted(std::function<bool()> func, short start);
@@ -513,6 +514,11 @@ private:
 	static constexpr std::string_view WeaponsString = "\n**WEAPONS**";
 	static constexpr std::string_view NoWeaponsString = "\n02-Hands-(A)\n**ARMOUR**";
 	static constexpr std::string_view NoArmorString = "\n01-Skin-(A)";
+
+	static constexpr std::string_view TerraformString = "TERRAFORM";
+	static constexpr std::string_view ArmageddonString = "ARMAGEDDON";
+	static constexpr std::string_view FlotellumString = "FLOTELLUM";
+	static constexpr std::string_view ScreamString = "\nAIEEEEE!\n\n";
 
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;

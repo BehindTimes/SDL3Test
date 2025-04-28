@@ -42,7 +42,9 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_cHide(false),
 	m_elapsedFlashTime(0),
 	m_updateBlink(false),
-	m_hit(0)
+	m_hit(0),
+	m_destX(0),
+	m_destY(0)
 {
 }
 
@@ -1616,25 +1618,21 @@ bool UltimaSpellCombat::ApparUnemCallback()
 	return false;
 }
 
-void UltimaSpellCombat::Heal(short damage) // $56F7
+void UltimaSpellCombat::Alcort()
 {
 	m_scrollArea->UPrintMessage(130);
-
 	m_misc->m_inputType = InputType::Transact;
-	//m_scrollArea->blockPrompt(true);
-	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::HealCallback, this));
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::AlcortCallback, this));
 	m_misc->AddProcessEvent();
-	m_damage = damage;
 }
 
-bool UltimaSpellCombat::HealCallback()
+bool UltimaSpellCombat::AlcortCallback()
 {
 	if (m_misc->m_callbackStack.size() > 0)
 	{
 		m_misc->m_callbackStack.pop();
 	}
-
-	if (m_misc->m_input_num < 1 || m_misc->m_input_num > 4)
+	if (m_misc->m_input_num < 0 || m_misc->m_input_num > 3)
 	{
 		m_scrollArea->UPrintWin("\n");
 		Failed();
@@ -1648,9 +1646,77 @@ bool UltimaSpellCombat::HealCallback()
 	}
 	std::string dispString(std::to_string(m_misc->m_input_num + 1) + std::string("\n"));
 	m_scrollArea->UPrintWin(dispString);
-	m_misc->HPAdd(m_misc->m_Party[6 + m_misc->m_input_num], m_damage);
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::AlcortCallback1, this));
 	m_misc->InverseCharDetails(m_misc->m_input_num, true);
 	Flashriek();
+
+	return false;
+}
+
+bool UltimaSpellCombat::AlcortCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'P')
+	{
+		Failed();
+		return false;
+	}
+	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
+
+	return false;
+}
+
+void UltimaSpellCombat::Heal(short damage) // $56F7
+{
+	m_scrollArea->UPrintMessage(130);
+
+	m_misc->m_inputType = InputType::Transact;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::HealCallback, this));
+	m_misc->AddProcessEvent();
+	m_damage = damage;
+}
+
+bool UltimaSpellCombat::HealCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_input_num < 0 || m_misc->m_input_num > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	std::string dispString(std::to_string(m_misc->m_input_num + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::HealCallback1, this));
+	m_misc->InverseCharDetails(m_misc->m_input_num, true);
+	Flashriek();
+
+	return false;
+}
+
+bool UltimaSpellCombat::HealCallback1() const
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_misc->HPAdd(m_misc->m_Party[6 + m_misc->m_input_num], m_damage);
 
 	return false;
 }
@@ -1668,6 +1734,296 @@ bool UltimaSpellCombat::LibRekCallback()
 	}
 	RelocateDungeon();
 
+	return false;
+}
+
+bool UltimaSpellCombat::SequituCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_dungeon->m_dungeonLevel = 0;
+	m_dungeon->m_gExitDungeon = 1;
+
+	return false;
+}
+
+void UltimaSpellCombat::Surmandum()
+{
+	m_scrollArea->UPrintMessage(128);
+	m_misc->m_inputType = InputType::Transact;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::SurmandumCallback, this));
+	m_misc->AddProcessEvent();
+}
+
+bool UltimaSpellCombat::SurmandumCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_input_num < 0 || m_misc->m_input_num > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	std::string dispString(std::to_string(m_misc->m_input_num + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::SurmandumCallback1, this));
+	m_misc->InverseCharDetails(m_misc->m_input_num, true);
+	Flashriek();
+
+	return false;
+}
+
+bool UltimaSpellCombat::SurmandumCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'D')
+	{
+		Failed();
+		return false;
+	}
+	int rngNum = m_utilities->getRandom(0, 255) & 0x03;
+	if (rngNum == 0)
+	{
+		m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'A';
+		Failed();
+		return false;
+	}
+	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
+
+	return false;
+}
+
+void UltimaSpellCombat::AnjuSermani()
+{
+	m_scrollArea->UPrintMessage(129);
+	m_misc->m_inputType = InputType::Transact;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::AnjuSermaniCallback, this));
+	m_misc->AddProcessEvent();
+}
+
+bool UltimaSpellCombat::AnjuSermaniCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_input_num < 0 || m_misc->m_input_num > 3)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	std::string dispString(std::to_string(m_misc->m_input_num + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::AnjuSermaniCallback1, this));
+	m_misc->InverseCharDetails(m_misc->m_input_num, true);
+	Flashriek();
+
+	return false;
+}
+
+bool UltimaSpellCombat::AnjuSermaniCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'A')
+	{
+		Failed();
+		return false;
+	}
+
+	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] > 5)
+	{
+		m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] -= 5; // Caster's wisdom-5
+	}
+	if (m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] < 5)
+	{
+		m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] = 5;
+	}
+
+	return false;
+}
+
+void UltimaSpellCombat::Armageddon()
+{
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ArmageddonCallback, this));
+	Flashriek();
+}
+
+bool UltimaSpellCombat::ArmageddonCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	for (short mon = 0; mon < 32; mon++)
+	{
+		if (m_misc->m_Monsters[mon] != 0 && m_misc->m_Monsters[mon] != 0x4C) // Can't kill Lord British
+		{
+			// put a chest where the monster was
+			short tileon = m_misc->m_Monsters[mon + TILEON];
+			if (tileon != 0)
+			{
+				tileon = ((tileon / 4) & 0x03) + 0x24;
+			}
+			m_misc->PutXYVal((unsigned char)tileon, m_misc->m_Monsters[mon + XMON], m_misc->m_Monsters[mon + YMON]);
+			m_misc->m_Monsters[mon] = 0;
+		}
+		else
+		{
+			m_misc->m_Monsters[mon + HPMON] = 0xC0;
+		}
+	}
+
+	return false;
+}
+
+void UltimaSpellCombat::Terramorph()
+{
+	m_scrollArea->UPrintMessage(85);
+	m_misc->m_inputType = InputType::GetDirection;
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::TerramorphCallback, this));
+	m_misc->AddProcessEvent();
+}
+
+bool UltimaSpellCombat::TerramorphCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	std::string_view temp = m_resources->TypeNumStr;
+	std::string dispString = std::string(temp);
+	m_scrollArea->UPrintWin(dispString);
+	m_misc->setInputTypeNum(std::bind(&UltimaSpellCombat::TerramorphCallback2, this));
+	return false;
+}
+
+bool UltimaSpellCombat::TerramorphCallback2()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::TerramorphCallback3, this));
+	Flashriek();
+	m_scrollArea->UPrintWin("\n");
+	return false;
+}
+
+bool UltimaSpellCombat::TerramorphCallback3()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	unsigned char value = (unsigned char)(m_misc->m_input_num % 64);
+	short mon;
+
+	if (value > 12 && value < 31)   // a creature
+	{
+		short openSpot = -1;
+		for (mon = 0; mon < 32; mon++)
+		{
+			if (m_misc->m_Monsters[mon] == 0)
+			{
+				openSpot = mon;
+			}
+		}
+		if (openSpot == -1)
+		{
+			m_misc->PutXYVal(value * 4, (unsigned char)(m_misc->m_xpos + m_misc->m_dx), (unsigned char)(m_misc->m_ypos + m_misc->m_dy));
+		}
+		else
+		{
+			m_misc->m_Monsters[openSpot] = value * 4;
+			m_misc->m_Monsters[openSpot + TILEON] = m_misc->GetXYVal((unsigned char)(m_misc->m_xpos + m_misc->m_dx), (unsigned char)(m_misc->m_ypos + m_misc->m_dy));
+			m_misc->m_Monsters[openSpot + XMON] = (unsigned char)(m_misc->m_xpos + m_misc->m_dx);
+			m_misc->m_Monsters[openSpot + YMON] = (unsigned char)(m_misc->m_ypos + m_misc->m_dy);
+			m_misc->m_Monsters[openSpot + HPMON] = 0x40;    // wander
+			m_misc->PutXYVal(value * 4, (unsigned char)(m_misc->m_xpos + m_misc->m_dx), (unsigned char)(m_misc->m_ypos + m_misc->m_dy));
+		}
+	}
+	else
+	{
+		m_misc->PutXYVal(value * 4, (unsigned char)(m_misc->m_xpos + m_misc->m_dx), (unsigned char)(m_misc->m_ypos + m_misc->m_dy));
+	}
+
+	return false;
+}
+
+
+void UltimaSpellCombat::Flotellum()
+{
+	int closestDist = 99;
+	int destX = -1, destY = -1;
+	int testY;
+	for (testY = -5; testY <= 5; testY++)
+	{
+		int testX;
+		for (testX = -5; testX <= 5; testX++)
+		{
+			if (!(testX == 0 && testY == 0) && m_misc->GetXYVal((short)(m_misc->m_xpos + testX), (short)(m_misc->m_ypos + testY)) == 0)
+			{
+				int thisDist = m_utilities->Absolute((short)testX) + m_utilities->Absolute((short)testY);
+				if (thisDist < closestDist)
+				{
+					closestDist = thisDist;
+					destX = m_misc->m_xpos + testX;
+					destY = m_misc->m_ypos + testY;
+				}
+			}
+		}
+	}
+	if (destX < 0)
+	{
+		Failed();
+		return;
+	}
+	m_destX = (unsigned char)destX;
+	m_destY = (unsigned char)destY;
+
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::FlotellumCallback, this));
+	Flashriek();
+}
+
+bool UltimaSpellCombat::FlotellumCallback() const
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->PutXYVal(11 * 4, m_destX, m_destY);
 	return false;
 }
 
@@ -1793,8 +2149,16 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Flashriek();
 		break;
 	case 23: // Alcort
+		Alcort();
 		break;
 	case 24: // Sequitu
+		if (m_misc->m_Party[2] != 1)
+		{
+			Failed();
+			return;
+		}
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::SequituCallback, this));
+		Flashriek();
 		break;
 	case 25: // Sominae
 		m_misc->m_gTorch = 250;
@@ -1832,17 +2196,47 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Projectile(chnum, 255);
 		break;
 	case 29: // Surmandum
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			Failed();
+			return;
+		}
+		Surmandum();
 		break;
 	case 30: // ZXKUQYB
 		BigDeath(255, chnum);
 		break;
 	case 31: // Anju Sermani
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			Failed();
+			return;
+		}
+		AnjuSermani();
 		break;
 	case 32: // Terramorph
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			Failed();
+			return;
+		}
+		Terramorph();
 		break;
 	case 33: // Armageddon
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			Failed();
+			return;
+		}
+		Armageddon();
 		break;
 	case 34: // Flotellum
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			Failed();
+			return;
+		}
+		Flotellum();
 		break;
 	default:
 		break;

@@ -2999,15 +2999,18 @@ bool U3Misc::ProcessMagic()
 	{
 		if (spellnum == 32)
 		{
-			m_scrollArea->UPrintWin("TERRAFORM");
+			std::string dispString(TerraformString);
+			m_scrollArea->UPrintWin(dispString);
 		}
 		else if (spellnum == 33)
 		{
-			m_scrollArea->UPrintWin("ARMAGEDDON");
+			std::string dispString(ArmageddonString);
+			m_scrollArea->UPrintWin(dispString);
 		}
 		else if (spellnum == 34)
 		{
-			m_scrollArea->UPrintWin("FLOTELLUM");
+			std::string dispString(FlotellumString);
+			m_scrollArea->UPrintWin(dispString);
 		}
 	}
 	m_scrollArea->UPrintWin("\n\n");

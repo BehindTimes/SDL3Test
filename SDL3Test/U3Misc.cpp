@@ -4209,7 +4209,8 @@ bool U3Misc::OtherCallback1()
 	}
 	else if (0 == m_input.compare("SCREAM"))
 	{
-		m_scrollArea->UPrintWin("\nAIEEEEE!\n\n");
+		std::string dispString(ScreamString);
+		m_scrollArea->UPrintWin(dispString);
 		return false;
 	}
 	else if (0 == m_input.compare("INSERT"))

@@ -219,6 +219,7 @@ public:
 	static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
 	static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
 	static constexpr std::string_view SelectRemoveCharacterStr = "SELECT CHARACTER TO REMOVE";
+	static constexpr std::string_view TypeNumStr = "TypeNum-";
 
 	int m_blockSize;
 	int m_overrideImage;

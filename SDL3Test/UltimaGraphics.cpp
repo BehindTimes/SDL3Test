@@ -1157,13 +1157,6 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
     }
     else
     {
-        if (m_resources->m_newMove)
-        {
-            //m_scrollArea->blockPrompt(false);
-            m_resources->m_newMove = false;
-            m_misc->CheckAllDead();
-            m_misc->WhirlPool();
-        }
         //if (!m_misc->m_freezeAnimation)
         {
             DrawMap((unsigned char)m_misc->m_xpos, (unsigned char)m_misc->m_ypos);
@@ -1206,6 +1199,18 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
 
     if (updateGame)
     {
+        if (m_resources->m_newMove)
+        {
+            //m_scrollArea->blockPrompt(false);
+            m_resources->m_newMove = false;
+            m_misc->CheckAllDead();
+            m_misc->WhirlPool();
+            updateGame = false;
+        }
+    }
+
+    if (updateGame)
+    {
         m_scrollArea->blockPrompt(false);
         m_misc->ProcessEvent(event);
         m_resources->updateGameTime(deltaTime);
@@ -1237,25 +1242,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     }
     else
     {
-        if (m_resources->m_newMove)
-        {
-            m_dungeon->setForceRedraw();
-            //m_scrollArea->blockPrompt(false);
-            m_resources->m_newMove = false;
-            m_misc->CheckAllDead();
-
-            /*if (!m_misc->m_checkDead && m_queuedMode == U3GraphicsMode::None)
-            {
-                m_scrollArea->blockPrompt(false);
-            }*/
-
-            if (m_misc->m_gTorch == 0 && !m_misc->m_checkDead)
-            {
-                m_scrollArea->UPrintMessage(150);
-                
-            }
-            //m_scrollArea->blockPrompt(false);
-        }
+        
         //if (!m_misc->m_freezeAnimation)
         {
             m_dungeon->DrawDungeon();
@@ -1308,6 +1295,29 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
             m_spellCombat->PutXYDng(0x40, m_misc->m_xpos, m_misc->m_ypos);
         }
         updateGame = false;
+    }
+    if (updateGame)
+    {
+        if (m_resources->m_newMove)
+        {
+            m_dungeon->setForceRedraw();
+            //m_scrollArea->blockPrompt(false);
+            m_resources->m_newMove = false;
+            m_misc->CheckAllDead();
+
+            /*if (!m_misc->m_checkDead && m_queuedMode == U3GraphicsMode::None)
+            {
+                m_scrollArea->blockPrompt(false);
+            }*/
+
+            if (m_misc->m_gTorch == 0 && !m_misc->m_checkDead)
+            {
+                m_scrollArea->UPrintMessage(150);
+
+            }
+            //m_scrollArea->blockPrompt(false);
+            updateGame = false;
+        }
     }
 
     if (updateGame)

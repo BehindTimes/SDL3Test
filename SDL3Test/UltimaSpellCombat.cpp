@@ -1726,7 +1726,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(255, chnum);
 		break;
 	case 16: // Pontori
-		if (m_misc->m_Party[3] != 0x80)
+		if (m_misc->m_Party[2] != 0x80)
 		{
 			Failed();
 			return;
@@ -1783,6 +1783,28 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Heal(rngNum);
 		break;
 	case 27: // Vieda
+		if (m_misc->m_Party[2] == 0x80)
+		{
+			// The original Ultima 3 doesn't allow casting this in combat, though the LairWare version does.
+			// A little extra logic would have to be put in if keeping directly to that, so let's keep
+			// closer to the original.
+			Failed();
+		}
+		else
+		{
+			if (m_graphics->m_curMode == U3GraphicsMode::Map)
+			{
+				m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;
+			}
+			else if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)
+			{
+				m_graphics->m_queuedMode = U3GraphicsMode::MiniMapDungeon;
+			}
+			else
+			{
+				Failed();
+			}
+		}
 		break;
 	case 28: // Excuun
 		Projectile(chnum, 255);

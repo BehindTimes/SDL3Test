@@ -34,6 +34,7 @@ std::unique_ptr<U3ScrollArea> m_scrollArea;
 std::unique_ptr<U3Utilities> m_utilities;
 std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 std::unique_ptr<UltimaDungeon> m_dungeon;
+std::unique_ptr<U3Audio> m_audio;
 
 bool DoSplashScreen();
 void MainLoop();
@@ -63,6 +64,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     m_utilities = std::make_unique<U3Utilities>();
     m_spellCombat = std::make_unique<UltimaSpellCombat>();
     m_dungeon = std::make_unique<UltimaDungeon>();
+    m_audio = std::make_unique<U3Audio>();
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -100,8 +102,9 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     SDL_SetRenderVSync(renderer, 1);
 
     bool valid = m_resources->init(renderer);
+    bool valid2 = m_audio->initMusic();
 
-    if (valid)
+    if (valid && valid2)
     {
         if (DoSplashScreen())
         {
@@ -113,6 +116,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
+    m_audio.reset();
     m_dungeon.reset();
     m_spellCombat.reset();
     m_utilities.reset();
@@ -186,12 +190,25 @@ void MainLoop()
     {
         if (oldMode != newMode)
         {
+            if (oldMode == GameMode::Demo)
+            {
+                if (newMode == GameMode::Game)
+                {
+                    m_audio->stopMusic();
+                }
+                else
+                {
+                    m_audio->pauseMusic();
+                }
+            }
+            
             switch (newMode)
             {
             case GameMode::Demo:
             {
                 Uint64 curTick = SDL_GetTicks();
                 m_resources->setTickCount(curTick, false);
+                m_audio->playMusic(0);
             }
             break;
             case GameMode::Organize:

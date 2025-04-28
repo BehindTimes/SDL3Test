@@ -99,7 +99,7 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     //auto blah = SDL_GetError();
     //Mix_PlayMusic(music, 1);
 
-    SDL_SetRenderVSync(renderer, 1);
+   // SDL_SetRenderVSync(renderer, 1);
 
     bool valid = m_resources->init(renderer);
     bool valid2 = m_audio->initMusic();

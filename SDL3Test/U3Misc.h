@@ -332,9 +332,12 @@ private:
 	bool ExodusCastleCallback();
 	void GetMonsterDir(short monNum);
 	
-	bool moveshoot(short offset);
-	void move7AAA(short offset);
-	bool moveoutside(short offset);
+	//bool moveshoot(short offset);
+	bool move7AAA();
+	bool moveshoot();
+	bool moveshoot2();
+	//void move7AAA(short offset);
+	//bool moveoutside(short offset);
 	bool AttackCallback();
 	bool IgniteCallback();
 	bool JoinGoldCallback();
@@ -483,6 +486,13 @@ private:
 	void HandleLava();
 	bool HandleLavaCallback();
 	bool HandleLavaCallback1();
+	bool movemon();
+	bool moveoutside();
+	short GetXY(short x, short y);
+	void PutXY(short a, short x, short y);
+	bool moveshoot2Callback();
+	bool movemonCallback();
+	bool movemonCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -534,5 +544,8 @@ private:
 	short m_gMoon[2];
 	unsigned char m_validDirValue;
 	bool m_GoodPlace;
+
+	short m_moveMonsterOffset;
+	short m_value;
 };
 

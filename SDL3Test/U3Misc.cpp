@@ -72,7 +72,9 @@ U3Misc::U3Misc() :
 	m_gTimeNegate(0),
 	m_lastMode(GameStateMode::Map),
 	m_GoodPlace(false),
-	m_validDirValue(0)
+	m_validDirValue(0),
+	m_moveMonsterOffset(0),
+	m_value(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -3387,7 +3389,7 @@ char U3Misc::GetHeading(short value) // $7DFC
 // TO DO:
 // They're updating the graphics in the monster move loop.
 // Rather, we want to rewrite this to handle being in the main loop
-bool U3Misc::moveshoot(short offset) // $7B36
+/*bool U3Misc::moveshoot(short offset) // $7B36
 {
 	int randnum = m_utilities->getRandom(0, 255);
 	if (randnum > 128)
@@ -3413,9 +3415,9 @@ bool U3Misc::moveshoot(short offset) // $7B36
 	// moveshoot2
 
 	return true;
-}
+}*/
 
-void U3Misc::move7AAA(short offset)
+/*void U3Misc::move7AAA(short offset)
 {
 	short value;
 	// check if this is a valid place for the monster to walk on.
@@ -3470,9 +3472,9 @@ void U3Misc::move7AAA(short offset)
 	{
 		moveshoot(offset);
 	}
-}
+}*/
 
-bool U3Misc::moveoutside(short offset)
+/*bool U3Misc::moveoutside(short offset)
 {
 	GetMonsterDir(offset);
 	if (m_xpos == m_xs && m_ypos == m_ys)
@@ -3481,6 +3483,314 @@ bool U3Misc::moveoutside(short offset)
 		return false;
 	}
 	return true;
+}*/
+
+short U3Misc::GetXY(short x, short y) // $7E18
+{
+	return m_resources->m_TileArray[y * 11 + x];
+}
+
+void U3Misc::PutXY(short a, short x, short y)
+{
+	m_resources->m_TileArray[y * 11 + x] = (unsigned char)a;
+}
+
+bool U3Misc::moveshoot2Callback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	PutXY(m_value, m_xs, m_ys);
+	if (m_xs == 5 && m_ys == 5)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		BombTrap();
+		return false;
+	}
+	m_zp[0xFB]--;
+	if (m_zp[0xFB] > 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::moveshoot2, this));
+		return false;
+	}
+	m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+
+	return false;
+}
+
+bool U3Misc::moveshoot2() // $7B60
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_xs += m_dx;
+	if (m_xs > 10 || m_xs < 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		return false;
+	}
+	m_ys += m_dy;
+	if (m_ys > 10 || m_ys < 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		return false;
+	}
+	m_value = GetXY(m_xs, m_ys);
+	if (m_value == 0x08 || m_value == 0x46 || m_value == 0x48)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		return false;
+	}
+	m_gBallTileBackground = (unsigned char)m_value;
+	PutXY(0x7A, m_xs, m_ys);
+	DelayGame(200, std::bind(&U3Misc::moveshoot2Callback, this));
+
+	return false;
+}
+
+bool U3Misc::moveshoot() // $7B36
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	int rngNum = m_utilities->getRandom(0, 255);
+	if (rngNum > 127)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+	}
+	else
+	{
+		GetMonsterDir(m_moveMonsterOffset);
+		m_xs = 5 - m_zp[0xF5];
+		if (m_xs > 10 || m_xs < 0)
+		{
+			m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+			return false;
+		}
+		m_ys = 5 - m_zp[0xF6];
+		if (m_ys > 10 || m_ys < 0)
+		{
+			m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+			return false;
+		}
+		m_zp[0xFB] = 3;
+		m_callbackStack.push(std::bind(&U3Misc::moveshoot2, this));
+	}
+	return false;
+}
+
+bool U3Misc::move7AAA()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	short value;
+	// check if this is a valid place for the monster to walk on.
+	value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[m_moveMonsterOffset]);
+	if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+		value = 255;
+	if (value != 0)
+	{
+		m_xs = m_Monsters[m_moveMonsterOffset + XMON];
+		value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[m_moveMonsterOffset]);
+		if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+		{
+			value = 255;
+		}
+		if (value != 0)
+		{
+			m_xs = m_graphics->MapConstrain(m_Monsters[m_moveMonsterOffset + XMON] + m_dx);
+			m_ys = m_graphics->MapConstrain(m_Monsters[m_moveMonsterOffset + YMON]);    // no +dy!?
+			value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[m_moveMonsterOffset]);
+			if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
+			{
+				value = 255;
+			}
+			if (value != 0)
+			{
+				if (m_Monsters[m_moveMonsterOffset] == 0x3C || m_Monsters[m_moveMonsterOffset] == 0x74)
+				{
+					m_callbackStack.push(std::bind(&U3Misc::moveshoot, this));
+					return false;
+				}
+				m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+				return false;
+			}
+		}
+	}
+	if (m_xpos == m_xs && m_ypos == m_ys)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		return false;
+	}
+
+	PutXYVal(m_Monsters[m_moveMonsterOffset + TILEON], m_Monsters[m_moveMonsterOffset + XMON], m_Monsters[m_moveMonsterOffset + YMON]);
+	m_Monsters[m_moveMonsterOffset + XMON] = (unsigned char)m_xs;
+	m_Monsters[m_moveMonsterOffset + YMON] = (unsigned char)m_ys;
+	m_Monsters[m_moveMonsterOffset + TILEON] = GetXYVal(m_Monsters[m_moveMonsterOffset + XMON], m_Monsters[m_moveMonsterOffset + YMON]);
+	unsigned char monsterTile = m_Monsters[m_moveMonsterOffset];
+	if (m_Monsters[m_moveMonsterOffset + VARMON])
+	{
+		monsterTile += m_Monsters[m_moveMonsterOffset + VARMON];
+	}
+	PutXYVal(monsterTile, m_Monsters[m_moveMonsterOffset + XMON], m_Monsters[m_moveMonsterOffset + YMON]);
+
+	if (m_Monsters[m_moveMonsterOffset] == 0x3C || m_Monsters[m_moveMonsterOffset] == 0x74)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::moveshoot, this));
+	}
+	else
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+	}
+
+	return false;
+}
+
+bool U3Misc::moveoutside()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	GetMonsterDir(m_moveMonsterOffset);
+	if (m_xpos == m_xs && m_ypos == m_ys)
+	{
+		AttackCode(m_moveMonsterOffset);
+		return false;
+	}
+	m_callbackStack.push(std::bind(&U3Misc::move7AAA, this));
+	return false;
+}
+
+bool U3Misc::movemon() // $7A85
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_moveMonsterOffset--;
+	if (m_moveMonsterOffset < 0)
+	{
+		return false;
+	}
+	if (m_Monsters[m_moveMonsterOffset] == 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+		return false;
+	}
+	if (m_Party[2] == 0 && m_Party[15] == 0)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::moveoutside, this));
+		return false;
+	}
+	else
+	{
+		m_value = m_Monsters[m_moveMonsterOffset + 128];
+		m_value = m_value & 0xC0;
+		if (m_value == 0)
+		{
+			m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+			return false;
+		}
+		if (m_value == 0x40)
+		{
+			int rngNum = m_utilities->getRandom(0, 255);
+			if (rngNum < 128)
+			{
+				m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+				return false;
+			}
+			rngNum = m_utilities->getRandom(0, 255);
+			m_xs = m_graphics->MapConstrain(m_Monsters[m_moveMonsterOffset + XMON] + GetHeading((short)rngNum));
+			if (m_xs == 0)
+			{
+				m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+				return false;
+			}
+			rngNum = m_utilities->getRandom(0, 255);
+			m_ys = m_graphics->MapConstrain(m_Monsters[m_moveMonsterOffset + YMON] + GetHeading((short)rngNum));
+			if (m_ys == 0)
+			{
+				m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+				return false;
+			}
+			// Sosaria, and user has already defeated Exodus.  Handle monsters running into one another.
+			if (m_Party[15] != 0 && m_Party[2] == 0)
+			{
+				m_value = GetXYVal(m_xs, m_ys);
+				if (m_value > 0x27)
+				{
+					m_value = MonsterHere(m_xs, m_ys);
+					if (m_value != 255 && m_Monsters[m_moveMonsterOffset] != m_Monsters[m_value])
+					{
+						if (m_xs > (m_xpos - 6) && m_ys > (m_ypos - 6) && m_xs < (m_xpos + 6) && m_ys < (m_ypos + 6))
+						{
+							m_gBallTileBackground = m_Monsters[m_value + TILEON] / 2;
+							PutXYVal(0xF4, (unsigned char)m_xs, (unsigned char)m_ys);
+							DelayGame(200, std::bind(&U3Misc::movemonCallback1, this));
+							return false;
+						}
+
+						m_callbackStack.push(std::bind(&U3Misc::movemonCallback, this));
+						return false;
+					}
+				}
+			}
+
+			m_callbackStack.push(std::bind(&U3Misc::move7AAA, this));
+			return false;
+		}
+		if (m_value == 0x80)
+		{
+			GetMonsterDir(m_moveMonsterOffset);
+			m_callbackStack.push(std::bind(&U3Misc::move7AAA, this));
+			return false;
+		}
+		if (m_value != 0x40 && m_value != 0x80)
+		{
+			m_callbackStack.push(std::bind(&U3Misc::moveoutside, this));
+			return false;
+		}
+	}
+
+	return false;
+}
+
+bool U3Misc::movemonCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	PutXYVal(m_Monsters[m_value], (unsigned char)m_xs, (unsigned char)m_ys);
+	m_callbackStack.push(std::bind(&U3Misc::movemonCallback, this));
+	return false;
+}
+
+bool U3Misc::movemonCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	short expnum1 = (m_Experience[m_Monsters[m_moveMonsterOffset] / 4 & 0x0F]);
+	short expnum2 = (m_Experience[m_Monsters[m_value] / 4 & 0x0F]);
+	if (expnum1 >= expnum2)
+	{
+		m_Monsters[m_value] = 0;
+		PutXYVal(m_Monsters[m_value + TILEON], (unsigned char)m_xs, (unsigned char)m_ys);
+	}
+
+	m_callbackStack.push(std::bind(&U3Misc::move7AAA, this));
+
+	return false;
 }
 
 bool U3Misc::MoveMonsters() // $7A81
@@ -3490,7 +3800,11 @@ bool U3Misc::MoveMonsters() // $7A81
 		m_callbackStack.pop();
 	}
 
-	short value;
+	m_moveMonsterOffset = 32;
+
+	m_callbackStack.push(std::bind(&U3Misc::movemon, this));
+
+	/*short value;
 
 	for (short offset = 0; offset < 32; ++offset)
 	{
@@ -3554,7 +3868,7 @@ bool U3Misc::MoveMonsters() // $7A81
 				move7AAA(offset);
 			}
 		}
-	}
+	}*/
 	return false;
 }
 

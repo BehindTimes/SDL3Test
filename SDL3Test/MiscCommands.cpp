@@ -2982,7 +2982,7 @@ bool U3Misc::ProcessMagic()
 	{
 		magicreq = 90;
 	}
-	magicreq = 0;
+	//magicreq = 0;
 	if (magicreq > m_Player[m_rosNum][25])
 	{
 		m_scrollArea->UPrintMessage(122);

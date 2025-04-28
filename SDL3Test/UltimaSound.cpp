@@ -5,6 +5,7 @@
 U3Audio::U3Audio()
 {
 	m_music.resize(10);
+	m_sfx.resize(36);
 }
 
 U3Audio::~U3Audio()
@@ -17,6 +18,13 @@ U3Audio::~U3Audio()
 		}
 	}
 	m_music.clear();
+	for (auto& curSfx : m_sfx)
+	{
+		if (curSfx)
+		{
+			Mix_FreeChunk(curSfx);
+		}
+	}
 }
 
 bool U3Audio::initMusic()
@@ -48,6 +56,60 @@ bool U3Audio::initMusic()
 			return false;
 		}
 	}
+
+	std::vector<std::string> sfxList = {
+		{ "Alarm.wav" },
+		{ "Attack.wav" },
+		{ "BigDeath.wav" },
+		{ "Bump.wav" },
+		{ "CombatStart.wav" },
+		{ "CombatVictory.wav" },
+		{ "Creak.wav" },
+		{ "DeathFemale.wav" },
+		{ "DeathMale.wav" },
+		{ "Downwards.wav" },
+		{ "Error1.wav" },
+		{ "Error2.wav" },
+		{ "ExpLevelUp.wav" },
+		{ "FailedSpell.wav" },
+		{ "ForceField.wav" },
+		{ "Heal.wav" },
+		{ "Hit.wav" },
+		{ "Horsewalk.wav" },
+		{ "Immolate.wav" },
+		{ "Invocation.wav" },
+		{ "LBLevelRise.wav" },
+		{ "MiscSpell.wav" },
+		{ "MonsterSpell.wav" },
+		{ "Moongate.wav" },
+		{ "MountHorse.wav" },
+		{ "Ouch.wav" },
+		{ "Shoot.wav" },
+		{ "Shrine.wav" },
+		{ "Sink.wav" },
+		{ "Step.wav" },
+		{ "Swish1.wav" },
+		{ "Swish2.wav" },
+		{ "Swish3.wav" },
+		{ "Swish4.wav" },
+		{ "TorchIgnite.wav" },
+		{ "Upwards.wav" },
+	};
+
+	for (size_t index = 0; index < sfxList.size(); ++index)
+	{
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		currentPath /= ResourceLoc;
+		currentPath /= SfxLoc;
+		currentPath /= sfxList[index];
+
+		m_sfx[index] = Mix_LoadWAV(currentPath.string().c_str());
+		if (m_sfx[index] == nullptr)
+		{
+			return false;
+		}
+	}
+
 	return true;
 }
 

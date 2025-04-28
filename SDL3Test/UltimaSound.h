@@ -16,8 +16,10 @@ public:
 	void pauseMusic();
 
 	std::vector<Mix_Music*> m_music;
+	std::vector<Mix_Chunk*> m_sfx;
 private:
 	static constexpr std::string_view ResourceLoc = "Resources";
 	static constexpr std::string_view MusicLoc = "Music";
+	static constexpr std::string_view SfxLoc = "Sounds";
 	static constexpr std::string_view Standard = "Standard";
 };

@@ -101,6 +101,7 @@ private:
 	bool ApparUnemCallback();
 	void Heal(short damage);
 	bool HealCallback();
+	bool LibRekCallback();
 
 	static constexpr Uint64 CombatBlink = 300;
 

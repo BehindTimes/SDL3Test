@@ -1046,44 +1046,6 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     unsigned char chnum;
     std::string dispString;
 
-    if (m_spellCombat->m_newMove)
-    {
-        m_spellCombat->m_newMove = false;
-        if (m_spellCombat->m_monster_turn)
-        {
-            m_spellCombat->m_mon++;
-        }
-        else
-        {
-            m_spellCombat->m_updateBlink = true;
-            m_spellCombat->m_cHide = false;
-            m_spellCombat->m_elapsedFlashTime = 0;
-            chnum = m_spellCombat->m_g835D;
-            m_spellCombat->m_gChnum = chnum;
-            m_spellCombat->m_activePlayer = chnum;
-
-            if (m_misc->CheckAlive(chnum))
-            {
-                m_misc->InverseChnum(chnum, true);
-                m_spellCombat->m_count = 0x2F;
-                m_scrollArea->UPrintMessage(134);
-                dispString = std::to_string(chnum + 1);
-                m_scrollArea->UPrintWin(dispString);
-                m_misc->m_wx++;
-                m_scrollArea->UPrintMessage(135);
-                m_misc->m_dx = m_misc->m_dy = 0;
-                m_misc->m_xs = m_misc->m_CharX[chnum];
-                m_misc->m_ys = m_misc->m_CharY[chnum];
-                m_spellCombat->m_count2 = 0xC0;
-            }
-            else
-            {
-                m_misc->AddFinishTurn();
-            }
-        }
-        
-    }
-
     if (m_scrollArea->isUpdating() || !m_scrollArea->MessageQueueEmpty())
     {
         updateGame = false;
@@ -1113,6 +1075,47 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     {
         updateGame = false;
     }
+    if (updateGame)
+    {
+        if (m_spellCombat->m_newMove)
+        {
+            m_spellCombat->m_newMove = false;
+            if (m_spellCombat->m_monster_turn)
+            {
+                m_spellCombat->m_mon++;
+            }
+            else
+            {
+                m_spellCombat->m_updateBlink = true;
+                m_spellCombat->m_cHide = false;
+                m_spellCombat->m_elapsedFlashTime = 0;
+                chnum = m_spellCombat->m_g835D;
+                m_spellCombat->m_gChnum = chnum;
+                m_spellCombat->m_activePlayer = chnum;
+
+                if (m_misc->CheckAlive(chnum))
+                {
+                    m_misc->InverseChnum(chnum, true);
+                    m_spellCombat->m_count = 0x2F;
+                    m_scrollArea->UPrintMessage(134);
+                    dispString = std::to_string(chnum + 1);
+                    m_scrollArea->UPrintWin(dispString);
+                    m_misc->m_wx++;
+                    m_scrollArea->UPrintMessage(135);
+                    m_misc->m_dx = m_misc->m_dy = 0;
+                    m_misc->m_xs = m_misc->m_CharX[chnum];
+                    m_misc->m_ys = m_misc->m_CharY[chnum];
+                    m_spellCombat->m_count2 = 0xC0;
+                }
+                else
+                {
+                    m_misc->AddFinishTurn();
+                }
+            }
+            updateGame = false;
+        }
+    }
+
     if (updateGame)
     {
         if (m_spellCombat->m_monster_turn)

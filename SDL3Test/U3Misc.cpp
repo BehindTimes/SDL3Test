@@ -1910,7 +1910,7 @@ bool U3Misc::FinishAll2()
 		return false;
 	}
 	// Spawn Monsters
-	//SpawnMonster();
+	SpawnMonster();
 
 	m_callbackStack.push(std::bind(&U3Misc::FinishAll1, this));
 	m_callbackStack.push(std::bind(&U3Misc::MoveMonsters, this));

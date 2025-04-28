@@ -132,6 +132,9 @@ void UltimaSpellCombat::Combat()
 			numMon--;
 		}
 	}
+	m_monster_turn = false;
+	m_elapsedFlashTime = 0;
+	m_chNum = false;
 	m_newMove = true;
 	m_combatStart = true;
 }
@@ -681,6 +684,7 @@ bool UltimaSpellCombat::FinishCombatTurn()
 		return false;
 	}
 	m_monster_turn = true;
+	m_mon = -1;
 	return false;
 }
 
@@ -1651,6 +1655,22 @@ bool UltimaSpellCombat::HealCallback()
 	return false;
 }
 
+bool UltimaSpellCombat::LibRekCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	if (m_misc->m_Party[2] != 1)
+	{
+		Failed();
+		return false;
+	}
+	RelocateDungeon();
+
+	return false;
+}
+
 void UltimaSpellCombat::Spell(short chnum, short spellnum)
 {
 	short rosNum;
@@ -1769,6 +1789,8 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		DownLevel();
 		break;
 	case 22: // Lib Rec
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::LibRekCallback, this));
+		Flashriek();
 		break;
 	case 23: // Alcort
 		break;

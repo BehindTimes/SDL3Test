@@ -988,9 +988,8 @@ bool U3Misc::ValidDir()
 		m_callbackStack.pop();
 	}
 
-	m_GoodPlace = true;
-
-	/*m_GoodPlace = false;
+#ifdef NDEBUG
+	m_GoodPlace = false;
 	unsigned char value = m_validDirValue;
 
 	if (m_Party[0] == 0x16) // Ship
@@ -1027,7 +1026,10 @@ bool U3Misc::ValidDir()
 			{
 			}
 		}
-	}*/
+	}
+#else
+	m_GoodPlace = true;
+#endif
 
 	return false;
 }

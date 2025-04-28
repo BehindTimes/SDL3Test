@@ -905,6 +905,8 @@ void JourneyOnward()
 
 void Game()
 {
+#ifdef NDEBUG
+#else
     /*m_misc->m_Player[1][34] = 0;
     m_misc->m_Player[2][34] = 0;
     m_misc->m_Player[3][34] = 0;
@@ -922,6 +924,7 @@ void Game()
     m_misc->m_Player[1][14] = 0xFF;
     m_misc->m_Player[1][15] = 50;
     m_misc->m_Player[1][37] = 50;
+#endif
 
     bool quit = false;
     bool gInterrupt = false;

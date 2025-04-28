@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include <iostream>
 
@@ -69,11 +70,31 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
         return 3;
     }
 
+    if (!SDL_Init(SDL_INIT_AUDIO))
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL_Mixer: %s", SDL_GetError());
+        return 3;
+    }
+
     if (!SDL_CreateWindowAndRenderer("Ultima 3 - LairWare", 1280, 768, SDL_WINDOW_OPENGL /*| SDL_WINDOW_HIGH_PIXEL_DENSITY*/, &window, &renderer))
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
         return 3;
     }
+    int result = 0;
+    int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
+    if (flags != (result = Mix_Init(flags)))
+    {
+        return 3;
+    }
+
+    SDL_AudioSpec curSpec{};
+    curSpec.freq = 22050;
+    curSpec.format = SDL_AUDIO_S16;
+    curSpec.channels = 2;
+    Mix_OpenAudio(0, &curSpec);
+    //Mix_Music* music = Mix_LoadMUS("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Sounds\\Heal.wav");
+    //Mix_PlayMusic(music, 1);
 
     SDL_SetRenderVSync(renderer, 1);
 
@@ -102,6 +123,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     // For debugging purposes.  Shouldn't display anything
     std::cout << "Error = " << errorValue << std::endl;
 
+    //Mix_FreeMusic(music);
+    Mix_CloseAudio();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

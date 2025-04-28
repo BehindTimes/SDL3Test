@@ -2696,12 +2696,15 @@ void U3Resources::UpdateFormParty(float xPos, float yPos, int mouseState)
 			}
 		}
 
-		if (mouseState == 2 && m_selectedFormRect >= 0 && m_selectedCharacters.size() <= 4)
+		if (mouseState == 2 && m_selectedFormRect >= 0)
 		{
 			auto it = std::find(m_selectedCharacters.begin(), m_selectedCharacters.end(), m_selectedFormRect);
 			if (it == m_selectedCharacters.end())
 			{
-				m_selectedCharacters.push_back(m_selectedFormRect);
+				if (m_selectedCharacters.size() < 4)
+				{
+					m_selectedCharacters.push_back(m_selectedFormRect);
+				}
 			}
 			else
 			{

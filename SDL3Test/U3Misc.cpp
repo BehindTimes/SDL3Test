@@ -60,7 +60,7 @@ U3Misc::U3Misc() :
 	m_checkDead(false),
 	m_elapsedSleepTime(0),
 	m_sleepCheckTime(0),
-	m5BDC(false),
+	m_m5BDC(false),
 	m_gameMode(GameStateMode::Map),
 	m_map_id(0),
 	m_chNum(0),
@@ -70,7 +70,9 @@ U3Misc::U3Misc() :
 	m_partyFormed(false),
 	m_surpressTextDisplay(false),
 	m_gTimeNegate(0),
-	m_lastMode(GameStateMode::Map)
+	m_lastMode(GameStateMode::Map),
+	m_GoodPlace(false),
+	m_validDirValue(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -883,50 +885,132 @@ bool U3Misc::ValidTrans(char value) const
 	return cango;
 }
 
-bool U3Misc::ValidDir(unsigned char value) // $4702
+// This was a bug in the Mac version, but not in the original PC version.
+// I'm unaware if this was a bug in the original Apple II version.
+// In the 1983 PC version, everyone needs the Mark of Force to get through
+// a force field.  In the Mac version, as long as the leader has the
+// mark, everyone can pass through, even though there will be damage.
+// I'm changing this to the PC version
+
+// A second bug?/quirk, but I'm leaving it here, as it exists in both games.
+// Only one character can die to a force field.  If multiple people are
+// missing the mark, only one character will ever take damage, even if
+// they're already dead.
+
+void U3Misc::HandleForceField()
 {
-	return true;
-	char byte;
-	char byte2;
-	bool GoodPlace = false;
+	bool GoodPlace = true;
+
+	for (char byte = 0; byte < 4; byte++)
+	{
+		if (m_Party[6 + byte] != 0)
+		{
+			if (!(m_Player[m_Party[byte + 6]][14] & 0x10))
+			{
+				InverseCharDetails(byte, true);
+				HPSubtract(m_Party[byte + 6], 99);
+				GoodPlace = false;
+				break;
+			}
+		}
+	}
+
+	if (GoodPlace)
+	{
+		InverseTiles(true, 200);
+	}
+	else
+	{
+		InverseTiles(true, 500);
+	}
+
+	m_GoodPlace = GoodPlace;
+}
+
+void U3Misc::HandleLava()
+{
+	m_opnum = 0;
+	m_GoodPlace = true;
+	m_callbackStack.push(std::bind(&U3Misc::HandleLavaCallback, this));
+}
+
+bool U3Misc::HandleLavaCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	// Should never happen, but just keeping this in for paranoia
+	if (m_opnum > 3)
+	{
+		return false;
+	}
+	m_callbackStack.push(std::bind(&U3Misc::HandleLavaCallback1, this));
+	if (m_Party[6 + m_opnum] != 0)
+	{
+		char byte2 = m_Party[m_opnum + 6];
+		if (!(m_Player[byte2][14] & 0x20))
+		{
+			if ((m_Player[byte2][17] == 'G') || (m_Player[byte2][17] == 'P'))
+			{
+				HPSubtract(m_Party[m_opnum + 6], 50);
+				InverseCharDetails(m_opnum, true);
+				m_resources->m_inverses.elapsedTileTime = 0;
+				m_resources->m_inverses.inverseTileTime = 200;
+				m_resources->setInversed(true);
+				m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+			}
+		}
+	}
+
+	return false;
+}
+
+bool U3Misc::HandleLavaCallback1()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_opnum++;
+	if (m_opnum < 4)
+	{
+		m_callbackStack.push(std::bind(&U3Misc::HandleLavaCallback, this));
+	}
+
+	return false;
+}
+
+bool U3Misc::ValidDir()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_GoodPlace = true;
+
+	/*m_GoodPlace = false;
+	unsigned char value = m_validDirValue;
 
 	if (m_Party[0] == 0x16) // Ship
 	{
 		if ((value == 00) || (value == 48))
 		{
-			GoodPlace = true; // Water or whirlpool OK
+			m_GoodPlace = true; // Water or whirlpool OK
 		}
 	}
 	else
 	{
 		if (value == 128) // Forcefield
 		{
-			InverseTiles(true);
-			for (byte = 0; byte < 4; byte++)
-			{
-				if (!(m_Player[m_Party[byte + 6]][14] & 0x10))
-				{
-					byte = 5;
-				}
-				else
-				{
-					GoodPlace = true;
-				}
-			}
+			HandleForceField();
+			return false;
 		}
 		else if (value == 132) // Lava
 		{
-			GoodPlace = true;
-			for (byte = 0; byte < 4; byte++)
-			{
-				byte2 = m_Party[byte + 6];
-				if (!(m_Player[byte2][14] & 0x20))
-				{
-					if ((m_Player[byte2][17] == 'G') || (m_Player[byte2][17] == 'P'))
-					{
-					}
-				}
-			}
+			HandleLava();
+			return false;
 		}
 		else if ((value == 136) || (value == 248))
 		{
@@ -935,7 +1019,7 @@ bool U3Misc::ValidDir(unsigned char value) // $4702
 
 		if ((value < 48) && (value != 0) && (value != 16))
 		{
-			GoodPlace = true;
+			m_GoodPlace = true;
 			if (m_Party[0] == 20)
 			{
 			}
@@ -943,9 +1027,9 @@ bool U3Misc::ValidDir(unsigned char value) // $4702
 			{
 			}
 		}
-	}
+	}*/
 
-	return GoodPlace;
+	return false;
 }
 
 void U3Misc::NoGo()
@@ -4673,7 +4757,7 @@ void U3Misc::GetChest(short spell, short chnum)
 	}
 	else if (spell == 0)
 	{
-		m5BDC = true;
+		m_m5BDC = true;
 		m_scrollArea->UPrintMessage(40);
 		//m_scrollArea->blockPrompt(true);
 		m_inputType = InputType::Transact;
@@ -4751,7 +4835,7 @@ void U3Misc::GetChest1(short chnum)
 	}
 	int rngnum = m_utilities->getRandom(0, 255);
 
-	if ((m5BDC == 0) || rngnum > 127)
+	if ((m_m5BDC == false) || rngnum > 127)
 	{
 		GetChestBooty();
 		return;
@@ -4990,6 +5074,11 @@ void U3Misc::AddItem(short rosNum, short item, short amount) // $7145
 	}
 }
 
+// Right now, there can only be one delay game per queue, otherwise these
+// values will overwrite the previous one.  This can be changed by adding
+// another queue, but as a temporary fix, make sure you only call
+// this at the end of a function (or series of functions), so that no
+// other items can on the queue.
 void U3Misc::DelayGame(Uint64 delay_time)
 {
 	m_elapsedSleepTime = 0;

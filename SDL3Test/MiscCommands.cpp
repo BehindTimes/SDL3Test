@@ -134,6 +134,24 @@ bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 	return true;
 }
 
+bool U3Misc::CommandNorthCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		m_ypos--;
+		m_ypos = m_graphics->MapConstrain((short)m_ypos);
+	}
+	return false;
+}
+
 bool U3Misc::CommandNorth()
 {
 	if (m_callbackStack.size() > 0)
@@ -148,7 +166,11 @@ bool U3Misc::CommandNorth()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos - 1)))
+		m_validDirValue = GetXYVal(m_xpos, m_ypos - 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandNorthCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos - 1)))
 		{
 			NoGo();
 		}
@@ -156,9 +178,27 @@ bool U3Misc::CommandNorth()
 		{
 			m_ypos--;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}
+		}*/
 	}
 
+	return false;
+}
+
+bool U3Misc::CommandSouthCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		m_ypos++;
+		m_ypos = m_graphics->MapConstrain((short)m_ypos);
+	}
 	return false;
 }
 
@@ -176,7 +216,11 @@ bool U3Misc::CommandSouth()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
+		m_validDirValue = GetXYVal(m_xpos, m_ypos + 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandSouthCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
 		{
 			NoGo();
 		}
@@ -184,9 +228,27 @@ bool U3Misc::CommandSouth()
 		{
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}
+		}*/
 	}
 
+	return false;
+}
+
+bool U3Misc::CommandEastCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		m_xpos++;
+		m_xpos = m_graphics->MapConstrain((short)m_xpos);
+	}
 	return false;
 }
 
@@ -204,7 +266,11 @@ bool U3Misc::CommandEast()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos + 1, m_ypos)))
+		m_validDirValue = GetXYVal(m_xpos + 1, m_ypos);
+		m_callbackStack.push(std::bind(&U3Misc::CommandEastCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos + 1, m_ypos)))
 		{
 			NoGo();
 		}
@@ -212,11 +278,30 @@ bool U3Misc::CommandEast()
 		{
 			m_xpos++;
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
-		}
+		}*/
 	}
 
 	return false;
 }
+
+bool U3Misc::CommandWestCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		m_xpos--;
+		m_xpos = m_graphics->MapConstrain((short)m_xpos);
+	}
+	return false;
+}
+
 
 bool U3Misc::CommandWest()
 {
@@ -232,7 +317,11 @@ bool U3Misc::CommandWest()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos - 1, m_ypos)))
+		m_validDirValue = GetXYVal(m_xpos - 1, m_ypos);
+		m_callbackStack.push(std::bind(&U3Misc::CommandWestCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos - 1, m_ypos)))
 		{
 			NoGo();
 		}
@@ -240,9 +329,36 @@ bool U3Misc::CommandWest()
 		{
 			m_xpos--;
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
-		}
+		}*/
 	}
 
+	return false;
+}
+
+bool U3Misc::CommandSouthEastCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		if (!m_GoodPlace)
+		{
+			NoGo();
+		}
+		else
+		{
+			m_xpos++;
+			m_xpos = m_graphics->MapConstrain((short)m_xpos);
+			m_ypos++;
+			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+		}
+	}
 	return false;
 }
 
@@ -260,17 +376,50 @@ bool U3Misc::CommandSouthEast()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
+		m_validDirValue = GetXYVal(m_xpos + 1, m_ypos + 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandSouthEastCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
 		{
 			NoGo();
 		}
 		else
 		{
+			m_xpos++;
+			m_xpos = m_graphics->MapConstrain((short)m_xpos);
+			m_ypos++;
+			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+		}*/
+	}
+
+	return false;
+}
+
+bool U3Misc::CommandSouthWestCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		if (!m_GoodPlace)
+		{
+			NoGo();
+		}
+		else
+		{
+			m_xpos--;
+			m_xpos = m_graphics->MapConstrain((short)m_xpos);
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
 		}
 	}
-
 	return false;
 }
 
@@ -288,7 +437,11 @@ bool U3Misc::CommandSouthWest()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
+		m_validDirValue = GetXYVal(m_xpos - 1, m_ypos + 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandSouthWestCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
 		{
 			NoGo();
 		}
@@ -296,9 +449,36 @@ bool U3Misc::CommandSouthWest()
 		{
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}
+		}*/
 	}
 
+	return false;
+}
+
+bool U3Misc::CommandNorthEastCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		if (!m_GoodPlace)
+		{
+			NoGo();
+		}
+		else
+		{
+			m_xpos++;
+			m_xpos = m_graphics->MapConstrain((short)m_xpos);
+			m_ypos--;
+			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+		}
+	}
 	return false;
 }
 
@@ -316,7 +496,11 @@ bool U3Misc::CommandNorthEast()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
+		m_validDirValue = GetXYVal(m_xpos + 1, m_ypos - 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandNorthEastCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
 		{
 			NoGo();
 		}
@@ -324,9 +508,36 @@ bool U3Misc::CommandNorthEast()
 		{
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}
+		}*/
 	}
 
+	return false;
+}
+
+bool U3Misc::CommandNorthWestCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (!m_GoodPlace)
+	{
+		NoGo();
+	}
+	else
+	{
+		if (!m_GoodPlace)
+		{
+			NoGo();
+		}
+		else
+		{
+			m_xpos--;
+			m_xpos = m_graphics->MapConstrain((short)m_xpos);
+			m_ypos--;
+			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+		}
+	}
 	return false;
 }
 
@@ -344,7 +555,11 @@ bool U3Misc::CommandNorthWest()
 	}
 	else
 	{
-		if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
+		m_validDirValue = GetXYVal(m_xpos - 1, m_ypos - 1);
+		m_callbackStack.push(std::bind(&U3Misc::CommandNorthWestCallback, this));
+		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
+
+		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
 		{
 			NoGo();
 		}
@@ -352,7 +567,7 @@ bool U3Misc::CommandNorthWest()
 		{
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}
+		}*/
 	}
 
 	return false;
@@ -2621,6 +2836,12 @@ bool U3Misc::CastCallback()
 	}
 
 	return false;
+}
+
+void U3Misc::callClerickChoose()
+{
+	m_callbackStack.push(std::bind(&U3Misc::ProcessMagic, this));
+	m_callbackStack.push(std::bind(&U3Misc::ClericChoose, this));
 }
 
 bool U3Misc::ClericChoose()

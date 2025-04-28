@@ -137,6 +137,8 @@ public:
 	char GetHeading(short value);
 	void What2();
 	void NegateTime(short chnum);
+	void callClerickChoose();
+	void HPAdd(short member, short amount);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -191,7 +193,7 @@ public:
 	short m_wx;
 	short m_wy;
 	bool m_checkDead;
-	bool m5BDC;
+	bool m_m5BDC;
 	GameStateMode m_gameMode;
 	GameStateMode m_lastMode;
 	short m_heading;
@@ -246,7 +248,8 @@ private:
 	bool HandleKeyPress(SDL_KeyboardEvent key);
 	void LetterCommand(SDL_Keycode key);
 	bool ValidTrans(char value) const;
-	bool ValidDir(unsigned char value);
+	//bool ValidDir(unsigned char value);
+	bool ValidDir();
 
 	bool LookCallback();
 	
@@ -369,7 +372,7 @@ private:
 	bool FinishEatFood();
 	void EatFood(short member, short amount, std::function<bool()> callback);
 	bool EatFoodCallback();
-	void HPAdd(short member, short amount);
+	
 	bool EndTurnCallback();
 	bool InverseCallback();
 
@@ -381,6 +384,14 @@ private:
 	bool CommandSouthWest();
 	bool CommandNorthEast();
 	bool CommandNorthWest();
+	bool CommandNorthCallback();
+	bool CommandSouthCallback();
+	bool CommandEastCallback();
+	bool CommandWestCallback();
+	bool CommandSouthEastCallback();
+	bool CommandSouthWestCallback();
+	bool CommandNorthEastCallback();
+	bool CommandNorthWestCallback();
 	bool CommandAttack();
 	bool CommandBoard();
 	bool CommandCast();
@@ -467,6 +478,10 @@ private:
 	void SpawnMonster();
 	void AttackCode(short whichMon);
 	bool fireloop();
+	void HandleForceField();
+	void HandleLava();
+	bool HandleLavaCallback();
+	bool HandleLavaCallback1();
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";
@@ -511,6 +526,7 @@ private:
 	std::unique_ptr <SosariaHandle> m_saved_map;
 	int m_gWhirlCtr;
 	short m_gMoon[2];
-	
+	unsigned char m_validDirValue;
+	bool m_GoodPlace;
 };
 

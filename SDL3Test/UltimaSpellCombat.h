@@ -48,6 +48,7 @@ private:
 	bool BigDeathCallback();
 	bool BigDeathCallback1();
 	bool BigDeathCallback2();
+	bool BigDeathCallback3();
 	void DamageMonster(short which, short damage, short chnum);
 	void AddExp(short chnum, short amount);
 	short BackGround(short montype);
@@ -91,6 +92,15 @@ private:
 	void UpLevel();
 	bool UpLevelCallback();
 	bool DagAcronCallback();
+	bool FalDiviCallback();
+	void Necorp();
+	bool NecorpCallback();
+	bool NecorpCallback1();
+	bool NecorpCallback2();
+	bool NecorpCallback3();
+	bool ApparUnemCallback();
+	void Heal(short damage);
+	bool HealCallback();
 
 	static constexpr Uint64 CombatBlink = 300;
 

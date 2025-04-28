@@ -531,6 +531,17 @@ bool UltimaSpellCombat::BigDeathCallback()
 	return false;
 }
 
+bool UltimaSpellCombat::BigDeathCallback3()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
+
+	return false;
+}
+
 bool UltimaSpellCombat::BigDeathCallback1()
 {
 	if (m_misc->m_callbackStack.size() > 0)
@@ -543,7 +554,8 @@ bool UltimaSpellCombat::BigDeathCallback1()
 		m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
 		m_misc->m_gBallTileBackground = m_misc->m_MonsterTile[m_misc->m_opnum];
 		m_misc->PutXYTile(0x78, m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum]);
-		m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
+		
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::BigDeathCallback3, this));
 		ShowHit(m_misc->m_MonsterX[m_misc->m_opnum], m_misc->m_MonsterY[m_misc->m_opnum], 0x78, m_misc->m_MonsterTile[m_misc->m_opnum]);
 		return false;
 	}
@@ -939,7 +951,6 @@ void UltimaSpellCombat::monshoot2() // $86B5
 	m_misc->m_gBallTileBackground = (unsigned char)m_misc->m_opnum;
 	m_misc->PutXYTile(0x7A, m_misc->m_xs, m_misc->m_ys);
 	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::monshootCallback, this));
-	monshoot2();
 }
 
 void UltimaSpellCombat::monshoot() const // $86A4
@@ -956,6 +967,7 @@ bool UltimaSpellCombat::monshootCallback()
 	}
 
 	m_misc->PutXYTile(m_misc->m_opnum, m_misc->m_xs, m_misc->m_ys);
+	monshoot2();
 	return false;
 }
 
@@ -1495,11 +1507,155 @@ bool UltimaSpellCombat::DagAcronCallback()
 	return false;
 }
 
+bool UltimaSpellCombat::FalDiviCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	m_misc->callClerickChoose();
+	return false;
+}
+
+void UltimaSpellCombat::Necorp() // $5677
+{
+	if (m_misc->m_Party[2] != 0x80)
+	{
+		Failed();
+		return;
+	}
+	m_misc->m_opnum = 7;
+	for (short mon = 7; mon >= 0; mon--)
+	{
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::NecorpCallback1, this));
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::NecorpCallback, this));
+	}
+	Flashriek();
+}
+
+bool UltimaSpellCombat::NecorpCallback1()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	m_misc->m_opnum--;
+
+	return false;
+}
+
+bool UltimaSpellCombat::NecorpCallback2()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+	// Maybe later create a queue, but right now, we can only have one delay in
+	// the queue at a time
+	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::NecorpCallback3, this));
+
+	return false;
+}
+
+bool UltimaSpellCombat::NecorpCallback3()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	short mon = m_misc->m_opnum;
+	m_misc->PutXYTile(m_misc->m_opnum, m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
+
+	return false;
+}
+
+
+bool UltimaSpellCombat::NecorpCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	short mon = m_misc->m_opnum;
+
+	if (m_misc->m_MonsterHP[mon] > 0)
+	{
+		m_misc->m_MonsterHP[mon] = 5;
+		m_misc->m_opnum2 = m_misc->GetXYTile(m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
+		m_misc->PutXYTile(0x78, m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon]);
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::NecorpCallback2, this));
+		ShowHit(m_misc->m_MonsterX[mon], m_misc->m_MonsterY[mon], 0x78, m_misc->m_MonsterTile[mon]);
+	}
+	
+	return false;
+}
+
+bool UltimaSpellCombat::ApparUnemCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	int rngNum = m_utilities->getRandom(0, 255);
+	if (0 == (rngNum & 03))
+	{
+		Failed();
+		return false;
+	}
+	m_misc->m_m5BDC = false;
+	m_misc->GetChest(1, m_chNum);
+
+	return false;
+}
+
+void UltimaSpellCombat::Heal(short damage) // $56F7
+{
+	m_scrollArea->UPrintMessage(130);
+
+	m_misc->m_inputType = InputType::Transact;
+	//m_scrollArea->blockPrompt(true);
+	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::HealCallback, this));
+	m_misc->AddProcessEvent();
+	m_damage = damage;
+}
+
+bool UltimaSpellCombat::HealCallback()
+{
+	if (m_misc->m_callbackStack.size() > 0)
+	{
+		m_misc->m_callbackStack.pop();
+	}
+
+	if (m_misc->m_input_num < 1 || m_misc->m_input_num > 4)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	{
+		m_scrollArea->UPrintWin("\n");
+		Failed();
+		return false;
+	}
+	std::string dispString(std::to_string(m_misc->m_input_num + 1) + std::string("\n"));
+	m_scrollArea->UPrintWin(dispString);
+	m_misc->HPAdd(m_misc->m_Party[6 + m_misc->m_input_num], m_damage);
+	m_misc->InverseCharDetails(m_misc->m_input_num, true);
+	Flashriek();
+
+	return false;
+}
 
 void UltimaSpellCombat::Spell(short chnum, short spellnum)
 {
 	short rosNum;
 	short rngNum;
+	m_chNum = chnum;
 
 	rosNum = m_misc->m_Party[6 + chnum];
 	switch (spellnum)
@@ -1548,6 +1704,8 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Flashriek();
 		break;
 	case 9: // Fal Divi
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::FalDiviCallback, this));
+		Flashriek();
 		break;
 	case 10: // Noxum
 		BigDeath(75, chnum);
@@ -1562,6 +1720,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(m_misc->m_Player[rosNum][20] * 2, chnum);
 		break;
 	case 14: // Necorp
+		Necorp();
 		break;
 	case 15: // nameless
 		BigDeath(255, chnum);
@@ -1592,8 +1751,12 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(255, chnum);
 		break;
 	case 17: // Appar Unem
+		m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ApparUnemCallback, this));
+		Flashriek();
 		break;
 	case 18: // Sanctu
+		rngNum = (short)m_utilities->getRandom(0, 20) + 10;
+		Heal(rngNum);
 		break;
 	case 19: // Luminae
 		m_misc->m_gTorch = 10;
@@ -1616,6 +1779,8 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Flashriek();
 		break;
 	case 26: // Sanctu Mani
+		rngNum = (short)m_utilities->getRandom(0, 80) + 20;
+		Heal(rngNum);
 		break;
 	case 27: // Vieda
 		break;

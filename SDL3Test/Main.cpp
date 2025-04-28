@@ -93,7 +93,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     curSpec.format = SDL_AUDIO_S16;
     curSpec.channels = 2;
     Mix_OpenAudio(0, &curSpec);
-    //Mix_Music* music = Mix_LoadMUS("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Sounds\\Heal.wav");
+   // Mix_Music* music = Mix_LoadMUS("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Music\\Standard\\Song_1.ogg");
+    //auto blah = SDL_GetError();
     //Mix_PlayMusic(music, 1);
 
     SDL_SetRenderVSync(renderer, 1);

@@ -220,6 +220,7 @@ public:
 	static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
 	static constexpr std::string_view SelectRemoveCharacterStr = "SELECT CHARACTER TO REMOVE";
 	static constexpr std::string_view TypeNumStr = "TypeNum-";
+	static constexpr std::string_view CreateStr = "Kreate (Y/N):";
 
 	int m_blockSize;
 	int m_overrideImage;

@@ -95,11 +95,8 @@ int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
     curSpec.format = SDL_AUDIO_S16;
     curSpec.channels = 2;
     Mix_OpenAudio(0, &curSpec);
-   // Mix_Music* music = Mix_LoadMUS("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Music\\Standard\\Song_1.ogg");
-    //auto blah = SDL_GetError();
-    //Mix_PlayMusic(music, 1);
 
-   // SDL_SetRenderVSync(renderer, 1);
+    SDL_SetRenderVSync(renderer, 1);
 
     bool valid = m_resources->init(renderer);
     bool valid2 = m_audio->initMusic();
@@ -966,6 +963,7 @@ void Game()
     m_misc->m_Player[1][14] = 0xFF;
     m_misc->m_Player[1][15] = 50;
     m_misc->m_Player[1][37] = 50;
+    m_misc->m_Party[15] = 1;
 #endif
 
     bool quit = false;

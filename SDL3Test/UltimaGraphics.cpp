@@ -850,6 +850,9 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
     case U3GraphicsMode::MiniMap:
         renderMiniMap(event, deltaTime);
         break;
+    case U3GraphicsMode::Diorama:
+        renderDiorama(event, deltaTime);
+        break;
     case U3GraphicsMode::MiniMapDungeon:
         renderMiniMapDungeon(event, deltaTime);
         break;
@@ -976,6 +979,30 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
         m_forceRedraw = true;
          m_curMode = U3GraphicsMode::Map;
          m_resources->m_wasMove = true;
+        //m_scrollArea->blockPrompt(false);
+        m_scrollArea->UPrintWin("");
+    }
+}
+
+void U3Graphics::renderDiorama(SDL_Event event, Uint64 deltaTime)
+{
+    DrawFrame(1);
+    DrawDioramaMap();
+    m_resources->ShowChars(true);
+    m_scrollArea->render(deltaTime);
+    m_resources->DrawWind();
+    bool returnToGame = m_misc->ProcessAnyEvent(event);
+    m_blinkElapsed += deltaTime;
+    if (m_blinkElapsed > DelayScroll)
+    {
+        m_blinkElapsed %= DelayScroll;
+        m_fading = !m_fading;
+    }
+    if (returnToGame)
+    {
+        m_forceRedraw = true;
+        m_curMode = U3GraphicsMode::Map;
+        m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }

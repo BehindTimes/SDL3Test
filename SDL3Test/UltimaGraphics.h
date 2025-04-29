@@ -15,6 +15,7 @@ enum class U3GraphicsMode
 	Map,
 	MiniMap,
 	MiniMapDungeon,
+	Diorama,
 	PauseScreen,
 	BlackScreen,
 	WinScreen,
@@ -89,10 +90,13 @@ private:
 	void renderCombat(SDL_Event event, Uint64 deltaTime);
 	void renderGameMap(SDL_Event event, Uint64 deltaTime);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
+	void renderDiorama(SDL_Event event, Uint64 deltaTime);
 	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade);
 	void DrawWinScreen(float ratio);
 	void renderWinScreen() const;
 	void renderDungeon(SDL_Event event, Uint64 deltaTime);
+	void DrawDioramaMap();
+	void renderDiorama();
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;

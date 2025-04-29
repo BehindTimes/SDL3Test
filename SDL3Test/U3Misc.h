@@ -493,6 +493,8 @@ private:
 	bool moveshoot2Callback();
 	bool movemonCallback();
 	bool movemonCallback1();
+	bool KreateCallback();
+	
 
 	static constexpr std::string_view SaveLoc = "Save";
 	static constexpr std::string_view ResourceLoc = "Resources";

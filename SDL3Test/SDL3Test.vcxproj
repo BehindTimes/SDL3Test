@@ -153,6 +153,7 @@
     <ClCompile Include="UltimaGraphics.cpp" />
     <ClCompile Include="UltimaIncludes.cpp" />
     <ClCompile Include="UltimaMacIF.cpp" />
+    <ClCompile Include="UltimaNewMap.cpp" />
     <ClCompile Include="UltimaSound.cpp" />
     <ClCompile Include="UltimaSpellCombat.cpp" />
   </ItemGroup>

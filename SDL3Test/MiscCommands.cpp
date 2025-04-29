@@ -1227,15 +1227,31 @@ bool U3Misc::CommandKlimb()
 
 	// Another easter egg, implement later
 	// Exodus not defeated or not on the overworld
-	//if (m_Party[15] != 1 || m_Party[2] != 0)
+	if (m_Party[15] != 1 || m_Party[2] != 0)
 	{
 		m_scrollArea->UPrintMessage(68);
 		What2();
 	}
-	//else
-	//{
-		// ?
-	//}
+	else
+	{
+		std::string_view sv_kreate = m_resources->CreateStr;
+		std::string disp_string(sv_kreate);
+		m_scrollArea->UPrintWin(disp_string);
+		setInputTypeYesNo(std::bind(&U3Misc::KreateCallback, this));
+	}
+	return false;
+}
+
+bool U3Misc::KreateCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	if (m_input_num == 1) // yes
+	{
+		//CreateNewMap();
+	}
 	return false;
 }
 
@@ -1253,17 +1269,21 @@ bool U3Misc::CommandDescend()
 	}
 
 	// Seems like a little easter egg, not going to implement yet
-	//if (m_Party[15] == 0)
+	if (m_Party[15] == 0)
 	{
 		m_scrollArea->UPrintMessage(32);
 		What2();
-		return false;
 	}
-	//std::string strDiorama = std::string(DioramaString);
-	//m_scrollArea->UPrintWin(strDiorama);
-	//DrawDioramaMap();
+	else
+	{
+		std::string_view svDiorama = DioramaString;
+		std::string dispString = std::string(svDiorama);
+		m_graphics->m_queuedMode = U3GraphicsMode::Diorama;
+		m_scrollArea->UPrintWin(dispString);
+		//DrawDioramaMap();
+	}
 
-	//return false;
+	return false;
 }
 
 void U3Misc::Descend()

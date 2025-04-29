@@ -73,3 +73,6 @@ enum {
 	initCmd = 1,
 	freqDurationCmd = 40
 };
+
+const int TEXTURE_SIZE_X = 128;
+const int TEXTURE_SIZE_Y = 128;

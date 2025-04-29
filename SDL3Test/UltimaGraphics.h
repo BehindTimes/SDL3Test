@@ -16,6 +16,7 @@ enum class U3GraphicsMode
 	MiniMap,
 	MiniMapDungeon,
 	Diorama,
+	KreateMap,
 	PauseScreen,
 	BlackScreen,
 	WinScreen,
@@ -80,6 +81,7 @@ public:
 	bool m_staydead;
 	OrganizeBottomScreen m_obsCurMode;
 	SDL_Texture* m_texMap;
+	bool m_mode_switch;
 
 private:
 	void renderMiniMapDungeon();
@@ -91,17 +93,42 @@ private:
 	void renderGameMap(SDL_Event event, Uint64 deltaTime);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
 	void renderDiorama(SDL_Event event, Uint64 deltaTime);
+	void renderKreateMap(SDL_Event event, Uint64 deltaTime);
 	void renderWinScreen(SDL_Event event, Uint64 deltaTime, bool fade);
 	void DrawWinScreen(float ratio);
 	void renderWinScreen() const;
 	void renderDungeon(SDL_Event event, Uint64 deltaTime);
 	void DrawDioramaMap();
 	void renderDiorama();
+	void renderKreateMap();
+	void DrawKreateMap();
+	bool Kreate1();
+	bool Kreate2();
+	bool Kreate3();
+	bool Kreate4();
+	bool Kreate5();
+	bool Kreate6();
+	bool Kreate7();
+	bool Kreate8();
+	bool Kreate9();
+	bool Kreate10();
+	bool Kreate11();
+	bool Kreate12();
+	bool Kreate13();
+	void AllWater();
+	void MapSplat(unsigned char startX, unsigned char startY, unsigned char size, unsigned char onlyOn, unsigned char type);
+	void CleanSurround();
+	void CleanUpSingle();
+	void CleanUpDiags(short what);
+	bool CheckIfHasLava();
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;
 	static constexpr Uint64 DungeonBlink = 300;
+	static constexpr Uint64 DelayKreate = 1000;
+	static constexpr Uint64 DelaySplat = 20;
 	bool m_fading;
+	bool m_allowRendering;
 
 	Uint64 m_startTickCount;
 	Uint64 m_fadeTime;
@@ -109,4 +136,7 @@ private:
 	int m_blockSize;
 	bool m_forceRedraw;
 	Uint64 m_blinkElapsed;
+	unsigned char m_storeIcons[19];
+	bool m_hasLava;
+	unsigned short m_counter;
 };

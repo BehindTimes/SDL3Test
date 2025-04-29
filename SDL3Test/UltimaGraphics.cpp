@@ -30,8 +30,13 @@ U3Graphics::U3Graphics() :
     m_blinkElapsed(0),
     m_staydead(false),
     m_winElapsed(0),
-    m_obsCurMode(OrganizeBottomScreen::None)
+    m_obsCurMode(OrganizeBottomScreen::None),
+    m_mode_switch(false),
+    m_allowRendering(false),
+    m_hasLava(false),
+    m_counter(0)
 {
+    memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
     memset(m_maskArray, 0, sizeof(unsigned char) * 128);
 }
@@ -853,6 +858,9 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
     case U3GraphicsMode::Diorama:
         renderDiorama(event, deltaTime);
         break;
+    case U3GraphicsMode::KreateMap:
+        renderKreateMap(event, deltaTime);
+        break;
     case U3GraphicsMode::MiniMapDungeon:
         renderMiniMapDungeon(event, deltaTime);
         break;
@@ -939,6 +947,7 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, [[maybe_unus
             {
                 m_forceRedraw = true;
                 m_curMode = U3GraphicsMode::Map;
+                m_mode_switch = true;
                 m_resources->m_wasMove = true;
                 //m_scrollArea->blockPrompt(false);
                 m_scrollArea->UPrintWin("\n");
@@ -976,12 +985,14 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
     }
     if (returnToGame)
     {
-        m_forceRedraw = true;
-         m_curMode = U3GraphicsMode::Map;
-         m_resources->m_wasMove = true;
-        //m_scrollArea->blockPrompt(false);
-        m_scrollArea->UPrintWin("");
-    }
+		m_misc->m_inputType = InputType::Default;
+		m_forceRedraw = true;
+		m_curMode = U3GraphicsMode::Map;
+		m_mode_switch = true;
+		m_resources->m_wasMove = true;
+		//m_scrollArea->blockPrompt(false);
+		m_scrollArea->UPrintWin("");
+	}
 }
 
 void U3Graphics::renderDiorama(SDL_Event event, Uint64 deltaTime)
@@ -1002,9 +1013,53 @@ void U3Graphics::renderDiorama(SDL_Event event, Uint64 deltaTime)
     {
         m_forceRedraw = true;
         m_curMode = U3GraphicsMode::Map;
+        m_mode_switch = true;
         m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
+    }
+}
+
+
+void U3Graphics::renderKreateMap([[maybe_unused]]SDL_Event event, Uint64 deltaTime)
+{
+    if (m_mode_switch)
+    {
+        m_mode_switch = false;
+        Kreate1();
+    }
+
+    DrawFrame(1);
+    DrawKreateMap();
+    m_resources->ShowChars(true);
+    m_scrollArea->render(deltaTime);
+    m_resources->DrawWind();
+    m_resources->DrawInverses(deltaTime);
+
+    if (m_queuedMode != U3GraphicsMode::None)
+    {
+        m_curMode = m_queuedMode;
+        m_mode_switch = true;
+        m_queuedMode = U3GraphicsMode::None;
+        return;
+    }
+
+    if (m_scrollArea->isUpdating() || !m_scrollArea->MessageQueueEmpty())
+    {
+
+    }
+    else
+    {
+        while (m_misc->m_callbackStack.size() > 0)
+        {
+            std::function<bool()> curCallback = m_misc->m_callbackStack.top();
+            bool resumeRendering = curCallback();
+            if (resumeRendering)
+            {
+                // Resume rendering (i.e. we're waiting on a function)
+                break;
+            }
+        }
     }
 }
 
@@ -1024,8 +1079,10 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
     }
     if (returnToGame)
     {
+        m_misc->m_inputType = InputType::Default;
         m_forceRedraw = true;
         m_curMode = U3GraphicsMode::Dungeon;
+        m_mode_switch = true;
         m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
@@ -1037,6 +1094,7 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     if (m_queuedMode != U3GraphicsMode::None)
     {
         m_curMode = m_queuedMode;
+        m_mode_switch = true;
         m_queuedMode = U3GraphicsMode::None;
         return;
     }
@@ -1315,6 +1373,8 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     if (m_queuedMode != U3GraphicsMode::None && m_scrollArea->MessageQueueEmpty())
     {
         m_curMode = m_queuedMode;
+        m_mode_switch = true;
+        m_mode_switch = true;
         m_resources->m_wasMove = true;
         m_queuedMode = U3GraphicsMode::None;
 

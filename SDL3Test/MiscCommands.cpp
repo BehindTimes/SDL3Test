@@ -1250,8 +1250,9 @@ bool U3Misc::KreateCallback()
 	}
 	if (m_input_num == 1) // yes
 	{
-		//CreateNewMap();
+		m_graphics->m_queuedMode = U3GraphicsMode::KreateMap;
 	}
+	m_scrollArea->UPrintWin("\n");
 	return false;
 }
 

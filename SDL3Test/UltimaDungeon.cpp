@@ -482,6 +482,7 @@ void UltimaDungeon::Routine6E6B()
 	m_misc->m_ypos = m_misc->m_zp[0xE4];
 	m_graphics->m_curMode = U3GraphicsMode::Map;
 	m_misc->m_gameMode = GameStateMode::Map;
+	m_graphics->m_mode_switch = true;
 	m_resources->m_wasMove = true;
 	m_misc->m_Party[2] = 0;    // back to surface
 

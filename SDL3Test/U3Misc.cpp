@@ -134,23 +134,23 @@ bool U3Misc::OpenRstr()
 	resourcePath /= BinLoc;
 
 	std::vector<std::string> orig_files = {
-		"Sosaria Monsters.ult",
+		"Sosaria_Monsters.ult",
 		"Preferences.ult",
-		"MainResources.rsrc_MAPS_420_Sosaria.bin",
-		"Sosaria Current.ult",
+		"MainResources.rsrc_MAPS_420.bin",
+		"Sosaria_Current.ult",
 		"MainResources.rsrc_PRTY_500_Party.bin",
 		"Party.ult",
-		/*"MainResources.rsrc_MISC_400_Moongate Locations.bin",
-		"Moongate Locations.ult",
-		"MainResources.rsrc_MISC_401_Type Initial Table.bin",
+		"MainResources.rsrc_MISC_400.bin",
+		"Moongate_Locations.ult",
+		/*"MainResources.rsrc_MISC_401_Type Initial Table.bin",
 		"Type Initial Table.ult",
 		"MainResources.rsrc_MISC_402_Weapon Use By Class.bin",
 		"Weapon Use By class.ult",
 		"MainResources.rsrc_MISC_403_Armour Use By Class.bin",
-		"Armour Use By class.ult",
-		"MainResources.rsrc_MISC_404_Location Table.bin",
-		"Location Table.ult",
-		"MainResources.rsrc_MISC_405_Experience Table.bin",
+		"Armour Use By class.ult",*/
+		"MainResources.rsrc_MISC_404.bin",
+		"Location_Table.ult",
+		/*"MainResources.rsrc_MISC_405_Experience Table.bin",
 		"Experience Table.ult",*/
 		"MainResources.rsrc_ROST_500_Roster.bin",
 		"Roster.ult"
@@ -217,11 +217,11 @@ bool U3Misc::OpenRstr()
 void U3Misc::GetMiscStuff(bool defaultData)
 {
 	std::vector<std::string> orig_files = {
-		"Moongate Locations.ult",
+		"Moongate_Locations.ult",
 		"Type Initial Table.ult",
 		"Weapon Use By class.ult",
 		"Armour Use By class.ult",
-		"Location Table.ult",
+		"Location_Table.ult",
 		"Experience Table.ult",
 		"MainResources.rsrc_MISC_400.bin",
 		"MainResources.rsrc_MISC_401.bin",
@@ -548,7 +548,7 @@ void U3Misc::LoadUltimaMap(short map)
 		{ 16, "MainResources.rsrc_MAPS_416" },
 		{ 17, "MainResources.rsrc_MAPS_417" },
 		{ 18, "MainResources.rsrc_MAPS_418" },
-		{ 19, "Sosaria Current" },
+		{ 19, "Sosaria_Current" },
 		{ 20, "MainResources.rsrc_MAPS_420" },
 		{ 21, "MainResources.rsrc_MAPS_421" },
 	};
@@ -566,7 +566,7 @@ void U3Misc::LoadUltimaMap(short map)
 		{ 9, "MainResources.rsrc_MONS_409" },
 		{ 10, "MainResources.rsrc_MONS_410" },
 		{ 11, "MainResources.rsrc_MONS_411" },
-		{ 19, "Sosaria Monsters" },
+		{ 19, "Sosaria_Monsters" },
 		{ 20, "MainResources.rsrc_MONS_420" },
 		{ 21, "MainResources.rsrc_MONS_421" },
 	};
@@ -5456,6 +5456,7 @@ bool U3Misc::EndTurnCallback()
 	{
 		//m_scrollArea->blockPrompt(true);
 		m_graphics->m_curMode = m_graphics->m_queuedMode;
+		m_graphics->m_mode_switch = true;
 		m_resources->m_wasMove = true;
 
 		if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)

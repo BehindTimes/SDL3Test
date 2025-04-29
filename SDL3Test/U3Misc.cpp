@@ -74,7 +74,8 @@ U3Misc::U3Misc() :
 	m_GoodPlace(false),
 	m_validDirValue(0),
 	m_moveMonsterOffset(0),
-	m_value(0)
+	m_value(0),
+	m_storeBool(false)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -1138,6 +1139,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 
 	switch (key)
 	{
+	case SDLK_KP_8:
 	case SDLK_UP:
 		m_input_num = 0;
 		m_xs = m_xpos;
@@ -1147,6 +1149,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		dirgot = true;
 		m_scrollArea->UPrintMessage(24);
 		break;
+	case SDLK_KP_2:
 	case SDLK_DOWN:
 		m_input_num = 0;
 		m_xs = m_xpos;
@@ -1156,6 +1159,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		dirgot = true;
 		m_scrollArea->UPrintMessage(25);
 		break;
+	case SDLK_KP_4:
 	case SDLK_LEFT:
 		m_input_num = 0;
 		m_xs = m_xpos - 1;
@@ -1165,6 +1169,7 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		dirgot = true;
 		m_scrollArea->UPrintMessage(27);
 		break;
+	case SDLK_KP_6:
 	case SDLK_RIGHT:
 		m_input_num = 0;
 		m_xs = m_xpos + 1;
@@ -1173,6 +1178,54 @@ void U3Misc::HandleDircetionKeyPress(SDL_Keycode key)
 		m_dy = 0;
 		dirgot = true;
 		m_scrollArea->UPrintMessage(26);
+		break;
+	case SDLK_KP_1:
+		if (m_resources->m_preferences.allow_diagonal)
+		{
+			m_input_num = 0;
+			m_xs = m_xpos - 1;
+			m_ys = m_ypos + 1;
+			m_dx = -1;
+			m_dy = 1;
+			dirgot = true;
+			m_scrollArea->UPrintMessage(250);
+		}
+		break;
+	case SDLK_KP_3:
+		if (m_resources->m_preferences.allow_diagonal)
+		{
+			m_input_num = 0;
+			m_xs = m_xpos + 1;
+			m_ys = m_ypos + 1;
+			m_dx = 1;
+			m_dy = 1;
+			dirgot = true;
+			m_scrollArea->UPrintMessage(251);
+		}
+		break;
+	case SDLK_KP_7:
+		if (m_resources->m_preferences.allow_diagonal)
+		{
+			m_input_num = 0;
+			m_xs = m_xpos - 1;
+			m_ys = m_ypos - 1;
+			m_dx = -1;
+			m_dy = -1;
+			dirgot = true;
+			m_scrollArea->UPrintMessage(252);
+		}
+		break;
+	case SDLK_KP_9:
+		if (m_resources->m_preferences.allow_diagonal)
+		{
+			m_input_num = 0;
+			m_xs = m_xpos + 1;
+			m_ys = m_ypos - 1;
+			m_dx = 1;
+			m_dy = -1;
+			dirgot = true;
+			m_scrollArea->UPrintMessage(253);
+		}
 		break;
 	case SDLK_RETURN:
 	case SDLK_SPACE:
@@ -4132,6 +4185,7 @@ bool U3Misc::UnlockCallback()
 	{
 		m_callbackStack.pop();
 	}
+	m_resources->SetPreference(U3PreferencesType::Allow_Diagonal, m_storeBool);
 	if (m_input_num < 0)
 	{
 		m_scrollArea->UPrintWin("\n");

@@ -112,17 +112,45 @@ bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 	{
 		switch (key)
 		{
+		case SDLK_KP_8:
 		case SDLK_UP:
 			North();
 			break;
+		case SDLK_KP_2:
 		case SDLK_DOWN:
 			South();
 			break;
+		case SDLK_KP_4:
 		case SDLK_LEFT:
 			West();
 			break;
+		case SDLK_KP_6:
 		case SDLK_RIGHT:
 			East();
+			break;
+		case SDLK_KP_1:
+			if (m_resources->m_preferences.allow_diagonal)
+			{
+				SouthWest();
+			}
+			break;
+		case SDLK_KP_3:
+			if (m_resources->m_preferences.allow_diagonal)
+			{
+				SouthEast();
+			}
+			break;
+		case SDLK_KP_7:
+			if (m_resources->m_preferences.allow_diagonal)
+			{
+				NorthWest();
+			}
+			break;
+		case SDLK_KP_9:
+			if (m_resources->m_preferences.allow_diagonal)
+			{
+				NorthEast();
+			}
 			break;
 		case SDLK_SPACE:
 			Pass();
@@ -430,7 +458,7 @@ bool U3Misc::CommandSouthWest()
 		m_callbackStack.pop();
 	}
 
-	m_scrollArea->UPrintMessage(25);
+	m_scrollArea->UPrintMessage(250);
 	if (ValidTrans(3) == false || ValidTrans(4) == false)
 	{
 		NoGo();
@@ -489,7 +517,7 @@ bool U3Misc::CommandNorthEast()
 		m_callbackStack.pop();
 	}
 
-	m_scrollArea->UPrintMessage(25);
+	m_scrollArea->UPrintMessage(253);
 	if (ValidTrans(1) == false || ValidTrans(2) == false)
 	{
 		NoGo();
@@ -548,7 +576,7 @@ bool U3Misc::CommandNorthWest()
 		m_callbackStack.pop();
 	}
 
-	m_scrollArea->UPrintMessage(25);
+	m_scrollArea->UPrintMessage(252);
 	if (ValidTrans(1) == false || ValidTrans(4) == false)
 	{
 		NoGo();
@@ -1327,6 +1355,8 @@ bool U3Misc::CommandUnlock()
 		m_callbackStack.pop();
 	}
 
+	m_resources->GetPreference(U3PreferencesType::Allow_Diagonal, m_storeBool);
+	m_resources->SetPreference(U3PreferencesType::Allow_Diagonal, false);
 	m_scrollArea->UPrintMessage(95);
 	m_inputType = InputType::GetDirection;
 	m_callbackStack.push(std::bind(&U3Misc::UnlockCallback, this));

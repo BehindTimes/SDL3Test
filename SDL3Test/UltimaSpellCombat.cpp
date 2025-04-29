@@ -797,21 +797,25 @@ bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
 	{
 		switch (key)
 		{
+		case SDLK_KP_8:
 		case SDLK_UP:
 			m_scrollArea->UPrintMessage(24);
 			m_misc->m_dy = -1;
 			HandleMove();
 			break;
+		case SDLK_KP_2:
 		case SDLK_DOWN:
 			m_scrollArea->UPrintMessage(25);
 			m_misc->m_dy = 1;
 			HandleMove();
 			break;
+		case SDLK_KP_4:
 		case SDLK_LEFT:
 			m_scrollArea->UPrintMessage(27);
 			m_misc->m_dx = -1;
 			HandleMove();
 			break;
+		case SDLK_KP_6:
 		case SDLK_RIGHT:
 			m_scrollArea->UPrintMessage(26);
 			m_misc->m_dx = 1;

@@ -549,5 +549,6 @@ private:
 
 	short m_moveMonsterOffset;
 	short m_value;
+	bool m_storeBool;
 };
 

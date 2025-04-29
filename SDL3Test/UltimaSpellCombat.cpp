@@ -46,6 +46,8 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_destX(0),
 	m_destY(0)
 {
+	memset(m_futureMonX, 0, sizeof(unsigned char) * 8);
+	memset(m_futureMonY, 0, sizeof(unsigned char) * 8);
 }
 
 void UltimaSpellCombat::drawCombat()
@@ -789,6 +791,9 @@ void UltimaSpellCombat::LetterCommand(SDL_Keycode key)
 
 bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
 {
+	std::string strError;
+	bool allowDiagonal;
+	m_resources->GetPreference(U3PreferencesType::Allow_Diagonal, allowDiagonal);
 	if (key >= SDLK_A && key <= SDLK_Z)
 	{
 		LetterCommand(key);
@@ -821,10 +826,67 @@ bool UltimaSpellCombat::HandleDefaultKeyPress(SDL_Keycode key)
 			m_misc->m_dx = 1;
 			HandleMove();
 			break;
+		case SDLK_KP_1:
+			if (allowDiagonal)
+			{
+				m_scrollArea->UPrintMessage(250);
+				m_misc->m_dx = -1;
+				m_misc->m_dy = 1;
+				HandleMove();
+			}
+			else
+			{
+				m_misc->AddFinishTurn();
+				m_misc->What2();
+			}
+			break;
+		case SDLK_KP_3:
+			if (allowDiagonal)
+			{
+				m_scrollArea->UPrintMessage(251);
+				m_misc->m_dx = 1;
+				m_misc->m_dy = 1;
+				HandleMove();
+			}
+			else
+			{
+				m_misc->AddFinishTurn();
+				m_misc->What2();
+			}
+			break;
+		case SDLK_KP_7:
+			if (allowDiagonal)
+			{
+				m_scrollArea->UPrintMessage(252);
+				m_misc->m_dx = -1;
+				m_misc->m_dy = -1;
+				HandleMove();
+			}
+			else
+			{
+				m_misc->AddFinishTurn();
+				m_misc->What2();
+			}
+			break;
+		case SDLK_KP_9:
+			if (allowDiagonal)
+			{
+				m_scrollArea->UPrintMessage(253);
+				m_misc->m_dx = 1;
+				m_misc->m_dy = -1;
+				HandleMove();
+			}
+			else
+			{
+				m_misc->AddFinishTurn();
+				m_misc->What2();
+			}
+			break;
 		case SDLK_SPACE:
 			m_misc->Pass();
 			break;
 		default:
+			strError = std::string(SDL_GetKeyName(key));
 			m_misc->AddFinishTurn();
 			m_misc->What2();
 			break;

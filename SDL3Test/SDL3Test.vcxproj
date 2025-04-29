@@ -149,6 +149,7 @@
     <ClCompile Include="U3Resources.cpp" />
     <ClCompile Include="U3ScrollArea.cpp" />
     <ClCompile Include="U3Utilities.cpp" />
+    <ClCompile Include="UltimaAuotcombat.cpp" />
     <ClCompile Include="UltimaDungeon.cpp" />
     <ClCompile Include="UltimaGraphics.cpp" />
     <ClCompile Include="UltimaIncludes.cpp" />

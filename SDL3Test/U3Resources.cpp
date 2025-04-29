@@ -61,6 +61,7 @@ bool U3Resources::loadPreferences()
 		xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST  "0");
 		xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST  "0");
 		xmlTextWriterWriteElement(writer, BAD_CAST  "sound_inactive", BAD_CAST  "1");
+		xmlTextWriterWriteElement(writer, BAD_CAST  "auto_combat", BAD_CAST  "1");
 		xmlTextWriterEndElement(writer);
 		xmlTextWriterEndDocument(writer);
 		xmlFreeTextWriter(writer);
@@ -106,6 +107,11 @@ bool U3Resources::loadPreferences()
 		{
 			int val = std::stoi(curMap["allow_diagonal"]);
 			m_preferences.allow_diagonal = (val != 0);
+		}
+		if (curMap.find("auto_combat") != curMap.end())
+		{
+			int val = std::stoi(curMap["auto_combat"]);
+			m_preferences.auto_combat = (val != 0);
 		}
 		if (curMap.find("sound_inactive") != curMap.end())
 		{
@@ -440,6 +446,9 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 	case U3PreferencesType::Auto_Save:
 		value = m_preferences.auto_save;
 		break;
+	case U3PreferencesType::Auto_Combat:
+		value = m_preferences.auto_combat;
+		break;
 	case U3PreferencesType::Include_Wind:
 		value = m_preferences.include_wind;
 		break;
@@ -463,6 +472,9 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 		break;
 	case U3PreferencesType::Auto_Save:
 		m_preferences.auto_save = value;
+		break;
+	case U3PreferencesType::Auto_Combat:
+		m_preferences.auto_combat = value;
 		break;
 	case U3PreferencesType::Include_Wind:
 		m_preferences.include_wind = value;
@@ -3804,7 +3816,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			if (maxnum > 0 && (tempRight > 1))
 			{
 				bar_color.r = 192;
-				bar_color.g = 48;
+				bar_color.g = 192;
 				bar_color.b = 48;
 
 				barRect.w = tempRight;

@@ -25,6 +25,8 @@ public:
 	bool FinishCombatTurn();
 	void HandleMonsterMove();
 	void updateGameTime(Uint64 deltaTime);
+	void AutoCombat(short chnum);
+	bool FutureMonsterHere(short x, short y) const;
 
 	unsigned char m_g5521;
 	unsigned char m_g835D;
@@ -121,6 +123,18 @@ private:
 	bool TerramorphCallback3();
 	void Flotellum();
 	bool FlotellumCallback() const;
+	bool NearlyDead(short who);
+	bool MonsterCanAttack(short x, short y);
+	bool CombatCharHere(short x, short y);
+	short ThreatValue();
+	void SetupNow();
+	unsigned int MonsterLinedUp(short chnum, short x, short y);
+	unsigned int AutoMoveChar(short chnum, short deltaX, short deltaY);
+	unsigned int doKeyNow(short deltaX, short deltaY);
+	unsigned int LineUpToMonster(short chnum);
+	void SetupFuture();
+	unsigned int DirToNearestMonster(short chnum);
+	unsigned int MonsterNearby(short chnum);
 
 	static constexpr Uint64 CombatBlink = 300;
 
@@ -141,6 +155,8 @@ private:
 
 	unsigned char m_destX;
 	unsigned char m_destY;
+	unsigned char m_futureMonX[8];
+	unsigned char m_futureMonY[8];
 	
 };
 

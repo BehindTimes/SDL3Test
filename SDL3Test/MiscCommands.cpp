@@ -958,6 +958,14 @@ bool U3Misc::LookCallback()
 
 bool U3Misc::ProcessEventCallback()
 {
+	if (!m_InputDeque.empty())
+	{
+		m_currentEvent.type = SDL_EVENT_KEY_DOWN;
+		m_currentEvent.key.key = m_InputDeque.back();
+		m_currentEvent.key.mod = 0;
+		m_InputDeque.pop_back();
+	}
+
 	ProcessEvent(m_currentEvent);
 	return true;
 }

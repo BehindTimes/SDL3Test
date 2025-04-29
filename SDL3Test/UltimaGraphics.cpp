@@ -1215,6 +1215,35 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
         else
         {
             m_scrollArea->blockPrompt(false);
+            if (m_resources->m_preferences.auto_combat)
+            {
+                // something went wrong here, switch to manual mode
+                if (!m_misc->m_InputDeque.empty())
+                {
+                    event.type = SDL_EVENT_KEY_DOWN;
+                    event.key.key = m_misc->m_InputDeque.back();
+                    event.key.mod = 0;
+                    m_misc->m_InputDeque.pop_back();
+                }
+                else
+                {
+                    chnum = m_spellCombat->m_g835D;
+                    m_spellCombat->AutoCombat(chnum);
+                    // something went wrong here, switch to manual mode
+                    if (m_misc->m_InputDeque.empty())
+                    {
+                        m_resources->m_preferences.auto_combat = false;
+                    }
+                    else
+                    {
+                        event.type = SDL_EVENT_KEY_DOWN;
+                        event.key.key = m_misc->m_InputDeque.back();
+                        event.key.mod = 0;
+                        m_misc->m_InputDeque.pop_back();
+                    }
+                }
+            }
+
             m_misc->ProcessEvent(event);
             m_resources->updateGameTime(deltaTime);
         }

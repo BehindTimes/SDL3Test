@@ -17,7 +17,8 @@ enum class U3PreferencesType
 	Allow_Diagonal,
 	Classic_Appearance,
 	Include_Wind,
-	Sound_Inactive
+	Sound_Inactive,
+	Auto_Combat
 };
 
 struct U3Preferences
@@ -29,10 +30,12 @@ struct U3Preferences
 		full_screen(false),
 		theme("Standard"),
 		allow_diagonal(false),
-		sound_inactive(false)
+		sound_inactive(false),
+		auto_combat(true)
 	{
 	}
 
+	bool auto_combat;
 	bool auto_save;
 	bool include_wind;
 	bool classic_appearance;

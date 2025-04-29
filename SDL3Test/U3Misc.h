@@ -230,6 +230,7 @@ public:
 	bool m_partyFormed;
 	bool m_surpressTextDisplay;
 	short m_gTimeNegate;
+	std::deque<SDL_Keycode> m_InputDeque;
 
 private:
 	void Attack();

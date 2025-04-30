@@ -118,6 +118,7 @@ bool U3Resources::loadPreferences()
 		if (curMap.find("Theme") != curMap.end())
 		{
 			m_preferences.theme = curMap["Theme"];
+			changeTheme(m_preferences.theme);
 		}
 	}
 	catch ([[maybe_unused]]const std::exception& e)
@@ -915,7 +916,7 @@ void U3Resources::changeTheme(std::string theme)
 	if (m_allGraphics.find(theme) != m_allGraphics.end())
 	{
 		m_currentGraphics = &m_allGraphics[theme];
-		auto it = std::find(m_themes.begin(), m_themes.end(), std::string(Standard));
+		auto it = std::find(m_themes.begin(), m_themes.end(), theme);
 		if (it != m_themes.end())
 		{
 			m_currentTheme = (int)std::distance(m_themes.begin(), it);

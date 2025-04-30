@@ -51,21 +51,7 @@ bool U3Resources::loadPreferences()
 
 	if (!std::filesystem::exists(currentPath))
 	{
-		xmlTextWriterPtr writer;
-		writer = xmlNewTextWriterFilename(currentPath.string().c_str(), 0);
-		xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
-		xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST  "0");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST  "Standard");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST  "0");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST  "1");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST  "0");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST  "0");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "sound_inactive", BAD_CAST  "1");
-		xmlTextWriterWriteElement(writer, BAD_CAST  "auto_combat", BAD_CAST  "1");
-		xmlTextWriterEndElement(writer);
-		xmlTextWriterEndDocument(writer);
-		xmlFreeTextWriter(writer);
+		savePreferences();
 	}
 	if (!std::filesystem::exists(currentPath))
 	{
@@ -114,10 +100,20 @@ bool U3Resources::loadPreferences()
 			int val = std::stoi(curMap["auto_combat"]);
 			m_preferences.auto_combat = (val != 0);
 		}
-		if (curMap.find("sound_inactive") != curMap.end())
+		if (curMap.find("auto_heal") != curMap.end())
 		{
-			int val = std::stoi(curMap["sound_inactive"]);
-			m_preferences.sound_inactive = (val != 0);
+			int val = std::stoi(curMap["auto_heal"]);
+			m_preferences.auto_heal = (val != 0);
+		}
+		if (curMap.find("play_music") != curMap.end())
+		{
+			int val = std::stoi(curMap["play_music"]);
+			m_preferences.play_music = (val != 0);
+		}
+		if (curMap.find("play_sfx") != curMap.end())
+		{
+			int val = std::stoi(curMap["play_sfx"]);
+			m_preferences.play_sfx = (val != 0);
 		}
 		if (curMap.find("Theme") != curMap.end())
 		{
@@ -133,6 +129,30 @@ bool U3Resources::loadPreferences()
 
 void U3Resources::savePreferences()
 {
+	LIBXML_TEST_VERSION
+
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= SaveLoc;
+	currentPath /= "settings.xml";
+
+	xmlTextWriterPtr writer;
+	writer = xmlNewTextWriterFilename(currentPath.string().c_str(), 0);
+	xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+	xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
+	xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST  (m_preferences.full_screen ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST  m_themes[m_currentTheme].c_str());
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST  (m_preferences.auto_save ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST  (m_preferences.include_wind ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST  (m_preferences.classic_appearance ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST  (m_preferences.allow_diagonal ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_combat", BAD_CAST (m_preferences.auto_combat ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_heal", BAD_CAST  (m_preferences.auto_heal ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "play_music", BAD_CAST  (m_preferences.play_music ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "play_sfx", BAD_CAST  (m_preferences.play_sfx ? "1" : "0"));
+	xmlTextWriterEndElement(writer);
+	xmlTextWriterEndDocument(writer);
+	xmlFreeTextWriter(writer);
 }
 
 U3Resources::U3Resources() :
@@ -458,9 +478,6 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 	case U3PreferencesType::Classic_Appearance:
 		value = m_preferences.classic_appearance;
 		break;
-	case U3PreferencesType::Sound_Inactive:
-		value = m_preferences.sound_inactive;
-		break;
 	default:
 		break;
 	}
@@ -484,9 +501,6 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 		break;
 	case U3PreferencesType::Classic_Appearance:
 		m_preferences.classic_appearance = value;
-		break;
-	case U3PreferencesType::Sound_Inactive:
-		m_preferences.sound_inactive = value;
 		break;
 	default:
 		break;
@@ -916,7 +930,7 @@ void U3Resources::changeTheme(int theme)
 	if (theme >= 0 && theme < m_themes.size())
 	{
 		m_currentTheme = theme;
-		/*if (theme == 2)
+		if (theme == 2)
 		{
 			m_graphics->ChangeClassic();
 			m_scrollArea->forceRedraw();
@@ -929,7 +943,7 @@ void U3Resources::changeTheme(int theme)
 			m_scrollArea->forceRedraw();
 			m_graphics->setForceRedraw();
 			return;
-		}*/
+		}
 
 		std::string strMode = m_themes[theme];
 		if (m_allGraphics.find(strMode) != m_allGraphics.end())
@@ -2817,8 +2831,33 @@ void U3Resources::OptionsDlgClosed(int button)
 {
 	if (button == 1)
 	{
-		int tempTheme = m_SetOptionsDlg->m_curTheme;
+		bool changeScreen = false;
+		int tempTheme = m_SetOptionsDlg->m_codData.theme;
+		m_preferences.allow_diagonal = m_SetOptionsDlg->m_codData.allow_diagonals;
+		m_preferences.auto_combat = m_SetOptionsDlg->m_codData.auto_combat;
+		m_preferences.auto_heal = m_SetOptionsDlg->m_codData.auto_heal;
+		m_preferences.auto_save = m_SetOptionsDlg->m_codData.auto_save;
+		m_preferences.include_wind = m_SetOptionsDlg->m_codData.include_wind;
+		m_preferences.allow_diagonal = m_SetOptionsDlg->m_codData.allow_diagonals;
+		if (m_preferences.full_screen != m_SetOptionsDlg->m_codData.is_full_screen)
+		{
+			m_preferences.full_screen = m_SetOptionsDlg->m_codData.is_full_screen;
+			changeScreen = true;
+		}
+		m_preferences.play_music = m_SetOptionsDlg->m_codData.play_music;
+		m_preferences.play_sfx = m_SetOptionsDlg->m_codData.play_sfx;
+		m_preferences.classic_appearance = m_SetOptionsDlg->m_codData.classic;
+
+		savePreferences();
+
 		changeTheme(tempTheme);
+
+		if (changeScreen)
+		{
+			SDL_SetWindowFullscreen(window, m_preferences.full_screen);
+			SDL_SyncWindow(window);
+			CalculateBlockSize();
+		}
 	}
 }
 

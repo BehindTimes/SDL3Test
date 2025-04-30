@@ -130,6 +130,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;G:\source\SDL_mixer-main\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

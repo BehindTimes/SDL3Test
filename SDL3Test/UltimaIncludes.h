@@ -166,6 +166,7 @@ static constexpr std::string_view AutoSaveStr = "Auto Save";
 static constexpr std::string_view AudioStr = "Audio:";
 static constexpr std::string_view MusicStr = "Music";
 static constexpr std::string_view SFXStr = "SFX";
+static constexpr std::string_view FullScreenStr = "Full Screen";
 
 enum {
 	initCmd = 1,

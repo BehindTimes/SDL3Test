@@ -731,6 +731,45 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 	}
 }
 
+U3CheckBox::U3CheckBox(int blockSize, int x, int y) :
+	m_x(x),
+	m_y(y),
+	m_blockSize(blockSize),
+	m_checked(false)
+{
+}
+
+U3CheckBox::~U3CheckBox()
+{
+}
+
+void U3CheckBox::render(SDL_Renderer* renderer, int x, int y)
+{
+	SDL_FRect myRect{};
+
+	myRect.x = (float)x;
+	myRect.y = (float)y;
+	myRect.w = (float)m_blockSize;
+	myRect.h = (float)m_blockSize;
+
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_RenderFillRect(renderer, &myRect);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderRect(renderer, &myRect);
+
+	if (m_checked)
+	{
+		float scaler = (float)m_blockSize / 16.0f;
+
+		myRect.x = (float)x + (3 * scaler);
+		myRect.y = (float)y + (3 * scaler);
+		myRect.w = (float)(10) * scaler;
+		myRect.h = (float)(10) * scaler;
+
+		SDL_RenderFillRect(renderer, &myRect);
+	}
+}
+
 U3TextBox::U3TextBox(int blockSize, int x, int y, int width) :
 	m_ttfText(nullptr),
 	m_x(x),
@@ -864,6 +903,8 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 
 ChooseOptionsDialog::~ChooseOptionsDialog()
 {
+	m_checkBoxes.clear();
+	m_textBoxes.clear();
 	m_labels.clear();
 	m_buttons.clear();
 
@@ -929,8 +970,31 @@ void ChooseOptionsDialog::init()
 	addLabel(std::string(AutoHealStr), 194, 100);
 	addLabel(std::string(AutoSaveStr), 194, 120);
 	addLabel(std::string(AudioStr), 4, 100);
-	addLabel(std::string(MusicStr), 8, 120);
-	addLabel(std::string(SFXStr), 8, 140);
+	addLabel(std::string(FullScreenStr), 4, 120);
+	addLabel(std::string(MusicStr), 8, 140);
+	addLabel(std::string(SFXStr), 8, 160);
+
+	addCheckBox((int)(m_Rect.w - 20), 40);
+	addCheckBox((int)(m_Rect.w - 20), 60);
+	addCheckBox((int)(m_Rect.w - 20), 80);
+	addCheckBox((int)(m_Rect.w - 20), 100);
+	addCheckBox((int)(m_Rect.w - 20), 120);
+
+	addCheckBox(80, 40);
+	addCheckBox(80, 120);
+	addCheckBox(80, 140);
+	addCheckBox(80, 160);
+
+	m_checkBoxes[0]->setChecked(m_resources->m_preferences.include_wind);
+	m_checkBoxes[1]->setChecked(m_resources->m_preferences.allow_diagonal);
+	m_checkBoxes[2]->setChecked(m_resources->m_preferences.auto_combat);
+	m_checkBoxes[3]->setChecked(m_resources->m_preferences.auto_heal);
+	m_checkBoxes[4]->setChecked(m_resources->m_preferences.auto_save);
+
+	m_checkBoxes[5]->setChecked(m_resources->m_preferences.classic_appearance);
+	m_checkBoxes[6]->setChecked(m_resources->m_preferences.full_screen);
+	m_checkBoxes[7]->setChecked(m_resources->m_preferences.play_music);
+	m_checkBoxes[8]->setChecked(m_resources->m_preferences.play_sfx);
 
 	addTextBox(50, 68, 110);
 	std::string strTheme = m_resources->m_themes[m_curTheme];
@@ -955,6 +1019,7 @@ void ChooseOptionsDialog::changeBlockSize(int blockSize)
 	m_labels.clear();
 	m_buttons.clear();
 	m_textBoxes.clear();
+	m_checkBoxes.clear();
 	init();
 }
 
@@ -1003,6 +1068,12 @@ bool ChooseOptionsDialog::display()
 	{
 		curTextBox->render(m_renderer, (int)(curTextBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
 			(int)(curTextBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
+	}
+
+	for (auto& curCheckBox : m_checkBoxes)
+	{
+		curCheckBox->render(m_renderer, (int)(curCheckBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+			(int)(curCheckBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
 	myRect.x = (float)m_Rect.x * scaler;
@@ -1072,6 +1143,13 @@ void ChooseOptionsDialog::addTextBox(int x, int y, int width)
 	m_textBoxes.push_back(std::move(curTextBox));
 }
 
+void ChooseOptionsDialog::addCheckBox(int x, int y)
+{
+	auto curCheckBox = std::make_unique<U3CheckBox>(m_blockSize, x, y);
+	m_checkBoxes.push_back(std::move(curCheckBox));
+}
+
+
 void ChooseOptionsDialog::cancelPushed([[maybe_unused]] int id)
 {
 	m_closeValue = 0;
@@ -1080,6 +1158,17 @@ void ChooseOptionsDialog::cancelPushed([[maybe_unused]] int id)
 
 void ChooseOptionsDialog::okPushed([[maybe_unused]] int id)
 {
+	m_codData.theme = m_curTheme;
+	m_codData.include_wind = m_checkBoxes[0]->m_checked;
+	m_codData.allow_diagonals = m_checkBoxes[1]->m_checked;
+	m_codData.auto_combat = m_checkBoxes[2]->m_checked;
+	m_codData.auto_heal = m_checkBoxes[3]->m_checked;
+	m_codData.auto_save = m_checkBoxes[4]->m_checked;
+	m_codData.classic = m_checkBoxes[5]->m_checked;
+	m_codData.is_full_screen = m_checkBoxes[6]->m_checked;
+	m_codData.play_music = m_checkBoxes[7]->m_checked;
+	m_codData.play_sfx = m_checkBoxes[8]->m_checked;
+
 	m_closeValue = 1;
 	m_callBack(1);
 }
@@ -1087,6 +1176,21 @@ void ChooseOptionsDialog::okPushed([[maybe_unused]] int id)
 bool ChooseOptionsDialog::updateDialog(float xPos, float yPos, int mouseState)
 {
 	float scaler = (float)m_blockSize / 16.0f;
+
+	for (auto& curCheck : m_checkBoxes)
+	{
+		float butOffsetX = (float)(curCheck->m_x * scaler + m_Rect.x * scaler) + screenOffsetX;
+		float butOffsetY = (float)(curCheck->m_y * scaler + m_Rect.y * scaler) + screenOffsetY;
+
+		if (mouseState == 2) // mouse up
+		{
+			if (butOffsetX < xPos && butOffsetX + m_blockSize > xPos &&
+				butOffsetY < yPos && butOffsetY + m_blockSize > yPos)
+			{
+				curCheck->m_checked = !curCheck->m_checked;
+			}
+		}
+	}
 
 	for (auto& curButton : m_buttons)
 	{
@@ -1108,12 +1212,26 @@ bool ChooseOptionsDialog::updateDialog(float xPos, float yPos, int mouseState)
 				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
 		}
 	}
+
 	return (m_closeValue >= 0);
 }
 
 void ChooseOptionsDialog::SetDialogFinishedCallback(std::function<void(int)> func)
 {
 	m_callBack = func;
+
+	/*
+	* m_checkBoxes[0]->setChecked(m_resources->m_preferences.include_wind);
+	m_checkBoxes[1]->setChecked(m_resources->m_preferences.allow_diagonal);
+	m_checkBoxes[2]->setChecked(m_resources->m_preferences.auto_combat);
+	m_checkBoxes[3]->setChecked(m_resources->m_preferences.auto_heal);
+	m_checkBoxes[4]->setChecked(m_resources->m_preferences.auto_save);
+
+	m_checkBoxes[5]->setChecked(m_resources->m_preferences.classic_appearance);
+	m_checkBoxes[6]->setChecked(m_resources->m_preferences.full_screen);
+	m_checkBoxes[7]->setChecked(m_resources->m_preferences.play_music);
+	m_checkBoxes[8]->setChecked(m_resources->m_preferences.play_sfx);
+	*/
 }
 
 
@@ -1136,6 +1254,7 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 
 CreateCharacterDialog::~CreateCharacterDialog()
 {
+	m_textBoxes.clear();
 	m_labels.clear();
 	m_buttons.clear();
 

@@ -30,19 +30,23 @@ struct U3Preferences
 		full_screen(false),
 		theme("Standard"),
 		allow_diagonal(false),
-		sound_inactive(false),
-		auto_combat(true)
+		auto_combat(true),
+		auto_heal(true),
+		play_music(true),
+		play_sfx(true)
 	{
 	}
 
 	bool auto_combat;
 	bool auto_save;
+	bool auto_heal;
 	bool include_wind;
 	bool classic_appearance;
 	bool full_screen;
 	std::string theme;
 	bool allow_diagonal;
-	bool sound_inactive;
+	bool play_music;
+	bool play_sfx;
 };
 
 struct InverseStruct

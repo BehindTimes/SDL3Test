@@ -15,6 +15,22 @@ enum class DialogType
 	Custom
 };
 
+struct U3CheckBox
+{
+public:
+	U3CheckBox(int blockSize, int x, int y);
+	~U3CheckBox();
+
+	void render(SDL_Renderer* renderer, int x, int y);
+
+	void setChecked(bool checked) { m_checked = checked; }
+
+	bool m_checked;
+	int m_x;
+	int m_y;
+	int m_blockSize;
+};
+
 struct U3DlgLabel
 {
 public:
@@ -77,6 +93,33 @@ struct ccdData
 	int race;
 };
 
+struct codData
+{
+	codData() :
+		theme(0),
+		classic(false),
+		include_wind(false),
+		auto_heal(false),
+		auto_save(false),
+		auto_combat(false),
+		play_music(false),
+		play_sfx(false),
+		is_full_screen(false),
+		allow_diagonals(false)
+	{
+	}
+	int theme;
+	bool classic;
+	bool include_wind;
+	bool auto_heal;
+	bool auto_save;
+	bool auto_combat;
+	bool play_music;
+	bool play_sfx;
+	bool is_full_screen;
+	bool allow_diagonals;
+};
+
 class ChooseOptionsDialog
 {
 public:
@@ -89,6 +132,7 @@ public:
 	void addLabel(std::string strLabel, int x, int y);
 	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func);
 	void addTextBox(int x, int y, int width);
+	void addCheckBox(int x, int y);
 	void cancelPushed(int id);
 	void okPushed(int id);
 	bool updateDialog(float xPos, float yPos, int mouseState);
@@ -96,7 +140,7 @@ public:
 
 	SDL_FRect m_Rect;
 
-	int m_curTheme;
+	codData m_codData;
 
 private:
 	bool createFont();
@@ -110,12 +154,14 @@ private:
 	std::vector<std::unique_ptr<U3DlgLabel>> m_labels;
 	std::vector<std::unique_ptr<U3Button>> m_buttons;
 	std::vector<std::unique_ptr<U3TextBox>> m_textBoxes;
+	std::vector<std::unique_ptr<U3CheckBox>> m_checkBoxes;
 	TTF_Font* m_font; // block size font
 
 	std::string m_upArrow;
 	std::string m_downArrow;
 	std::function<void(int)> m_callBack;
 	int m_closeValue;
+	int m_curTheme;
 	
 };
 

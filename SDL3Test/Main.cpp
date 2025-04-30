@@ -55,580 +55,423 @@ void partyFormed(int button);
 void backToOrganize(int button);
 void createCharacterChooseSlot(int button);
 
-int main([[maybe_unused]]int argc, [[maybe_unused]] char* argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    m_resources = std::make_unique<U3Resources>();
-    m_misc = std::make_unique<U3Misc>();
-    m_graphics = std::make_unique<U3Graphics>();
-    m_scrollArea = std::make_unique<U3ScrollArea>();
-    m_utilities = std::make_unique<U3Utilities>();
-    m_spellCombat = std::make_unique<UltimaSpellCombat>();
-    m_dungeon = std::make_unique<UltimaDungeon>();
-    m_audio = std::make_unique<U3Audio>();
+	m_resources = std::make_unique<U3Resources>();
+	m_misc = std::make_unique<U3Misc>();
+	m_graphics = std::make_unique<U3Graphics>();
+	m_scrollArea = std::make_unique<U3ScrollArea>();
+	m_utilities = std::make_unique<U3Utilities>();
+	m_spellCombat = std::make_unique<UltimaSpellCombat>();
+	m_dungeon = std::make_unique<UltimaDungeon>();
+	m_audio = std::make_unique<U3Audio>();
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
-        return 3;
-    }
+	if (!SDL_Init(SDL_INIT_VIDEO))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
+		return 3;
+	}
 
-    if (!SDL_Init(SDL_INIT_AUDIO))
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL_Mixer: %s", SDL_GetError());
-        return 3;
-    }
+	if (!SDL_Init(SDL_INIT_AUDIO))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL_Mixer: %s", SDL_GetError());
+		return 3;
+	}
 
-    if (!SDL_CreateWindowAndRenderer("Ultima 3 - LairWare", 1280, 768, SDL_WINDOW_OPENGL /*| SDL_WINDOW_HIGH_PIXEL_DENSITY*/, &window, &renderer))
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
-        return 3;
-    }
-    int result = 0;
-    int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
-    if (flags != (result = Mix_Init(flags)))
-    {
-        return 3;
-    }
+	if (!SDL_CreateWindowAndRenderer("Ultima 3 - LairWare", 1280, 768, SDL_WINDOW_OPENGL /*| SDL_WINDOW_HIGH_PIXEL_DENSITY*/, &window, &renderer))
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
+		return 3;
+	}
+	int result = 0;
+	int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
+	if (flags != (result = Mix_Init(flags)))
+	{
+		return 3;
+	}
 
-    SDL_AudioSpec curSpec{};
-    curSpec.freq = 22050;
-    curSpec.format = SDL_AUDIO_S16;
-    curSpec.channels = 2;
-    Mix_OpenAudio(0, &curSpec);
+	SDL_AudioSpec curSpec{};
+	curSpec.freq = 22050;
+	curSpec.format = SDL_AUDIO_S16;
+	curSpec.channels = 2;
+	Mix_OpenAudio(0, &curSpec);
 
-    SDL_SetRenderVSync(renderer, 1);
+	SDL_SetRenderVSync(renderer, 1);
 
-    bool valid = m_resources->init(renderer);
-    bool valid2 = m_audio->initMusic();
+	bool valid = m_resources->init(renderer);
+	bool valid2 = m_audio->initMusic();
 
-    if (valid && valid2)
-    {
-        if (DoSplashScreen())
-        {
-            MainLoop();
-        }
-    }
+	if (valid && valid2)
+	{
+		if (DoSplashScreen())
+		{
+			MainLoop();
+		}
+	}
 
-    SDL_SetRenderTarget(renderer, NULL);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
+	SDL_SetRenderTarget(renderer, NULL);
+	SDL_RenderClear(renderer);
+	SDL_RenderPresent(renderer);
 
-    m_audio.reset();
-    m_dungeon.reset();
-    m_spellCombat.reset();
-    m_utilities.reset();
-    m_scrollArea.reset();
-    m_graphics.reset();
-    m_misc.reset();
-    m_resources.reset();
-    auto errorValue = SDL_GetError();
-    // For debugging purposes.  Shouldn't display anything
-    std::cout << "Error = " << errorValue << std::endl;
+	m_audio.reset();
+	m_dungeon.reset();
+	m_spellCombat.reset();
+	m_utilities.reset();
+	m_scrollArea.reset();
+	m_graphics.reset();
+	m_misc.reset();
+	m_resources.reset();
+	auto errorValue = SDL_GetError();
+	// For debugging purposes.  Shouldn't display anything
+	std::cout << "Error = " << errorValue << std::endl;
 
-    //Mix_FreeMusic(music);
-    Mix_CloseAudio();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+	//Mix_FreeMusic(music);
+	Mix_CloseAudio();
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
-    return 0;
+	return 0;
 }
 
 bool DoSplashScreen()
 {
-    m_resources->loadPreferences();
-    m_misc->GetMiscStuff(true);
-    m_misc->GetRoster();
-    m_misc->GetParty();
+	m_resources->loadPreferences();
+	m_misc->GetMiscStuff(true);
+	m_misc->GetRoster();
+	m_misc->GetParty();
 
-    m_resources->changeTheme(m_resources->m_preferences.theme);
-    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+	m_resources->changeTheme(m_resources->m_preferences.theme);
+	SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
 
-    m_resources->CalculateBlockSize();
-   /* OpenChannel();
-    SetUpFont();
-    DisableMenus();
-    SetUpGWorlds();
-    GetFont();
-    GetGraphics();
-    GetMiscStuff(100);
-    GetRoster();
-    GetParty();
-    SetUpSpeech();
-    SetUpMusic();
-    SetUpDragRect();
-    InitMacro();
-    InitCursor();
-    ObscureCursor();*/
-    return true;
+	m_resources->CalculateBlockSize();
+	/* OpenChannel();
+	 SetUpFont();
+	 DisableMenus();
+	 SetUpGWorlds();
+	 GetFont();
+	 GetGraphics();
+	 GetMiscStuff(100);
+	 GetRoster();
+	 GetParty();
+	 SetUpSpeech();
+	 SetUpMusic();
+	 SetUpDragRect();
+	 InitMacro();
+	 InitCursor();
+	 ObscureCursor();*/
+	return true;
 }
 
 static void CreateButtonCallbacks()
 {
-    m_resources->SetButtonCallback(3, createCharacterChooseSlot);
-    m_resources->SetButtonCallback(4, terminateCharacter);
-    m_resources->SetButtonCallback(5, formParty);
-    m_resources->SetButtonCallback(6, disperseParty);
-    m_resources->SetButtonCallback(7, backToMenu);
+	m_resources->SetButtonCallback(3, createCharacterChooseSlot);
+	m_resources->SetButtonCallback(4, terminateCharacter);
+	m_resources->SetButtonCallback(5, formParty);
+	m_resources->SetButtonCallback(6, disperseParty);
+	m_resources->SetButtonCallback(7, backToMenu);
 }
 
 void MainLoop()
 {
-    MenuBarInit();
-    m_graphics->CreateIntroData();
-    m_graphics->CreateMenuData();
-    CreateButtonCallbacks();
-    Intro();
+	MenuBarInit();
+	m_graphics->CreateIntroData();
+	m_graphics->CreateMenuData();
+	CreateButtonCallbacks();
+	Intro();
 
-    m_misc->m_zp[0xCF] = 0;
-    m_misc->m_zp[0x10] = 0;
-    
-    while (newMode != GameMode::Unknown)
-    {
-        if (oldMode != newMode)
-        {
-            if (oldMode == GameMode::Demo)
-            {
-                if (newMode == GameMode::Game)
-                {
-                    m_audio->stopMusic();
-                }
-                else
-                {
-                    m_audio->pauseMusic();
-                }
-            }
-            
-            switch (newMode)
-            {
-            case GameMode::Demo:
-            {
-                Uint64 curTick = SDL_GetTicks();
-                m_resources->setTickCount(curTick, false);
-                m_audio->playMusic(0);
-            }
-            break;
-            case GameMode::Organize:
-                m_graphics->CreateOrganizeData();
-                break;
-            case GameMode::Game:
-            {
-                m_misc->GetSosaria();
-            }
-            break;
-            default:
-                break;
-            }
+	m_misc->m_zp[0xCF] = 0;
+	m_misc->m_zp[0x10] = 0;
 
-            oldMode = newMode;
-        }
+	while (newMode != GameMode::Unknown)
+	{
+		if (oldMode != newMode)
+		{
+			if (oldMode == GameMode::Demo)
+			{
+				if (newMode == GameMode::Game)
+				{
+					m_audio->stopMusic();
+				}
+				else
+				{
+					m_audio->pauseMusic();
+				}
+			}
 
-        switch (newMode)
-        {
-        case GameMode::Demo:
-            Demo();
-            break;
-        case GameMode::MainMenu:
-            MainMenu();
-            break;
-        case GameMode::Organize:
-            Organize();
-            break;
-        case GameMode::Options:
-            newMode = GameMode::Demo;
-            break;
-        case GameMode::JourneyOnward:
-            JourneyOnward();
-            break;
-        case GameMode::Game:
-            Game();
-            break;
-        default:
-            newMode = GameMode::Demo;
-            break;
-        }
-    }
+			switch (newMode)
+			{
+			case GameMode::Options:
+				m_resources->CreateOptionsDlg();
+					break;
+			case GameMode::Demo:
+			{
+				Uint64 curTick = SDL_GetTicks();
+				m_resources->setTickCount(curTick, false);
+				m_audio->playMusic(0);
+			}
+			break;
+			case GameMode::Organize:
+				m_graphics->CreateOrganizeData();
+				break;
+			case GameMode::Game:
+			{
+				m_misc->GetSosaria();
+			}
+			break;
+			default:
+				break;
+			}
+
+			oldMode = newMode;
+		}
+
+		switch (newMode)
+		{
+		case GameMode::Demo:
+			Demo();
+			break;
+		case GameMode::MainMenu:
+			MainMenu();
+			break;
+		case GameMode::Organize:
+			Organize();
+			break;
+		case GameMode::Options:
+			MainMenu();
+			//newMode = GameMode::Demo;
+			break;
+		case GameMode::JourneyOnward:
+			JourneyOnward();
+			break;
+		case GameMode::Game:
+			Game();
+			break;
+		default:
+			newMode = GameMode::Demo;
+			break;
+		}
+	}
 }
 
-static void returnToView([[maybe_unused]]int button)
+static void returnToView([[maybe_unused]] int button)
 {
-    changeMode = true;
-    newMode = GameMode::Demo;
+	changeMode = true;
+	newMode = GameMode::Demo;
 }
 
 static void organizeParty([[maybe_unused]] int button)
 {
-    changeMode = true;
-    newMode = GameMode::Organize;
+	changeMode = true;
+	newMode = GameMode::Organize;
 }
 
 static void changeOptions([[maybe_unused]] int button)
 {
-    changeMode = true;
-    newMode = GameMode::Options;
+	changeMode = true;
+	newMode = GameMode::Options;
 }
 
 static void journeyOnward([[maybe_unused]] int button)
 {
-    changeMode = true;
-    newMode = GameMode::JourneyOnward;
+	changeMode = true;
+	newMode = GameMode::JourneyOnward;
 }
 
 void disperseParty([[maybe_unused]] int button)
 {
-    bool altMessage = false;
-    char byte;
-    for (byte = 1; byte < 21; byte++)
-    {
-        m_misc->m_Player[byte][16] = 0;
-    }
-    if (m_misc->m_Party[6] == 0)
-    {
-        altMessage = true;
-    }
-    for (byte = 0; byte < 16; byte++)
-    {
-        m_misc->m_Party[byte] = 0;
-    }
+	bool altMessage = false;
+	char byte;
+	for (byte = 1; byte < 21; byte++)
+	{
+		m_misc->m_Player[byte][16] = 0;
+	}
+	if (m_misc->m_Party[6] == 0)
+	{
+		altMessage = true;
+	}
+	for (byte = 0; byte < 16; byte++)
+	{
+		m_misc->m_Party[byte] = 0;
+	}
 
-    m_misc->m_partyFormed = false;
+	m_misc->m_partyFormed = false;
 
-    m_resources->SetButtonVisibility(5, true);
-    m_resources->SetButtonVisibility(6, false);
+	m_resources->SetButtonVisibility(5, true);
+	m_resources->SetButtonVisibility(6, false);
 
-    if (altMessage)
-    {
-        m_graphics->m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
-    }
-    else
-    {
-        m_graphics->m_obsCurMode = OrganizeBottomScreen::Dispersed;
-    }
+	if (altMessage)
+	{
+		m_graphics->m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
+	}
+	else
+	{
+		m_graphics->m_obsCurMode = OrganizeBottomScreen::Dispersed;
+	}
 }
 
 void createCharacterChooseSlot([[maybe_unused]] int button)
 {
-    bool hasSpace = m_resources->CheckRosterSpace();
-    m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
-    
-    if (!hasSpace)
-    {
-        m_resources->CreateAlertMessage(6);
-    }
-    else
-    {
-        m_resources->SetButtonCallback(7, backToOrganize);
-    }
+	bool hasSpace = m_resources->CheckRosterSpace();
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
+
+	if (!hasSpace)
+	{
+		m_resources->CreateAlertMessage(6);
+	}
+	else
+	{
+		m_resources->SetButtonCallback(7, backToOrganize);
+	}
 }
 
 void terminateCharacter([[maybe_unused]] int button)
 {
-    m_graphics->m_obsCurMode = OrganizeBottomScreen::TerminateCharacter;
-    m_resources->SetButtonCallback(4, removeCharacter);
-    m_resources->SetButtonCallback(7, backToOrganize);
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::TerminateCharacter;
+	m_resources->SetButtonCallback(4, removeCharacter);
+	m_resources->SetButtonCallback(7, backToOrganize);
 }
 
 void removeCharacter([[maybe_unused]] int button)
 {
-    if (!m_resources->m_selectedCharacters.empty())
-    {
-        int curChar = m_resources->m_selectedCharacters[0] + 1;
-        m_resources->m_selectedFormRect = -1;
-        m_resources->m_selectedCharacters.clear();
-        if (curChar > 0 && curChar < 21)
-        {
-            memset(m_misc->m_Player[curChar], 0, sizeof(unsigned char) * 65);
-            m_resources->CreatePartyNames();
-        }
-    }
+	if (!m_resources->m_selectedCharacters.empty())
+	{
+		int curChar = m_resources->m_selectedCharacters[0] + 1;
+		m_resources->m_selectedFormRect = -1;
+		m_resources->m_selectedCharacters.clear();
+		if (curChar > 0 && curChar < 21)
+		{
+			memset(m_misc->m_Player[curChar], 0, sizeof(unsigned char) * 65);
+			m_resources->CreatePartyNames();
+		}
+	}
 }
 
 void formParty([[maybe_unused]] int button)
 {
-    if (m_misc->m_Party[6] != 0)
-    {
-        m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
-        m_resources->SetButtonVisibility(3, false);
-        m_resources->SetButtonVisibility(4, true);
-        m_resources->SetButtonVisibility(5, false);
-        m_resources->SetButtonVisibility(6, false);
-        m_resources->SetButtonCallback(7, backToOrganize);
-    }
-    else
-    {
-        m_graphics->m_obsCurMode = OrganizeBottomScreen::FormParty;
-        m_resources->SetButtonVisibility(3, false);
-        m_resources->SetButtonVisibility(4, false);
-        m_resources->SetButtonVisibility(5, false);
-        m_resources->SetButtonVisibility(6, false);
+	if (m_misc->m_Party[6] != 0)
+	{
+		m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
+		m_resources->SetButtonVisibility(3, false);
+		m_resources->SetButtonVisibility(4, true);
+		m_resources->SetButtonVisibility(5, false);
+		m_resources->SetButtonVisibility(6, false);
+		m_resources->SetButtonCallback(7, backToOrganize);
+	}
+	else
+	{
+		m_graphics->m_obsCurMode = OrganizeBottomScreen::FormParty;
+		m_resources->SetButtonVisibility(3, false);
+		m_resources->SetButtonVisibility(4, false);
+		m_resources->SetButtonVisibility(5, false);
+		m_resources->SetButtonVisibility(6, false);
 
-        m_resources->SetButtonCallback(5, partyFormed);
-        m_resources->SetButtonCallback(7, backToOrganize);
-    }
+		m_resources->SetButtonCallback(5, partyFormed);
+		m_resources->SetButtonCallback(7, backToOrganize);
+	}
 }
 
 void partyFormed([[maybe_unused]] int button)
 {
-    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
-    m_misc->m_partyFormed = true;
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_misc->m_partyFormed = true;
 
-    memset(m_misc->m_Party, 0, sizeof(unsigned char) * 64);
+	memset(m_misc->m_Party, 0, sizeof(unsigned char) * 64);
 
-    for (size_t index = 0; index < m_resources->m_selectedCharacters.size(); ++index)
-    {
-        int curChar = m_resources->m_selectedCharacters[index] + 1;
-        m_misc->m_Player[curChar][16] = 255;
-        m_misc->m_Party[index + 6] = (unsigned char)curChar;
-    }
-    m_misc->m_Party[1] = (unsigned char)m_resources->m_selectedCharacters.size();
+	for (size_t index = 0; index < m_resources->m_selectedCharacters.size(); ++index)
+	{
+		int curChar = m_resources->m_selectedCharacters[index] + 1;
+		m_misc->m_Player[curChar][16] = 255;
+		m_misc->m_Party[index + 6] = (unsigned char)curChar;
+	}
+	m_misc->m_Party[1] = (unsigned char)m_resources->m_selectedCharacters.size();
 
-    m_misc->m_Party[2] = 0;
-    m_misc->m_Party[0] = 0x7E;
-    m_misc->m_Party[5] = 255;    // WTF is this?
-    m_misc->m_xpos = 42;
-    m_misc->m_ypos = 20;
-    m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
-    m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
-    //PutParty();
-    //PutRoster();
-    m_misc->ResetSosaria();
-    //GetMiscStuff(0);
-    //PutMiscStuff();
+	m_misc->m_Party[2] = 0;
+	m_misc->m_Party[0] = 0x7E;
+	m_misc->m_Party[5] = 255;    // WTF is this?
+	m_misc->m_xpos = 42;
+	m_misc->m_ypos = 20;
+	m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
+	m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
+	//PutParty();
+	//PutRoster();
+	m_misc->ResetSosaria();
+	//GetMiscStuff(0);
+	//PutMiscStuff();
 
-    m_resources->m_selectedFormRect = -1;
-    m_resources->SetButtonVisibility(3, true);
-    m_resources->SetButtonVisibility(4, true);
-    m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
-    m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
-    m_resources->SetButtonVisibility(7, true);
+	m_resources->m_selectedFormRect = -1;
+	m_resources->SetButtonVisibility(3, true);
+	m_resources->SetButtonVisibility(4, true);
+	m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
+	m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
+	m_resources->SetButtonVisibility(7, true);
 
-    m_resources->SetButtonCallback(5, formParty);
-    m_resources->SetButtonCallback(7, backToMenu);
-    m_resources->m_selectedCharacters.clear();
+	m_resources->SetButtonCallback(5, formParty);
+	m_resources->SetButtonCallback(7, backToMenu);
+	m_resources->m_selectedCharacters.clear();
 
-    m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormed;
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormed;
 }
 
 void backToOrganize([[maybe_unused]] int button)
 {
-    m_resources->m_selectedCharacters.clear();
-    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
-    m_resources->m_selectedFormRect = -1;
+	m_resources->m_selectedCharacters.clear();
+	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_resources->m_selectedFormRect = -1;
 
-    m_resources->SetButtonVisibility(3, true);
-    m_resources->SetButtonVisibility(4, true);
-    m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
-    m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
-    m_resources->SetButtonVisibility(7, true);
+	m_resources->SetButtonVisibility(3, true);
+	m_resources->SetButtonVisibility(4, true);
+	m_resources->SetButtonVisibility(5, !m_misc->m_partyFormed);
+	m_resources->SetButtonVisibility(6, m_misc->m_partyFormed);
+	m_resources->SetButtonVisibility(7, true);
 
-    m_resources->SetButtonCallback(4, terminateCharacter);
-    m_resources->SetButtonCallback(5, formParty);
-    m_resources->SetButtonCallback(7, backToMenu);
+	m_resources->SetButtonCallback(4, terminateCharacter);
+	m_resources->SetButtonCallback(5, formParty);
+	m_resources->SetButtonCallback(7, backToMenu);
 }
 
 void backToMenu([[maybe_unused]] int button)
 {
-    m_resources->CleanupPartyNames();
-    changeMode = true;
-    newMode = GameMode::MainMenu;
+	m_resources->CleanupPartyNames();
+	changeMode = true;
+	newMode = GameMode::MainMenu;
 }
 
 void MainMenu()
 {
-    bool gInterrupt = false;
-    bool quit = false;
-    SDL_Event event;
-    int mouseState = 0;
-    bool updateMouse = false;
-    changeMode = false;
+	bool gInterrupt = false;
+	bool quit = false;
+	SDL_Event event;
+	int mouseState = 0;
+	bool updateMouse = false;
+	changeMode = false;
 
-    m_resources->SetButtonCallback(0, returnToView);
-    m_resources->SetButtonCallback(1, organizeParty);
-    m_resources->SetButtonCallback(2, journeyOnward);
-    m_resources->SetButtonCallback(8, changeOptions);
+	m_resources->SetButtonCallback(0, returnToView);
+	m_resources->SetButtonCallback(1, organizeParty);
+	m_resources->SetButtonCallback(2, journeyOnward);
+	m_resources->SetButtonCallback(8, changeOptions);
 
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            break;
-        }
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			break;
+		}
 
-        updateMouse = false;
+		updateMouse = false;
 
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
-                if (event.key.key == SDLK_RETURN)
-                {
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
-                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    SDL_SyncWindow(window);
-
-                    m_resources->CalculateBlockSize();
-                }
-                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
-                {
-                    int mode = event.key.key - SDLK_0;
-                    m_resources->changeTheme(mode);
-                }
-            }
-            else if (event.key.key == SDLK_ESCAPE)
-            {
-                quit = true;
-            }
-            else
-            {
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            mouseState = 1;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            mouseState = 2;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_MOTION:
-            mouseState = 0;
-            updateMouse = true;
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            changeMode = true;
-            newMode = GameMode::Unknown;
-            break;
-        }
-        //Uint64 curTick = SDL_GetTicks();
-
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        m_graphics->DrawFrame(3);
-        if (updateMouse)
-        {
-            m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
-        }
-        m_graphics->DrawMenu();
-        SDL_RenderPresent(renderer);
-
-        if (changeMode)
-        {
-            gInterrupt = true;
-        }
-    }
-}
-
-void Demo()
-{
-    bool gInterrupt = false;
-    bool quit = false;
-    SDL_Event event;
-    changeMode = false;
-
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            changeMode = true;
-            newMode = GameMode::MainMenu;
-            break;
-        }
-
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
-                if (event.key.key == SDLK_RETURN)
-                {
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
-                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    SDL_SyncWindow(window);
-
-                    m_resources->CalculateBlockSize();
-                }
-                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
-                {
-                    int mode = event.key.key - SDLK_0;
-                    m_resources->changeTheme(mode);
-                }
-            }
-            else if (event.key.key == SDLK_ESCAPE)
-            {
-                quit = true;
-            }
-            else
-            {
-                gInterrupt = true;
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            gInterrupt = true;
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            changeMode = true;
-            newMode = GameMode::Unknown;
-            break;
-        }
-
-        Uint64 curTick = SDL_GetTicks();
-
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        m_graphics->DrawFrame(2);
-        m_graphics->DrawDemoScreen(curTick);
-        m_resources->DemoUpdate(curTick);
-        SDL_RenderPresent(renderer);
-    }
-}
-
-void Intro()
-{
-    bool gInterrupt = false;
-    bool quit = false;
-    SDL_Event event;
-
-    /*isFullScreen = !isFullScreen;
-    SDL_SetWindowFullscreen(window, isFullScreen);
-    m_resources->CalculateBlockSize();*/
-
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            changeMode = true;
-            newMode = GameMode::Demo;
-            break;
-        }
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
 				if (event.key.key == SDLK_RETURN)
 				{
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
 					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
 					SDL_SyncWindow(window);
 
@@ -642,427 +485,608 @@ void Intro()
 			}
 			else if (event.key.key == SDLK_ESCAPE)
 			{
-                quit = true;
-            }
-            else
-            {
-                gInterrupt = true;
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            gInterrupt = true;
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            changeMode = true;
-            newMode = GameMode::Unknown;
-            break;
-        }
-        Uint64 curTick = SDL_GetTicks();
+				quit = true;
+			}
+			else
+			{
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			mouseState = 1;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			mouseState = 2;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_MOTION:
+			mouseState = 0;
+			updateMouse = true;
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			changeMode = true;
+			newMode = GameMode::Unknown;
+			break;
+		}
+		//Uint64 curTick = SDL_GetTicks();
 
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        m_graphics->DrawFrame(3);
-        m_graphics->FadeOnExodusUltima(curTick);
-        m_graphics->WriteLordBritish(curTick);
-        m_graphics->FightScene(curTick);
-        SDL_RenderPresent(renderer);
-    }
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
+		m_graphics->DrawFrame(3);
+		if (!m_resources->m_SetOptionsDlg)
+		{
+			if (updateMouse)
+			{
+				m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+			}
+		}
+		else
+		{
+			if (updateMouse)
+			{
+				if (m_resources->m_SetOptionsDlg->updateDialog(event.motion.x, event.motion.y, mouseState))
+				{
+					m_resources->m_SetOptionsDlg.reset();
+					changeMode = true;
+					newMode = GameMode::MainMenu;
+				}
+			}
+		}
+		m_graphics->DrawMenu();
+		if (m_resources->m_SetOptionsDlg)
+		{
+			m_resources->m_SetOptionsDlg->display();
+		}
+		SDL_RenderPresent(renderer);
+
+		if (changeMode)
+		{
+			gInterrupt = true;
+		}
+	}
+}
+
+void Demo()
+{
+	bool gInterrupt = false;
+	bool quit = false;
+	SDL_Event event;
+	changeMode = false;
+
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			changeMode = true;
+			newMode = GameMode::MainMenu;
+			break;
+		}
+
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
+				if (event.key.key == SDLK_RETURN)
+				{
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+					SDL_SyncWindow(window);
+
+					m_resources->CalculateBlockSize();
+				}
+				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				{
+					int mode = event.key.key - SDLK_0;
+					m_resources->changeTheme(mode);
+				}
+			}
+			else if (event.key.key == SDLK_ESCAPE)
+			{
+				quit = true;
+			}
+			else
+			{
+				gInterrupt = true;
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			gInterrupt = true;
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			changeMode = true;
+			newMode = GameMode::Unknown;
+			break;
+		}
+
+		Uint64 curTick = SDL_GetTicks();
+
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
+		m_graphics->DrawFrame(2);
+		m_graphics->DrawDemoScreen(curTick);
+		m_resources->DemoUpdate(curTick);
+		SDL_RenderPresent(renderer);
+	}
+}
+
+void Intro()
+{
+	bool gInterrupt = false;
+	bool quit = false;
+	SDL_Event event;
+
+	/*isFullScreen = !isFullScreen;
+	SDL_SetWindowFullscreen(window, isFullScreen);
+	m_resources->CalculateBlockSize();*/
+
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			changeMode = true;
+			newMode = GameMode::Demo;
+			break;
+		}
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
+				if (event.key.key == SDLK_RETURN)
+				{
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+					SDL_SyncWindow(window);
+
+					m_resources->CalculateBlockSize();
+				}
+				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				{
+					int mode = event.key.key - SDLK_0;
+					m_resources->changeTheme(mode);
+				}
+			}
+			else if (event.key.key == SDLK_ESCAPE)
+			{
+				quit = true;
+			}
+			else
+			{
+				gInterrupt = true;
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			gInterrupt = true;
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			changeMode = true;
+			newMode = GameMode::Unknown;
+			break;
+		}
+		Uint64 curTick = SDL_GetTicks();
+
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
+		m_graphics->DrawFrame(3);
+		m_graphics->FadeOnExodusUltima(curTick);
+		m_graphics->WriteLordBritish(curTick);
+		m_graphics->FightScene(curTick);
+		SDL_RenderPresent(renderer);
+	}
 }
 
 
 void Organize()
 {
-    bool gInterrupt = false;
-    bool quit = false;
-    SDL_Event event;
-    int mouseState = 0;
-    bool updateMouse = false;
-    changeMode = false;
-    bool hasAlert = false;
+	bool gInterrupt = false;
+	bool quit = false;
+	SDL_Event event;
+	int mouseState = 0;
+	bool updateMouse = false;
+	changeMode = false;
+	bool hasAlert = false;
 
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            break;
-        }
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			break;
+		}
 
-        updateMouse = false;
+		updateMouse = false;
 
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
-                if (event.key.key == SDLK_RETURN)
-                {
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
-                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    SDL_SyncWindow(window);
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
+				if (event.key.key == SDLK_RETURN)
+				{
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+					SDL_SyncWindow(window);
 
-                    m_resources->CalculateBlockSize();
-                }
-                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
-                {
-                    int mode = event.key.key - SDLK_0;
-                    m_resources->changeTheme(mode);
-                }
-            }
-            else if (event.key.key == SDLK_ESCAPE)
-            {
-                quit = true;
-            }
-            else
-            {
-                switch (m_graphics->m_obsCurMode)
-                {
-                case OrganizeBottomScreen::CreateCharacterAborted:
-                case OrganizeBottomScreen::CreateCharacterDone:
-                case OrganizeBottomScreen::PartyFormed:
-                case OrganizeBottomScreen::PartyFormedInUse:
-                case OrganizeBottomScreen::DispersedNoOne:
-                case OrganizeBottomScreen::Dispersed:
-                    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
-                    break;
-                default:
-                    break;
-                }
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            mouseState = 1;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            mouseState = 2;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_MOTION:
-            mouseState = 0;
-            updateMouse = true;
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            changeMode = true;
-            newMode = GameMode::Unknown;
-            break;
-        }
-        //Uint64 curTick = SDL_GetTicks();
+					m_resources->CalculateBlockSize();
+				}
+				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				{
+					int mode = event.key.key - SDLK_0;
+					m_resources->changeTheme(mode);
+				}
+			}
+			else if (event.key.key == SDLK_ESCAPE)
+			{
+				quit = true;
+			}
+			else
+			{
+				switch (m_graphics->m_obsCurMode)
+				{
+				case OrganizeBottomScreen::CreateCharacterAborted:
+				case OrganizeBottomScreen::CreateCharacterDone:
+				case OrganizeBottomScreen::PartyFormed:
+				case OrganizeBottomScreen::PartyFormedInUse:
+				case OrganizeBottomScreen::DispersedNoOne:
+				case OrganizeBottomScreen::Dispersed:
+					m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+					break;
+				default:
+					break;
+				}
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			mouseState = 1;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			mouseState = 2;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_MOTION:
+			mouseState = 0;
+			updateMouse = true;
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			changeMode = true;
+			newMode = GameMode::Unknown;
+			break;
+		}
+		//Uint64 curTick = SDL_GetTicks();
 
-        bool alertValid = false;
-        if (m_resources->HasAlert())
-        {
-            hasAlert = true;
-            alertValid = true;
-        }
+		bool alertValid = false;
+		if (m_resources->HasAlert())
+		{
+			hasAlert = true;
+			alertValid = true;
+		}
 
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        if (updateMouse)
-        {
-            switch (m_graphics->m_obsCurMode)
-            {
-            case OrganizeBottomScreen::CreateCharacterChooseSlot:
-            {
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
+		if (updateMouse)
+		{
+			switch (m_graphics->m_obsCurMode)
+			{
+			case OrganizeBottomScreen::CreateCharacterChooseSlot:
+			{
 				if (!hasAlert)
 				{
 					m_resources->UpdateCreateCharacterChooseSlot(event.motion.x, event.motion.y, mouseState);
 					m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
 				}
 			}
-                break;
-            case OrganizeBottomScreen::CreateCharacter:
-                m_resources->UpdateCreateCharacter(event.motion.x, event.motion.y, mouseState);
-                break;
-            case OrganizeBottomScreen::TerminateCharacter:
-                m_resources->UpdateTerminateCharacter(event.motion.x, event.motion.y, mouseState);
-                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
-                break;
-            case OrganizeBottomScreen::FormParty:
-                m_resources->UpdateFormParty(event.motion.x, event.motion.y, mouseState);
-                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
-                break;
-            case OrganizeBottomScreen::PartyFormed:
-            case OrganizeBottomScreen::PartyFormedInUse:
-            case OrganizeBottomScreen::DispersedNoOne:
-            case OrganizeBottomScreen::Dispersed:
-            case OrganizeBottomScreen::CreateCharacterAborted:
-            case OrganizeBottomScreen::CreateCharacterDone:
-                if (mouseState == 2)
-                {
-                    m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
-                }
-                break;
-            default:
-                m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
-                break;
-            }
-        }
-        m_graphics->DrawFrame(3);
-        m_graphics->DrawOrganizeMenu(event);
-        if (hasAlert)
-        {
-            m_resources->HandleAlert(event);
-        }
-        SDL_RenderPresent(renderer);
+			break;
+			case OrganizeBottomScreen::CreateCharacter:
+				m_resources->UpdateCreateCharacter(event.motion.x, event.motion.y, mouseState);
+				break;
+			case OrganizeBottomScreen::TerminateCharacter:
+				m_resources->UpdateTerminateCharacter(event.motion.x, event.motion.y, mouseState);
+				m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+				break;
+			case OrganizeBottomScreen::FormParty:
+				m_resources->UpdateFormParty(event.motion.x, event.motion.y, mouseState);
+				m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+				break;
+			case OrganizeBottomScreen::PartyFormed:
+			case OrganizeBottomScreen::PartyFormedInUse:
+			case OrganizeBottomScreen::DispersedNoOne:
+			case OrganizeBottomScreen::Dispersed:
+			case OrganizeBottomScreen::CreateCharacterAborted:
+			case OrganizeBottomScreen::CreateCharacterDone:
+				if (mouseState == 2)
+				{
+					m_resources->m_CreateCharacterDlg.reset();
+					m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+				}
+				break;
+			default:
+				m_resources->UpdateButtons(event.motion.x, event.motion.y, mouseState);
+				break;
+			}
+		}
+		m_graphics->DrawFrame(3);
+		m_graphics->DrawOrganizeMenu(event);
+		if (hasAlert)
+		{
+			m_resources->HandleAlert(event);
+		}
+		SDL_RenderPresent(renderer);
 
-        if (!alertValid)
-        {
-            if (hasAlert)
-            {
-                hasAlert = false;
-                m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
-            }
-        }
+		if (!alertValid)
+		{
+			if (hasAlert)
+			{
+				hasAlert = false;
+				m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+			}
+		}
 
-        if (changeMode)
-        {
-            gInterrupt = true;
-        }
-    }
+		if (changeMode)
+		{
+			gInterrupt = true;
+		}
+	}
 }
 
 void JourneyOnward()
 {
-    bool journey = m_resources->CheckJourneyOnward();
-    bool quit = false;
-    bool gInterrupt = false;
-    bool updateMouse = false;
-    SDL_Event event;
-    //int mouseState = 0;
-    changeMode = false;
+	bool journey = m_resources->CheckJourneyOnward();
+	bool quit = false;
+	bool gInterrupt = false;
+	bool updateMouse = false;
+	SDL_Event event;
+	//int mouseState = 0;
+	changeMode = false;
 
-    Uint64 startTick = SDL_GetTicks();
-    Uint64 elapsedTime = 0;
-    //const Uint64 gameDelay = 750;
-    const Uint64 gameDelay = 0;
+	Uint64 startTick = SDL_GetTicks();
+	Uint64 elapsedTime = 0;
+	//const Uint64 gameDelay = 750;
+	const Uint64 gameDelay = 0;
 
-    //journey = false;
-    
-    if (!journey)
-    {
-        m_resources->CreateAlertMessage(7);
-    }
+	//journey = false;
 
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            break;
-        }
+	if (!journey)
+	{
+		m_resources->CreateAlertMessage(7);
+	}
 
-        updateMouse = false;
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			break;
+		}
 
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
-                if (event.key.key == SDLK_RETURN)
-                {
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
-                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    SDL_SyncWindow(window);
+		updateMouse = false;
 
-                    m_resources->CalculateBlockSize();
-                }
-                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
-                {
-                    int mode = event.key.key - SDLK_0;
-                    m_resources->changeTheme(mode);
-                }
-            }
-            else if (event.key.key == SDLK_ESCAPE)
-            {
-                quit = true;
-            }
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            newMode = GameMode::Unknown;
-            break;
-        }
-        Uint64 curTick = SDL_GetTicks();
-        elapsedTime += (curTick - startTick);
-        startTick = curTick;
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
+				if (event.key.key == SDLK_RETURN)
+				{
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+					SDL_SyncWindow(window);
 
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        m_graphics->DrawFrame(3);
-        m_resources->drawExodus(255);
-        m_resources->CenterMessage(1, 15);
+					m_resources->CalculateBlockSize();
+				}
+				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				{
+					int mode = event.key.key - SDLK_0;
+					m_resources->changeTheme(mode);
+				}
+			}
+			else if (event.key.key == SDLK_ESCAPE)
+			{
+				quit = true;
+			}
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			newMode = GameMode::Unknown;
+			break;
+		}
+		Uint64 curTick = SDL_GetTicks();
+		elapsedTime += (curTick - startTick);
+		startTick = curTick;
 
-        if (journey)
-        {
-        }
-        else
-        {
-            m_resources->CenterMessage(2, 21);
-            bool alertValid = m_resources->HandleAlert(event);
-            if (!alertValid)
-            {
-                gInterrupt = true;
-                newMode = GameMode::MainMenu;
-            }
-        }
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
+		m_graphics->DrawFrame(3);
+		m_resources->drawExodus(255);
+		m_resources->CenterMessage(1, 15);
 
-        SDL_RenderPresent(renderer);
+		if (journey)
+		{
+		}
+		else
+		{
+			m_resources->CenterMessage(2, 21);
+			bool alertValid = m_resources->HandleAlert(event);
+			if (!alertValid)
+			{
+				gInterrupt = true;
+				newMode = GameMode::MainMenu;
+			}
+		}
 
-        if (journey)
-        {
-            if (changeMode)
-            {
-                gInterrupt = true;
-            }
-            else if (elapsedTime > gameDelay)
-            {
-                gInterrupt = true;
-                newMode = GameMode::Game;
-            }
-        }
-    }
+		SDL_RenderPresent(renderer);
+
+		if (journey)
+		{
+			if (changeMode)
+			{
+				gInterrupt = true;
+			}
+			else if (elapsedTime > gameDelay)
+			{
+				gInterrupt = true;
+				newMode = GameMode::Game;
+			}
+		}
+	}
 }
 
 void Game()
 {
 #ifdef NDEBUG
 #else
-    /*m_misc->m_Player[1][34] = 0;
-    m_misc->m_Player[2][34] = 0;
-    m_misc->m_Player[3][34] = 0;
-    m_misc->m_Player[4][34] = 0;
-    m_misc->m_Player[1][33] = 0;
-    m_misc->m_Player[2][33] = 0;
-    m_misc->m_Player[3][33] = 0;
-    m_misc->m_Player[4][33] = 0;
-    m_misc->m_Player[1][32] = 0;
-    m_misc->m_Player[2][32] = 0;
-    m_misc->m_Player[3][32] = 0;
-    m_misc->m_Player[4][32] = 0;*/
-    //m_misc->m_xpos = 10;
-    //m_misc->m_ypos = 10;
-    //m_misc->m_Player[1][17] = 'A';
-    m_misc->m_Player[1][14] = 0xFF;
-    m_misc->m_Player[1][15] = 50;
-    m_misc->m_Player[1][37] = 50;
-    //m_misc->m_Party[15] = 1;
+	/*m_misc->m_Player[1][34] = 0;
+	m_misc->m_Player[2][34] = 0;
+	m_misc->m_Player[3][34] = 0;
+	m_misc->m_Player[4][34] = 0;
+	m_misc->m_Player[1][33] = 0;
+	m_misc->m_Player[2][33] = 0;
+	m_misc->m_Player[3][33] = 0;
+	m_misc->m_Player[4][33] = 0;
+	m_misc->m_Player[1][32] = 0;
+	m_misc->m_Player[2][32] = 0;
+	m_misc->m_Player[3][32] = 0;
+	m_misc->m_Player[4][32] = 0;*/
+	//m_misc->m_xpos = 10;
+	//m_misc->m_ypos = 10;
+	//m_misc->m_Player[1][17] = 'A';
+	m_misc->m_Player[1][14] = 0xFF;
+	m_misc->m_Player[1][15] = 50;
+	m_misc->m_Player[1][37] = 50;
+	//m_misc->m_Party[15] = 1;
 #endif
 
-    bool quit = false;
-    bool gInterrupt = false;
-    bool updateMouse = false;
-    SDL_Event event;
-    int mouseState = 0;
-    changeMode = false;
+	bool quit = false;
+	bool gInterrupt = false;
+	bool updateMouse = false;
+	SDL_Event event;
+	int mouseState = 0;
+	changeMode = false;
 
-    Uint64 startTick = SDL_GetTicks();
-    Uint64 elapsedTime = 0;
+	Uint64 startTick = SDL_GetTicks();
+	Uint64 elapsedTime = 0;
 
-    m_resources->ShowChars(true);
+	m_resources->ShowChars(true);
 
-    while (1)
-    {
-        if (gInterrupt)
-        {
-            break;
-        }
+	while (1)
+	{
+		if (gInterrupt)
+		{
+			break;
+		}
 
-        updateMouse = false;
+		updateMouse = false;
 
-        SDL_PollEvent(&event);
-        switch (event.type)
-        {
-        case SDL_EVENT_QUIT:
-            quit = true;
-            break;
-        case SDL_EVENT_KEY_DOWN:
-            if (event.key.mod & SDL_KMOD_ALT)
-            {
-                if (event.key.key == SDLK_RETURN)
-                {
-                    m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
-                    SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
-                    SDL_SyncWindow(window);
+		SDL_PollEvent(&event);
+		switch (event.type)
+		{
+		case SDL_EVENT_QUIT:
+			quit = true;
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			if (event.key.mod & SDL_KMOD_ALT)
+			{
+				if (event.key.key == SDLK_RETURN)
+				{
+					m_resources->m_preferences.full_screen = !m_resources->m_preferences.full_screen;
+					SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+					SDL_SyncWindow(window);
 
-                    m_resources->CalculateBlockSize();
-                }
-                if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
-                {
-                    int mode = event.key.key - SDLK_0;
-                    m_resources->changeTheme(mode);
-                }
-            }
-            else if (event.key.key == SDLK_ESCAPE)
-            {
-                quit = true;
-            }
-            else
-            {
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            mouseState = 1;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            mouseState = 2;
-            updateMouse = true;
-            break;
-        case SDL_EVENT_MOUSE_MOTION:
-            mouseState = 0;
-            updateMouse = true;
-            break;
-        default:
-            break;
-        }
-        if (quit)
-        {
-            changeMode = true;
-            newMode = GameMode::Unknown;
-            break;
-        }
-        Uint64 curTick = SDL_GetTicks();
-        Uint64 deltaTime = curTick - startTick;
-        startTick = curTick;
+					m_resources->CalculateBlockSize();
+				}
+				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				{
+					int mode = event.key.key - SDLK_0;
+					m_resources->changeTheme(mode);
+				}
+			}
+			else if (event.key.key == SDLK_ESCAPE)
+			{
+				quit = true;
+			}
+			else
+			{
+			}
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			mouseState = 1;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			mouseState = 2;
+			updateMouse = true;
+			break;
+		case SDL_EVENT_MOUSE_MOTION:
+			mouseState = 0;
+			updateMouse = true;
+			break;
+		default:
+			break;
+		}
+		if (quit)
+		{
+			changeMode = true;
+			newMode = GameMode::Unknown;
+			break;
+		}
+		Uint64 curTick = SDL_GetTicks();
+		Uint64 deltaTime = curTick - startTick;
+		startTick = curTick;
 
-        elapsedTime += deltaTime;
+		elapsedTime += deltaTime;
 
-        m_misc->m_gResurrect = false;
+		m_misc->m_gResurrect = false;
 
-        SDL_SetRenderTarget(renderer, NULL);
-        SDL_RenderClear(renderer);
-        
-        m_graphics->render(event, deltaTime);
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderClear(renderer);
 
-        m_resources->displayFPS(fps);
+		m_graphics->render(event, deltaTime);
 
-        SDL_RenderPresent(renderer);
-        
-        updateGame(deltaTime);
+		m_resources->displayFPS(fps);
 
-        if (changeMode)
-        {
-            gInterrupt = true;
-        }
-    }
+		SDL_RenderPresent(renderer);
+
+		updateGame(deltaTime);
+
+		if (changeMode)
+		{
+			gInterrupt = true;
+		}
+	}
 }
 
 
@@ -1070,19 +1094,19 @@ Uint64 fps_elapsed_time = 0;
 
 void updateGame(Uint64 deltaTime)
 {
-    count++;
-    fps_elapsed_time += deltaTime;
-    if (fps_elapsed_time > 1000)
-    {
-        fps = (int)(count / (fps_elapsed_time / 1000));
-        fps_elapsed_time = 0;
-        count = 0;
-    }
+	count++;
+	fps_elapsed_time += deltaTime;
+	if (fps_elapsed_time > 1000)
+	{
+		fps = (int)(count / (fps_elapsed_time / 1000));
+		fps_elapsed_time = 0;
+		count = 0;
+	}
 
-    if (m_graphics->m_curMode == U3GraphicsMode::Map ||
-        m_graphics->m_curMode == U3GraphicsMode::Combat)
-    {
-        m_resources->updateTime(deltaTime);
-    }
-    m_resources->m_fullUpdate = false;
+	if (m_graphics->m_curMode == U3GraphicsMode::Map ||
+		m_graphics->m_curMode == U3GraphicsMode::Combat)
+	{
+		m_resources->updateTime(deltaTime);
+	}
+	m_resources->m_fullUpdate = false;
 }

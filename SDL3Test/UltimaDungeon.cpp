@@ -6,6 +6,7 @@
 #include "U3ScrollArea.h"
 #include "UltimaSpellCombat.h"
 #include "U3Utilities.h"
+#include "UltimaIncludes.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Graphics> m_graphics;

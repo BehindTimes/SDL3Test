@@ -187,6 +187,7 @@ public:
 	void createZStatButtons();
 
 	void DrawZStatButtons();
+	void CreateOptionsDlg();
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -195,6 +196,7 @@ public:
 	SDL_Renderer* m_renderer;
 	ModeGraphics* m_currentGraphics;
 	ModeGraphics* m_standardGraphics; // Fills in missing graphics
+	int m_currentTheme;
 
 	TTF_Font* m_font; // block size font
 	TTF_Font* m_font_9; // 9 point font
@@ -207,24 +209,6 @@ public:
 	float m_font_y_offset;
 	PartyDisplay m_partyDisplay[20];
 
-	static constexpr std::string_view WinText[10] = {
-		"   And so it came to",
-		"pass  that  on  this",
-		"day EXODUS,hell-born",
-		"incarnate  of  evil",
-		"was vanquished  from",
-		"SOSARIA.   What  now",
-		"lies  ahead  in  the",
-		"ULTIMA saga can only",
-		"be pure speculation!",
-		"Onward to ULTIMA IV!"
-	};
-	static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
-	static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
-	static constexpr std::string_view SelectRemoveCharacterStr = "SELECT CHARACTER TO REMOVE";
-	static constexpr std::string_view TypeNumStr = "TypeNum-";
-	static constexpr std::string_view CreateStr = "Kreate (Y/N):";
-
 	int m_blockSize;
 	int m_overrideImage;
 	bool m_newMove;
@@ -233,6 +217,7 @@ public:
 	int m_selectedFormRect;
 	std::vector<int> m_selectedCharacters;
 	std::unique_ptr<CreateCharacterDialog> m_CreateCharacterDlg;
+	std::unique_ptr<ChooseOptionsDialog> m_SetOptionsDlg;
 	float m_characterRecordWidth;
 	float m_characterRecordHeight;
 	SDL_Texture* m_texRaceClass;
@@ -241,6 +226,7 @@ public:
 	std::vector< U3Button> m_zstatbuttons;
 	U3Preferences m_preferences;
 	std::vector<std::array<unsigned char, 200>> m_cons_data;
+	std::vector<std::string> m_themes;
 
 private:
 	void LoadResource(std::string strFile);
@@ -259,6 +245,7 @@ private:
 
 	void HideMonsters();
 	void ShowMonsters();
+	void OptionsDlgClosed(int button);
 
 	void UPrint(std::string gString, char x, char y, bool autoadjust = false);
 
@@ -277,19 +264,6 @@ private:
 	void zStatDistributeCallback(int button);
 	void zStatJoinGold(int button);
 
-	static constexpr std::string_view FontLoc = "Fonts";
-	static constexpr std::string_view ResourceLoc = "Resources";
-	static constexpr std::string_view GraphicsLoc = "Graphics";
-	static constexpr std::string_view PListLoc = "PLists";
-	static constexpr std::string_view ImagesLoc = "Images";
-	static constexpr std::string_view Standard = "Standard";
-	static constexpr std::string_view BinLoc = "Bin";
-	static constexpr std::string_view SaveLoc = "Save";
-
-	static constexpr std::string_view LevelStr = "Level ";
-	static constexpr std::string_view FoodStr = "Food: ";
-	static constexpr std::string_view UnknownStr = "Unknown";
-
 	static constexpr Uint64 MoveTime = 6000;
 	static constexpr Uint64 DelayScroll = 2000;
 	static constexpr Uint64 DelayDemo = 250;
@@ -298,7 +272,7 @@ private:
 	static constexpr Uint64 DelayWind = 2560;
 
 	std::map<std::string, ModeGraphics> m_allGraphics;
-	std::vector<std::string> m_themes;
+	
 	
 	std::unique_ptr<U3Dialog> m_AlertDlg;
 

@@ -88,14 +88,6 @@ private:
 
 	std::vector < std::pair<SDL_FRect, SDL_FRect>> m_ladderRect; // A hack to render ladders
 
-	static constexpr std::string_view ResourceLoc = "Resources";
-	static constexpr std::string_view GraphicsLoc = "Graphics";
-	static constexpr std::string_view PListLoc = "PLists";
-	static constexpr std::string_view ImagesLoc = "Images";
-	static constexpr std::string_view Standard = "Standard";
-	static constexpr std::string_view BinLoc = "Bin";
-	static constexpr std::string_view SaveLoc = "Save";
-
 	bool m_forceRedraw;
 	char m_HeadX[4];
 	char m_HeadY[4];

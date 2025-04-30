@@ -69,6 +69,104 @@ extern std::string U3PrefLatestReleaseNote;
 extern std::string U3PrefInformedNewVersionDate;
 extern std::string U3PrefInformDayInterval;
 
+static constexpr std::string_view ResourceLoc = "Resources";
+static constexpr std::string_view MusicLoc = "Music";
+static constexpr std::string_view SfxLoc = "Sounds";
+static constexpr std::string_view Standard = "Standard";
+static constexpr std::string_view TextLoc = "Text";
+static constexpr std::string_view FontLoc = "Fonts";
+static constexpr std::string_view ImagesLoc = "Images";
+static constexpr std::string_view BinLoc = "Bin";
+static constexpr std::string_view GraphicsLoc = "Graphics";
+static constexpr std::string_view PListLoc = "PLists";
+static constexpr std::string_view SaveLoc = "Save";
+
+static constexpr std::string_view NameString = "Name:";
+static constexpr std::string_view StrengthString = "Strength:";
+static constexpr std::string_view DexterityString = "Dexterity:";
+static constexpr std::string_view IntelligenceString = "Intelligence:";
+static constexpr std::string_view WisdomString = "Wisdom:";
+static constexpr std::string_view PointsString = "Points Remaining:";
+static constexpr std::string_view SexString = "Sex:";
+static constexpr std::string_view RaceString = "Race:";
+static constexpr std::string_view TypeString = "Type:";
+static constexpr std::string_view OKString = "  OK  ";
+static constexpr std::string_view CancelString = " Cancel ";
+static constexpr std::string_view RandomNameString = " Random Name ";
+
+static constexpr std::string_view DoorString = "Door";
+static constexpr std::string_view DioramaString = "Diorama\n";
+static constexpr std::string_view StrString = "\nSTR...";
+static constexpr std::string_view DexString = "\nDEX...";
+static constexpr std::string_view IntString = "\nINT...";
+static constexpr std::string_view WisString = "\nWIS...";
+static constexpr std::string_view HpString = "\nH.P...";
+static constexpr std::string_view HmString = "\nH.M...";
+static constexpr std::string_view GoldString = "\nGOLD: ";
+static constexpr std::string_view ExpString = "\nEXP...";
+static constexpr std::string_view GemString = "\nGEMS..";
+static constexpr std::string_view KeyString = "\nKEYS..";
+static constexpr std::string_view PowdString = "\nPOWD..";
+static constexpr std::string_view TrchString = "\nTRCH..";
+static constexpr std::string_view CoDString = "\nCARD OF DEATH";
+static constexpr std::string_view CoSString = "\nCARD OF SOL";
+static constexpr std::string_view CoLString = "\nCARD OF LOVE";
+static constexpr std::string_view CoMString = "\nCARD OF MOONS";
+static constexpr std::string_view MoForceString = "\nMARK OF FORCE";
+static constexpr std::string_view MoFireString = "\nMARK OF FIRE";
+static constexpr std::string_view MoSString = "\nMARK OF SNAKE";
+static constexpr std::string_view MoKString = "\nMARK OF KINGS";
+static constexpr std::string_view WeaponString = "\nWEAPON:";
+static constexpr std::string_view ArmorString = "\nARMOUR:";
+static constexpr std::string_view WeaponsString = "\n**WEAPONS**";
+static constexpr std::string_view NoWeaponsString = "\n02-Hands-(A)\n**ARMOUR**";
+static constexpr std::string_view NoArmorString = "\n01-Skin-(A)";
+
+static constexpr std::string_view TerraformString = "TERRAFORM";
+static constexpr std::string_view ArmageddonString = "ARMAGEDDON";
+static constexpr std::string_view FlotellumString = "FLOTELLUM";
+static constexpr std::string_view ScreamString = "\nAIEEEEE!\n\n";
+static constexpr std::string_view WinText[10] = {
+		"   And so it came to",
+		"pass  that  on  this",
+		"day EXODUS,hell-born",
+		"incarnate  of  evil",
+		"was vanquished  from",
+		"SOSARIA.   What  now",
+		"lies  ahead  in  the",
+		"ULTIMA saga can only",
+		"be pure speculation!",
+		"Onward to ULTIMA IV!"
+};
+static constexpr std::string_view SelectPartyStr = "SELECT PARTY MEMBERS";
+static constexpr std::string_view SelectCharacterSlotStr = "SELECT CHARACTER SLOT";
+static constexpr std::string_view SelectRemoveCharacterStr = "SELECT CHARACTER TO REMOVE";
+static constexpr std::string_view TypeNumStr = "TypeNum-";
+static constexpr std::string_view CreateStr = "Kreate (Y/N):";
+static constexpr std::string_view LevelStr = "Level ";
+static constexpr std::string_view FoodStr = "Food: ";
+static constexpr std::string_view UnknownStr = "Unknown";
+
+static constexpr std::string_view FemaleStr = "Female";
+static constexpr std::string_view MaleStr = "Male";
+static constexpr std::string_view OtherStr = "Other";
+static constexpr std::string_view HumanStr = "Human";
+static constexpr std::string_view FighterStr = "Fighter";
+
+static constexpr std::string_view GameOptionsStr = "Game Options";
+static constexpr std::string_view AppearanceStr = "Appearance:";
+static constexpr std::string_view ClassicStr = "Classic";
+static constexpr std::string_view ThemeStr = "Theme";
+static constexpr std::string_view OtherOptionsStr = "Other Options:";
+static constexpr std::string_view WindStr = "Wind";
+static constexpr std::string_view DiagonalMovementStr = "Diagonal Movement";
+static constexpr std::string_view AutoCombatStr = "Auto Combat";
+static constexpr std::string_view AutoHealStr = "Auto Heal";
+static constexpr std::string_view AutoSaveStr = "Auto Save";
+static constexpr std::string_view AudioStr = "Audio:";
+static constexpr std::string_view MusicStr = "Music";
+static constexpr std::string_view SFXStr = "SFX";
+
 enum {
 	initCmd = 1,
 	freqDurationCmd = 40

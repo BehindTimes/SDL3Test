@@ -1270,7 +1270,7 @@ bool U3Misc::CommandKlimb()
 	}
 	else
 	{
-		std::string_view sv_kreate = m_resources->CreateStr;
+		std::string_view sv_kreate = CreateStr;
 		std::string disp_string(sv_kreate);
 		m_scrollArea->UPrintWin(disp_string);
 		setInputTypeYesNo(std::bind(&U3Misc::KreateCallback, this));

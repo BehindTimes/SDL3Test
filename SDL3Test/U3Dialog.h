@@ -77,6 +77,48 @@ struct ccdData
 	int race;
 };
 
+class ChooseOptionsDialog
+{
+public:
+	explicit ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface);
+	~ChooseOptionsDialog();
+
+	void init();
+	bool display();
+	void changeBlockSize(int blockSize);
+	void addLabel(std::string strLabel, int x, int y);
+	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func);
+	void addTextBox(int x, int y, int width);
+	void cancelPushed(int id);
+	void okPushed(int id);
+	bool updateDialog(float xPos, float yPos, int mouseState);
+	void SetDialogFinishedCallback(std::function<void(int)> func);
+
+	SDL_FRect m_Rect;
+
+	int m_curTheme;
+
+private:
+	bool createFont();
+	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
+	void themeUp(int id);
+	void themeDown(int id);
+
+	int m_blockSize;
+	SDL_Renderer* m_renderer;
+	TTF_TextEngine* m_engine_surface;
+	std::vector<std::unique_ptr<U3DlgLabel>> m_labels;
+	std::vector<std::unique_ptr<U3Button>> m_buttons;
+	std::vector<std::unique_ptr<U3TextBox>> m_textBoxes;
+	TTF_Font* m_font; // block size font
+
+	std::string m_upArrow;
+	std::string m_downArrow;
+	std::function<void(int)> m_callBack;
+	int m_closeValue;
+	
+};
+
 class CreateCharacterDialog
 {
 public:
@@ -120,25 +162,6 @@ private:
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 	int getClassIndex(char value);
 
-	static constexpr std::string_view ResourceLoc = "Resources";
-	static constexpr std::string_view TextLoc = "Text";
-	static constexpr std::string_view FontLoc = "Fonts";
-	static constexpr std::string_view ImagesLoc = "Images";
-	static constexpr std::string_view BinLoc = "Bin";
-
-	static constexpr std::string_view NameString = "Name:";
-	static constexpr std::string_view StrengthString = "Strength:";
-	static constexpr std::string_view DexterityString = "Dexterity:";
-	static constexpr std::string_view IntelligenceString = "Intelligence:";
-	static constexpr std::string_view WisdomString = "Wisdom:";
-	static constexpr std::string_view PointsString = "Points Remaining:";
-	static constexpr std::string_view SexString = "Sex:";
-	static constexpr std::string_view RaceString = "Race:";
-	static constexpr std::string_view TypeString = "Type:";
-	static constexpr std::string_view OKString = "  OK  ";
-	static constexpr std::string_view CancelString = " Cancel ";
-	static constexpr std::string_view RandomNameString = " Random Name ";
-
 	int m_blockSize;
 	SDL_Renderer* m_renderer;
 	TTF_TextEngine* m_engine_surface;
@@ -180,11 +203,7 @@ private:
 	void calculateRects();
 	void finishedCallback(int button);
 
-	static constexpr std::string_view ResourceLoc = "Resources";
-	static constexpr std::string_view TextLoc = "Text";
-	static constexpr std::string_view FontLoc = "Fonts";
-	static constexpr std::string_view ImagesLoc = "Images";
-	static constexpr std::string_view BinLoc = "Bin";
+	
 
 	U3Button m_backButton;
 

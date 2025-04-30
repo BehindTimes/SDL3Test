@@ -1987,7 +1987,7 @@ bool UltimaSpellCombat::TerramorphCallback()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	std::string_view temp = m_resources->TypeNumStr;
+	std::string_view temp = TypeNumStr;
 	std::string dispString = std::string(temp);
 	m_scrollArea->UPrintWin(dispString);
 	m_misc->setInputTypeNum(std::bind(&UltimaSpellCombat::TerramorphCallback2, this));

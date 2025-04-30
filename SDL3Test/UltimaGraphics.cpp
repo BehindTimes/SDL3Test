@@ -415,7 +415,7 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
     case OrganizeBottomScreen::FormParty:
     {
         m_resources->DrawButtons({ 5, 7 });
-        tempMessage = m_resources->SelectPartyStr;
+        tempMessage = SelectPartyStr;
         strMessage = std::string(tempMessage);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
@@ -443,7 +443,7 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
     case OrganizeBottomScreen::TerminateCharacter:
     {
         m_resources->DrawButtons({ 4, 7 });
-        tempMessage = m_resources->SelectRemoveCharacterStr;
+        tempMessage = SelectRemoveCharacterStr;
         strMessage = std::string(tempMessage);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->CenterMessage(strMessage, (short)startPos, (short)strMessage.size(), 11);
@@ -460,7 +460,7 @@ void U3Graphics::DrawOrganizeMenu(SDL_Event event)
         break;
     case OrganizeBottomScreen::CreateCharacterChooseSlot:
     {
-        std::string_view tempStr = m_resources->SelectCharacterSlotStr;
+        std::string_view tempStr = SelectCharacterSlotStr;
         strMessage = std::string(tempStr);
         size_t startPos = (40 - strMessage.size()) / 2;
         m_resources->DrawButtons({ 7 });
@@ -887,7 +887,7 @@ void U3Graphics::renderWinScreen() const
     for (int index = 0; index < 10; ++index)
     {
         float y = m_blockSize * 2.0f * (index + 1) - m_resources->m_font_y_offset;
-        std::string strDisplay = std::string(m_resources->WinText[index]);
+        std::string strDisplay = std::string(WinText[index]);
         m_resources->renderDisplayString(m_resources->m_font, strDisplay, (int)x, (int)y, sdl_text_color, 2, false);
     }
 

@@ -5,6 +5,7 @@
 #include "U3Utilities.h"
 #include "U3Resources.h"
 #include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;
@@ -841,6 +842,281 @@ void U3DlgLabel::updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font)
 	m_ttfLabel = TTF_CreateText(engine_surface, font, m_strLabel.c_str(), 0);
 }
 
+ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface) :
+	m_renderer(renderer),
+	m_engine_surface(engine_surface),
+	m_blockSize(32),
+	m_Rect(),
+	m_font(nullptr),
+	m_closeValue(-1),
+	m_curTheme(-1)
+{
+	m_upArrow += static_cast<char>(0xE2);
+	m_upArrow += static_cast<char>(0x96);
+	m_upArrow += static_cast<char>(0xB4);
+
+	m_downArrow += static_cast<char>(0xE2);
+	m_downArrow += static_cast<char>(0x96);
+	m_downArrow += static_cast<char>(0xBE);
+
+	m_curTheme = m_resources->m_currentTheme;
+}
+
+ChooseOptionsDialog::~ChooseOptionsDialog()
+{
+	m_labels.clear();
+	m_buttons.clear();
+
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+		m_font = nullptr;
+	}
+}
+
+void ChooseOptionsDialog::themeUp([[maybe_unused]]int id)
+{
+	if (m_resources->m_themes.size() < 1)
+	{
+		return;
+	}
+	m_curTheme++;
+	m_curTheme %= m_resources->m_themes.size();
+
+	std::string strTheme = m_resources->m_themes[m_curTheme];
+	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+}
+
+void ChooseOptionsDialog::themeDown([[maybe_unused]] int id)
+{
+	if (m_resources->m_themes.size() < 1)
+	{
+		return;
+	}
+	m_curTheme--;
+	if (m_curTheme < 0)
+	{
+		m_curTheme = (int)m_resources->m_themes.size() - 1;
+	}
+	std::string strTheme = m_resources->m_themes[m_curTheme];
+	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+}
+
+void ChooseOptionsDialog::init()
+{
+	// Initial size is 640x384 with a block size of 16
+	float scaler = (float)m_blockSize / 16.0f;
+	if (scaler < 1.0f)
+	{
+		return;
+	}
+	int w;
+	int h;
+	createFont();
+	addLabel(std::string(GameOptionsStr), 0, 0);
+	TTF_GetTextSize(m_labels.back()->m_ttfLabel, &w, &h);
+	int text_width_scaled = (int)(w / scaler);
+	
+	m_labels.back()->m_x = (int)((m_Rect.w - text_width_scaled) / 2);
+
+	addLabel(std::string(AppearanceStr), 4, 20);
+	addLabel(std::string(ClassicStr), 8, 40);
+	addLabel(std::string(ThemeStr), 8, 68);
+	addLabel(std::string(OtherOptionsStr), 190, 20);
+	addLabel(std::string(WindStr), 194, 40);
+	addLabel(std::string(DiagonalMovementStr), 194, 60);
+	addLabel(std::string(AutoCombatStr), 194, 80);
+	addLabel(std::string(AutoHealStr), 194, 100);
+	addLabel(std::string(AutoSaveStr), 194, 120);
+	addLabel(std::string(AudioStr), 4, 100);
+	addLabel(std::string(MusicStr), 8, 120);
+	addLabel(std::string(SFXStr), 8, 140);
+
+	addTextBox(50, 68, 110);
+	std::string strTheme = m_resources->m_themes[m_curTheme];
+	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+
+	addButton(m_upArrow, 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1));
+	addButton(m_downArrow, 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1));
+	addButton(std::string(CancelString), 176, 176, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
+	addButton(std::string(OKString), 256, 176, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
+}
+
+void ChooseOptionsDialog::changeBlockSize(int blockSize)
+{
+	m_blockSize = blockSize;
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+		m_font = nullptr;
+	}
+	createFont();
+
+	m_labels.clear();
+	m_buttons.clear();
+	m_textBoxes.clear();
+	init();
+}
+
+bool ChooseOptionsDialog::display()
+{
+	SDL_FRect myRect{};
+	SDL_FRect fromRect{};
+	float scaler = (float)m_blockSize / 16.0f;
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = (float)m_Rect.h * scaler;
+
+	m_resources->adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 224, 224, 224, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = 20.0f * scaler;
+
+	m_resources->adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 192, 192, 192, 255);
+	SDL_RenderFillRect(m_renderer, &myRect);
+
+
+	SDL_Color sdl_text_color = { 0, 0, 0 };
+
+	for (auto& curLabel : m_labels)
+	{
+		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler),
+			(int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
+	}
+
+	for (auto& curButton : m_buttons)
+	{
+		curButton->render(m_renderer, m_blockSize, (int)(curButton->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+			(int)(curButton->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
+	}
+
+	for (auto& curTextBox : m_textBoxes)
+	{
+		curTextBox->render(m_renderer, (int)(curTextBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+			(int)(curTextBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
+	}
+
+	myRect.x = (float)m_Rect.x * scaler;
+	myRect.y = (float)m_Rect.y * scaler;
+	myRect.w = (float)m_Rect.w * scaler;
+	myRect.h = (float)m_Rect.h * scaler;
+
+	m_resources->adjustRect(myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_RenderRect(m_renderer, &myRect);
+
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	return false;
+}
+
+bool ChooseOptionsDialog::createFont()
+{
+	bool retVal = false;
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= FontLoc;
+	currentPath /= "FreeSerif.ttf";
+
+	if (m_font)
+	{
+		TTF_CloseFont(m_font);
+		m_font = nullptr;
+	}
+
+	if (m_blockSize > 8)
+	{
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
+		if (m_font)
+		{
+			retVal = true;
+		}
+	}
+
+	return retVal;
+}
+
+void ChooseOptionsDialog::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
+{
+	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
+	TTF_DrawRendererText(text_obj, (float)x + screenOffsetX, (float)y + screenOffsetY);
+}
+
+void ChooseOptionsDialog::addLabel(std::string strLabel, int x, int y)
+{
+	auto curLabel = std::make_unique<U3DlgLabel>(m_engine_surface, m_font, strLabel, x, y);
+	m_labels.push_back(std::move(curLabel));
+}
+
+void ChooseOptionsDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func)
+{
+	auto curButton = std::make_unique<U3Button>();
+	m_buttons.push_back(std::move(curButton));
+	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
+	m_buttons.back()->setVisible(true);
+	m_buttons.back()->SetButtonCallback(func);
+}
+
+void ChooseOptionsDialog::addTextBox(int x, int y, int width)
+{
+	auto curTextBox = std::make_unique<U3TextBox>(m_blockSize, x, y, width);
+	m_textBoxes.push_back(std::move(curTextBox));
+}
+
+void ChooseOptionsDialog::cancelPushed([[maybe_unused]] int id)
+{
+	m_closeValue = 0;
+	m_callBack(0);
+}
+
+void ChooseOptionsDialog::okPushed([[maybe_unused]] int id)
+{
+	m_closeValue = 1;
+	m_callBack(1);
+}
+
+bool ChooseOptionsDialog::updateDialog(float xPos, float yPos, int mouseState)
+{
+	float scaler = (float)m_blockSize / 16.0f;
+
+	for (auto& curButton : m_buttons)
+	{
+		float butOffsetX = (float)(curButton->m_x * scaler + m_Rect.x * scaler);
+		float butOffsetY = (float)(curButton->m_y * scaler + m_Rect.y * scaler);
+		if (mouseState == 2) // mouse up
+		{
+			curButton->setMouseCapture(m_blockSize, 2, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+		else if (mouseState == 1) // mouse down
+		{
+			curButton->setMouseCapture(m_blockSize, 1, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+		else // mouse move
+		{
+			curButton->setMouseCapture(m_blockSize, 0, xPos, yPos,
+				butOffsetX, butOffsetY, screenOffsetX, screenOffsetY);
+		}
+	}
+	return (m_closeValue >= 0);
+}
+
+void ChooseOptionsDialog::SetDialogFinishedCallback(std::function<void(int)> func)
+{
+	m_callBack = func;
+}
+
+
 CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface) :
 	m_renderer(renderer),
 	m_engine_surface(engine_surface),
@@ -1054,13 +1330,13 @@ void CreateCharacterDialog::init()
 	switch (m_ccdData.sex)
 	{
 	case 1:
-		strSex = std::string("Female");
+		strSex = std::string(FemaleStr);
 		break;
 	case 2:
-		strSex = std::string("Other");
+		strSex = std::string(OtherStr);
 		break;
 	default:
-		strSex = std::string("Male");
+		strSex = std::string(MaleStr);
 		break;
 	}
 	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
@@ -1068,7 +1344,7 @@ void CreateCharacterDialog::init()
 	std::string strRace;
 	if (m_resources->m_plistMap["Races"].size() < m_ccdData.race)
 	{
-		strRace = std::string("Human");
+		strRace = std::string(HumanStr);
 	}
 	else
 	{
@@ -1078,7 +1354,7 @@ void CreateCharacterDialog::init()
 	std::string strClass;
 	if (m_resources->m_plistMap["Classes"].size() < m_ccdData.type)
 	{
-		strClass = std::string("Fighter");
+		strClass = std::string(FighterStr);
 	}
 	else
 	{

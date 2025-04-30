@@ -3,6 +3,7 @@
 #include <SDL3/SDL_timer.h>
 #include <iostream>
 #include <libxml/xmlwriter.h>
+#include <iterator>
 #include "U3Resources.h"
 #include "U3Misc.h"
 #include "U3ScrollArea.h"
@@ -200,7 +201,8 @@ U3Resources::U3Resources() :
 	m_texGatherGold(nullptr),
 	m_texDistributeFoodPushed(nullptr),
 	m_texGatherGoldPushed(nullptr),
-	m_exoduslitez(0)
+	m_exoduslitez(0),
+	m_currentTheme(-1)
 {
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -217,6 +219,7 @@ U3Resources::U3Resources() :
 
 U3Resources::~U3Resources()
 {
+	m_SetOptionsDlg.reset();
 	m_CreateCharacterDlg.reset();
 	m_AlertDlg.reset();
 	m_buttons.clear();
@@ -658,6 +661,11 @@ bool U3Resources::init(SDL_Renderer* renderer)
 		if (m_allGraphics[key].tiles.empty())
 		{
 			m_allGraphics.erase(key);
+			auto it = std::find(m_themes.begin(), m_themes.end(), key);
+			if (it != m_themes.end())
+			{
+				m_themes.erase(it);
+			}
 		}
 	}
 
@@ -665,6 +673,11 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	{
 		m_standardGraphics = &m_allGraphics[std::string(Standard)];
 		m_currentGraphics = m_standardGraphics;
+		auto it = std::find(m_themes.begin(), m_themes.end(), std::string(Standard));
+		if (it != m_themes.end())
+		{
+			m_currentTheme = (int)std::distance(m_themes.begin(), it);
+		}
 	}
 	else
 	{
@@ -855,6 +868,11 @@ void U3Resources::CalculateBlockSize()
 		m_CreateCharacterDlg->changeBlockSize(m_blockSize);
 	}
 
+	if (m_SetOptionsDlg.get())
+	{
+		m_SetOptionsDlg->changeBlockSize(m_blockSize);
+	}
+
 	CreatePartyNames();
 
 	int final = m_blockSize * 22;
@@ -883,6 +901,11 @@ void U3Resources::changeTheme(std::string theme)
 	if (m_allGraphics.find(theme) != m_allGraphics.end())
 	{
 		m_currentGraphics = &m_allGraphics[theme];
+		auto it = std::find(m_themes.begin(), m_themes.end(), std::string(Standard));
+		if (it != m_themes.end())
+		{
+			m_currentTheme = (int)std::distance(m_themes.begin(), it);
+		}
 	}
 	m_scrollArea->forceRedraw();
 	m_graphics->setForceRedraw();
@@ -890,23 +913,24 @@ void U3Resources::changeTheme(std::string theme)
 
 void U3Resources::changeTheme(int theme)
 {
-	if (theme == 2)
-	{
-		m_graphics->ChangeClassic();
-		m_scrollArea->forceRedraw();
-		m_graphics->setForceRedraw();
-		return;
-	}
-	if (theme == 6)
-	{
-		m_currentGraphics = &m_allGraphics["Standard"];
-		m_scrollArea->forceRedraw();
-		m_graphics->setForceRedraw();
-		return;
-	}
-
 	if (theme >= 0 && theme < m_themes.size())
 	{
+		m_currentTheme = theme;
+		/*if (theme == 2)
+		{
+			m_graphics->ChangeClassic();
+			m_scrollArea->forceRedraw();
+			m_graphics->setForceRedraw();
+			return;
+		}
+		if (theme == 6)
+		{
+			m_currentGraphics = &m_allGraphics["Standard"];
+			m_scrollArea->forceRedraw();
+			m_graphics->setForceRedraw();
+			return;
+		}*/
+
 		std::string strMode = m_themes[theme];
 		if (m_allGraphics.find(strMode) != m_allGraphics.end())
 		{
@@ -2789,6 +2813,27 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 	}
 }
 
+void U3Resources::OptionsDlgClosed(int button)
+{
+	if (button == 1)
+	{
+		int tempTheme = m_SetOptionsDlg->m_curTheme;
+		changeTheme(tempTheme);
+	}
+}
+
+void U3Resources::CreateOptionsDlg()
+{
+	// Initial size is 640x384 with a block size of 16
+	m_SetOptionsDlg = std::make_unique<ChooseOptionsDialog>(m_renderer, engine_surface);
+	m_SetOptionsDlg->m_Rect.x = 144;
+	m_SetOptionsDlg->m_Rect.y = ((384 - (200)) / 2.0f);
+	m_SetOptionsDlg->m_Rect.w = 336;
+	m_SetOptionsDlg->m_Rect.h = 200;
+	m_SetOptionsDlg->changeBlockSize(m_blockSize);
+	m_SetOptionsDlg->SetDialogFinishedCallback(std::bind(&U3Resources::OptionsDlgClosed, this, std::placeholders::_1));
+}
+
 void U3Resources::DrawOrganizePartyRect()
 {
 	SDL_FRect myRect{};
@@ -4304,11 +4349,6 @@ void U3Resources::CreatePartyNames()
 
 void U3Resources::GenerateZStatImage(int rosNum)
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
-	currentPath /= ResourceLoc;
-	currentPath /= FontLoc;
-	currentPath /= "FreeSerif.ttf";
-
 	SDL_SetRenderDrawColor(m_renderer, 192, 192, 192, 255);
 	SDL_SetRenderTarget(m_renderer, m_graphics->m_texMap);
 	SDL_RenderClear(m_renderer);

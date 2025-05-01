@@ -3714,7 +3714,7 @@ void U3Resources::updateTime(Uint64 deltaTime)
 	DoWind();
 }
 
-void U3Resources::ShowChars(bool force) /* $7338 methinx */
+void U3Resources::ShowChars(bool force) // $7338 methinx
 {
 	bool somethingChanged = false;
 	short i, num, ros;

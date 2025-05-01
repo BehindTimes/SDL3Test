@@ -631,7 +631,8 @@ void UltimaSpellCombat::AutoCombat(short chnum)
             m_misc->m_InputDeque.push_back(SDLK_DOWN);
             return;
         }
-        if (allowDiagonal) {
+        if (allowDiagonal)
+        {
             if (!MonsterCanAttack(x - 1, y + 1) && !CombatCharHere(x - 1, y + 1))
             {
                 m_misc->m_InputDeque.push_back(SDLK_KP_1);

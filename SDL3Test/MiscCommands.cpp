@@ -291,7 +291,7 @@ bool U3Misc::CommandEast()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = true;
 	m_scrollArea->UPrintMessage(26);
 	if (ValidTrans(2) == false)
 	{
@@ -342,7 +342,7 @@ bool U3Misc::CommandWest()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = false;
 	m_scrollArea->UPrintMessage(27);
 	if (ValidTrans(4) == false)
 	{
@@ -401,7 +401,7 @@ bool U3Misc::CommandSouthEast()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = true;
 	m_scrollArea->UPrintMessage(251);
 	if (ValidTrans(2) == false || ValidTrans(3) == false)
 	{
@@ -462,7 +462,7 @@ bool U3Misc::CommandSouthWest()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = true;
 	m_scrollArea->UPrintMessage(250);
 	if (ValidTrans(3) == false || ValidTrans(4) == false)
 	{
@@ -521,7 +521,7 @@ bool U3Misc::CommandNorthEast()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = true;
 	m_scrollArea->UPrintMessage(253);
 	if (ValidTrans(1) == false || ValidTrans(2) == false)
 	{
@@ -580,7 +580,7 @@ bool U3Misc::CommandNorthWest()
 	{
 		m_callbackStack.pop();
 	}
-
+	m_gHorseFacingEast = true;
 	m_scrollArea->UPrintMessage(252);
 	if (ValidTrans(1) == false || ValidTrans(4) == false)
 	{

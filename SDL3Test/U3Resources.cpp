@@ -2537,7 +2537,7 @@ void U3Resources::SwapShape(short shape)
 		return;
 	}
 
-	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+	/*SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
 	SDL_RenderClear(m_renderer);
 	if (!m_shapeSwap[realTile])
 	{
@@ -2547,7 +2547,7 @@ void U3Resources::SwapShape(short shape)
 	{
 		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, NULL);
 	}
-	SDL_SetRenderTarget(m_renderer, NULL);
+	SDL_SetRenderTarget(m_renderer, NULL);*/
 	m_shapeSwap[realTile] = !m_shapeSwap[realTile];
 }
 
@@ -2748,6 +2748,10 @@ void U3Resources::DrawDemo(Uint64 curTick)
 					int tileY = (bgndTile / 2) % TILES_NUM_Y;
 					int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
 					int realTile = tileX * TILES_NUM_Y + tileY;
+					if (m_shapeSwap[realTile])
+					{
+						realTile += 16;
+					}
 					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
 				}
 			}
@@ -2756,11 +2760,19 @@ void U3Resources::DrawDemo(Uint64 curTick)
 				int tileY = (bgndTile / 2) % TILES_NUM_Y;
 				int tileX = ((bgndTile / 2) / TILES_NUM_Y) * 2;
 				int realTile = tileX * TILES_NUM_Y + tileY;
+				if (m_shapeSwap[realTile])
+				{
+					realTile += 16;
+				}
 				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
 
 				tileY = (thisTile / 2) % TILES_NUM_Y;
 				tileX = ((thisTile / 2) / TILES_NUM_Y) * 2;
 				realTile = tileX * TILES_NUM_Y + tileY;
+				if (m_shapeSwap[realTile])
+				{
+					realTile += 16;
+				}
 				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
 			}
 			demoffset++;
@@ -3319,6 +3331,11 @@ void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned sh
 	ToRect.w = (float)(shapSize);
 	ToRect.h = (float)(shapSize);
 
+	if (m_shapeSwap[realTile])
+	{
+		realTile += 16;
+	}
+
 	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &ToRect);
 }
 
@@ -3360,7 +3377,10 @@ void U3Resources::DrawTiles()
 			}
 			offRect = shapeRect;
 			offset++;
-
+			if (m_shapeSwap[realTile])
+			{
+				realTile += 16;
+			}
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
 		}
 	}
@@ -3575,10 +3595,16 @@ void U3Resources::ShowMonsters()
 		{
 			if (m_misc->m_Party[0] == 0x14 && m_misc->m_gHorseFacingEast)
 			{
-				m_misc->m_gShapeSwapped[10] = true;
+				SwapShape(m_misc->m_Party[0]);
+				DrawMasked(m_misc->m_Party[0], 5, 5);
+				SwapShape(m_misc->m_Party[0]);
 			}
-			DrawMasked(m_misc->m_Party[0], 5, 5);
-			m_misc->m_gShapeSwapped[10] = false;
+			else
+			{
+				DrawMasked(m_misc->m_Party[0], 5, 5);
+			}
+			
+			//m_misc->m_gShapeSwapped[10] = false;
 		}
 	}
 	else   // ... or in combat, draw masked mons & chars, restore tiles.

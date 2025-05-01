@@ -6250,6 +6250,7 @@ short U3Misc::ShrineRace(short race)
 
 void U3Misc::SpawnMonster() // $7A0C
 {
+	return;
 	const char              MonTypes[14] = { 24,23,25,20,26,27,13,28,22,14,15,29,30,24 };
 	const char              MonBegin[13] = { 4,4,4,4,4,4,0,4,4,0,0,4,4 };
 	bool allFirst;

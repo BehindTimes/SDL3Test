@@ -168,6 +168,14 @@ static constexpr std::string_view MusicStr = "Music";
 static constexpr std::string_view SFXStr = "SFX";
 static constexpr std::string_view FullScreenStr = "Full Screen";
 
+static constexpr std::string_view OptionsStr = "Options";
+static constexpr std::string_view CommandListStr = "Command List";
+static constexpr std::string_view SpellListStr = "Spell List";
+static constexpr std::string_view TablesStr = "Tables";
+static constexpr std::string_view MainMenuStr = "Main Menu";
+static constexpr std::string_view QuitStr = "Quit";
+static constexpr std::string_view ReturnToGameStr = "Return to Game";
+
 enum {
 	initCmd = 1,
 	freqDurationCmd = 40

@@ -137,6 +137,7 @@ public:
 	void okPushed(int id);
 	bool updateDialog(float xPos, float yPos, int mouseState);
 	void SetDialogFinishedCallback(std::function<void(int)> func);
+	void HandleEvent(SDL_Event& event);
 
 	SDL_FRect m_Rect;
 

@@ -570,6 +570,7 @@ void MainMenu()
 				if (m_resources->m_SetOptionsDlg->updateDialog(event.motion.x, event.motion.y, mouseState))
 				{
 					m_resources->m_SetOptionsDlg.reset();
+					m_resources->m_cleanupAlert = false;
 					changeMode = true;
 					newMode = GameMode::MainMenu;
 				}

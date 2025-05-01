@@ -137,6 +137,7 @@ private:
 	void goCommandList(int button);
 	void goSpellList(int button);
 	void goTables(int button);
+	void goOptions(int button);
 	bool closeImage();
 
 	static constexpr Uint64 DelayScroll = 700;

@@ -4329,6 +4329,25 @@ bool U3Misc::ShowAlert()
 	return true;
 }
 
+void U3Misc::AddOptions()
+{
+	m_callbackStack.push(std::bind(&U3Misc::ShowOptions, this));
+}
+
+bool U3Misc::ShowOptions()
+{
+	if (!m_resources->HandleOptions(m_currentEvent))
+	{
+		if (m_callbackStack.size() > 0)
+		{
+			m_callbackStack.pop();
+		}
+
+		return false;
+	}
+	return true;
+}
+
 bool U3Misc::CheckAllDeadPause()
 {
 	if (m_callbackStack.size() > 0)

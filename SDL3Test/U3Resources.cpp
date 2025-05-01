@@ -2976,6 +2976,8 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 
 void U3Resources::OptionsDlgClosed(int button)
 {
+	m_cleanupAlert = true;
+
 	if (button == 1)
 	{
 		bool changeScreen = false;
@@ -3229,6 +3231,23 @@ bool U3Resources::CheckJourneyOnward()
 
 	return true;
 }
+
+bool U3Resources::HandleOptions(SDL_Event& event)
+{
+	if (!m_SetOptionsDlg.get())
+	{
+		return false;
+	}
+	m_SetOptionsDlg->HandleEvent(event);
+	m_SetOptionsDlg->display();
+	if (m_cleanupAlert)
+	{
+		m_SetOptionsDlg.reset();
+		m_cleanupAlert = false;
+	}
+	return m_SetOptionsDlg.get();
+}
+
 
 bool U3Resources::HandleAlert(SDL_Event& event)
 {

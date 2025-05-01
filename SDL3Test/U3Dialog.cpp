@@ -881,6 +881,39 @@ void U3DlgLabel::updateLabelFont(TTF_TextEngine* engine_surface, TTF_Font* font)
 	m_ttfLabel = TTF_CreateText(engine_surface, font, m_strLabel.c_str(), 0);
 }
 
+void ChooseOptionsDialog::HandleEvent(SDL_Event& event)
+{
+	bool updateMouse = false;
+	int mouseState = 0;
+
+	switch (event.type)
+	{
+	case SDL_EVENT_KEY_UP:
+		break;
+	case SDL_EVENT_KEY_DOWN:
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		mouseState = 1;
+		updateMouse = true;
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+		mouseState = 2;
+		updateMouse = true;
+		break;
+	case SDL_EVENT_MOUSE_MOTION:
+		mouseState = 0;
+		updateMouse = true;
+		break;
+	default:
+		break;
+	}
+
+	if (updateMouse)
+	{
+		m_resources->m_SetOptionsDlg->updateDialog(event.motion.x, event.motion.y, mouseState);
+	}
+}
+
 ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface) :
 	m_renderer(renderer),
 	m_engine_surface(engine_surface),

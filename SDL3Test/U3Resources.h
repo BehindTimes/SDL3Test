@@ -193,6 +193,7 @@ public:
 	void DrawZStatButtons();
 	void CreateOptionsDlg();
 	bool loadDemo();
+	bool HandleOptions(SDL_Event& event);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -235,6 +236,7 @@ public:
 	U3Preferences m_preferences;
 	std::vector<std::array<unsigned char, 200>> m_cons_data;
 	std::vector<std::string> m_themes;
+	bool m_cleanupAlert;
 
 private:
 	void LoadResource(std::string strFile);
@@ -341,7 +343,7 @@ private:
 	int m_numUpdateFlag;
 	int m_numUpdateAnimate;
 	bool m_shapeSwap[256];
-	bool m_cleanupAlert;
+	
 
 	int m_xPos;
 	int m_yPos;

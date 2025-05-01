@@ -1179,19 +1179,25 @@ void U3Graphics::goTables([[maybe_unused]] int button)
     m_misc->AddProcessEvent();
 }
 
+void U3Graphics::goOptions([[maybe_unused]] int button)
+{
+    m_resources->CreateOptionsDlg();
+    m_misc->AddOptions();
+}
+
 void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
 {
     if (!m_menuInit)
     {
         m_buttons.clear();
-        addButton("Options", 114, 100, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
-        addButton("Command List", 114, 120, 120, std::bind(&U3Graphics::goCommandList, this, std::placeholders::_1));
-        addButton("Spell List", 114, 140, 120, std::bind(&U3Graphics::goSpellList, this, std::placeholders::_1));
-        addButton("Tables", 114, 160, 120, std::bind(&U3Graphics::goTables, this, std::placeholders::_1));
-        addButton("Main Menu", 114, 180, 120, std::bind(&U3Graphics::backToMenu, this, std::placeholders::_1));
-        addButton("Quit", 114, 200, 120, std::bind(&U3Graphics::quitGame, this, std::placeholders::_1));
+        addButton(std::string(OptionsStr), 114, 100, 120, std::bind(&U3Graphics::goOptions, this, std::placeholders::_1));
+        addButton(std::string(CommandListStr), 114, 120, 120, std::bind(&U3Graphics::goCommandList, this, std::placeholders::_1));
+        addButton(std::string(SpellListStr), 114, 140, 120, std::bind(&U3Graphics::goSpellList, this, std::placeholders::_1));
+        addButton(std::string(TablesStr), 114, 160, 120, std::bind(&U3Graphics::goTables, this, std::placeholders::_1));
+        addButton(std::string(MainMenuStr), 114, 180, 120, std::bind(&U3Graphics::backToMenu, this, std::placeholders::_1));
+        addButton(std::string(QuitStr), 114, 200, 120, std::bind(&U3Graphics::quitGame, this, std::placeholders::_1));
 
-        addButton("Return to Game", 114, 240, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
+        addButton(std::string(ReturnToGameStr), 114, 240, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
         m_menuInit = true;
     }
     m_misc->m_currentEvent = event;
@@ -1226,6 +1232,11 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
     {
         m_resources->DrawPrompt();
     }
+
+    /*if (m_resources->m_SetOptionsDlg)
+    {
+        m_resources->m_SetOptionsDlg->display();
+    }*/
 
     bool updateGame = true;
 

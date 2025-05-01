@@ -73,6 +73,7 @@ public:
 	}
 	
 	void render(SDL_Event event, Uint64 deltaTime);
+	void returnToGame(int button);
 
 	unsigned char m_maskRestoreArray[128];
 	unsigned char m_maskArray[128];
@@ -129,9 +130,14 @@ private:
 	void CleanUpSingle();
 	void CleanUpDiags(short what);
 	bool CheckIfHasLava();
-	void DrawGameMenu();
+	void DrawGameMenu() const;
 	void addButton(std::string strLabel, int x, int y, int width, std::function<void(int)> func);
-	
+	void quitGame(int button);
+	void backToMenu(int button);
+	void goCommandList(int button);
+	void goSpellList(int button);
+	void goTables(int button);
+	bool closeImage();
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;

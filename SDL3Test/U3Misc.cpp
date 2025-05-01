@@ -6348,7 +6348,10 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 	case SDL_EVENT_KEY_DOWN:
 		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
 		{
-			//retVal = HandleKeyPress(event.key);
+			if (event.key.key == SDLK_TAB)
+			{
+				m_graphics->returnToGame(0);
+			}
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:

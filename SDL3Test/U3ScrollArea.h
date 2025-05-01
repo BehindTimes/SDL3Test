@@ -40,6 +40,7 @@ public:
 	void DrawPrompt();
 	void UPrintWin(std::string gString, bool prettyPrint = false);
 	std::string RewrapString(std::string str);
+	void Clear();
 	void forceRedraw()
 	{
 		m_forceRedraw = true;

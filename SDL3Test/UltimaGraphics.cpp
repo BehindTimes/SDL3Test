@@ -8,6 +8,7 @@
 #include "U3ScrollArea.h"
 #include "UltimaSpellCombat.h"
 #include "UltimaDungeon.h"
+#include "UltimaMain.h"
 
 extern short blkSiz;
 
@@ -16,6 +17,8 @@ extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
+
+extern GameMode newMode;
 
 extern TTF_TextEngine* engine_surface;
 extern short screenOffsetX;
@@ -848,7 +851,7 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     m_resources->DrawTiles();
 }
 
-void U3Graphics::DrawGameMenu()
+void U3Graphics::DrawGameMenu() const
 {
     SDL_FRect theRect{};
 
@@ -1119,19 +1122,76 @@ void U3Graphics::addButton(std::string strLabel, int x, int y, int width, std::f
     m_buttons.back()->SetButtonCallback(func);
 }
 
+void U3Graphics::returnToGame([[maybe_unused]]int button)
+{
+    if (m_menu_stack.empty())
+    {
+        // Something went seriously wrong here
+        newMode = GameMode::Unknown;
+    }
+    m_curMode = m_menu_stack.top();
+    m_menu_stack.pop();
+}
+
+void U3Graphics::backToMenu([[maybe_unused]] int button)
+{
+    newMode = GameMode::MainMenu;
+}
+
+void U3Graphics::quitGame([[maybe_unused]] int button)
+{
+    newMode = GameMode::Unknown;
+}
+
+bool U3Graphics::closeImage()
+{
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
+
+    m_resources->m_overrideImage = -1;
+
+    return false;
+}
+
+void U3Graphics::goCommandList([[maybe_unused]] int button)
+{
+    m_resources->m_overrideImage = 1;
+    m_misc->m_inputType = InputType::AnyKey;
+    m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
+    m_misc->AddProcessEvent();
+}
+
+void U3Graphics::goSpellList([[maybe_unused]] int button)
+{
+    m_resources->m_overrideImage = 2;
+    m_misc->m_inputType = InputType::AnyKey;
+    m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
+    m_misc->AddProcessEvent();
+}
+
+void U3Graphics::goTables([[maybe_unused]] int button)
+{
+    m_resources->m_overrideImage = 3;
+    m_misc->m_inputType = InputType::AnyKey;
+    m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
+    m_misc->AddProcessEvent();
+}
+
 void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
 {
     if (!m_menuInit)
     {
         m_buttons.clear();
-        addButton("Options", 114, 100, 120, nullptr);
-        addButton("Command List", 114, 120, 120, nullptr);
-        addButton("Spell List", 114, 140, 120, nullptr);
-        addButton("Tables", 114, 160, 120, nullptr);
-        addButton("Main Menu", 114, 180, 120, nullptr);
-        addButton("Quit", 114, 200, 120, nullptr);
+        addButton("Options", 114, 100, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
+        addButton("Command List", 114, 120, 120, std::bind(&U3Graphics::goCommandList, this, std::placeholders::_1));
+        addButton("Spell List", 114, 140, 120, std::bind(&U3Graphics::goSpellList, this, std::placeholders::_1));
+        addButton("Tables", 114, 160, 120, std::bind(&U3Graphics::goTables, this, std::placeholders::_1));
+        addButton("Main Menu", 114, 180, 120, std::bind(&U3Graphics::backToMenu, this, std::placeholders::_1));
+        addButton("Quit", 114, 200, 120, std::bind(&U3Graphics::quitGame, this, std::placeholders::_1));
 
-        addButton("Return to Game", 114, 240, 120, nullptr);
+        addButton("Return to Game", 114, 240, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
         m_menuInit = true;
     }
     m_misc->m_currentEvent = event;
@@ -1167,7 +1227,24 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
         m_resources->DrawPrompt();
     }
 
-    m_misc->ProcessMenuEvent(event);
+    bool updateGame = true;
+
+    while (m_misc->m_callbackStack.size() > 0)
+    {
+        updateGame = false;
+        std::function<bool()> curCallback = m_misc->m_callbackStack.top();
+        bool resumeRendering = curCallback();
+        if (resumeRendering)
+        {
+            // Resume rendering (i.e. we're waiting on a function)
+            break;
+        }
+    }
+
+    if (updateGame)
+    {
+        m_misc->ProcessMenuEvent(event);
+    }
 }
 
 void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)

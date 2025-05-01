@@ -223,7 +223,10 @@ U3Resources::U3Resources() :
 	m_texDistributeFoodPushed(nullptr),
 	m_texGatherGoldPushed(nullptr),
 	m_exoduslitez(0),
-	m_currentTheme(-1)
+	m_currentTheme(-1),
+	m_texSpellList(nullptr),
+	m_texCommands(nullptr),
+	m_texMiscTables(nullptr)
 {
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -275,6 +278,24 @@ U3Resources::~U3Resources()
 			SDL_DestroyTexture(curTex);
 			curTex = nullptr;
 		}
+	}
+
+	if (m_texSpellList)
+	{
+		SDL_DestroyTexture(m_texSpellList);
+		m_texSpellList = nullptr;
+	}
+
+	if (m_texCommands)
+	{
+		SDL_DestroyTexture(m_texCommands);
+		m_texCommands = nullptr;
+	}
+
+	if (m_texMiscTables)
+	{
+		SDL_DestroyTexture(m_texMiscTables);
+		m_texMiscTables = nullptr;
 	}
 
 	if (m_texSosariaMap)
@@ -447,8 +468,7 @@ U3Resources::~U3Resources()
 		m_font_18 = nullptr;
 	}*/
 
-	TTF_Quit();
-	TTF_DestroyRendererTextEngine(engine_surface);
+	
 }
 
 void U3Resources::displayFPS(int fps) const
@@ -759,16 +779,6 @@ void U3Resources::SetButtonCallback(short button, std::function<void(int)> func)
 
 bool U3Resources::loadFont()
 {
-	if (!TTF_Init())
-	{
-		return false;
-	}
-
-	if (!engine_surface)
-	{
-		engine_surface = TTF_CreateRendererTextEngine(m_renderer);
-	}
-
 	return createFont();
 }
 
@@ -1249,6 +1259,8 @@ bool U3Resources::loadPLists()
 	currentPath /= ResourceLoc;
 	currentPath /= PListLoc;
 
+	m_plistMap.clear();
+
 	for (const std::filesystem::directory_entry& dirEntry : std::filesystem::recursive_directory_iterator(currentPath))
 	{
 		if (dirEntry.path().extension() != ".plist")
@@ -1414,7 +1426,10 @@ bool U3Resources::loadImages()
 		{ "GatherGoldPushed.png", &m_texGatherGoldPushed },
 		{ "Exodus.png", &m_texExodus },
 		{ "Portraits.png", &m_texPortraits },
-		{ "UltimaLogo.png", &m_texUltimaLogo }
+		{ "UltimaLogo.png", &m_texUltimaLogo },
+		{ "SpellList.png", &m_texSpellList },
+		{ "MiscTables.png", &m_texMiscTables },
+		{ "Commands.png", &m_texCommands }
 	};
 
 	for (auto& cur_pair : image_pair)
@@ -4262,10 +4277,13 @@ void U3Resources::ImageDisplay()
 	switch (m_overrideImage)
 	{
 	case 1:
+		curTexture = m_texCommands;
 		break;
 	case 2:
+		curTexture = m_texSpellList;
 		break;
 	case 3:
+		curTexture = m_texMiscTables;
 		break;
 	case 4:
 		curTexture = m_texSosariaMap;

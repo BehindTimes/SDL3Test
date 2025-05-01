@@ -39,6 +39,16 @@ U3ScrollArea::~U3ScrollArea()
 	}
 }
 
+void U3ScrollArea::Clear()
+{
+	m_messages.clear();
+	while (!m_messageQueue.empty())
+	{
+		m_messageQueue.pop();
+	}
+	m_messages.emplace_back(sTextFlags(false, true), "");
+}
+
 void U3ScrollArea::UPrintWin(std::string gString, bool prettyPrint)
 {
 	auto vecString = m_utilities->splitString(gString, '\n', true);

@@ -112,7 +112,7 @@ bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 	{
 		switch (key)
 		{
-		case SDLK_1:
+		case SDLK_TAB:
 			m_graphics->m_menu_stack.push(m_graphics->m_curMode);
 			m_graphics->m_curMode = U3GraphicsMode::Menu;
 			m_graphics->m_menuInit = false;

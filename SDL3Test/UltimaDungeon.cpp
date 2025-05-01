@@ -156,6 +156,11 @@ bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 	{
 		switch (key)
 		{
+		case SDLK_TAB:
+			m_graphics->m_menu_stack.push(m_graphics->m_curMode);
+			m_graphics->m_curMode = U3GraphicsMode::Menu;
+			m_graphics->m_menuInit = false;
+			break;
 		case SDLK_UP:
 			Forward();
 			break;
@@ -1505,6 +1510,7 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_scrollArea->UPrintMessage(151);
 		m_misc->m_inputType = InputType::AnyKey;
 		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::TimeLordCallback, this));
+		m_misc->AddProcessEvent();
 		break;
 	case 2: // $9174 fountain
 		m_resources->m_overrideImage = 5;

@@ -83,6 +83,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
 		return 3;
 	}
+
+	if (!TTF_Init())
+	{
+		return -1;
+	}
+
+	if (!engine_surface)
+	{
+		engine_surface = TTF_CreateRendererTextEngine(renderer);
+	}
+
 	int result = 0;
 	int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
 	if (flags != (result = Mix_Init(flags)))
@@ -124,6 +135,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto errorValue = SDL_GetError();
 	// For debugging purposes.  Shouldn't display anything
 	std::cout << "Error = " << errorValue << std::endl;
+
+	TTF_Quit();
+	TTF_DestroyRendererTextEngine(engine_surface);
 
 	//Mix_FreeMusic(music);
 	Mix_CloseAudio();
@@ -187,6 +201,28 @@ void MainLoop()
 	{
 		if (oldMode != newMode)
 		{
+			if (oldMode == GameMode::Game) // Need to do a bunch of cleanup here
+			{
+				if (!m_resources->loadDemo())
+				{
+					break;
+				}
+				if (!m_misc->OpenRstr())
+				{
+					break;
+				}
+				DoSplashScreen();
+				MenuBarInit();
+				m_graphics->CreateIntroData();
+				m_graphics->CreateMenuData();
+				CreateButtonCallbacks();
+				Intro();
+				m_scrollArea->Clear();
+
+				m_misc->m_zp[0xCF] = 0;
+				m_misc->m_zp[0x10] = 0;
+			}
+
 			if (oldMode == GameMode::Demo)
 			{
 				if (newMode == GameMode::Game)
@@ -216,6 +252,9 @@ void MainLoop()
 				break;
 			case GameMode::Game:
 			{
+				m_graphics->m_curMode = U3GraphicsMode::Map;
+				m_misc->m_gameMode = GameStateMode::Map;
+				// TO DO: load the save game here
 				m_misc->GetSosaria();
 			}
 			break;
@@ -1081,6 +1120,11 @@ void Game()
 		SDL_RenderPresent(renderer);
 
 		updateGame(deltaTime);
+
+		if (newMode != GameMode::Game)
+		{
+			gInterrupt = true;
+		}
 
 		if (changeMode)
 		{

@@ -192,6 +192,7 @@ public:
 
 	void DrawZStatButtons();
 	void CreateOptionsDlg();
+	bool loadDemo();
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;
@@ -245,7 +246,7 @@ private:
 	void loadGraphics();
 	bool loadImages();
 	void loadButtons();
-	bool loadDemo();
+	
 	bool loadPLists();
 	bool loadCons();
 	bool checkFiles();
@@ -305,6 +306,10 @@ private:
 	SDL_Texture* m_texGatherGold;
 	SDL_Texture* m_texDistributeFoodPushed;
 	SDL_Texture* m_texGatherGoldPushed;
+
+	SDL_Texture* m_texSpellList;
+	SDL_Texture* m_texMiscTables;
+	SDL_Texture* m_texCommands;
 
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;

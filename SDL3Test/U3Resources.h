@@ -202,6 +202,8 @@ public:
 	ModeGraphics* m_standardGraphics; // Fills in missing graphics
 	int m_currentTheme;
 
+	std::map<int, TTF_Font*> m_font_map;
+
 	TTF_Font* m_font; // block size font
 	TTF_Font* m_font_9; // 9 point font
 	TTF_Font* m_font_10; // 10 point font
@@ -226,6 +228,7 @@ public:
 	float m_characterRecordHeight;
 	SDL_Texture* m_texRaceClass;
 	SDL_Texture* m_texCharacterRecord;
+	SDL_Texture* m_texSosariaMap;
 	bool m_fullUpdate;
 	std::vector< U3Button> m_zstatbuttons;
 	U3Preferences m_preferences;
@@ -293,7 +296,6 @@ private:
 	SDL_Texture* m_texStats;
 	SDL_Texture* m_texPortraits;
 
-	SDL_Texture* m_texSosariaMap;
 	SDL_Texture* m_texFountain;
 	SDL_Texture* m_texRod;
 	SDL_Texture* m_texShrine;

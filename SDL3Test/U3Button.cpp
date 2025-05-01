@@ -18,7 +18,8 @@ U3Button::U3Button() :
 	m_id(0),
 	m_hasFocus(false),
 	m_x(0),
-	m_y(0)
+	m_y(0),
+	m_override_width(0)
 {
 }
 
@@ -58,7 +59,7 @@ void U3Button::resizeButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngin
 		SDL_DestroyTexture(m_texDisabled);
 		m_texDisabled = NULL;
 	}
-	CreateTextButton(blockSize, renderer, engine_surface, font, m_text, m_x, m_y);
+	CreateTextButton(blockSize, renderer, engine_surface, font, m_text, m_x, m_y, (int)m_override_width);
 }
 
 void U3Button::CreateImageButton([[maybe_unused]]int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height)
@@ -103,19 +104,31 @@ void U3Button::CreateImageButton([[maybe_unused]]int blockSize, SDL_Renderer* re
 	SDL_SetRenderTarget(renderer, NULL);
 }
 
-void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x, int y)
+void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x, int y, int override_width)
 {
+	float scaler = (float)blockSize / 16.0f;
+
+	m_override_width = (float)override_width;
 	m_x = x;
 	m_y = y;
 	float offset = 0;
 	float offsety = 0;
 
+	float override_offset = 0;
+
 	TTF_Text* text_obj = NULL;
 	text_obj = TTF_CreateText(engine_surface, font, strText.c_str(), 0);
 	if (text_obj)
 	{
+		float temp_width = m_override_width * scaler;
 		int w, h;
 		TTF_GetTextSize(text_obj, &w, &h);
+
+		if (temp_width > w)
+		{
+			override_offset = (temp_width - w) / 2.0f;
+			w = (int)temp_width;
+		}
 
 		if (h > blockSize)
 		{
@@ -135,9 +148,11 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+		//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderFillRect(renderer, NULL);
 		TTF_SetTextColor(text_obj, 0, 0, 0, 255);
-		TTF_DrawRendererText(text_obj, 2 + offset, (float)((int)(-1.0f * offsety)));
+		//TTF_SetTextColor(text_obj, 255, 255, 255, 255);
+		TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -148,10 +163,10 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 
 		SDL_SetRenderTarget(renderer, m_texPushed);
 		SDL_RenderClear(renderer);
-		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
+		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
 		SDL_RenderFillRect(renderer, NULL);
 		TTF_SetTextColor(text_obj, 255,255, 255, 255);
-		TTF_DrawRendererText(text_obj, 2 + offset, 0);
+		TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);

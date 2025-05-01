@@ -1,6 +1,8 @@
 #pragma once
 
+#include <stack>
 #include <SDL3/SDL.h>
+#include "U3Button.h"
 
 enum class IntroEnum
 {
@@ -21,7 +23,8 @@ enum class U3GraphicsMode
 	BlackScreen,
 	WinScreen,
 	Dungeon,
-	Combat
+	Combat,
+	Menu
 };
 
 enum class OrganizeBottomScreen
@@ -82,6 +85,10 @@ public:
 	OrganizeBottomScreen m_obsCurMode;
 	SDL_Texture* m_texMap;
 	bool m_mode_switch;
+	std::stack<U3GraphicsMode> m_menu_stack;
+	bool m_menuInit;
+
+	std::vector<std::unique_ptr<U3Button>> m_buttons;
 
 private:
 	void renderMiniMapDungeon();
@@ -89,6 +96,7 @@ private:
 	void renderMiniMap();
 	void renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime);
 	void DrawMoonGateStuff();
+	void renderGameMenu(SDL_Event event, Uint64 deltaTime);
 	void renderCombat(SDL_Event event, Uint64 deltaTime);
 	void renderGameMap(SDL_Event event, Uint64 deltaTime);
 	void renderMiniMap(SDL_Event event, Uint64 deltaTime);
@@ -121,6 +129,9 @@ private:
 	void CleanUpSingle();
 	void CleanUpDiags(short what);
 	bool CheckIfHasLava();
+	void DrawGameMenu();
+	void addButton(std::string strLabel, int x, int y, int width, std::function<void(int)> func);
+	
 
 	static constexpr Uint64 DelayScroll = 700;
 	static constexpr Uint64 WinFade = 300;

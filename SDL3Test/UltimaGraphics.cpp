@@ -17,6 +17,10 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 
+extern TTF_TextEngine* engine_surface;
+extern short screenOffsetX;
+extern short screenOffsetY;
+
 U3Graphics::U3Graphics() :
     m_startTickCount(0),
     m_fadeTime(2400),
@@ -34,7 +38,8 @@ U3Graphics::U3Graphics() :
     m_mode_switch(false),
     m_allowRendering(false),
     m_hasLava(false),
-    m_counter(0)
+    m_counter(0),
+    m_menuInit(false)
 {
     memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
@@ -43,6 +48,7 @@ U3Graphics::U3Graphics() :
 
 U3Graphics::~U3Graphics()
 {
+    m_buttons.clear();
     if (m_texMap)
     {
         SDL_DestroyTexture(m_texMap);
@@ -842,6 +848,18 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     m_resources->DrawTiles();
 }
 
+void U3Graphics::DrawGameMenu()
+{
+    SDL_FRect theRect{};
+
+    theRect.x = (float)m_blockSize;
+    theRect.y = (float)m_blockSize;
+    theRect.w = (float)m_blockSize * 22;
+    theRect.h = (float)m_blockSize * 22;
+    m_resources->adjustRect(theRect);
+    SDL_RenderTexture(m_resources->m_renderer, m_resources->m_texSosariaMap, NULL, &theRect);
+}
+
 void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
 {
     switch (m_curMode)
@@ -869,6 +887,9 @@ void U3Graphics::render(SDL_Event event, Uint64 deltaTime)
         break;
     case U3GraphicsMode::Dungeon:
         renderDungeon(event, deltaTime);
+        break;
+    case U3GraphicsMode::Menu:
+        renderGameMenu(event, deltaTime);
         break;
     default:
         break;
@@ -1087,6 +1108,66 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
     }
+}
+
+void U3Graphics::addButton(std::string strLabel, int x, int y, int width, std::function<void(int)> func)
+{
+    auto curButton = std::make_unique<U3Button>();
+    m_buttons.push_back(std::move(curButton));
+    m_buttons.back()->CreateTextButton(m_blockSize, m_resources->m_renderer, engine_surface, m_resources->m_font, strLabel, x, y, width);
+    m_buttons.back()->setVisible(true);
+    m_buttons.back()->SetButtonCallback(func);
+}
+
+void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
+{
+    if (!m_menuInit)
+    {
+        m_buttons.clear();
+        addButton("Options", 114, 100, 120, nullptr);
+        addButton("Command List", 114, 120, 120, nullptr);
+        addButton("Spell List", 114, 140, 120, nullptr);
+        addButton("Tables", 114, 160, 120, nullptr);
+        addButton("Main Menu", 114, 180, 120, nullptr);
+        addButton("Quit", 114, 200, 120, nullptr);
+
+        addButton("Return to Game", 114, 240, 120, nullptr);
+        m_menuInit = true;
+    }
+    m_misc->m_currentEvent = event;
+    DrawFrame(1);
+    m_resources->ShowChars(true);
+    if (m_resources->m_overrideImage >= 0)
+    {
+        m_resources->ImageDisplay();
+    }
+    else
+    {
+        float scaler = (float)m_blockSize / 16.0f;
+
+        SDL_FRect theRect{};
+
+        theRect.x = (float)m_blockSize;
+        theRect.y = (float)m_blockSize;
+        theRect.w = (float)m_blockSize * 22;
+        theRect.h = (float)m_blockSize * 22;
+        m_resources->adjustRect(theRect);
+
+        DrawGameMenu();
+        for (auto& curButton : m_buttons)
+        {
+            curButton->render(m_resources->m_renderer, m_blockSize, (int)(curButton->m_x * scaler + theRect.x),
+                (int)(curButton->m_y * scaler + theRect.y));
+        }
+    }
+    m_scrollArea->render(deltaTime);
+
+    if (m_scrollArea->isPrompt())
+    {
+        m_resources->DrawPrompt();
+    }
+
+    m_misc->ProcessMenuEvent(event);
 }
 
 void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)

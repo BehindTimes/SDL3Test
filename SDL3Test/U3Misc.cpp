@@ -6331,3 +6331,71 @@ void U3Misc::AttackCode(short whichMon) // $52B3
 	}
 	m_spellCombat->Combat();
 }
+
+bool U3Misc::ProcessMenuEvent(SDL_Event event)
+{
+	bool quit = false;
+	//bool gInterrupt = false;
+	bool updateMouse = false;
+	int mouseState = 0;
+	bool retVal = false;
+
+	switch (event.type)
+	{
+	case SDL_EVENT_QUIT:
+		quit = true;
+		break;
+	case SDL_EVENT_KEY_DOWN:
+		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
+		{
+			//retVal = HandleKeyPress(event.key);
+		}
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		mouseState = 1;
+		updateMouse = true;
+		/*if (m_inputType == InputType::AnyKey)
+		{
+			HandleAnyKey();
+			retVal = true;
+		}
+		else if (m_inputType == InputType::AnyKeyEscape)
+		{
+			HandleAnyKeyEscape(0);
+			retVal = true;
+		}*/
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+		mouseState = 2;
+		updateMouse = true;
+		break;
+	case SDL_EVENT_MOUSE_MOTION:
+		mouseState = 0;
+		updateMouse = true;
+		break;
+	default:
+		break;
+	}
+
+	if (updateMouse)
+	{
+		//if (m_inputType == InputType::ZStats)
+		{
+			bool isCaptured = false;
+
+			if (m_graphics->m_buttons.size() > 0)
+			{
+				for (auto& curButton : m_graphics->m_buttons)
+				{
+					curButton->setMouseCapture(mouseState, event.motion.x, event.motion.y);
+					isCaptured |= curButton->isCaptured();
+				}
+			}
+			if (mouseState == 1 && !isCaptured)
+			{
+				//HandleAnyKey();
+			}
+		}
+	}
+	return retVal;
+}

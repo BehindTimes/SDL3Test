@@ -140,6 +140,7 @@ public:
 	void callClerickChoose();
 	void HPAdd(short member, short amount);
 	void setInputTypeNum(std::function<bool()> func, int inputLength = 2);
+	bool ProcessMenuEvent(SDL_Event event);
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];

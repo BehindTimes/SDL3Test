@@ -11,7 +11,7 @@ public:
 	~U3Button();
 
 	void resizeButton(int m_blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font);
-	void CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x = 0, int y = 0);
+	void CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string strText, int x = 0, int y = 0, int override_width = 0);
 	void CreateImageButton(int blockSize, SDL_Renderer* renderer, SDL_Texture* buttonImage, SDL_Texture* buttonPushedImage, int width, int height);
 	void forceCapture();
 	void click();
@@ -39,6 +39,7 @@ private:
 	SDL_FRect m_renderRect;
 	std::function<void(int)> m_callbackFunction;
 
+	float m_override_width;
 	float m_width;
 	float m_height;
 	bool m_captureMouse;

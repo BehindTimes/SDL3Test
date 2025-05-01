@@ -277,6 +277,12 @@ U3Resources::~U3Resources()
 		}
 	}
 
+	if (m_texSosariaMap)
+	{
+		SDL_DestroyTexture(m_texSosariaMap);
+		m_texSosariaMap = nullptr;
+	}
+
 	if (m_texDistributeFood)
 	{
 		SDL_DestroyTexture(m_texDistributeFood);
@@ -299,12 +305,6 @@ U3Resources::~U3Resources()
 	{
 		SDL_DestroyTexture(m_texGatherGoldPushed);
 		m_texGatherGoldPushed = nullptr;
-	}
-
-	if (m_texSosariaMap)
-	{
-		SDL_DestroyTexture(m_texSosariaMap);
-		m_texSosariaMap = nullptr;
 	}
 
 	if (m_texFountain)
@@ -407,7 +407,16 @@ U3Resources::~U3Resources()
 		m_texCharacterRecord = nullptr;
 	}
 
-	if (m_font)
+	for (auto& cur_font : m_font_map)
+	{
+		if (cur_font.second)
+		{
+			TTF_CloseFont(cur_font.second);
+			cur_font.second = nullptr;
+		}
+	}
+
+	/*if (m_font)
 	{
 		TTF_CloseFont(m_font);
 		m_font = nullptr;
@@ -436,9 +445,10 @@ U3Resources::~U3Resources()
 	{
 		TTF_CloseFont(m_font_18);
 		m_font_18 = nullptr;
-	}
+	}*/
 
 	TTF_Quit();
+	TTF_DestroyRendererTextEngine(engine_surface);
 }
 
 void U3Resources::displayFPS(int fps) const
@@ -762,6 +772,11 @@ bool U3Resources::loadFont()
 	return createFont();
 }
 
+/*
+* I was freeing and recreating the fonts on window size changes, but this started to look really, really awful
+* if you changed the screen too often in a short period of time.
+* This is going to use more memory, but gives vastly superior results in terms of quality with SDL TTF.
+*/
 bool U3Resources::createFont()
 {
 	float scaler = (float)m_blockSize / 16.0f;
@@ -777,7 +792,116 @@ bool U3Resources::createFont()
 	float font_size = (float)(m_blockSize);
 	m_font_y_offset = (m_blockSize) * (1.0f / 8.0f);
 
-	m_font = TTF_OpenFont(currentPath.string().c_str(), font_size);
+	int nFontSize = (int)font_size;
+
+	auto it = m_font_map.find(nFontSize);
+	
+	if (it != m_font_map.end())
+	{
+		m_font = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font = m_font_map[nFontSize];
+		if (!m_font)
+		{
+			return false;
+		}
+	}
+
+	nFontSize = (int)(9.0f * scaler);
+
+	it = m_font_map.find(nFontSize);
+
+	if (it != m_font_map.end())
+	{
+		m_font_9 = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_9 = m_font_map[nFontSize];
+		if (!m_font_9)
+		{
+			return false;
+		}
+	}
+
+	nFontSize = (int)(10.0f * scaler);
+
+	it = m_font_map.find(nFontSize);
+
+	if (it != m_font_map.end())
+	{
+		m_font_10 = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_10 = m_font_map[nFontSize];
+		if (!m_font_10)
+		{
+			return false;
+		}
+	}
+
+	nFontSize = (int)(11.0f * scaler);
+
+	it = m_font_map.find(nFontSize);
+
+	if (it != m_font_map.end())
+	{
+		m_font_11 = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_11 = m_font_map[nFontSize];
+		if (!m_font_11)
+		{
+			return false;
+		}
+
+	}
+
+	nFontSize = (int)(12.0f * scaler);
+
+	it = m_font_map.find(nFontSize);
+
+	if (it != m_font_map.end())
+	{
+		m_font_12 = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_12 = m_font_map[nFontSize];
+		if (!m_font_12)
+		{
+			return false;
+		}
+	}
+
+	nFontSize = (int)(18.0f * scaler);
+
+	it = m_font_map.find(nFontSize);
+
+	if (it != m_font_map.end())
+	{
+		m_font_18 = m_font_map[nFontSize];
+	}
+	else
+	{
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_18 = m_font_map[nFontSize];
+		if (!m_font_18)
+		{
+			return false;
+		}
+	}
+
+	/*m_font = TTF_OpenFont(currentPath.string().c_str(), font_size);
 	if (!m_font)
 	{
 		return false;
@@ -811,7 +935,7 @@ bool U3Resources::createFont()
 	if (!m_font_18)
 	{
 		return false;
-	}
+	}*/
 
 	return true;
 }
@@ -841,7 +965,12 @@ void U3Resources::CalculateBlockSize()
 	m_scrollArea->setBlockSize(m_blockSize);
 	m_graphics->setBlockSize(m_blockSize);
 
-	if (m_font)
+	if (m_graphics->m_buttons.size() > 0)
+	{
+		m_graphics->m_buttons.clear();
+	}
+
+	/*if (m_font)
 	{
 		TTF_CloseFont(m_font);
 		m_font = nullptr;
@@ -870,7 +999,7 @@ void U3Resources::CalculateBlockSize()
 	{
 		TTF_CloseFont(m_font_18);
 		m_font_18 = nullptr;
-	}
+	}*/
 	createFont();
 
 	if (m_AlertDlg.get())
@@ -905,6 +1034,8 @@ void U3Resources::CalculateBlockSize()
 	{
 		createZStatButtons();
 	}
+
+	m_graphics->m_menuInit = false;
 
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
 	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
@@ -2849,8 +2980,6 @@ void U3Resources::OptionsDlgClosed(int button)
 		m_preferences.play_sfx = m_SetOptionsDlg->m_codData.play_sfx;
 		m_preferences.classic_appearance = m_SetOptionsDlg->m_codData.classic;
 
-		savePreferences();
-
 		changeTheme(tempTheme);
 
 		if (changeScreen)
@@ -2859,6 +2988,8 @@ void U3Resources::OptionsDlgClosed(int button)
 			SDL_SyncWindow(window);
 			CalculateBlockSize();
 		}
+
+		savePreferences();
 	}
 }
 

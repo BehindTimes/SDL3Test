@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <memory>
 #include <SDL3/SDL.h>
 #include "U3Button.h"
 
@@ -90,6 +91,7 @@ public:
 	bool m_menuInit;
 
 	std::vector<std::unique_ptr<U3Button>> m_buttons;
+	bool m_showMenu;
 
 private:
 	void renderMiniMapDungeon();
@@ -157,4 +159,5 @@ private:
 	unsigned char m_storeIcons[19];
 	bool m_hasLava;
 	unsigned short m_counter;
+	
 };

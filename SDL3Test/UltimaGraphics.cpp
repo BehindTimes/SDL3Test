@@ -42,7 +42,8 @@ U3Graphics::U3Graphics() :
     m_allowRendering(false),
     m_hasLava(false),
     m_counter(0),
-    m_menuInit(false)
+    m_menuInit(false),
+    m_showMenu(false)
 {
     memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
@@ -1260,6 +1261,11 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
 
 void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
 {
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_TAB)
+    {
+        m_showMenu = true;
+    }
+
     if (m_queuedMode != U3GraphicsMode::None)
     {
         m_curMode = m_queuedMode;
@@ -1333,6 +1339,15 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     {
         if (m_spellCombat->m_newMove)
         {
+            if (m_showMenu)
+            {
+                m_menu_stack.push(m_curMode);
+                m_curMode = U3GraphicsMode::Menu;
+                m_menuInit = false;
+                m_showMenu = false;
+                return;
+            }
+
             m_spellCombat->m_newMove = false;
             if (m_spellCombat->m_monster_turn)
             {

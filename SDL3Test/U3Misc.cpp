@@ -75,7 +75,8 @@ U3Misc::U3Misc() :
 	m_validDirValue(0),
 	m_moveMonsterOffset(0),
 	m_value(0),
-	m_storeBool(false)
+	m_storeBool(false),
+	m_lastSaveNumberOfMoves(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -6250,7 +6251,6 @@ short U3Misc::ShrineRace(short race)
 
 void U3Misc::SpawnMonster() // $7A0C
 {
-	return;
 	const char              MonTypes[14] = { 24,23,25,20,26,27,13,28,22,14,15,29,30,24 };
 	const char              MonBegin[13] = { 4,4,4,4,4,4,0,4,4,0,0,4,4 };
 	bool allFirst;

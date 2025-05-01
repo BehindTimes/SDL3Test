@@ -143,6 +143,7 @@ public:
 	bool ProcessMenuEvent(SDL_Event event);
 	bool ShowOptions();
 	void AddOptions();
+	void AddQuitSave();
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];
@@ -234,6 +235,7 @@ public:
 	bool m_surpressTextDisplay;
 	short m_gTimeNegate;
 	std::deque<SDL_Keycode> m_InputDeque;
+	int m_lastSaveNumberOfMoves;
 
 private:
 	void Attack();
@@ -246,6 +248,7 @@ private:
 	void Klimb();
 	void OtherCommand();
 	void PeerGem();
+	void QuitSave();
 	void Steal();
 	void Transact();
 	void Unlock();
@@ -417,6 +420,7 @@ private:
 	bool CommandNegateTime();
 	bool CommandPass();
 	bool CommandPeerGem();
+	bool CommandQuitSave();
 	bool CommandTransact();
 	bool CommandSteal();
 	bool CommandUnlock();

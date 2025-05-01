@@ -69,7 +69,7 @@ void U3Misc::LetterCommand(SDL_Keycode key)
 		PeerGem();
 		break;
 	case SDLK_Q:
-		//QuitSave
+		QuitSave();
 		break;
 	case SDLK_R:
 		ReadyWeapon(-1);
@@ -1257,6 +1257,45 @@ void U3Misc::PeerGem()
 {
 	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
 	m_callbackStack.push(std::bind(&U3Misc::CommandPeerGem, this));
+}
+
+void U3Misc::AddQuitSave()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandQuitSave, this));
+}
+
+bool U3Misc::CommandQuitSave()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
+	m_scrollArea->UPrintMessage(76);
+	if (m_Party[2] != 0)
+	{
+		m_scrollArea->UPrintMessage(77);
+		return false;
+	}
+	int number = m_Party[13] * 1000000 + m_Party[12] * 10000 + m_Party[11] * 100 + m_Party[10];
+	std::string dispString = std::to_string(number) + m_resources->m_plistMap["Messages"][77];
+	m_scrollArea->UPrintWin(dispString);
+
+	m_lastSaveNumberOfMoves = number;
+
+	PutRoster();
+	m_Party[3] = (unsigned char)m_xpos;
+	m_Party[4] = (unsigned char)m_ypos;
+	PutParty();
+	PutSosaria();
+
+	return false;
+}
+
+void U3Misc::QuitSave()
+{
+	m_callbackStack.push(std::bind(&U3Misc::CommandFinishTurn, this));
+	m_callbackStack.push(std::bind(&U3Misc::CommandQuitSave, this));
 }
 
 bool U3Misc::CommandKlimb()

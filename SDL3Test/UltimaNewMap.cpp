@@ -218,6 +218,7 @@ bool U3Graphics::Kreate13()
     m_misc->m_WhirlY = 0;
 
     m_misc->PutMiscStuff();
+    m_misc->AddQuitSave();
     m_queuedMode = U3GraphicsMode::MiniMap;
 
     return false;
@@ -583,7 +584,7 @@ bool U3Graphics::Kreate1()
     {
         m_misc->m_callbackStack.pop();
     }
-    m_allowRendering = false;
+    
     m_misc->m_Party[2] = 255; // Will prevent the moongates from being shown
 
     m_misc->DelayGame(DelayKreate, std::bind(&U3Graphics::Kreate2, this));

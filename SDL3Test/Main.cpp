@@ -1027,7 +1027,7 @@ void Game()
 	m_misc->m_Player[1][14] = 0xFF;
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
-	//m_misc->m_Party[15] = 1;
+	m_misc->m_Party[15] = 1;
 #endif
 
 	bool quit = false;
@@ -1148,8 +1148,8 @@ void updateGame(Uint64 deltaTime)
 		count = 0;
 	}
 
-	if (m_graphics->m_curMode == U3GraphicsMode::Map ||
-		m_graphics->m_curMode == U3GraphicsMode::Combat)
+	//if (m_graphics->m_curMode == U3GraphicsMode::Map ||
+	//	m_graphics->m_curMode == U3GraphicsMode::Combat)
 	{
 		m_resources->updateTime(deltaTime);
 	}

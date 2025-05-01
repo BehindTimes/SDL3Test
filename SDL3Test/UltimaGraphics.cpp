@@ -1050,8 +1050,10 @@ void U3Graphics::renderKreateMap([[maybe_unused]]SDL_Event event, Uint64 deltaTi
 {
     if (m_mode_switch)
     {
+        m_allowRendering = false;
         m_mode_switch = false;
-        Kreate1();
+        //Kreate1();
+        m_misc->m_callbackStack.push(std::bind(&U3Graphics::Kreate1, this));
     }
 
     DrawFrame(1);
@@ -1085,6 +1087,8 @@ void U3Graphics::renderKreateMap([[maybe_unused]]SDL_Event event, Uint64 deltaTi
                 break;
             }
         }
+
+        m_resources->updateGameTime(deltaTime);
     }
 }
 

@@ -106,6 +106,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	curSpec.format = SDL_AUDIO_S16;
 	curSpec.channels = 2;
 	Mix_OpenAudio(0, &curSpec);
+	// Allocate a number of channels
+	Mix_AllocateChannels(8);
 
 	//SDL_SetRenderVSync(renderer, 1);
 
@@ -216,8 +218,13 @@ void MainLoop()
 				m_graphics->CreateIntroData();
 				m_graphics->CreateMenuData();
 				CreateButtonCallbacks();
-				Intro();
 				m_scrollArea->Clear();
+				m_resources->m_elapsedTimeDemo = 0;
+				m_resources->m_elapsedTimeFlag = 0;
+				m_resources->m_elapsedTimeAnimate = 0;
+				m_resources->m_curTickDemo = 0;
+				m_resources->m_demoDelay = 0;
+				m_resources->m_demoptr = 0;
 
 				m_misc->m_zp[0xCF] = 0;
 				m_misc->m_zp[0x10] = 0;
@@ -237,11 +244,21 @@ void MainLoop()
 
 			switch (newMode)
 			{
+			case GameMode::Intro:
+				m_graphics->m_playFade1 = true;
+				m_graphics->m_playFade2 = true;
+				m_graphics->m_fadeExodus = false;
+				m_graphics->m_fadeUltima = false;
+				m_graphics->m_writeLordBritish = false;
+				m_graphics->m_curIntro = IntroEnum::PRE_FIGHT;
+				m_graphics->m_startFightTick = 0;
+				break;
 			case GameMode::Options:
 				m_resources->CreateOptionsDlg();
 					break;
 			case GameMode::Demo:
 			{
+				m_audio->stopSfx();
 				Uint64 curTick = SDL_GetTicks();
 				m_resources->setTickCount(curTick, false);
 				m_audio->playMusic(0);
@@ -252,6 +269,8 @@ void MainLoop()
 				break;
 			case GameMode::Game:
 			{
+				m_audio->stopMusic();
+				m_audio->stopSfx();
 				m_graphics->m_curMode = U3GraphicsMode::Map;
 				m_misc->m_gameMode = GameStateMode::Map;
 				// TO DO: load the save game here

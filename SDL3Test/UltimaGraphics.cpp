@@ -9,6 +9,7 @@
 #include "UltimaSpellCombat.h"
 #include "UltimaDungeon.h"
 #include "UltimaMain.h"
+#include "UltimaSound.h"
 
 extern short blkSiz;
 
@@ -17,6 +18,7 @@ extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
+extern std::unique_ptr<U3Audio> m_audio;
 
 extern GameMode newMode;
 
@@ -26,7 +28,7 @@ extern short screenOffsetY;
 
 U3Graphics::U3Graphics() :
     m_startTickCount(0),
-    m_fadeTime(2400),
+    m_fadeTime(ExodusFadeTime_1),
     m_curMode(U3GraphicsMode::Map),
     m_texMap(nullptr),
     m_queuedMode(U3GraphicsMode::None),
@@ -43,7 +45,15 @@ U3Graphics::U3Graphics() :
     m_hasLava(false),
     m_counter(0),
     m_menuInit(false),
-    m_showMenu(false)
+    m_showMenu(false),
+    m_playFade1(true),
+    m_playFade2(true),
+    m_playImmolate(true),
+    m_fadeExodus(false),
+    m_fadeUltima(false),
+    m_writeLordBritish(false),
+    m_curIntro(IntroEnum::PRE_FIGHT),
+    m_startFightTick(0)
 {
     memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
@@ -226,22 +236,16 @@ void U3Graphics::DrawFramePiece(short which, short x, short y, bool adjust)
     m_resources->renderUI(which, x, y, adjust);
 }
 
-bool fadeExodus = false;
-bool fadeUltima = false;
-bool writeLordBritish = false;
-IntroEnum curIntro = IntroEnum::PRE_FIGHT;
-Uint64 startFightTick = 0;
-
 void U3Graphics::FightScene(Uint64 curTick)
 {
     const short animorder[5] = { 0, 1, 2, 3, 2 };
     short anim = 1;
 
-    if (curIntro == IntroEnum::PRE_FIGHT)
+    if (m_curIntro == IntroEnum::PRE_FIGHT)
     {
         m_resources->drawIntro(2, -25);
     }
-    else if (curIntro == IntroEnum::POST_FIGHT)
+    else if (m_curIntro == IntroEnum::POST_FIGHT)
     {
         m_resources->drawIntro(4, 22);
         DrawFramePiece(12, 12, 23);
@@ -250,7 +254,7 @@ void U3Graphics::FightScene(Uint64 curTick)
     }
     else
     {
-        int x = (int)((curTick - startFightTick) / 100);
+        int x = (int)((curTick - m_startFightTick) / 100);
         if (x < 25)
         {
             int xPos = (x * 2) - 25;
@@ -273,12 +277,18 @@ void U3Graphics::FightScene(Uint64 curTick)
         {
             m_resources->drawIntro(animorder[anim], 10);
         }
-        else if (x < 100)
+        else
         {
-            m_resources->drawIntro(3, 4);
-            if (x > 98)
+            if (m_playImmolate)
             {
-                curIntro = IntroEnum::POST_FIGHT;
+                m_audio->playSfx(SFX_IMMOLATE);
+                m_playImmolate = false;
+            }
+
+            m_resources->drawIntro(3, 4);
+            if (x > 80)
+            {
+                m_curIntro = IntroEnum::POST_FIGHT;
             }
         }
     }
@@ -290,7 +300,7 @@ void U3Graphics::FadeOnExodusUltima(Uint64 curTick)
 
     m_resources->renderStalagtites();
 
-    if (curPass < 200 && !fadeExodus)
+    if (curPass < 200 && !m_fadeExodus)
     {
         return;
     }
@@ -299,17 +309,23 @@ void U3Graphics::FadeOnExodusUltima(Uint64 curTick)
     if (curPass > m_fadeTime)
     {
         alpha = 255;
-        if (!fadeExodus)
+        if (!m_fadeExodus)
         {
-            fadeExodus = true;
+            m_fadeExodus = true;
             InitializeStartTicks();
             alpha = 0;
-            m_fadeTime = 2200;
+            m_fadeTime = ExodusFadeTime_2;
+            if (m_playFade2)
+            {
+                m_playFade2 = false;
+                m_playImmolate = true;
+                m_audio->playSfx(SFX_FADE2);
+            }
         }
-        else if (!fadeUltima)
+        else if (!m_fadeUltima)
         {
-            fadeUltima = true;
-            writeLordBritish = true;
+            m_fadeUltima = true;
+            m_writeLordBritish = true;
             InitializeStartTicks();
         }
     }
@@ -319,19 +335,25 @@ void U3Graphics::FadeOnExodusUltima(Uint64 curTick)
     }
     
     
-    if (!fadeExodus)
+    if (!m_fadeExodus)
     {
+        if (m_playFade1)
+        {
+            m_playFade1 = false;
+            m_audio->playSfx(SFX_FADE1);
+        }
+        
         m_resources->drawExodus(alpha);
     }
     else
     {
-        if (!fadeUltima)
+        if (!m_fadeUltima)
         {
             m_resources->drawUltimaLogo(alpha);
         }
         else
         {
-            Uint8 curAlpha = fadeExodus ? 255 : 0;
+            Uint8 curAlpha = m_fadeExodus ? 255 : 0;
             m_resources->drawUltimaLogo(curAlpha);
         }
 
@@ -339,7 +361,7 @@ void U3Graphics::FadeOnExodusUltima(Uint64 curTick)
     }
 }
 
-void U3Graphics::WriteLordBritish(Uint64 curTick) const
+void U3Graphics::WriteLordBritish(Uint64 curTick)
 {
     const int RENDERTIME = 3850;
     bool showCredits = false;
@@ -353,7 +375,7 @@ void U3Graphics::WriteLordBritish(Uint64 curTick) const
 
     curPass /= 10;
 
-    if (!writeLordBritish)
+    if (!m_writeLordBritish)
     {
         return;
     }
@@ -363,10 +385,10 @@ void U3Graphics::WriteLordBritish(Uint64 curTick) const
     if (showCredits)
     {
         m_resources->DrawCredits();
-        if (curIntro == IntroEnum::PRE_FIGHT)
+        if (m_curIntro == IntroEnum::PRE_FIGHT)
         {
-            curIntro = IntroEnum::FIGHTING;
-            startFightTick = curTick;
+            m_curIntro = IntroEnum::FIGHTING;
+            m_startFightTick = curTick;
         }
     }
 }

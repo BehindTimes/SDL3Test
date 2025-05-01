@@ -12,8 +12,10 @@ public:
 
 	bool initMusic();
 	void playMusic(int song);
+	void playSfx(int sfx);
 	void stopMusic();
 	void pauseMusic();
+	void stopSfx();
 
 	std::vector<Mix_Music*> m_music;
 	std::vector<Mix_Chunk*> m_sfx;

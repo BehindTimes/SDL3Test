@@ -237,6 +237,13 @@ public:
 	std::vector<std::array<unsigned char, 200>> m_cons_data;
 	std::vector<std::string> m_themes;
 	bool m_cleanupAlert;
+	Uint64 m_curTickDemo;
+	Uint64 m_elapsedTimeDemo;
+	Uint64 m_elapsedTimeFlag;
+	Uint64 m_elapsedTimeAnimate;
+	Uint64 m_elapsedWindTime;
+	int m_demoDelay;
+	int m_demoptr;
 
 private:
 	void LoadResource(std::string strFile);
@@ -328,15 +335,11 @@ private:
 	std::vector<unsigned char> m_demoData;
 
 	unsigned char m_demoBgndTiles[114];
-	int m_demoptr;
-	int m_demoDelay;
+	
+	
 	Uint64 m_curTickScroll;
 	Uint64 m_elapsedTimeScroll;
-	Uint64 m_curTickDemo;
-	Uint64 m_elapsedTimeDemo;
-	Uint64 m_elapsedTimeFlag;
-	Uint64 m_elapsedTimeAnimate;
-	Uint64 m_elapsedWindTime;
+	
 
 	short m_animFlag[4];
 	short m_twiddleFlag[4];

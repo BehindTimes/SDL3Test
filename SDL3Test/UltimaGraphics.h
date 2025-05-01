@@ -56,7 +56,7 @@ public:
 	void DrawFramePiece(short which, short x, short y, bool adjust = true);
 	void DrawFramePieceScroll(short which, short x, short y, int offsetX = 0, int offsetY = 0);
 	void FadeOnExodusUltima(Uint64 curTick);
-	void WriteLordBritish(Uint64 curTick) const;
+	void WriteLordBritish(Uint64 curTick);
 	void FightScene(Uint64 curTick);
 	void DrawDemoScreen(Uint64 curTick);
 	void DrawMenu();
@@ -92,6 +92,15 @@ public:
 
 	std::vector<std::unique_ptr<U3Button>> m_buttons;
 	bool m_showMenu;
+
+	bool m_playFade1;
+	bool m_playFade2;
+	bool m_playImmolate;
+	bool m_fadeExodus;
+	bool m_fadeUltima;
+	bool m_writeLordBritish;
+	IntroEnum m_curIntro;
+	Uint64 m_startFightTick;
 
 private:
 	void renderMiniMapDungeon();

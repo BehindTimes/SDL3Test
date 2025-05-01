@@ -176,6 +176,9 @@ static constexpr std::string_view MainMenuStr = "Main Menu";
 static constexpr std::string_view QuitStr = "Quit";
 static constexpr std::string_view ReturnToGameStr = "Return to Game";
 
+static const int ExodusFadeTime_1 = 4000;
+static const int ExodusFadeTime_2 = 3000;
+
 enum {
 	initCmd = 1,
 	freqDurationCmd = 40
@@ -183,3 +186,47 @@ enum {
 
 const int TEXTURE_SIZE_X = 128;
 const int TEXTURE_SIZE_Y = 128;
+
+enum SFX_LIST
+{
+	SFX_ALARM = 0,
+	SFX_ATTACK,
+	SFX_BIGDEATH,
+	SFX_BUMP,
+	SFX_COMBATSTART,
+	SFX_COMBATVICTORY,
+	SFX_CREAK,
+	SFX_DEATHFEMALE,
+	SFX_DEATHMALE,
+	SFX_DOWNWARDS,
+	SFX_ERROR1,
+	SFX_ERROR2,
+	SFX_EXPLEVELUP,
+	SFX_FAILEDSPELL,
+	SFX_FORCEFIELD,
+	SFX_HEAL,
+	SFX_HIT,
+	SFX_HORSEWALK,
+	SFX_IMMOLATE,
+	SFX_INVOCATION,
+	SFX_LBLEVELRISE,
+	SFX_MISCSPELL,
+	SFX_MONSTERSPELL,
+	SFX_MOONGATE,
+	SFX_MOUNTHORSE,
+	SFX_OUCH,
+	SFX_SHOOT,
+	SFX_SHRINE,
+	SFX_SINK,
+	SFX_STEP,
+	SFX_SWISH1,
+	SFX_SWISH2,
+	SFX_SWISH3,
+	SFX_SWISH4,
+	SFX_TORCHIGNITE,
+	SFX_UPWARDS,
+	SFX_FADE1,
+	SFX_FADE2
+};
+
+

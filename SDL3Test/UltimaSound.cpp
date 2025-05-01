@@ -1,12 +1,16 @@
 #include "UltimaSound.h"
 #include "UltimaIncludes.h"
+#include "U3Resources.h"
+#include "U3Misc.h"
 #include <string>
 #include <filesystem>
+#include <iostream>
+
+extern std::unique_ptr<U3Misc> m_misc;
+extern std::unique_ptr<U3Resources> m_resources;
 
 U3Audio::U3Audio()
 {
-	m_music.resize(10);
-	m_sfx.resize(36);
 }
 
 U3Audio::~U3Audio()
@@ -42,6 +46,7 @@ bool U3Audio::initMusic()
 		{ "Song_A.ogg" },
 		{ "Song_B.ogg" }
 	};
+	m_music.resize(musicList.size());
 
 	for (size_t index = 0; index < m_music.size(); ++index)
 	{
@@ -95,7 +100,11 @@ bool U3Audio::initMusic()
 		{ "Swish4.wav" },
 		{ "TorchIgnite.wav" },
 		{ "Upwards.wav" },
+		{ "Fade1.wav" },
+		{ "Fade2.wav" },
 	};
+
+	m_sfx.resize(sfxList.size());
 
 	for (size_t index = 0; index < sfxList.size(); ++index)
 	{
@@ -116,7 +125,10 @@ bool U3Audio::initMusic()
 
 void U3Audio::playMusic([[maybe_unused]] int song)
 {
-#ifdef NDEBUG
+	if (!m_resources->m_preferences.play_music)
+	{
+		return;
+	}
 	if (song >= 0 && song < m_music.size())
 	{
 		if (Mix_PausedMusic())
@@ -128,11 +140,25 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 			Mix_PlayMusic(m_music[song], 1);
 		}
 	}
+}
+
+void U3Audio::stopSfx()
+{
+	Mix_HaltChannel(-1);
+#ifdef NDEBUG
+	Mix_HaltMusic();
 #endif
 }
 
+
 void U3Audio::stopMusic()
 {
+	if (Mix_PausedMusic())
+	{
+		Mix_ResumeMusic();
+	}
+	Mix_HaltMusic();
+	Mix_HaltChannel(-1);
 #ifdef NDEBUG
 	Mix_HaltMusic();
 #endif
@@ -140,7 +166,21 @@ void U3Audio::stopMusic()
 
 void U3Audio::pauseMusic()
 {
+	Mix_PauseMusic();
 #ifdef NDEBUG
 	Mix_PauseMusic();
 #endif
+}
+
+void U3Audio::playSfx([[maybe_unused]] int sfx)
+{
+	if (!m_resources->m_preferences.play_sfx)
+	{
+		return;
+	}
+	if (m_sfx.size() <= sfx)
+	{
+		return;
+	}
+	Mix_PlayChannel(-1, m_sfx[sfx], 0);
 }

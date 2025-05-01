@@ -64,7 +64,7 @@ public:
 	bool GetParty();
 	bool GetSosaria();
 	bool PutRoster() const;
-	bool PutParty();
+	bool PutParty() const;
 	bool PutSosaria();
 
 	unsigned char GetXYTile(short x, short y);
@@ -117,7 +117,7 @@ public:
 	void NoGo();
 	void BombTrap();
 	bool BombTrapCallback();
-	void PutMiscStuff();
+	void PutMiscStuff() const;
 	void ResetSosaria();
 	bool HPSubtract(short rosNum, short amount);
 	void Pass();

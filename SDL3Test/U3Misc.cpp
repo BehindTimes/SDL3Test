@@ -144,15 +144,15 @@ bool U3Misc::OpenRstr()
 		"Party.ult",
 		"MainResources.rsrc_MISC_400.bin",
 		"Moongate_Locations.ult",
-		/*"MainResources.rsrc_MISC_401_Type Initial Table.bin",
+		/*"MainResources.rsrc_MISC_401.bin",
 		"Type Initial Table.ult",
-		"MainResources.rsrc_MISC_402_Weapon Use By Class.bin",
+		"MainResources.rsrc_MISC_402.bin",
 		"Weapon Use By class.ult",
-		"MainResources.rsrc_MISC_403_Armour Use By Class.bin",
+		"MainResources.rsrc_MISC_403.bin",
 		"Armour Use By class.ult",*/
 		"MainResources.rsrc_MISC_404.bin",
 		"Location_Table.ult",
-		/*"MainResources.rsrc_MISC_405_Experience Table.bin",
+		/*"MainResources.rsrc_MISC_405.bin",
 		"Experience Table.ult",*/
 		"MainResources.rsrc_ROST_500_Roster.bin",
 		"Roster.ult"
@@ -170,10 +170,6 @@ bool U3Misc::OpenRstr()
 			}
 
 		}
-		/*if (std::filesystem::exists(rosterPath))
-		{
-			loadRoster(rosterPath);
-		}*/
 		// New game, so copy stuff
 		std::vector<char> dummy;
 		if (!std::filesystem::exists(rosterPath))
@@ -215,7 +211,59 @@ bool U3Misc::OpenRstr()
 	return true;
 }
 
-// TO DO: Are we even changing these files?  If not, why the copy?
+void U3Misc::PutMiscStuff() const
+{
+	std::filesystem::path moongatePath = std::filesystem::current_path();
+	moongatePath /= ResourceLoc;
+	moongatePath /= SaveLoc;
+	moongatePath /= std::string("Moongate_Locations.ult");
+
+	std::filesystem::path locationPath = std::filesystem::current_path();
+	locationPath /= ResourceLoc;
+	locationPath /= SaveLoc;
+	locationPath /= std::string("Location_Table.ult");
+
+	std::vector<unsigned char> vec_moongates;
+	vec_moongates.resize(16);
+	memcpy(vec_moongates.data(), m_MoonXTable, sizeof(unsigned char) * 8);
+	memcpy(vec_moongates.data() + 8, m_MoonYTable, sizeof(unsigned char) * 8);
+
+	std::string strTemp = m_utilities->PathToSDLString(moongatePath);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return;
+	}
+
+	SDL_WriteIO(file, vec_moongates.data(), vec_moongates.size());
+	SDL_CloseIO(file);
+
+	std::vector<unsigned char> vec_locations;
+	vec_locations.resize(64);
+	// It appears as if some of the data is not being used.  Perhaps it was in the past?
+	std::fill(vec_locations.begin(), vec_locations.end(), 0xFF);
+	memcpy(vec_locations.data(), m_LocationX, sizeof(unsigned char) * 20);
+	memcpy(vec_locations.data() + 32, m_LocationY, sizeof(unsigned char) * 20);
+
+	strTemp = m_utilities->PathToSDLString(locationPath);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return;
+	}
+
+	SDL_WriteIO(file, vec_locations.data(), vec_locations.size());
+	SDL_CloseIO(file);
+}
+
 void U3Misc::GetMiscStuff(bool defaultData)
 {
 	std::vector<std::string> orig_files = {
@@ -241,7 +289,10 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	std::filesystem::path experienceFile;
 
 	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath1 = std::filesystem::current_path();
+
 	currentPath /= ResourceLoc;
+	currentPath1 /= ResourceLoc;
 	if (defaultData)
 	{
 		currentPath /= BinLoc;
@@ -255,21 +306,21 @@ void U3Misc::GetMiscStuff(bool defaultData)
 	else
 	{
 		currentPath /= SaveLoc;
+		currentPath1 /= BinLoc;
 		moongateFile = currentPath / orig_files[0];
-		typeFile = currentPath / orig_files[1];
-		weaponFile = currentPath / orig_files[2];
-		armourFile = currentPath / orig_files[3];
+		typeFile = currentPath1 / orig_files[7];
+		weaponFile = currentPath1 / orig_files[8];
+		armourFile = currentPath1 / orig_files[9];
 		locationFile = currentPath / orig_files[4];
-		experienceFile = currentPath / orig_files[5];
+		experienceFile = currentPath1 / orig_files[11];
 	}
+
+	std::vector<std::filesystem::path> m_filePaths = { typeFile, weaponFile, armourFile, experienceFile };
+	std::vector<unsigned char*> m_fileData = { m_careerTable, m_wpnUseTable, m_armUseTable, m_Experience };
+	std::vector<size_t> m_arraySize = {12, 12, 12, 17};
 
 	std::uintmax_t file_size = std::filesystem::file_size(moongateFile);
 	std::vector<unsigned char> dummy;
-
-	memset(m_careerTable, 0, sizeof(char) * 12);
-	memset(m_wpnUseTable, 0, sizeof(char) * 12);
-	memset(m_armUseTable, 0, sizeof(char) * 12);
-	memset(m_Experience, 0, sizeof(char) * 17);
 
 	dummy.resize(file_size);
 	std::string strTemp = m_utilities->PathToSDLString(moongateFile);
@@ -287,50 +338,31 @@ void U3Misc::GetMiscStuff(bool defaultData)
 		m_MoonYTable[byte] = dummy[static_cast<size_t>(byte + 8)];
 	}
 
-	file_size = std::filesystem::file_size(typeFile);
-	dummy.resize(file_size);
-	strTemp = m_utilities->PathToSDLString(typeFile);
-	if (strTemp.empty())
+	for (size_t index = 0; index < m_filePaths.size(); ++index)
 	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-	if (dummy.size() < 12)
-	{
-		memcpy(m_careerTable, dummy.data(), 12);
+		memset(m_fileData[index], 0, sizeof(unsigned char) * m_arraySize[index]);
+
+		if (!std::filesystem::exists(m_filePaths[0]))
+		{
+			return;
+		}
+
+		file_size = std::filesystem::file_size(m_filePaths[index]);
+		dummy.resize(file_size);
+		strTemp = m_utilities->PathToSDLString(m_filePaths[index]);
+		if (strTemp.empty())
+		{
+			return;
+		}
+		file = SDL_IOFromFile(strTemp.c_str(), "rb");
+		SDL_ReadIO(file, dummy.data(), dummy.size());
+		SDL_CloseIO(file);
+		if (dummy.size() < m_arraySize[index])
+		{
+			memcpy(m_fileData[index], dummy.data(), m_arraySize[index]);
+		}
 	}
 
-	file_size = std::filesystem::file_size(weaponFile);
-	dummy.resize(file_size);
-	strTemp = m_utilities->PathToSDLString(weaponFile);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-	if (dummy.size() < 12)
-	{
-		memcpy(m_wpnUseTable, dummy.data(), 12);
-	}
-
-	file_size = std::filesystem::file_size(armourFile);
-	dummy.resize(file_size);
-	strTemp = m_utilities->PathToSDLString(armourFile);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-	if (dummy.size() < 12)
-	{
-		memcpy(m_armUseTable, dummy.data(), 12);
-	}
 
 	file_size = std::filesystem::file_size(locationFile);
 	dummy.resize(file_size);
@@ -348,21 +380,6 @@ void U3Misc::GetMiscStuff(bool defaultData)
 		m_LocationX[byte] = dummy[byte];
 		m_LocationY[byte] = dummy[static_cast<size_t>(byte + 32)];
 	}
-
-	file_size = std::filesystem::file_size(experienceFile);
-	dummy.resize(file_size);
-	strTemp = m_utilities->PathToSDLString(experienceFile);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-	if (dummy.size() < 17)
-	{
-		memcpy(m_Experience, dummy.data(), 12);
-	}
 }
 
 bool U3Misc::PutRoster() const
@@ -370,10 +387,10 @@ bool U3Misc::PutRoster() const
 	std::filesystem::path rosterPath = std::filesystem::current_path();
 	rosterPath /= ResourceLoc;
 	rosterPath /= SaveLoc;
-	rosterPath /= std::string("Roster1.ult");
+	rosterPath /= std::string("Roster.ult");
 
 	short player;
-	const size_t roster_size = 1280;
+	//const size_t roster_size = 1280;
 
 	std::string strTemp = m_utilities->PathToSDLString(rosterPath);
 	if (strTemp.empty())
@@ -385,14 +402,10 @@ bool U3Misc::PutRoster() const
 	{
 		return false;
 	}
-	std::vector<unsigned char> data;
-	data.resize(roster_size);
+
 	for (player = 0; player < 20; player++)
 	{
-		/*for (byte = 0; byte < 64; byte++)
-		{
-			data[((player) * 64) + byte] = m_Player[player + 1][byte];
-		}*/
+
 		SDL_WriteIO(file, m_Player[player + 1], 64);
 	}
 
@@ -402,13 +415,92 @@ bool U3Misc::PutRoster() const
 	return true;
 }
 
-bool U3Misc::PutParty()
+bool U3Misc::PutParty() const
 {
+	std::filesystem::path partyPath = std::filesystem::current_path();
+	partyPath /= ResourceLoc;
+	partyPath /= SaveLoc;
+	partyPath /= std::string("Party.ult");
+
+	std::string strTemp = m_utilities->PathToSDLString(partyPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return false;
+	}
+
+	SDL_WriteIO(file, m_Party, 64);
+
+	SDL_CloseIO(file);
+
 	return true;
 }
 
 bool U3Misc::PutSosaria()
 {
+	if (m_Party[2] != 0)
+	{
+		return false;
+	}
+	int mapLength = m_misc->m_mapSize * m_misc->m_mapSize;
+
+	std::filesystem::path mapPath = std::filesystem::current_path();
+	mapPath /= ResourceLoc;
+	mapPath /= SaveLoc;
+	mapPath /= std::string("Sosaria_Current.ult");
+
+	std::string strTemp = m_utilities->PathToSDLString(mapPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return false;
+	}
+
+	unsigned char mSize = m_misc->m_mapSize & 0xFF;
+
+	SDL_WriteIO(file, &mSize, 1);
+	SDL_WriteIO(file, m_map.data(), mapLength);
+
+	unsigned char whirlX = (unsigned char)m_misc->m_WhirlX;
+	unsigned char whirlY = (unsigned char)m_misc->m_WhirlY;
+	unsigned char whirlDX = (unsigned char)m_misc->m_WhirlDX;
+	unsigned char whirlDY = (unsigned char)m_misc->m_WhirlDY;
+
+	SDL_WriteIO(file, &whirlX, 1);
+	SDL_WriteIO(file, &whirlY, 1);
+	SDL_WriteIO(file, &whirlDX, 1);
+	SDL_WriteIO(file, &whirlDY, 1);
+
+	SDL_CloseIO(file);
+
+	std::filesystem::path monsterPath = std::filesystem::current_path();
+	monsterPath /= ResourceLoc;
+	monsterPath /= SaveLoc;
+	monsterPath /= std::string("Sosaria_Monsters.ult");
+
+	strTemp = m_utilities->PathToSDLString(monsterPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	if (!file)
+	{
+		return false;
+	}
+
+	SDL_WriteIO(file, m_misc->m_Monsters, 256);
+
+	SDL_CloseIO(file);
+
 	return true;
 }
 
@@ -1828,7 +1920,10 @@ void U3Misc::Routine6E6B()
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
 	{
-		PullSosaria();
+		GetSosaria();
+		PutRoster();
+		PutParty();
+		PutSosaria();
 	}
 	else
 	{
@@ -1991,6 +2086,9 @@ void U3Misc::PullSosaria()
 	if (!m_saved_map.get()) // was never pushed!
 	{
 		GetSosaria();
+		PutRoster();
+		PutParty();
+		PutSosaria();
 	}
 	else // oh, yes it was!  Don't tease!
 	{
@@ -2002,6 +2100,19 @@ void U3Misc::PullSosaria()
 		m_WhirlY = m_saved_map->WhirlY;
 
 		m_saved_map.release();
+	}
+
+	// If Exodus has been defeated, make land creatures placid.
+	if (m_Party[15] == 1)
+	{
+		int i;
+		for (i = 0; i < 32; i++)
+		{
+			if (m_Monsters[i] >= 0x40)
+			{
+				m_Monsters[i + HPMON] = 0x40;
+			}
+		}
 	}
 }
 
@@ -4031,23 +4142,32 @@ bool U3Misc::PeerGemCallback()
 	}
 	short rosnum;
 
-	if (m_input_num > 3 || m_input_num < 0 || m_Party[6 + m_input_num] == 0)
+	if (m_input_num > 3 || m_input_num < 0)
 	{
 		m_scrollArea->UPrintWin("\n\n");
 		return false;
 	}
-	rosnum = m_Party[6 + m_input_num];
-	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
-	if (m_Player[rosnum][37] < 1)
+
+	if (m_Party[6 + m_input_num] == 0)
 	{
-		m_scrollArea->UPrintWin(strRosNum);
+		m_scrollArea->UPrintWin("\n");
+		m_scrollArea->UPrintMessage(41);
+		m_scrollArea->UPrintWin("\n");
+		return false;
+	}
+
+	m_chNum = m_input_num;
+	rosnum = m_Party[6 + m_input_num];
+	std::string strRosNum = std::to_string(m_chNum + 1) + std::string("\n\n");
+	m_scrollArea->UPrintWin(strRosNum);
+	/*if (m_Player[rosnum][37] < 1)
+	{
+		
 		m_scrollArea->UPrintMessage(67);
 	}
-	else
+	else*/
 	{
-		//m_scrollArea->blockPrompt(true);
-		m_scrollArea->UPrintWin(strRosNum);
-		m_Player[rosnum][37]--;
+		//m_Player[rosnum][37]--;
 		m_scrollArea->forceRedraw();
 		m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;
 	}
@@ -4402,12 +4522,45 @@ bool  U3Misc::HandleDeadResponse1()
 	return false;
 }
 
-void U3Misc::PutMiscStuff()
-{
-}
-
 void U3Misc::ResetSosaria()
 {
+	std::filesystem::path currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= SaveLoc;
+
+	std::filesystem::path resourcePath = std::filesystem::current_path();
+	resourcePath /= ResourceLoc;
+	resourcePath /= BinLoc;
+
+	std::vector<std::string> orig_files = {
+		"MainResources.rsrc_MAPS_420.bin",
+		"Sosaria_Current.ult",
+		"MainResources.rsrc_MISC_400.bin",
+		"Moongate_Locations.ult",
+		"MainResources.rsrc_MISC_404.bin",
+		"Location_Table.ult",
+	};
+
+	// Resetting the map, so copy stuff
+	for (int index = 0; index < orig_files.size(); index += 2)
+	{
+		std::filesystem::path sosariaFileOrig = resourcePath / orig_files[index];
+		std::filesystem::path sosariaFileCurrent = currentPath / orig_files[index + 1];
+		std::filesystem::copy(sosariaFileOrig, sosariaFileCurrent, std::filesystem::copy_options::overwrite_existing);
+	}
+
+	std::vector<char> dummy;
+
+	std::filesystem::path monsterFile = currentPath / std::string("Sosaria_Monsters.ult");
+	dummy.resize(256);
+	std::string strTemp = m_utilities->PathToSDLString(monsterFile);
+	if (strTemp.empty())
+	{
+		return;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+	SDL_WriteIO(file, dummy.data(), dummy.size());
+	SDL_CloseIO(file);
 }
 
 bool U3Misc::ResurrectCallback()
@@ -4454,11 +4607,11 @@ bool U3Misc::ResurrectCallback()
 	m_zp[0xE3] = (unsigned char)m_xpos;
 	m_zp[0xE4] = (unsigned char)m_ypos;
 
-	/*PutParty();
+	PutParty();
 	PutRoster();
 	ResetSosaria();
 	GetMiscStuff(0);
-	PutMiscStuff();*/
+	PutMiscStuff();
 	GetSosaria();
 
 	m_ox = m_xpos - 1;

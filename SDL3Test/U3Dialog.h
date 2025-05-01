@@ -21,7 +21,7 @@ public:
 	U3CheckBox(int blockSize, int x, int y);
 	~U3CheckBox();
 
-	void render(SDL_Renderer* renderer, int x, int y);
+	void render(SDL_Renderer* renderer, int x, int y) const;
 
 	void setChecked(bool checked) { m_checked = checked; }
 

@@ -336,6 +336,8 @@ void disperseParty([[maybe_unused]] int button)
 
 	m_misc->m_partyFormed = false;
 
+	m_misc->PutParty();
+
 	m_resources->SetButtonVisibility(5, true);
 	m_resources->SetButtonVisibility(6, false);
 
@@ -381,6 +383,7 @@ void removeCharacter([[maybe_unused]] int button)
 		if (curChar > 0 && curChar < 21)
 		{
 			memset(m_misc->m_Player[curChar], 0, sizeof(unsigned char) * 65);
+			m_misc->PutRoster();
 			m_resources->CreatePartyNames();
 		}
 	}
@@ -432,11 +435,11 @@ void partyFormed([[maybe_unused]] int button)
 	m_misc->m_ypos = 20;
 	m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
 	m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
-	//PutParty();
-	//PutRoster();
+	m_misc->PutParty();
+	m_misc->PutRoster();
 	m_misc->ResetSosaria();
-	//GetMiscStuff(0);
-	//PutMiscStuff();
+	m_misc->GetMiscStuff(0);
+	m_misc->PutMiscStuff();
 
 	m_resources->m_selectedFormRect = -1;
 	m_resources->SetButtonVisibility(3, true);
@@ -1036,6 +1039,7 @@ void Game()
 	SDL_Event event;
 	int mouseState = 0;
 	changeMode = false;
+	m_misc->m_lastCard = 0x1E;
 
 	Uint64 startTick = SDL_GetTicks();
 	Uint64 elapsedTime = 0;

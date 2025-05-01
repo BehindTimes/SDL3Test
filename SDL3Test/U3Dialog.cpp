@@ -6,6 +6,7 @@
 #include "U3Resources.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "U3Misc.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;
@@ -13,6 +14,7 @@ extern short screenOffsetY;
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<U3Graphics> m_graphics;
+extern std::unique_ptr<U3Misc> m_misc;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
@@ -743,7 +745,7 @@ U3CheckBox::~U3CheckBox()
 {
 }
 
-void U3CheckBox::render(SDL_Renderer* renderer, int x, int y)
+void U3CheckBox::render(SDL_Renderer* renderer, int x, int y) const
 {
 	SDL_FRect myRect{};
 
@@ -1773,6 +1775,7 @@ void CreateCharacterDialog::okPushed([[maybe_unused]] int id)
 	m_curPlayer[40] = 1;      // pre-readied
 	m_curPlayer[49] = 1;      // Dagger
 	m_curPlayer[48] = 1;      // pre-readied
+	m_misc->PutRoster();
 
 	m_resources->CreatePartyNames();
 }

@@ -256,14 +256,23 @@ U3Resources::~U3Resources()
 
 	CleanupPartyNames();
 
-	for (auto& curSurface : m_cursors)
+	for (auto& curCursor : m_cursors)
+	{
+		if (curCursor)
+		{
+			SDL_DestroyCursor(curCursor);
+		}
+	}
+	m_cursors.clear();
+
+	for (auto& curSurface : m_cursor_surface)
 	{
 		if (curSurface)
 		{
 			SDL_DestroySurface(curSurface);
 		}
 	}
-	m_cursors.clear();
+	m_cursor_surface.clear();
 
 	for (auto& mode : m_allGraphics)
 	{
@@ -1432,13 +1441,23 @@ void U3Resources::createZStatButtons()
 bool U3Resources::loadCursors()
 {
 	ReflectNewCursor(-1);
-	for (auto& curSurface : m_cursors)
+
+	for (auto& curCursor : m_cursors)
+	{
+		if (curCursor)
+		{
+			SDL_DestroyCursor(curCursor);
+		}
+	}
+
+	for (auto& curSurface : m_cursor_surface)
 	{
 		if (curSurface)
 		{
 			SDL_DestroySurface(curSurface);
 		}
 	}
+	m_cursor_surface.clear();
 
 	m_cursors.clear();
 
@@ -1449,54 +1468,32 @@ bool U3Resources::loadCursors()
 	std::vector<std::string> cursorPath =
 	{
 		{ "CursorAttack.png" },
-		{ "CursorAttack_4X.png" },
 		{ "CursorBackward.png" },
-		{ "CursorBackward_4X.png" },
 		{ "CursorBoard.png" },
-		{ "CursorBoard_4X.png" },
 		{ "CursorCannon.png" },
-		{ "CursorCannon_4X.png" },
 		{ "CursorChest.png" },
 		{ "CursorDead.png" },
-		{ "CursorDead_4X.png" },
 		{ "CursorDown.png" },
-		{ "CursorDown_4X.png" },
 		{ "CursorEast.png" },
-		{ "CursorEast_4X.png" },
 		{ "CursorEnter.png" },
-		{ "CursorEnter_4X.png" },
 		{ "CursorExit.png" },
-		{ "CursorExit_4X.png" },
 		{ "CursorForward.png" },
-		{ "CursorForward_4X.png" },
 		{ "CursorLeft.png" },
-		{ "CursorLeft_4X.png" },
 		{ "CursorLook.png" },
-		{ "CursorLook_4X.png" },
 		{ "CursorNorth.png" },
-		{ "CursorNorth_4X.png" },
 		{ "CursorNorthEast.png" },
-		{ "CursorNorthEast_4X.png" },
 		{ "CursorNorthWest.png" },
-		{ "CursorNorthWest_4X.png" },
 		{ "CursorPass.png" },
-		{ "CursorPass_4X.png" },
 		{ "CursorRight.png" },
-		{ "CursorRight_4X.png" },
 		{ "CursorSouth.png" },
-		{ "CursorSouth_4X.png" },
 		{ "CursorSouthEast.png" },
-		{ "CursorSouthEast_4X.png" },
 		{ "CursorSouthWest.png" },
-		{ "CursorSouthWest_4X.png" },
 		{ "CursorTalk.png" },
 		{ "CursorTorch.png" },
 		{ "CursorUnlock.png" },
 		{ "CursorUp.png" },
-		{ "CursorUp_4X.png" },
 		{ "CursorUse.png" },
 		{ "CursorWest.png" },
-		{ "CursorWest_4X.png" }
 	};
 
 	std::filesystem::path currentPath;
@@ -1516,7 +1513,9 @@ bool U3Resources::loadCursors()
 		}
 		SDL_Surface* newSurface = SDL_ScaleSurface(curSurface, (int)(curSurface->w * scaler), (int)(curSurface->h * scaler), SDL_SCALEMODE_LINEAR);
 		SDL_DestroySurface(curSurface);
-		m_cursors.push_back(newSurface);
+		m_cursor_surface.push_back(newSurface);
+		SDL_Cursor*  newCursor = SDL_CreateColorCursor(newSurface, 0, 0);
+		m_cursors.push_back(newCursor);
 	}
 	return true;
 }

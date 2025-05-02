@@ -35,7 +35,6 @@ std::unique_ptr<U3Utilities> m_utilities;
 std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 std::unique_ptr<UltimaDungeon> m_dungeon;
 std::unique_ptr<U3Audio> m_audio;
-SDL_Cursor* g_current_cursor = nullptr;
 
 bool DoSplashScreen();
 void MainLoop();
@@ -141,12 +140,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	TTF_Quit();
 	TTF_DestroyRendererTextEngine(engine_surface);
-
-	if (g_current_cursor)
-	{
-		SDL_DestroyCursor(g_current_cursor);
-		g_current_cursor = nullptr;
-	}
 
 	//Mix_FreeMusic(music);
 	Mix_CloseAudio();

@@ -238,7 +238,8 @@ public:
 	U3Preferences m_preferences;
 	std::vector<std::array<unsigned char, 200>> m_cons_data;
 	std::vector<std::string> m_themes;
-	std::vector<SDL_Surface*> m_cursors;
+	std::vector<SDL_Cursor*> m_cursors;
+	
 	bool m_cleanupAlert;
 	Uint64 m_curTickDemo;
 	Uint64 m_elapsedTimeDemo;
@@ -324,6 +325,7 @@ private:
 	SDL_Texture* m_texSpellList;
 	SDL_Texture* m_texMiscTables;
 	SDL_Texture* m_texCommands;
+	std::vector<SDL_Surface*> m_cursor_surface;
 
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;

@@ -26,7 +26,6 @@ extern short screenOffsetX;
 extern short screenOffsetY;
 
 int gCurCursor;
-extern SDL_Cursor* g_current_cursor;
 
 void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 {
@@ -104,13 +103,17 @@ void ReflectNewCursor(int newCursor)
 {
 	if (newCursor != gCurCursor)
 	{
-		if(!g_current_cursor)
+		if (newCursor >= 0)
 		{
-			SDL_DestroyCursor(g_current_cursor);
-			g_current_cursor = nullptr;
+			SDL_SetCursor(m_resources->m_cursors[newCursor]);
 		}
+		else
+		{
+			SDL_SetCursor(SDL_GetDefaultCursor());
+		}
+
 		gCurCursor = newCursor;
-		SDL_Surface* cursorName;
+		SDL_Cursor* cursorName;
 
 		switch (gCurCursor)
 		{
@@ -148,13 +151,11 @@ void ReflectNewCursor(int newCursor)
 
 		if (cursorName)
 		{
-			g_current_cursor = SDL_CreateColorCursor(cursorName, 0, 0);
-			SDL_SetCursor(g_current_cursor);
+			SDL_SetCursor(cursorName);
 		}
 		else
 		{
-			g_current_cursor = SDL_GetDefaultCursor();
-			SDL_SetCursor(g_current_cursor);
+			SDL_SetCursor(SDL_GetDefaultCursor());
 		}
 	}
 }

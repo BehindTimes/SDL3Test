@@ -6,6 +6,7 @@
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
+#include "UltimaSound.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -15,6 +16,7 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
+extern std::unique_ptr<U3Audio> m_audio;
 
 void U3Misc::LetterCommand(SDL_Keycode key)
 {
@@ -806,11 +808,16 @@ bool U3Misc::CommandEnter()
 
 		m_inputType = InputType::Transact;
 		//m_scrollArea->blockPrompt(true);
+		m_audio->m_currentSong = 9;
+		m_audio->m_nextSong = 9;
+		m_audio->musicUpdate();
 		m_callbackStack.push(std::bind(&U3Misc::EnterShrineCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
 		return false;
 	}
+	m_audio->m_currentSong = 0;
+	m_audio->m_nextSong = 0;
 	bool autosave;
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
@@ -837,20 +844,30 @@ bool U3Misc::CommandEnter()
 	if (m_Party[2] == 1) // Dungeon
 	{
 		m_dungeon->DungeonStart(0);
+		m_audio->m_nextSong = 1;
+		m_audio->musicUpdate();
 		return false;
 	}
 	if (m_Party[2] == 2) // Town
 	{
+		m_audio->m_nextSong = 2;
+		m_audio->musicUpdate();
 		return false;
 	}
 	if (placeNum != 1)
 	{
+		m_audio->m_nextSong = 3;
+		m_audio->musicUpdate();
 		return false;
 	}
 	if (m_Party[15] == 1)
 	{
 		SafeExodus();
 	}
+
+	m_audio->m_currentSong = 0;
+	m_audio->m_nextSong = 7;
+	m_audio->musicUpdate();
 
 	return false;
 }
@@ -1034,6 +1051,22 @@ bool U3Misc::TransactCallback()
 	return false;
 }
 
+bool U3Misc::transactFinishCallback()
+{
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+	m_audio->m_nextSong = m_Party[2];
+	if (m_audio->m_nextSong > 8)
+	{
+		m_audio->m_nextSong--;
+	}
+	m_audio->m_currentSong = m_audio->m_nextSong;
+	m_audio->musicUpdate();
+	return false;
+}
+
 bool U3Misc::TransactCallback2()
 {
 	if (m_callbackStack.size() > 0)
@@ -1073,8 +1106,12 @@ bool U3Misc::TransactCallback2()
 			return false;
 		}
 		shopNum = (m_ypos & 0x07);
+		m_audio->m_currentSong = 6;
+		m_audio->m_nextSong = 6;
+		m_audio->musicUpdate();
 
 		//gSongCurrent = gSongNext = 6;
+		m_callbackStack.push(std::bind(&U3Misc::transactFinishCallback, this));
 		InverseChnum((char)m_transactNum, true);
 		Shop(shopNum, (short)m_transactNum);
 		//InverseChnum(m_transactNum, false);
@@ -1101,6 +1138,9 @@ bool U3Misc::TransactCallback2()
 		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
+	m_audio->m_currentSong = 8;
+	m_audio->musicUpdate();
+
 	m_scrollArea->UPrintMessage(90);
 	level = m_Player[m_rosNum][30];
 	hpmax = (m_Player[m_rosNum][28] * 256) + m_Player[m_rosNum][29];

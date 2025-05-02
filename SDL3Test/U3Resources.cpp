@@ -12,6 +12,7 @@
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
 #include "UltimaSpellCombat.h"
+#include "UltimaSound.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -24,6 +25,7 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
+extern std::unique_ptr<U3Audio> m_audio;
 
 constexpr int FONT_NUM_X = 96;
 constexpr int FONT_NUM_Y = 1;
@@ -154,6 +156,8 @@ void U3Resources::savePreferences()
 	xmlTextWriterEndElement(writer);
 	xmlTextWriterEndDocument(writer);
 	xmlFreeTextWriter(writer);
+
+	m_audio->musicUpdate();
 }
 
 U3Resources::U3Resources() :

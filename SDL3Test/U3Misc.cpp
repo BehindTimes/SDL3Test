@@ -6,6 +6,7 @@
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
+#include "UltimaSound.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -16,6 +17,7 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
+extern std::unique_ptr<U3Audio> m_audio;
 
 U3Misc::U3Misc() :
 	m_WhirlX(0),
@@ -76,7 +78,8 @@ U3Misc::U3Misc() :
 	m_moveMonsterOffset(0),
 	m_value(0),
 	m_storeBool(false),
-	m_lastSaveNumberOfMoves(0)
+	m_lastSaveNumberOfMoves(0),
+	m_demoSong(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -1915,6 +1918,10 @@ void U3Misc::Routine6E6B()
 	}
 	m_Party[3] = (unsigned char)m_xpos;
 	m_Party[4] = (unsigned char)m_ypos;
+
+	m_audio->m_currentSong = 0;
+	m_audio->m_nextSong = 1;
+	m_audio->musicUpdate();
 
 	bool autosave;
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
@@ -3969,71 +3976,6 @@ bool U3Misc::MoveMonsters() // $7A81
 
 	m_callbackStack.push(std::bind(&U3Misc::movemon, this));
 
-	/*short value;
-
-	for (short offset = 0; offset < 32; ++offset)
-	{
-		if (m_Monsters[offset] == 0)
-		{
-			continue;
-		}
-		if (m_Party[2] == 0 && m_Party[15] == 0) // // Player hasn't beaten Exodus.
-		{
-			if (!moveoutside(offset))
-			{
-				return false;
-			}
-			move7AAA(offset);
-		}
-		else
-		{
-			value = m_Monsters[offset + 128];
-			value = value & 0xC0;
-			if (value == 0)
-			{
-				continue;
-			}
-			if (value == 0x40)
-			{
-				int randnum = m_utilities->getRandom(0, 255);
-				if (randnum < 128)
-				{
-					continue;
-				}
-				randnum = m_utilities->getRandom(0, 255);
-				m_xs = m_graphics->MapConstrain(m_Monsters[offset + XMON] + GetHeading((short)randnum));
-				if (m_xs == 0)
-				{
-					continue;
-				}
-				randnum = m_utilities->getRandom(0, 255);
-				m_ys = m_graphics->MapConstrain(m_Monsters[offset + YMON] + GetHeading((short)randnum));
-				if (m_ys == 0)
-				{
-					continue;
-				}
-
-				// Sosaria, and user has already defeated Exodus.  Handle monsters running into one another.
-				if (m_Party[15] != 0 && m_Party[2] == 0)
-				{
-				}
-				move7AAA(offset);
-			}
-			else if (value == 0x80)
-			{
-				GetMonsterDir(offset);
-				move7AAA(offset);
-			}
-			else
-			{
-				if (!moveoutside(offset))
-				{
-					return false;
-				}
-				move7AAA(offset);
-			}
-		}
-	}*/
 	return false;
 }
 
@@ -6382,6 +6324,7 @@ bool U3Misc::shrineCallback1()
 		m_callbackStack.pop();
 	}
 	m_resources->m_overrideImage = -1;
+	m_audio->m_nextSong = 10;
 	return false;
 }
 

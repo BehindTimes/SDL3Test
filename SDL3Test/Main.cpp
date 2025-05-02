@@ -198,6 +198,8 @@ void MainLoop()
 
 	m_misc->m_zp[0xCF] = 0;
 	m_misc->m_zp[0x10] = 0;
+	m_audio->m_nextSong = 0;
+	m_audio->m_currentSong = 0;
 
 	while (newMode != GameMode::Unknown)
 	{
@@ -230,20 +232,13 @@ void MainLoop()
 				m_misc->m_zp[0x10] = 0;
 			}
 
-			if (oldMode == GameMode::Demo)
-			{
-				if (newMode == GameMode::Game)
-				{
-					m_audio->stopMusic();
-				}
-				else
-				{
-					m_audio->pauseMusic();
-				}
-			}
-
 			switch (newMode)
 			{
+			case GameMode::MainMenu:
+				m_audio->m_currentSong = 0;
+				m_audio->m_nextSong = 0;
+				m_audio->musicUpdate();
+				break;
 			case GameMode::Intro:
 				m_graphics->m_playFade1 = true;
 				m_graphics->m_playFade2 = true;
@@ -261,7 +256,6 @@ void MainLoop()
 				m_audio->stopSfx();
 				Uint64 curTick = SDL_GetTicks();
 				m_resources->setTickCount(curTick, false);
-				m_audio->playMusic(0);
 			}
 			break;
 			case GameMode::Organize:
@@ -619,6 +613,12 @@ void Demo()
 	SDL_Event event;
 	changeMode = false;
 
+	if (m_audio->m_currentSong == 0)
+	{
+		m_audio->m_nextSong = m_misc->m_demoSong;
+	}
+	m_audio->musicUpdate();
+
 	while (1)
 	{
 		if (gInterrupt)
@@ -681,6 +681,17 @@ void Demo()
 		m_graphics->DrawDemoScreen(curTick);
 		m_resources->DemoUpdate(curTick);
 		SDL_RenderPresent(renderer);
+
+		if (m_audio->m_nextSong == m_audio->m_currentSong)
+		{
+			m_audio->m_nextSong++;
+			if (m_audio->m_nextSong > 10)
+			{
+				m_audio->m_nextSong = 1;
+			}
+			m_misc->m_demoSong = m_audio->m_nextSong;
+			m_audio->musicUpdate();
+		}
 	}
 }
 
@@ -1064,6 +1075,10 @@ void Game()
 	Uint64 elapsedTime = 0;
 
 	m_resources->ShowChars(true);
+
+	m_audio->m_currentSong = 1;
+	m_audio->m_nextSong = 1;
+	m_audio->musicUpdate();
 
 	while (1)
 	{

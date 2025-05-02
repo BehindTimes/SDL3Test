@@ -8,9 +8,25 @@
 
 extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3Resources> m_resources;
+extern std::unique_ptr<U3Audio> m_audio;
 
-U3Audio::U3Audio()
+static void musicFinished()
 {
+	m_audio->playNextSong();
+}
+
+void U3Audio::playNextSong()
+{
+	m_currentSong = m_nextSong;
+	playMusic(m_currentSong);
+}
+
+U3Audio::U3Audio() :
+	m_currentSong(0),
+	m_nextSong(0),
+	m_playingSong(0)
+{
+	Mix_HookMusicFinished(musicFinished);
 }
 
 U3Audio::~U3Audio()
@@ -125,6 +141,8 @@ bool U3Audio::initMusic()
 
 void U3Audio::playMusic([[maybe_unused]] int song)
 {
+	m_playingSong = song;
+	song--;
 	if (!m_resources->m_preferences.play_music)
 	{
 		return;
@@ -137,7 +155,7 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 		}
 		else
 		{
-			Mix_PlayMusic(m_music[song], 1);
+			Mix_PlayMusic(m_music[song], 0);
 		}
 	}
 }
@@ -159,17 +177,11 @@ void U3Audio::stopMusic()
 	}
 	Mix_HaltMusic();
 	Mix_HaltChannel(-1);
-#ifdef NDEBUG
-	Mix_HaltMusic();
-#endif
 }
 
 void U3Audio::pauseMusic()
 {
 	Mix_PauseMusic();
-#ifdef NDEBUG
-	Mix_PauseMusic();
-#endif
 }
 
 void U3Audio::playSfx([[maybe_unused]] int sfx)
@@ -183,4 +195,35 @@ void U3Audio::playSfx([[maybe_unused]] int sfx)
 		return;
 	}
 	Mix_PlayChannel(-1, m_sfx[sfx], 0);
+}
+
+void U3Audio::musicUpdate()
+{
+	if (!m_resources->m_preferences.play_music)
+	{
+		stopMusic();
+		return;
+	}
+
+	if (m_currentSong == 0 && m_nextSong == 0)
+	{
+		stopMusic();
+		return;
+	}
+	if (m_playingSong != m_currentSong)
+	{
+		int tempsong = m_currentSong;
+		stopMusic();
+		m_currentSong = tempsong;
+		playMusic(m_currentSong);
+	}
+	if (m_currentSong == 0)
+	{
+		m_currentSong = m_nextSong;
+		playMusic(m_currentSong);
+	}
+	else if (Mix_PlayingMusic() == 0)
+	{
+		playMusic(m_currentSong);
+	}
 }

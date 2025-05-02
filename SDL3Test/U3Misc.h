@@ -236,6 +236,7 @@ public:
 	short m_gTimeNegate;
 	std::deque<SDL_Keycode> m_InputDeque;
 	int m_lastSaveNumberOfMoves;
+	int m_demoSong;
 
 private:
 	void Attack();
@@ -502,6 +503,7 @@ private:
 	bool movemonCallback();
 	bool movemonCallback1();
 	bool KreateCallback();
+	bool transactFinishCallback();
 
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;

@@ -1077,6 +1077,8 @@ void Game()
 	Uint64 elapsedTime = 0;
 
 	m_resources->ShowChars(true);
+	m_misc->m_inputType = InputType::Default;
+	m_graphics->m_staydead = false;
 
 	m_audio->m_currentSong = 1;
 	m_audio->m_nextSong = 1;

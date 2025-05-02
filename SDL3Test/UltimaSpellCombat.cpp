@@ -1581,7 +1581,7 @@ bool UltimaSpellCombat::ProjectileCallback1()
 		return false;
 	}
 	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::ProjectileCallback2, this));
-	ShowHit(m_misc->m_MonsterX[m_hit & 8], m_misc->m_MonsterY[m_hit & 8], 0x78, m_misc->m_MonsterTile[m_hit & 8]);
+	ShowHit(m_misc->m_MonsterX[m_hit & 7], m_misc->m_MonsterY[m_hit & 7], 0x78, m_misc->m_MonsterTile[m_hit & 8]);
 	m_audio->playSfx(SFX_HIT);
 	return false;
 }

@@ -220,6 +220,7 @@ bool U3Graphics::Kreate13()
     m_misc->PutMiscStuff();
     m_misc->AddQuitSave();
     m_queuedMode = U3GraphicsMode::MiniMap;
+    m_menuInit = false;
 
     return false;
 }

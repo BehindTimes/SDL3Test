@@ -168,5 +168,5 @@ private:
 	unsigned char m_storeIcons[19];
 	bool m_hasLava;
 	unsigned short m_counter;
-	
+	bool m_miniMapInit;
 };

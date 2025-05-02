@@ -6,6 +6,7 @@
 #include "U3Utilities.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "UltimaSound.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
@@ -13,6 +14,7 @@ extern std::unique_ptr<U3ScrollArea> m_scrollArea;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<U3Graphics> m_graphics;
+extern std::unique_ptr<U3Audio> m_audio;
 
 
 UltimaSpellCombat::UltimaSpellCombat() :
@@ -74,7 +76,12 @@ void UltimaSpellCombat::Combat()
 	m_graphics->m_queuedMode = U3GraphicsMode::Combat;
 	m_misc->m_gameMode = GameStateMode::Combat;
 
+	m_g835F = (unsigned char)m_audio->m_currentSong;
 	m_g5521 = m_g56E7 = 0;
+
+	m_audio->m_currentSong = 0;
+	m_audio->m_nextSong = 5;
+	m_audio->musicUpdate();
 
 	for (short mon = 31; mon >= 0; mon--)
 	{
@@ -696,6 +703,9 @@ void UltimaSpellCombat::Victory() const
 {
 	m_misc->m_gTimeNegate = 0;
 	m_scrollArea->UPrintMessage(132);
+	m_audio->m_currentSong = m_g835F;
+	m_audio->m_nextSong = m_g835F;
+	m_audio->musicUpdate();
 	m_misc->m_Party[2] = m_g835E;
 	m_graphics->m_queuedMode = m_graphics->m_lastMode;
 	m_misc->m_gameMode = m_misc->m_lastMode;
@@ -2253,10 +2263,12 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 			if (m_graphics->m_curMode == U3GraphicsMode::Map)
 			{
 				m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;
+				m_graphics->m_menuInit = false;
 			}
 			else if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)
 			{
 				m_graphics->m_queuedMode = U3GraphicsMode::MiniMapDungeon;
+				m_graphics->m_menuInit = false;
 			}
 			else
 			{

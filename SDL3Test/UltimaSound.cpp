@@ -24,7 +24,8 @@ void U3Audio::playNextSong()
 U3Audio::U3Audio() :
 	m_currentSong(0),
 	m_nextSong(0),
-	m_playingSong(0)
+	m_playingSong(0),
+	m_cachedSong(0)
 {
 	Mix_HookMusicFinished(musicFinished);
 }

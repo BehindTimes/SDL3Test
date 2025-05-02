@@ -25,6 +25,7 @@ public:
 	int m_currentSong;
 	int m_nextSong;
 	int m_playingSong;
+	int m_cachedSong;
 private:
 	void playMusic(int song);
 };

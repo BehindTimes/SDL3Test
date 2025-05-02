@@ -53,7 +53,8 @@ U3Graphics::U3Graphics() :
     m_fadeUltima(false),
     m_writeLordBritish(false),
     m_curIntro(IntroEnum::PRE_FIGHT),
-    m_startFightTick(0)
+    m_startFightTick(0),
+    m_miniMapInit(false)
 {
     memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
@@ -1018,6 +1019,13 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, [[maybe_unus
 
 void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
 {
+    if (!m_miniMapInit)
+    {
+        m_miniMapInit = true;
+        m_audio->m_currentSong = 9;
+        m_audio->musicUpdate();
+    }
+
     DrawFrame(1);
     DrawMiniMap();
     m_resources->ShowChars(true);
@@ -1116,6 +1124,14 @@ void U3Graphics::renderKreateMap([[maybe_unused]]SDL_Event event, Uint64 deltaTi
 
 void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
 {
+    if (!m_miniMapInit)
+    {
+        m_miniMapInit = true;
+        m_audio->m_currentSong = 9;
+        m_audio->m_nextSong = 4;
+        m_audio->musicUpdate();
+    }
+
     DrawFrame(1);
     DrawMiniMapDungeon();
     m_resources->ShowChars(true);

@@ -809,7 +809,7 @@ bool U3Misc::CommandEnter()
 		m_inputType = InputType::Transact;
 		//m_scrollArea->blockPrompt(true);
 		m_audio->m_currentSong = 9;
-		m_audio->m_nextSong = 9;
+		m_audio->m_nextSong = 10;
 		m_audio->musicUpdate();
 		m_callbackStack.push(std::bind(&U3Misc::EnterShrineCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));

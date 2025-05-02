@@ -4112,6 +4112,7 @@ bool U3Misc::PeerGemCallback()
 		//m_Player[rosnum][37]--;
 		m_scrollArea->forceRedraw();
 		m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;
+		m_graphics->m_menuInit = false;
 	}
 	return false;
 }
@@ -4560,6 +4561,10 @@ bool U3Misc::ResurrectCallback()
 	m_oy = m_ypos - 1;
 	m_gTimeNegate = 0;
 
+	m_audio->m_currentSong = 1;
+	m_audio->m_nextSong = 1;
+	m_audio->musicUpdate();
+
 	m_scrollArea->UPrintWin("\n\n\n\n\n\n\n\n");
 	//m_scrollArea->blockPrompt(false);
 	m_checkDead = false;
@@ -4916,6 +4921,9 @@ bool U3Misc::ExodusDieCallback1()
 	m_Party[15] = 1;
 	bool classic;
 	std::string dispString;
+	m_audio->m_currentSong = 9;
+	m_audio->m_nextSong = 9;
+	m_audio->musicUpdate();
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 	if (classic)
 	{
@@ -5962,6 +5970,10 @@ void U3Misc::GoWhirlPool() // 772D
 	{
 		m_scrollArea->UPrintMessageRewrapped(256);
 	}
+	m_audio->m_cachedSong = m_audio->m_currentSong;
+	m_audio->m_currentSong = 0;
+	m_audio->m_nextSong = 0;
+	m_audio->musicUpdate();
 
 	m_elapsedSleepTime = 0;
 	m_sleepCheckTime = whirlpool_time;
@@ -6021,6 +6033,7 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_xpos = 32;
 		m_ypos = 54;
 		m_Party[2] = 255;
+		
 		m_resources->setInversed(true);
 		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback1, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
@@ -6049,6 +6062,7 @@ bool U3Misc::GoWhirlPoolCallback()
 			PutRoster();
 			PutParty();
 		}
+		
 	}
 	else if (m_Party[2] < 128)
 	{
@@ -6059,6 +6073,8 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_xpos = (short)m_utilities->getRandom(0, m_mapSize - 1);
 		m_ypos = (short)m_utilities->getRandom(0, m_mapSize - 1);
 		temp = GetXYVal(m_xpos, m_ypos);
+		m_audio->m_nextSong = m_audio->m_cachedSong;
+		m_audio->musicUpdate();
 	}
 	return false;
 }
@@ -6069,6 +6085,8 @@ bool U3Misc::GoWhirlPoolCallback2()
 	{
 		m_callbackStack.pop();
 	}
+	m_audio->m_nextSong = 1;
+	m_audio->musicUpdate();
 	m_scrollArea->UPrintMessage(115);
 	m_inputType = InputType::Default;
 	//m_scrollArea->blockPrompt(false);
@@ -6082,6 +6100,8 @@ bool U3Misc::GoWhirlPoolCallback1()
 		m_callbackStack.pop();
 	}
 
+	m_audio->m_nextSong = 10;
+	m_audio->musicUpdate();
 	bool classic;
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 	if (classic)

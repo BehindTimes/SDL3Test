@@ -6381,7 +6381,7 @@ void U3Misc::SpawnMonster() // $7A0C
 	{
 		return;
 	}
-	for (int offset = 32; offset >= 0; offset--)
+	for (int offset = 31; offset >= 0; offset--)
 	{
 		if (m_Monsters[offset] != 0)
 		{

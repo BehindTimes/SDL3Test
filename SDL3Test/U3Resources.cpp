@@ -513,7 +513,10 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 	case U3PreferencesType::Classic_Appearance:
 		value = m_preferences.classic_appearance;
 		break;
+	case U3PreferencesType::Sound_Inactive:
+		value = m_preferences.play_sfx;
 	default:
+		value = false;
 		break;
 	}
 }

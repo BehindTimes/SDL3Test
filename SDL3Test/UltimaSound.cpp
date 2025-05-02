@@ -177,7 +177,6 @@ void U3Audio::stopMusic()
 		Mix_ResumeMusic();
 	}
 	Mix_HaltMusic();
-	Mix_HaltChannel(-1);
 }
 
 void U3Audio::pauseMusic()

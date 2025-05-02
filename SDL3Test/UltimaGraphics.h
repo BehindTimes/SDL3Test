@@ -135,6 +135,7 @@ private:
 	bool Kreate11();
 	bool Kreate12();
 	bool Kreate13();
+	bool Kreate14();
 	void AllWater();
 	void MapSplat(unsigned char startX, unsigned char startY, unsigned char size, unsigned char onlyOn, unsigned char type);
 	void CleanSurround();

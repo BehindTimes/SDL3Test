@@ -1000,6 +1000,8 @@ void U3Misc::HandleForceField()
 {
 	bool GoodPlace = true;
 
+	m_audio->playSfx(SFX_FORCEFIELD);
+
 	for (char byte = 0; byte < 4; byte++)
 	{
 		if (m_Party[6 + byte] != 0)
@@ -1009,6 +1011,7 @@ void U3Misc::HandleForceField()
 				InverseCharDetails(byte, true);
 				HPSubtract(m_Party[byte + 6], 99);
 				GoodPlace = false;
+				m_audio->playSfx(SFX_HIT);
 				break;
 			}
 		}
@@ -1031,6 +1034,7 @@ void U3Misc::HandleLava()
 	m_opnum = 0;
 	m_GoodPlace = true;
 	m_callbackStack.push(std::bind(&U3Misc::HandleLavaCallback, this));
+	m_audio->playSfx(SFX_ATTACK);
 }
 
 bool U3Misc::HandleLavaCallback()
@@ -1058,6 +1062,7 @@ bool U3Misc::HandleLavaCallback()
 				m_resources->m_inverses.inverseTileTime = 200;
 				m_resources->setInversed(true);
 				m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+				m_audio->playSfx(SFX_HIT);
 			}
 		}
 	}
@@ -1138,6 +1143,7 @@ bool U3Misc::ValidDir()
 void U3Misc::NoGo()
 {
 	m_scrollArea->UPrintMessage(116);
+	m_audio->playSfx(SFX_BUMP);
 }
 
 bool U3Misc::HandleKeyPress(SDL_KeyboardEvent key)
@@ -1865,17 +1871,20 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 
 void U3Misc::What() // $5135
 {
+	m_audio->playSfx(SFX_ERROR2);
 	m_scrollArea->UPrintMessage(106);
 }
 
 void U3Misc::What2() // $5279
 {
 	m_scrollArea->UPrintMessage(107);
+	m_audio->playSfx(SFX_ERROR1);
 }
 
 void U3Misc::NotHere() // $5288
 {
 	m_scrollArea->UPrintMessage(108);
+	m_audio->playSfx(SFX_ERROR1);
 }
 
 void U3Misc::NoEffect()
@@ -1946,12 +1955,7 @@ void U3Misc::Routine6E35()
 	IncMoves();
 
 	MoonGateUpdate();
-	/*if (m_Party[2] == 1)
-	{
-		//DrawDungeon();
-		m_gameMode = GameStateMode::Dungeon;
-		return;
-	}*/
+
 	// if $E2=#$80 (combat?), see $6E5C.  Apparently unneccessary
 	//   code, since the combat routines never touch this area while in effect.
 	if (m_Party[2] > 1) // Town or castle, IOW
@@ -1964,34 +1968,7 @@ void U3Misc::Routine6E35()
 	m_callbackStack.push(std::bind(&U3Misc::EndTurnCallback, this));
 	m_callbackStack.push(std::bind(&U3Misc::FinishAge, this));
 	AgeChars();
-	//ShowChars(false);
 
-	/*if (ExodusCastle() == 0)
-	{
-		gTimeNegate = 0;
-		xs = RandNum(0, 11);
-		ys = RandNum(0, 11);
-		gBallTileBackground = GetXYTile(xs, ys);
-		if (xs == 5 && ys == 5)
-		{
-			PutXYTile(0x7A, xs, ys);
-			DrawTiles();
-			DrawMapPause();
-			BombTrap();
-			DrawMap(xpos, ypos);
-		}
-		else
-		{
-			if (gBallTileBackground == 0x10)
-			{
-				PutXYTile(0x7A, xs, ys);
-				DrawTiles();
-				PlaySoundFile(CFSTR("Hit"), FALSE);    // was 0xF7
-				DrawMap(xpos, ypos);
-			}
-		}
-	}
-	*/
 }
 
 bool U3Misc::FinishAge() // $79DD
@@ -2041,6 +2018,7 @@ bool U3Misc::ExodusCastleCallback()
 			if (m_gBallTileBackground == 0x10)
 			{
 				PutXYTile(0x7A, m_xs, m_ys);
+				m_audio->playSfx(SFX_HIT);
 			}
 		}
 	}
@@ -2354,6 +2332,7 @@ bool U3Misc::horseVendorCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (gold < m_opnum)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n\n");
 		m_scrollArea->UPrintMessageRewrapped(229);
 		//Speech(GetLocalizedPascalString("\pI'm sorry, but you haven't the gold!"),63);
@@ -2396,6 +2375,7 @@ bool U3Misc::oracleCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (input > gold)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(188);
 		//Speech(GetLocalizedPascalString("\pWhat? Can't pay? Out, you scum!"),16);
 		InverseChnum((char)m_transactNum, false);
@@ -2836,6 +2816,7 @@ bool U3Misc::grocerCallback()
 	int existingFood = (m_Player[m_rosNum][32] * 100) + m_Player[m_rosNum][33];
 	if (m_input_num > (9999 - existingFood))
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessageRewrapped(260);
 		m_scrollArea->UPrintWin("\n\n");
 		m_scrollArea->UPrintMessage(192);
@@ -2845,6 +2826,7 @@ bool U3Misc::grocerCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (gold < m_input_num)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		InverseChnum((char)m_transactNum, false);
 		m_scrollArea->UPrintMessageRewrapped(193);
 		return false;
@@ -2899,12 +2881,14 @@ bool U3Misc::tavernCallback()
 	if (m_input_num < 7)
 	{
 		InverseChnum((char)m_transactNum, false);
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessageRewrapped(187);
 		return false;
 	}
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (gold < m_input_num)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		InverseChnum((char)m_transactNum, false);
 		m_scrollArea->UPrintMessageRewrapped(188);
 		return false;
@@ -3033,6 +3017,7 @@ bool U3Misc::weaponsBuyCallback()
 		}
 		if (amount > gold)
 		{
+			m_audio->playSfx(SFX_ERROR1);
 			weaponsBuyPoor();
 			return false;
 		}
@@ -3119,6 +3104,7 @@ bool U3Misc::weaponsSellCallback()
 		}
 		else
 		{
+			m_audio->playSfx(SFX_ERROR1);
 			m_scrollArea->UPrintMessageRewrapped(214);
 		}
 		m_input_num = 0;
@@ -3161,6 +3147,7 @@ bool U3Misc::armorsBuyCallback()
 		}
 		if (amount > gold)
 		{
+			m_audio->playSfx(SFX_ERROR1);
 			armorsBuyPoor();
 			return false;
 		}
@@ -3236,6 +3223,7 @@ bool U3Misc::armorsSellCallback()
 		}
 		else
 		{
+			m_audio->playSfx(SFX_ERROR1);
 			m_scrollArea->UPrintMessageRewrapped(214);
 		}
 		m_input_num = 0;
@@ -3372,6 +3360,7 @@ bool U3Misc::healingPayCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (cost[m_opnum] > gold)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n\n");
 		m_scrollArea->UPrintMessageRewrapped(233);
 		InverseChnum((char)m_transactNum, false);
@@ -3415,6 +3404,7 @@ void U3Misc::SpellNoize(short opnum, [[maybe_unused]]short opnum2)
 	m_callbackStack.push(std::bind(&U3Misc::FinalizeHealingCallback, this));
 	InverseTiles(true);
 	InverseCharDetails(opnum, true);
+	m_audio->playSfx(SFX_HEAL);
 
 }
 
@@ -3472,6 +3462,7 @@ bool U3Misc::healingCallback2()
 		SpellNoize(m_input_num, m_opnum);
 		return false;
 	}
+	m_audio->playSfx(SFX_BUMP);
 
 	m_scrollArea->setInput(false);
 	m_scrollArea->UPrintWin("\n");
@@ -3651,6 +3642,7 @@ bool U3Misc::moveshoot() // $7B36
 			m_callbackStack.push(std::bind(&U3Misc::movemon, this));
 			return false;
 		}
+		m_audio->playSfx(SFX_SHOOT);
 		m_zp[0xFB] = 3;
 		m_callbackStack.push(std::bind(&U3Misc::moveshoot2, this));
 	}
@@ -3808,6 +3800,7 @@ bool U3Misc::movemon() // $7A85
 						{
 							m_gBallTileBackground = m_Monsters[m_value + TILEON] / 2;
 							PutXYVal(0xF4, (unsigned char)m_xs, (unsigned char)m_ys);
+							m_audio->playSfx(SFX_HIT);
 							DelayGame(200, std::bind(&U3Misc::movemonCallback1, this));
 							return false;
 						}
@@ -3911,6 +3904,7 @@ bool U3Misc::IgniteCallback()
 		return false;
 	}
 	m_Player[rosNum][15]--;
+	m_audio->playSfx(SFX_TORCHIGNITE);
 	m_gTorch = 255;
 	m_dungeon->setForceRedraw();
 
@@ -3933,6 +3927,7 @@ bool U3Misc::JoinGoldCallback()
 	}
 	if (m_input_num < 0 || m_input_num > 3)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
 		return false;
@@ -4036,6 +4031,15 @@ void U3Misc::StealFail()
 		}
 	}
 	m_scrollArea->UPrintMessage(87);
+	m_audio->playSfx(SFX_OUCH);
+	m_callbackStack.push(std::bind(&U3Misc::StealFailCallback, this));
+	
+}
+
+bool U3Misc::StealFailCallback()
+{
+	m_audio->playSfx(SFX_ALARM);
+	return false;
 }
 
 bool U3Misc::StealCallback()
@@ -4209,6 +4213,7 @@ bool U3Misc::UnlockKeyCallback()
 		else
 		{
 			m_Player[rosNum][38]--;
+			m_audio->playSfx(SFX_CREAK);
 			// see HideMonsters for visual under-tile choice equivalent
 			int mon = MonsterHere(m_xs - 1, m_ys);
 			unsigned char value = (mon < 255) ? m_Monsters[(mon + TILEON) % 256] : GetXYVal(m_xs - 1, m_ys);
@@ -4354,6 +4359,7 @@ bool  U3Misc::HandleDeadResponse1()
 	{
 		m_callbackStack.pop();
 	}
+	m_audio->playSfx(SFX_BIGDEATH);
 	m_resources->m_inverses.color.r = 255;
 	m_resources->m_inverses.color.g = 0;
 	m_resources->m_inverses.color.b = 0;
@@ -4468,6 +4474,8 @@ bool U3Misc::ResurrectCallback()
 	m_audio->m_nextSong = 1;
 	m_audio->musicUpdate();
 
+	m_audio->playSfx(SFX_BIGDEATH);
+
 	m_scrollArea->UPrintWin("\n\n\n\n\n\n\n\n");
 	//m_scrollArea->blockPrompt(false);
 	m_checkDead = false;
@@ -4542,6 +4550,7 @@ bool U3Misc::OtherCallback()
 	m_rosNum = m_Party[6 + m_chNum];
 	if (CheckAlive(m_chNum) == false)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
@@ -4602,6 +4611,15 @@ bool U3Misc::OtherCallback1()
 	{
 		std::string dispString(ScreamString);
 		m_scrollArea->UPrintWin(dispString);
+		
+		if (m_Player[m_rosNum][24] == 'F')
+		{
+			m_audio->playSfx(SFX_DEATHFEMALE);
+		}
+		else
+		{
+			m_audio->playSfx(SFX_DEATHMALE);
+		}
 		return false;
 	}
 	else if (0 == m_input.compare("INSERT"))
@@ -4749,6 +4767,7 @@ bool U3Misc::InsertCallback1()
 
 	if (m_xs != object || object != m_lastCard)
 	{
+		m_audio->playSfx(SFX_HIT);
 		InverseCharDetails(m_chNum, true);
 		m_resources->m_inverses.elapsedTileTime = 0;
 		m_resources->m_inverses.inverseTileTime = 250;
@@ -4782,6 +4801,7 @@ bool U3Misc::ExodusDieCallback()
 	m_inputType = InputType::SleepCallback;
 	m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback2, this));
 	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+	m_audio->playSfx(SFX_HIT);
 
 	return false;
 }
@@ -4797,6 +4817,7 @@ bool U3Misc::ExodusDieCallback2()
 	PutXYVal(0x7C, (unsigned char)m_xs, (unsigned char)m_ys);
 	m_inputType = InputType::SleepCallback;
 	m_callbackStack.push(std::bind(&U3Misc::SleepCallback, this));
+	m_audio->playSfx(SFX_HIT);
 
 	return false;
 }
@@ -4879,7 +4900,8 @@ bool U3Misc::ExodusDieCallback3()
 	m_resources->m_inverses.inverseTileTime = screen_flicker_time;
 	m_resources->m_inverses.additive = true;
 	m_resources->setInversed(true);
-	if (m_input_num > 6)
+	m_audio->playSfx(SFX_HIT);
+	if (m_input_num > 20)
 	{
 		m_callbackStack.push(std::bind(&U3Misc::ExodusDieCallback4, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
@@ -4920,12 +4942,12 @@ void U3Misc::BombTrap() // $5C63
 			m_resources->m_inverses.elapsedTileTime = 0;
 			m_resources->m_inverses.inverseTileTime = damage_time;
 			m_resources->setInversed(true);
+			m_audio->playSfx(SFX_HIT);
 			m_callbackStack.push(std::bind(&U3Misc::BombTrapCallback, this));
 			m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 		}
 		else
 		{
-			//BombTrapCallback();
 			m_callbackStack.push(std::bind(&U3Misc::BombTrapCallback, this));
 		}
 	}
@@ -4949,6 +4971,7 @@ bool U3Misc::BombTrapCallback()
 	{
 		if (CheckAlive(m_input_num))
 		{
+			m_audio->playSfx(SFX_HIT);
 			InverseCharDetails(m_input_num, true);
 			m_resources->m_inverses.elapsedTileTime = 0;
 			m_resources->m_inverses.inverseTileTime = damage_time;
@@ -5060,6 +5083,7 @@ bool U3Misc::BribeCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (gold < 100)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(245);
 		return false;
 	}
@@ -5127,6 +5151,7 @@ void U3Misc::Yell(short mode)
 	m_resources->m_inverses.inverseTileTime = 1000;
 	m_resources->setInversed(true);
 	m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+	m_audio->playSfx(SFX_INVOCATION);
 }
 
 void U3Misc::ClearTiles()
@@ -5247,6 +5272,7 @@ void U3Misc::GetChest1(short chnum)
 		if (StealDisarmFail(m_rosNum) == false)
 		{
 			m_scrollArea->UPrintMessage(46);
+			m_audio->playSfx(SFX_OUCH);
 			GetChestBooty();
 			return;
 		}
@@ -5260,6 +5286,7 @@ void U3Misc::GetChest1(short chnum)
 			m_resources->setInversed(true);
 			m_callbackStack.push(std::bind(&U3Misc::ChestAcidCallback, this));
 			m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+			m_audio->playSfx(SFX_HIT);
 			return;
 		}
 		break;
@@ -5268,6 +5295,7 @@ void U3Misc::GetChest1(short chnum)
 		if (StealDisarmFail(m_rosNum) == false)
 		{
 			m_scrollArea->UPrintMessage(46);
+			m_audio->playSfx(SFX_OUCH);
 			GetChestBooty();
 			return;
 		}
@@ -5281,6 +5309,7 @@ void U3Misc::GetChest1(short chnum)
 			m_resources->setInversed(true);
 			m_callbackStack.push(std::bind(&U3Misc::ChestPoisonCallback, this));
 			m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
+			m_audio->playSfx(SFX_HIT);
 			return;
 		}
 		break;
@@ -5289,6 +5318,7 @@ void U3Misc::GetChest1(short chnum)
 		if (StealDisarmFail(m_rosNum) == false)
 		{
 			m_scrollArea->UPrintMessage(46);
+			m_audio->playSfx(SFX_OUCH);
 			GetChestBooty();
 			return;
 		}
@@ -5305,6 +5335,7 @@ void U3Misc::GetChest1(short chnum)
 		if (StealDisarmFail(m_rosNum) == false)
 		{
 			m_scrollArea->UPrintMessage(46);
+			m_audio->playSfx(SFX_OUCH);
 			GetChestBooty();
 			return;
 		}
@@ -5320,6 +5351,7 @@ void U3Misc::GetChest1(short chnum)
 				m_resources->m_inverses.elapsedTileTime = 0;
 				m_resources->m_inverses.inverseTileTime = damage_time;
 				m_resources->setInversed(true);
+				m_audio->playSfx(SFX_HIT);
 				m_callbackStack.push(std::bind(&U3Misc::ChestGasCallback, this));
 				m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 				return;
@@ -5350,7 +5382,7 @@ bool U3Misc::ChestGasCallback()
 		if (CheckAlive(m_input_num))
 		{
 			InverseCharDetails(m_input_num, true);
-			//m_resources->m_inverses.func = std::bind(&U3Misc::ChestGasCallback, this);
+			m_audio->playSfx(SFX_HIT);
 			m_resources->m_inverses.elapsedTileTime = 0;
 			m_resources->m_inverses.inverseTileTime = damage_time;
 			m_resources->setInversed(true);
@@ -5401,6 +5433,8 @@ void U3Misc::GetChestBooty()
 	short wpn;
 	short arm;
 
+	m_audio->playSfx(SFX_CREAK);
+
 	m_inputType = InputType::Default;
 	std::string dispString = m_resources->m_plistMap["Messages"][46];
 	gold = (short)m_utilities->getRandom(0, 100);
@@ -5413,6 +5447,7 @@ void U3Misc::GetChestBooty()
 	m_scrollArea->UPrintWin(dispString);
 	if (AddGold(m_rosNum, gold, true) == false)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(48);
 	}
 	short rngNum = (short)m_utilities->getRandom(0, 255);
@@ -5728,12 +5763,7 @@ void U3Misc::EatFood(short member, short amount, std::function<bool()> callback)
 				InverseCharDetails(member, true);
 				m_resources->m_inverses.elapsedTileTime = 0;
 				m_resources->m_inverses.inverseTileTime = damage_time;
-
-				/*m_resources->setInversed(true);
-				InverseCharDetails(member, true);
-				m_resources->m_inverses.elapsedTileTime = 0;
-				m_resources->m_inverses.inverseTileTime = damage_time;
-				m_resources->m_inverses.func = std::bind(&U3Misc::EatFoodCallback, this);*/
+				m_audio->playSfx(SFX_HIT);
 				return;
 			}
 		}
@@ -5855,6 +5885,7 @@ void U3Misc::WhirlPool() // $7665
 	m_WhirlY = newy;
 	newy = swap;
 	PutXYVal(0, (unsigned char)newx, (unsigned char)newy);
+	m_audio->playSfx(SFX_SINK);
 	m_scrollArea->UPrintMessageRewrapped(110);
 	m_scrollArea->UPrintWin("\n");
 }
@@ -5877,6 +5908,7 @@ void U3Misc::GoWhirlPool() // 772D
 	m_audio->m_currentSong = 0;
 	m_audio->m_nextSong = 0;
 	m_audio->musicUpdate();
+	m_audio->playSfx(SFX_SINK);
 
 	m_elapsedSleepTime = 0;
 	m_sleepCheckTime = whirlpool_time;
@@ -6048,11 +6080,12 @@ void U3Misc::MoonGateUpdate() // $6F5D
 	}
 }
 
-void U3Misc::HandleMoonStep()
+void U3Misc::HandleMoonStep() // $7961
 {
 	m_callbackStack.push(std::bind(&U3Misc::HandleMoonStepCallback, this));
 	InverseTiles(true);
 	m_resources->m_inverses.stayInversed = true;
+	m_audio->playSfx(SFX_MOONGATE);
 }
 
 bool U3Misc::HandleMoonStepCallback()
@@ -6078,7 +6111,7 @@ bool U3Misc::HandleMoonStepCallback()
 			value = GetXYVal(m_xpos, m_ypos);
 		}
 	}
-
+	m_audio->playSfx(SFX_MOONGATE);
 	m_callbackStack.push(std::bind(&U3Misc::HandleMoonStepCallback1, this));
 	InverseTiles(true);
 	m_resources->m_inverses.stayInversed = false;
@@ -6214,6 +6247,7 @@ bool U3Misc::shrineCallback()
 	if (gold - (key * 100) < 0)
 	{
 		m_scrollArea->UPrintMessage(180);
+		m_audio->playSfx(SFX_ERROR1);
 		m_resources->m_overrideImage = -1;
 		return false;
 	}
@@ -6237,6 +6271,7 @@ bool U3Misc::shrineCallback()
 	m_callbackStack.push(std::bind(&U3Misc::shrineCallback1, this));
 	InverseCharDetails(m_chNum, true);
 	InverseTiles(true);
+	m_audio->playSfx(SFX_SHRINE);
 	return false;
 }
 

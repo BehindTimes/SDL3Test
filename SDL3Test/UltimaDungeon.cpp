@@ -1226,6 +1226,7 @@ bool UltimaDungeon::CommandNotDngCmd()
 
 void UltimaDungeon::NotDngCmd() // $8EF1
 {
+	m_audio->playSfx(SFX_ERROR1);
 	m_misc->AddFinishTurn();
 	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandNotDngCmd, this));
 }
@@ -1290,6 +1291,7 @@ void UltimaDungeon::Descend() // $8F0C
 
 void UltimaDungeon::InvalCmd() // $8ED8
 {
+	m_audio->playSfx(SFX_ERROR1);
 	m_scrollArea->UPrintMessage(171);
 }
 
@@ -1533,6 +1535,7 @@ void UltimaDungeon::dngnotcombat(short value)
 	case 4: // $9135 trap
 		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
 		m_scrollArea->UPrintMessage(159);
+		m_audio->playSfx(SFX_STEP);
 		if (m_misc->StealDisarmFail(m_misc->m_Party[6]))
 		{
 			m_scrollArea->UPrintMessage(160);
@@ -1568,6 +1571,7 @@ void UltimaDungeon::dngnotcombat(short value)
 			{
 				m_misc->m_Player[rosNum][32]--;
 			}
+			m_audio->playSfx(SFX_OUCH);
 			m_scrollArea->UPrintMessage(163);
 		}
 		else
@@ -1658,6 +1662,8 @@ bool UltimaDungeon::FountainCallback()
 	}
 	if (m_misc->CheckAlive(chNum) == false)
 	{
+		m_audio->playSfx(SFX_ERROR1);
+		m_audio->playSfx(SFX_ERROR1);
 		m_audio->m_currentSong = 4;
 		m_audio->m_nextSong = 4;
 		m_audio->musicUpdate();
@@ -1676,6 +1682,7 @@ bool UltimaDungeon::FountainCallback()
 		m_resources->setInversed(true);
 		m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
 		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_audio->playSfx(SFX_HIT);
 		m_misc->AddInverse();
 		break;
 	case 1: // Heal fountain
@@ -1693,6 +1700,7 @@ bool UltimaDungeon::FountainCallback()
 		m_resources->setInversed(true);
 		m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
 		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::foundFountain, this));
+		m_audio->playSfx(SFX_HIT);
 		m_misc->AddInverse();
 		break;
 	case 3:
@@ -1767,6 +1775,7 @@ bool UltimaDungeon::MarkCallback()
 	m_resources->m_inverses.inverseTileTime = m_misc->damage_time;
 	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::MarkCallback2, this));
 	m_misc->AddInverse();
+	m_audio->playSfx(SFX_HIT);
 
 	return false;
 }

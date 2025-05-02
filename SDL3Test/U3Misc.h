@@ -504,6 +504,7 @@ private:
 	bool movemonCallback1();
 	bool KreateCallback();
 	bool transactFinishCallback();
+	bool StealFailCallback();
 
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;

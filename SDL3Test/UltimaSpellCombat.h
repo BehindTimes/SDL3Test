@@ -129,6 +129,8 @@ private:
 	bool CombatCharHere(short x, short y);
 	short ThreatValue();
 	void SetupNow();
+	bool CombatCallback();
+	bool VictoryCallback() const;
 	unsigned int MonsterLinedUp(short chnum, short x, short y);
 	unsigned int AutoMoveChar(short chnum, short deltaX, short deltaY);
 	unsigned int doKeyNow(short deltaX, short deltaY);
@@ -136,6 +138,7 @@ private:
 	void SetupFuture();
 	unsigned int DirToNearestMonster(short chnum);
 	unsigned int MonsterNearby(short chnum);
+	bool CombatAttackCallback3();
 
 	static constexpr Uint64 CombatBlink = 300;
 

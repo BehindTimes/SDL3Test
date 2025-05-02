@@ -6,6 +6,7 @@
 #include "UltimaIncludes.h"
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
+#include "UltimaSound.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -15,6 +16,7 @@ extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 extern std::unique_ptr<UltimaDungeon> m_dungeon;
 extern std::unique_ptr<U3Misc> m_misc;
+extern std::unique_ptr<U3Audio> m_audio;
 
 void U3Graphics::AllWater()
 {
@@ -219,9 +221,21 @@ bool U3Graphics::Kreate13()
 
     m_misc->PutMiscStuff();
     m_misc->AddQuitSave();
+    m_audio->playSfx(SFX_LBLEVELRISE);
+    m_misc->m_callbackStack.push(std::bind(&U3Graphics::Kreate14, this));
+    
+
+    return false;
+}
+
+bool U3Graphics::Kreate14()
+{
+    if (m_misc->m_callbackStack.size() > 0)
+    {
+        m_misc->m_callbackStack.pop();
+    }
     m_queuedMode = U3GraphicsMode::MiniMap;
     m_menuInit = false;
-
     return false;
 }
 
@@ -568,6 +582,7 @@ bool U3Graphics::Kreate2()
     m_allowRendering = true;
 
     AllWater();
+    m_audio->playSfx(SFX_BIGDEATH);
 
     m_misc->m_callbackStack.push(std::bind(&U3Graphics::Kreate4, this));
     int rngNum = m_utilities->getRandom(8, 72);

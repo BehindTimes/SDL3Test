@@ -1376,6 +1376,14 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
     if (m_staydead)
     {
         updateGame = false;
+        if (m_showMenu)
+        {
+            m_menu_stack.push(m_curMode);
+            m_curMode = U3GraphicsMode::Menu;
+            m_menuInit = false;
+            m_showMenu = false;
+            return;
+        }
     }
     if (updateGame)
     {

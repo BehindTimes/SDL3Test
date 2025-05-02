@@ -1182,6 +1182,7 @@ bool U3Misc::TransactCallback2()
 	m_Player[m_rosNum][29] = (unsigned char)(hpmax - (m_Player[m_rosNum][28] * 256));
 	m_scrollArea->UPrintMessage(94);
 	InverseTiles(true);
+	m_audio->playSfx(SFX_LBLEVELRISE);
 	//m_scrollArea->blockPrompt(false);
 
 	return false;
@@ -1208,6 +1209,7 @@ bool U3Misc::CommandBoard()
 			PutXYVal(0x04, (unsigned char)m_xpos, (unsigned char)m_ypos); // replace with grass
 			m_Party[0] = 0x14;
 			m_scrollArea->UPrintMessage(30);
+			m_audio->playSfx(SFX_MOUNTHORSE);
 		}
 		else if (tileOn == 0x2C) // ship
 		{
@@ -1243,6 +1245,7 @@ bool U3Misc::CommandExit()
 		std::string addString = m_resources->m_plistMap["Messages"][106];
 		dispString += addString;
 		m_scrollArea->UPrintWin(dispString);
+		m_audio->playSfx(SFX_ERROR1);
 	}
 	else
 	{
@@ -1252,7 +1255,7 @@ bool U3Misc::CommandExit()
 			m_scrollArea->UPrintMessage(102);    // X-it
 			m_scrollArea->UPrintWin("\n");
 			m_scrollArea->UPrintMessage(108);    // Not here!\n
-			//ErrorTone();
+			m_audio->playSfx(SFX_ERROR1);
 		}
 		else
 		{
@@ -1315,6 +1318,7 @@ bool U3Misc::CommandQuitSave()
 	if (m_Party[2] != 0)
 	{
 		m_scrollArea->UPrintMessage(77);
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	int number = m_Party[13] * 1000000 + m_Party[12] * 10000 + m_Party[11] * 100 + m_Party[10];
@@ -1957,6 +1961,7 @@ void U3Misc::WearArmour(short chnum, char armour, bool preset)
 	}
 	if (armour != 'H' && armour >= m_armUseTable[typeNum])
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(82);
 		return;
 	}
@@ -1964,6 +1969,7 @@ void U3Misc::WearArmour(short chnum, char armour, bool preset)
 	if ((armour > 0) && (m_Player[m_rosNum][armour + 40] < 1))
 	{
 		m_scrollArea->UPrintMessage(81);
+		m_audio->playSfx(SFX_ERROR1);
 		return;
 	}
 	m_Player[m_rosNum][40] = armour;
@@ -1986,6 +1992,7 @@ bool U3Misc::WearArmourCallback()
 	m_chNum = (short)m_input_num;
 	if (m_chNum < 0 || m_chNum > 3)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -2020,6 +2027,7 @@ bool U3Misc::WearArmourCallback1()
 	}
 	else if (m_input[0] < 'A' || m_input[0] > 'H')
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(81);
 		return false;
 	}
@@ -2068,6 +2076,7 @@ void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
 	if (weapon != 'P' && weapon >= m_wpnUseTable[typeNum])
 	{
 		m_scrollArea->UPrintMessage(82);
+		m_audio->playSfx(SFX_ERROR1);
 		return;
 	}
 	weapon -= 'A';
@@ -2075,6 +2084,7 @@ void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
 	{
 		m_scrollArea->UPrintMessage(81);
 		return;
+		m_audio->playSfx(SFX_ERROR1);
 	}
 	m_Player[m_rosNum][48] = weapon;
 	if (!preset)
@@ -2379,6 +2389,7 @@ bool U3Misc::HandEquipCallback1()
 	m_opnum2 = (short)m_input_num;
 	if (m_opnum2 < 0 || m_opnum2 > 3)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(71);
 		return false;
 	}
@@ -2387,17 +2398,20 @@ bool U3Misc::HandEquipCallback1()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[6 + m_opnum2] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 
 	if (!m_Player[m_Party[6 + m_opnum2]][17])
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 	if (m_chNum == m_opnum2)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	m_scrollArea->UPrintMessage(53);
@@ -2455,6 +2469,7 @@ bool U3Misc::HandEquipCallback2()
 		setInputTypeRestricted(std::bind(&U3Misc::handArmorCallback, this), 'B');
 		break;
 	default:
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(59);
 		break;
 	}
@@ -2475,11 +2490,13 @@ bool U3Misc::handWeaponCallback()
 	if (m_input.empty())
 	{
 		m_scrollArea->UPrintMessage(59);
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	if (m_input[0] < 'B' || m_input[0] > 'P')
 	{
 		m_scrollArea->UPrintMessage(59);
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	short rosNum1 = m_Party[6 + m_chNum];
@@ -2488,11 +2505,13 @@ bool U3Misc::handWeaponCallback()
 	if (m_Player[rosNum1][48] == m_input_num && m_Player[rosNum1][48 + m_input_num] < 2)
 	{
 		m_scrollArea->UPrintMessage(63);
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	if (m_Player[rosNum1][48 + m_input_num] == 0)
 	{
 		m_scrollArea->UPrintMessage(59);
+		m_audio->playSfx(SFX_ERROR1);
 		return false;
 	}
 	m_Player[rosNum1][48 + m_input_num]--;
@@ -2518,11 +2537,13 @@ bool U3Misc::handArmorCallback()
 	m_scrollArea->UPrintWin("\n");
 	if (m_input.empty())
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(59);
 		return false;
 	}
 	if (m_input[0] < 'B' || m_input[0] > 'H')
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(59);
 		return false;
 	}
@@ -2531,11 +2552,13 @@ bool U3Misc::handArmorCallback()
 
 	if (m_Player[rosNum1][40] == m_input_num && m_Player[rosNum1][40 + m_input_num] < 2)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(63);
 		return false;
 	}
 	if (m_Player[rosNum1][40 + m_input_num] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(59);
 		return false;
 	}
@@ -2567,11 +2590,13 @@ bool U3Misc::handFoodCallback()
 	}
 	if (m_input_num > fromAmount)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(55);
 		return false;
 	}
 	if (toAmount + m_input_num > 9999)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(56);
 		return false;
 	}
@@ -2605,11 +2630,13 @@ bool U3Misc::handGoldCallback()
 	}
 	if (m_input_num > fromAmount)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(55);
 		return false;
 	}
 	if (toAmount + m_input_num > 9999)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(56);
 		return false;
 	}
@@ -2682,12 +2709,14 @@ bool U3Misc::handItemCallback1()
 
 	if (m_input_num > m_Player[rosNum1][m_opnum])
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(55);
 		return false;
 	}
 
 	if (m_input_num + m_Player[rosNum2][m_opnum] > 99)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(56);
 		return false;
 	}
@@ -2793,7 +2822,7 @@ bool U3Misc::FireCallback()
 	m_opnum = 4;
 
 	m_callbackStack.push(std::bind(&U3Misc::fireloop, this));
-
+	m_audio->playSfx(SFX_SHOOT);
 	return false;
 }
 
@@ -2841,6 +2870,7 @@ void U3Misc::firehit()
 	short monster = MonsterHere((short)m_xs, (short)m_ys);
 	m_gBallTileBackground = (monster == 255) ? value : m_Monsters[monster + TILEON] / 2;
 	PutXYVal(0xF4, (unsigned char)m_xs, (unsigned char)m_ys);
+	m_audio->playSfx(SFX_HIT);
 	int rngNum = m_utilities->getRandom(0, 255);
 	// This seems a little redundant
 	if (m_Monsters[m_opnum2] == 0x3C && rngNum < 128)

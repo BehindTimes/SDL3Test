@@ -217,6 +217,8 @@ void MainLoop()
 				}
 				DoSplashScreen();
 				MenuBarInit();
+				m_audio->m_currentSong = 0;
+				m_audio->m_nextSong = 0;
 				m_graphics->CreateIntroData();
 				m_graphics->CreateMenuData();
 				CreateButtonCallbacks();

@@ -6491,7 +6491,7 @@ void U3Misc::DoAutoHeal()
 	short clss;
 	bool isMulti;
 	bool isCler;
-	bool whoToCastHealIsMulti;
+	bool whoToCastHealIsMulti = false;
 
 	m_resources->GetPreference(U3PreferencesType::Auto_Heal, autoheal);
 	if (autoheal)

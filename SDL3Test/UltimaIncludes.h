@@ -69,6 +69,7 @@ extern std::string U3PrefLatestReleaseNote;
 extern std::string U3PrefInformedNewVersionDate;
 extern std::string U3PrefInformDayInterval;
 
+static constexpr std::string_view CursorsLoc = "Cursors";
 static constexpr std::string_view ResourceLoc = "Resources";
 static constexpr std::string_view MusicLoc = "Music";
 static constexpr std::string_view SfxLoc = "Sounds";

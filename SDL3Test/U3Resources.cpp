@@ -44,7 +44,7 @@ bool U3Resources::loadPreferences()
 {
 	LIBXML_TEST_VERSION
 
-	bool valid = true;
+		bool valid = true;
 	xmlDocPtr docPtr = nullptr;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -123,7 +123,7 @@ bool U3Resources::loadPreferences()
 			changeTheme(m_preferences.theme);
 		}
 	}
-	catch ([[maybe_unused]]const std::exception& e)
+	catch ([[maybe_unused]] const std::exception& e)
 	{
 	}
 
@@ -134,7 +134,7 @@ void U3Resources::savePreferences()
 {
 	LIBXML_TEST_VERSION
 
-	std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 	currentPath /= "settings.xml";
@@ -143,16 +143,16 @@ void U3Resources::savePreferences()
 	writer = xmlNewTextWriterFilename(currentPath.string().c_str(), 0);
 	xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
 	xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
-	xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST  (m_preferences.full_screen ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST(m_preferences.full_screen ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST  m_themes[m_currentTheme].c_str());
-	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST  (m_preferences.auto_save ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST  (m_preferences.include_wind ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST  (m_preferences.classic_appearance ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST  (m_preferences.allow_diagonal ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_combat", BAD_CAST (m_preferences.auto_combat ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_heal", BAD_CAST  (m_preferences.auto_heal ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "play_music", BAD_CAST  (m_preferences.play_music ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "play_sfx", BAD_CAST  (m_preferences.play_sfx ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST(m_preferences.auto_save ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST(m_preferences.include_wind ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST(m_preferences.classic_appearance ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "allow_diagonal", BAD_CAST(m_preferences.allow_diagonal ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_combat", BAD_CAST(m_preferences.auto_combat ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_heal", BAD_CAST(m_preferences.auto_heal ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "play_music", BAD_CAST(m_preferences.play_music ? "1" : "0"));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "play_sfx", BAD_CAST(m_preferences.play_sfx ? "1" : "0"));
 	xmlTextWriterEndElement(writer);
 	xmlTextWriterEndDocument(writer);
 	xmlFreeTextWriter(writer);
@@ -254,6 +254,15 @@ U3Resources::~U3Resources()
 	m_buttons.clear();
 
 	CleanupPartyNames();
+
+	for (auto& curSurface : m_cursors)
+	{
+		if (curSurface)
+		{
+			SDL_DestroySurface(curSurface);
+		}
+	}
+	m_cursors.clear();
 
 	for (auto& mode : m_allGraphics)
 	{
@@ -473,7 +482,7 @@ U3Resources::~U3Resources()
 		m_font_18 = nullptr;
 	}*/
 
-	
+
 }
 
 void U3Resources::displayFPS(int fps) const
@@ -700,6 +709,11 @@ bool U3Resources::init(SDL_Renderer* renderer)
 		return false;
 	}
 
+	if (!loadCursors())
+	{
+		return false;
+	}
+
 	loadButtons();
 	if (!loadDemo())
 	{
@@ -820,7 +834,7 @@ bool U3Resources::createFont()
 	int nFontSize = (int)font_size;
 
 	auto it = m_font_map.find(nFontSize);
-	
+
 	if (it != m_font_map.end())
 	{
 		m_font = m_font_map[nFontSize];
@@ -1268,7 +1282,7 @@ bool U3Resources::loadPLists()
 {
 	LIBXML_TEST_VERSION
 
-	bool valid = true;
+		bool valid = true;
 	xmlDocPtr docPtr = nullptr;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
@@ -1410,6 +1424,83 @@ void U3Resources::createZStatButtons()
 	m_zstatbuttons[1].setVisible(true);
 	m_zstatbuttons[0].SetButtonCallback(std::bind(&U3Resources::zStatDistributeCallback, this, std::placeholders::_1));
 	m_zstatbuttons[1].SetButtonCallback(std::bind(&U3Resources::zStatJoinGold, this, std::placeholders::_1));
+}
+
+bool U3Resources::loadCursors()
+{
+	/*auto tempsurface = IMG_Load("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Cursors\\CursorNorth_4X.png");
+	auto tempcursor = SDL_CreateColorCursor(tempsurface, 0, 0);
+	SDL_SetCursor(tempcursor);*/
+
+	std::vector<std::string> cursorPath =
+	{
+		{ "CursorAttack.png" },
+		{ "CursorAttack_4X.png" },
+		{ "CursorBackward.png" },
+		{ "CursorBackward_4X.png" },
+		{ "CursorBoard.png" },
+		{ "CursorBoard_4X.png" },
+		{ "CursorCannon.png" },
+		{ "CursorCannon_4X.png" },
+		{ "CursorChest.png" },
+		{ "CursorDead.png" },
+		{ "CursorDead_4X.png" },
+		{ "CursorDown.png" },
+		{ "CursorDown_4X.png" },
+		{ "CursorEast.png" },
+		{ "CursorEast_4X.png" },
+		{ "CursorEnter.png" },
+		{ "CursorEnter_4X.png" },
+		{ "CursorExit.png" },
+		{ "CursorExit_4X.png" },
+		{ "CursorForward.png" },
+		{ "CursorForward_4X.png" },
+		{ "CursorLeft.png" },
+		{ "CursorLeft_4X.png" },
+		{ "CursorLook.png" },
+		{ "CursorLook_4X.png" },
+		{ "CursorNorth.png" },
+		{ "CursorNorth_4X.png" },
+		{ "CursorNorthEast.png" },
+		{ "CursorNorthEast_4X.png" },
+		{ "CursorNorthWest.png" },
+		{ "CursorNorthWest_4X.png" },
+		{ "CursorPass.png" },
+		{ "CursorPass_4X.png" },
+		{ "CursorRight.png" },
+		{ "CursorRight_4X.png" },
+		{ "CursorSouth.png" },
+		{ "CursorSouth_4X.png" },
+		{ "CursorSouthEast.png" },
+		{ "CursorSouthEast_4X.png" },
+		{ "CursorSouthWest.png" },
+		{ "CursorSouthWest_4X.png" },
+		{ "CursorTalk.png" },
+		{ "CursorTorch.png" },
+		{ "CursorUnlock.png" },
+		{ "CursorUp.png" },
+		{ "CursorUp_4X.png" },
+		{ "CursorUse.png" },
+		{ "CursorWest.png" },
+		{ "CursorWest_4X.png" }
+	};
+
+	std::filesystem::path currentPath;
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= CursorsLoc;
+
+	for (auto& cur_pair : cursorPath)
+	{
+		std::filesystem::path tempPath = currentPath / cur_pair;
+		SDL_Surface* curSurface = IMG_Load(tempPath.string().c_str());
+		if (!curSurface)
+		{
+			return false;
+		}
+		m_cursors.push_back(curSurface);
+	}
+	return true;
 }
 
 bool U3Resources::loadImages()
@@ -3618,7 +3709,7 @@ void U3Resources::ShowMonsters()
 			{
 				DrawMasked(m_misc->m_Party[0], 5, 5);
 			}
-			
+
 			//m_misc->m_gShapeSwapped[10] = false;
 		}
 	}
@@ -4910,13 +5001,13 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][85];
 	outStr += tempStr;
-	renderDisplayString(m_font_10, outStr, (int)(((280)* scaler) + hOff), (int)((132 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280) * scaler) + hOff), (int)((132 * scaler) + vOff), sdl_text_color, 0, false);
 	// Keys
 	tempNum = m_misc->m_Player[rosNum][39];
 	outStr = std::to_string(tempNum);
 	tempStr = m_plistMap["MoreMessages"][86];
 	outStr += tempStr;
-	renderDisplayString(m_font_10, outStr, (int)(((280)* scaler) + hOff), (int)((146 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((280) * scaler) + hOff), (int)((146 * scaler) + vOff), sdl_text_color, 0, false);
 
 	// Small text
 	outStr = m_plistMap["MoreMessages"][61];
@@ -4935,7 +5026,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 		}
 	}
 	outStr += tempStr;
-	renderDisplayString(m_font_10, outStr, (int)(((82)* scaler) + hOff), (int)((64 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((82) * scaler) + hOff), (int)((64 * scaler) + vOff), sdl_text_color, 0, false);
 
 	// Draw boxed overall health, race, and gender.
 	if (m_misc->m_Player[rosNum][17] == 'G')
@@ -4979,7 +5070,7 @@ void U3Resources::GenerateZStatImage(int rosNum)
 			break;
 		}
 	}
-	renderDisplayString(m_font_10, outStr, (int)(((252)* scaler) + hOff), (int)((55 * scaler) + vOff), sdl_text_color, 0, false);
+	renderDisplayString(m_font_10, outStr, (int)(((252) * scaler) + hOff), (int)((55 * scaler) + vOff), sdl_text_color, 0, false);
 
 	if (m_misc->m_Player[rosNum][24] == 'F')
 	{

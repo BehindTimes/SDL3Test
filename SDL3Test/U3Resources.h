@@ -238,6 +238,7 @@ public:
 	U3Preferences m_preferences;
 	std::vector<std::array<unsigned char, 200>> m_cons_data;
 	std::vector<std::string> m_themes;
+	std::vector<SDL_Surface*> m_cursors;
 	bool m_cleanupAlert;
 	Uint64 m_curTickDemo;
 	Uint64 m_elapsedTimeDemo;
@@ -256,6 +257,7 @@ private:
 	bool createFont();
 	void loadGraphics();
 	bool loadImages();
+	bool loadCursors();
 	void loadButtons();
 	
 	bool loadPLists();

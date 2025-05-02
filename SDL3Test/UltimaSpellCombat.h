@@ -42,6 +42,7 @@ public:
 	bool m_cHide;
 	Uint64 m_elapsedFlashTime;
 	bool m_updateBlink;
+	int m_spellnum;
 private:
 	void Failed();
 	bool ShowHitCallback() const;

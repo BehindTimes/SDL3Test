@@ -46,7 +46,8 @@ UltimaSpellCombat::UltimaSpellCombat() :
 	m_updateBlink(false),
 	m_hit(0),
 	m_destX(0),
-	m_destY(0)
+	m_destY(0),
+	m_spellnum(-1)
 {
 	memset(m_futureMonX, 0, sizeof(unsigned char) * 8);
 	memset(m_futureMonY, 0, sizeof(unsigned char) * 8);
@@ -515,6 +516,32 @@ void UltimaSpellCombat::Flashriek() // $5885
 {
 	short SpellSound[34] = { 0, 1, 2, 3, 4, 1, 5, 1, 2, 7, 0, 1, 7, 0, 0, 0, 0, 7, 6, 2, 4, 3, 5, 6, 5, 2, 6, 7, 1, 6, 0, 6, 7, 0 };
 	m_misc->InverseTiles(true);
+	switch (SpellSound[m_spellnum]) {
+	case 0:
+		m_audio->playSfx(SFX_BIGDEATH);
+		break;    // was 0xE0
+	case 1:
+		m_audio->playSfx(SFX_IMMOLATE);
+		break;    // was 0xE9
+	case 2:
+		m_audio->playSfx(SFX_TORCHIGNITE);
+		break;    // was 0xDF
+	case 3:
+		m_audio->playSfx(SFX_DOWNWARDS);
+		break;    // was 0xDE
+	case 4:
+		m_audio->playSfx(SFX_UPWARDS);
+		break;    // was 0xDD
+	case 5:
+		m_audio->playSfx(SFX_INVOCATION);
+		break;    // was 0xF4
+	case 6:
+		m_audio->playSfx(SFX_HEAL);
+		break;    // was 0xF3
+	default:
+		m_audio->playSfx(SFX_MISCSPELL);
+		break;    // was 0xDC
+	}
 }
 
 
@@ -551,6 +578,7 @@ bool UltimaSpellCombat::BigDeathCallback3()
 	{
 		m_misc->m_callbackStack.pop();
 	}
+	m_audio->playSfx(SFX_HIT);
 	m_misc->DelayGame(200, std::bind(&UltimaSpellCombat::BigDeathCallback2, this));
 
 	return false;
@@ -1493,6 +1521,7 @@ bool UltimaSpellCombat::ProjectileCallback2()
 	{
 		m_misc->m_callbackStack.pop();
 	}
+	m_audio->playSfx(SFX_HIT);
 	DamageMonster(m_hit, m_damage, m_chNum);
 
 	return false;
@@ -2114,6 +2143,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 	short rosNum;
 	short rngNum;
 	m_chNum = chnum;
+	m_spellnum = spellnum;
 
 	rosNum = m_misc->m_Party[6 + chnum];
 	switch (spellnum)

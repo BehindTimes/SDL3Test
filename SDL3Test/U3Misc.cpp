@@ -1120,9 +1120,11 @@ bool U3Misc::ValidDir()
 			m_GoodPlace = true;
 			if (m_Party[0] == 20)
 			{
+				m_audio->playSfx(SFX_HORSEWALK);
 			}
 			else
 			{
+				m_audio->playSfx(SFX_STEP);
 			}
 		}
 	}
@@ -3558,105 +3560,6 @@ char U3Misc::GetHeading(short value) // $7DFC
 	return 1;
 }
 
-// TO DO:
-// They're updating the graphics in the monster move loop.
-// Rather, we want to rewrite this to handle being in the main loop
-/*bool U3Misc::moveshoot(short offset) // $7B36
-{
-	int randnum = m_utilities->getRandom(0, 255);
-	if (randnum > 128)
-	{
-		return false;
-	}
-	GetMonsterDir(offset);
-
-	m_xs = 5 - m_zp[0xF5];
-	if (m_xs > 10 || m_xs < 0)
-	{
-		return false;
-	}
-	m_ys = 5 - m_zp[0xF6];
-	if (m_ys > 10 || m_ys < 0)
-	{
-		return false;
-	}
-	//DrawMap(xpos, ypos);
-	//PlaySoundFile(CFSTR("Shoot"), TRUE);    // was 0xEA
-	m_zp[0xFB] = 3;
-
-	// moveshoot2
-
-	return true;
-}*/
-
-/*void U3Misc::move7AAA(short offset)
-{
-	short value;
-	// check if this is a valid place for the monster to walk on.
-
-	value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
-	if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
-	{
-		value = 255;
-	}
-	if (value != 0)
-	{
-		m_xs = m_Monsters[offset + XMON];
-		value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
-		if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
-		{
-			value = 255;
-		}
-		if (value != 0)
-		{
-			m_xs = m_graphics->MapConstrain(m_Monsters[offset + XMON] + m_dx);
-			m_ys = m_graphics->MapConstrain(m_Monsters[offset + YMON]);    // no +dy!?
-			value = ValidMonsterDir(GetXYVal(m_xs, m_ys), m_Monsters[offset]);
-			if (value == 0 && MonsterHere(m_xs, m_ys) != 255)
-			{
-				value = 255;
-			}
-			if (value != 0)
-			{
-				if (m_Monsters[offset] == 0x3C || m_Monsters[offset] == 0x74)
-				{
-					moveshoot(offset);
-				}
-				return;
-			}
-		}
-	}
-	if (m_xpos == m_xs && m_ypos == m_ys)
-	{
-		return;
-	}
-	PutXYVal(m_Monsters[offset + TILEON], m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
-	m_Monsters[offset + XMON] = (unsigned char)m_xs;
-	m_Monsters[offset + YMON] = (unsigned char)m_ys;
-	m_Monsters[offset + TILEON] = GetXYVal(m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
-	unsigned char monsterTile = m_Monsters[offset];
-	if (m_Monsters[offset + VARMON])
-	{
-		monsterTile += m_Monsters[offset + VARMON];
-	}
-	PutXYVal(monsterTile, m_Monsters[offset + XMON], m_Monsters[offset + YMON]);
-	if (m_Monsters[offset] == 0x3C || m_Monsters[offset] == 0x74)
-	{
-		moveshoot(offset);
-	}
-}*/
-
-/*bool U3Misc::moveoutside(short offset)
-{
-	GetMonsterDir(offset);
-	if (m_xpos == m_xs && m_ypos == m_ys)
-	{
-		AttackCode(offset);
-		return false;
-	}
-	return true;
-}*/
-
 short U3Misc::GetXY(short x, short y) // $7E18
 {
 	return m_resources->m_TileArray[y * 11 + x];
@@ -5108,11 +5011,11 @@ bool U3Misc::HPSubtract(short rosNum, short amount) // $7181
 		{
 			if (m_Player[rosNum][24] == 'F')
 			{
-				//PlaySoundFile(CFSTR("DeathFemale"), TRUE);    // was 0xE6, TRUE
+				m_audio->playSfx(SFX_DEATHFEMALE);
 			}
 			else
 			{
-				//PlaySoundFile(CFSTR("DeathMale"), TRUE);    // was 0xE5, TRUE
+				m_audio->playSfx(SFX_DEATHMALE);
 			}
 		}
 		return true;

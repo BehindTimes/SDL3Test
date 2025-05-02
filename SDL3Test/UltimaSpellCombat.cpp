@@ -236,7 +236,7 @@ void UltimaSpellCombat::ShowHit(short x, short y, unsigned char hitType, unsigne
 {
 	bool sound_inactive;
 	m_resources->GetPreference(U3PreferencesType::Sound_Inactive, sound_inactive);
-	if (!sound_inactive)
+	if (sound_inactive)
 	{
 		m_misc->m_inputType = InputType::Default;
 		return;

@@ -215,6 +215,7 @@ U3Resources::U3Resources() :
 	m_texTimeLord(nullptr),
 	m_overrideImage(-1),
 	m_elapsedMoveTime(0),
+	m_elapsedAutoHealTime(0),
 	m_newMove(false),
 	m_wasMove(false),
 	m_selectedFormRect(-1),
@@ -507,6 +508,9 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 	case U3PreferencesType::Auto_Combat:
 		value = m_preferences.auto_combat;
 		break;
+	case U3PreferencesType::Auto_Heal:
+		value = m_preferences.auto_heal;
+		break;
 	case U3PreferencesType::Include_Wind:
 		value = m_preferences.include_wind;
 		break;
@@ -515,6 +519,7 @@ void U3Resources::GetPreference(U3PreferencesType type, bool& value) const
 		break;
 	case U3PreferencesType::Sound_Inactive:
 		value = m_preferences.play_sfx;
+		break;
 	default:
 		value = false;
 		break;
@@ -533,6 +538,9 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 		break;
 	case U3PreferencesType::Auto_Combat:
 		m_preferences.auto_combat = value;
+		break;
+	case U3PreferencesType::Auto_Heal:
+		m_preferences.auto_heal = value;
 		break;
 	case U3PreferencesType::Include_Wind:
 		m_preferences.include_wind = value;
@@ -3662,6 +3670,7 @@ void U3Resources::updateGameTime(Uint64 deltaTime)
 {
 	if (m_wasMove)
 	{
+		m_elapsedAutoHealTime = 0;
 		m_elapsedMoveTime = 0;
 		m_wasMove = false;
 	}
@@ -3670,6 +3679,16 @@ void U3Resources::updateGameTime(Uint64 deltaTime)
 		if (m_misc->m_inputType == InputType::Default)
 		{
 			m_elapsedMoveTime += m_delta_time;
+			m_elapsedAutoHealTime += m_delta_time;
+			if (m_elapsedAutoHealTime > AutoHealTime)
+			{
+				m_elapsedAutoHealTime %= m_delta_time;
+				if (m_graphics->m_curMode == U3GraphicsMode::Map ||
+					m_graphics->m_curMode == U3GraphicsMode::Dungeon)
+				{
+					m_misc->DoAutoHeal();
+				}
+			}
 			if (m_elapsedMoveTime > MoveTime)
 			{
 				m_elapsedMoveTime %= m_delta_time;

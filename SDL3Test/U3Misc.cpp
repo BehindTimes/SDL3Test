@@ -4248,6 +4248,7 @@ void U3Misc::CheckAllDead() // $71B4
 
 	if (!alive)
 	{
+		m_resources->m_elapsedAutoHealTime = 0;
 		m_resources->m_wasMove = false;
 		m_resources->m_elapsedMoveTime = 0;
 		m_checkDead = true;
@@ -4480,6 +4481,7 @@ bool U3Misc::ResurrectCallback()
 	//m_scrollArea->blockPrompt(false);
 	m_checkDead = false;
 	m_resources->m_elapsedMoveTime = 0;
+	m_resources->m_elapsedAutoHealTime = 0;
 	//m_graphics->m_curMode = U3GraphicsMode::Map;
 	//m_gameMode = GameStateMode::Map;
 
@@ -6475,4 +6477,68 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 		}
 	}
 	return retVal;
+}
+
+void U3Misc::DoAutoHeal()
+{
+	short c;
+	bool autoheal;
+	short whoToHeal = -1;
+	short whoToCast = -1;
+	short hp;
+	short maxhp;
+	short lowest;
+	short clss;
+	bool isMulti;
+	bool isCler;
+	bool whoToCastHealIsMulti;
+
+	m_resources->GetPreference(U3PreferencesType::Auto_Heal, autoheal);
+	if (autoheal)
+	{
+		// pick someone to heal (lowest hp as long as need 25 hp or more)
+		lowest = 750; // To do (need to add threshold)
+		for (c = 0; c <= 3; c++)
+		{
+
+			hp = m_Player[m_Party[6 + c]][26] * 256 + m_Player[m_Party[6 + c]][27];
+			maxhp = m_Player[m_Party[6 + c]][28] * 256 + m_Player[m_Party[6 + c]][29];
+			if (hp < lowest && hp <= (maxhp - 25))
+			{
+				if (CheckAlive(c))
+				{
+					lowest = hp;
+					whoToHeal = c;
+				}
+			}
+			if (whoToHeal > -1)
+			{
+				for (c = 0; c <= 3; c++)
+				{
+					if (CheckAlive(c))
+					{
+						clss = m_Player[m_Party[6 + c]][23];
+						isMulti = (clss == m_careerTable[8] || clss == m_careerTable[10]);
+						isCler = (clss == m_careerTable[1] || clss == m_careerTable[4] || clss == m_careerTable[7] || isMulti);
+						if ((isCler || isMulti) && m_Player[m_Party[6 + c]][25] >= 10)
+						{
+							whoToCast = c;
+							whoToCastHealIsMulti = isMulti;
+						}
+					}
+				}
+				if (whoToCast > -1)
+				{
+					m_misc->m_InputDeque.push_back(SDLK_1 + whoToHeal);
+					if (whoToCastHealIsMulti)
+					{
+						m_misc->m_InputDeque.push_back(SDLK_C);
+					}
+					m_misc->m_InputDeque.push_back(SDLK_C);
+					m_misc->m_InputDeque.push_back(SDLK_1 + whoToCast);
+					m_misc->m_InputDeque.push_back(SDLK_C);
+				}
+			}
+		}
+	}
 }

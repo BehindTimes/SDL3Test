@@ -1563,6 +1563,13 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
     if (updateGame)
     {
         m_scrollArea->blockPrompt(false);
+        if (!m_misc->m_InputDeque.empty())
+        {
+            event.type = SDL_EVENT_KEY_DOWN;
+            event.key.key = m_misc->m_InputDeque.back();
+            event.key.mod = 0;
+            m_misc->m_InputDeque.pop_back();
+        }
         m_misc->ProcessEvent(event);
         m_resources->updateGameTime(deltaTime);
     }
@@ -1668,6 +1675,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
                 m_scrollArea->UPrintMessage(150);
 
             }
+
             //m_scrollArea->blockPrompt(false);
             updateGame = false;
         }
@@ -1676,6 +1684,13 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     if (updateGame)
     {
         m_scrollArea->blockPrompt(false);
+        if (!m_misc->m_InputDeque.empty())
+        {
+            event.type = SDL_EVENT_KEY_DOWN;
+            event.key.key = m_misc->m_InputDeque.back();
+            event.key.mod = 0;
+            m_misc->m_InputDeque.pop_back();
+        }
         m_misc->ProcessEvent(event);
         m_resources->updateGameTime(deltaTime);
     }

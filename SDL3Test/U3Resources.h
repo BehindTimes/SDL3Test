@@ -18,7 +18,8 @@ enum class U3PreferencesType
 	Classic_Appearance,
 	Include_Wind,
 	Sound_Inactive,
-	Auto_Combat
+	Auto_Combat,
+	Auto_Heal
 };
 
 struct U3Preferences
@@ -221,6 +222,7 @@ public:
 	int m_overrideImage;
 	bool m_newMove;
 	Uint64 m_elapsedMoveTime;
+	Uint64 m_elapsedAutoHealTime;
 	bool m_wasMove;
 	int m_selectedFormRect;
 	std::vector<int> m_selectedCharacters;
@@ -281,6 +283,7 @@ private:
 	void zStatDistributeCallback(int button);
 	void zStatJoinGold(int button);
 
+	static constexpr Uint64 AutoHealTime = 600;
 	static constexpr Uint64 MoveTime = 6000;
 	static constexpr Uint64 DelayScroll = 2000;
 	static constexpr Uint64 DelayDemo = 250;

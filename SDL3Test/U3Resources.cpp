@@ -13,6 +13,7 @@
 #include "UltimaDungeon.h"
 #include "UltimaSpellCombat.h"
 #include "UltimaSound.h"
+#include "UltimaMacIF.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -1074,6 +1075,8 @@ void U3Resources::CalculateBlockSize()
 		createZStatButtons();
 	}
 
+	loadCursors();
+
 	m_graphics->m_menuInit = false;
 
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
@@ -1428,6 +1431,17 @@ void U3Resources::createZStatButtons()
 
 bool U3Resources::loadCursors()
 {
+	ReflectNewCursor(-1);
+	for (auto& curSurface : m_cursors)
+	{
+		if (curSurface)
+		{
+			SDL_DestroySurface(curSurface);
+		}
+	}
+
+	m_cursors.clear();
+
 	/*auto tempsurface = IMG_Load("G:\\source\\SDL3Test\\SDL3Test\\Resources\\Cursors\\CursorNorth_4X.png");
 	auto tempcursor = SDL_CreateColorCursor(tempsurface, 0, 0);
 	SDL_SetCursor(tempcursor);*/
@@ -1490,6 +1504,8 @@ bool U3Resources::loadCursors()
 	currentPath /= ResourceLoc;
 	currentPath /= CursorsLoc;
 
+	float scaler = (float)m_blockSize / 16.0f;
+
 	for (auto& cur_pair : cursorPath)
 	{
 		std::filesystem::path tempPath = currentPath / cur_pair;
@@ -1498,7 +1514,9 @@ bool U3Resources::loadCursors()
 		{
 			return false;
 		}
-		m_cursors.push_back(curSurface);
+		SDL_Surface* newSurface = SDL_ScaleSurface(curSurface, (int)(curSurface->w * scaler), (int)(curSurface->h * scaler), SDL_SCALEMODE_LINEAR);
+		SDL_DestroySurface(curSurface);
+		m_cursors.push_back(newSurface);
 	}
 	return true;
 }

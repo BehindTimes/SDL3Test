@@ -1,6 +1,4 @@
 #pragma once
 
-void ToolBoxInit();
-void WindowInit(short which);
-void MenuBarInit();
-void CaclulateBlockSize(short& blockSize);
+void ReflectNewCursor(int newCursor);
+void CursorUpdate(float x, float y);

@@ -35,6 +35,7 @@ std::unique_ptr<U3Utilities> m_utilities;
 std::unique_ptr<UltimaSpellCombat> m_spellCombat;
 std::unique_ptr<UltimaDungeon> m_dungeon;
 std::unique_ptr<U3Audio> m_audio;
+SDL_Cursor* g_current_cursor = nullptr;
 
 bool DoSplashScreen();
 void MainLoop();
@@ -141,6 +142,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	TTF_Quit();
 	TTF_DestroyRendererTextEngine(engine_surface);
 
+	if (g_current_cursor)
+	{
+		SDL_DestroyCursor(g_current_cursor);
+		g_current_cursor = nullptr;
+	}
+
 	//Mix_FreeMusic(music);
 	Mix_CloseAudio();
 	SDL_DestroyRenderer(renderer);
@@ -190,7 +197,6 @@ static void CreateButtonCallbacks()
 
 void MainLoop()
 {
-	MenuBarInit();
 	m_graphics->CreateIntroData();
 	m_graphics->CreateMenuData();
 	CreateButtonCallbacks();
@@ -203,6 +209,8 @@ void MainLoop()
 
 	while (newMode != GameMode::Unknown)
 	{
+		ReflectNewCursor(-1);
+
 		if (oldMode != newMode)
 		{
 			if (oldMode == GameMode::Game) // Need to do a bunch of cleanup here
@@ -216,7 +224,6 @@ void MainLoop()
 					break;
 				}
 				DoSplashScreen();
-				MenuBarInit();
 				m_audio->m_currentSong = 0;
 				m_audio->m_nextSong = 0;
 				m_graphics->CreateIntroData();
@@ -1084,6 +1091,9 @@ void Game()
 	m_audio->m_nextSong = 1;
 	m_audio->musicUpdate();
 
+	ReflectNewCursor(-1);
+	//CursorUpdate();
+
 	while (1)
 	{
 		if (gInterrupt)
@@ -1135,6 +1145,7 @@ void Game()
 		case SDL_EVENT_MOUSE_MOTION:
 			mouseState = 0;
 			updateMouse = true;
+			CursorUpdate(event.motion.x, event.motion.y);
 			break;
 		default:
 			break;

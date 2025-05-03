@@ -223,6 +223,26 @@ private:
 	ccdData m_ccdData;
 };
 
+struct DitlInfo
+{
+	DitlInfo() :
+		x1(0),
+		y1(0),
+		x2(0),
+		y2(0),
+		type(0),
+		id(0)
+	{
+	}
+	int x1;
+	int y1;
+	int x2;
+	int y2;
+	int type;
+	std::string text;
+	int id;
+};
+
 class U3Dialog
 {
 public:
@@ -241,7 +261,8 @@ private:
 	void DrawFramePiece(int part, int x, int y);
 	void adjustRect(SDL_FRect& myRect);
 	void loadString();
-	void loadDitlString(int blockSize, std::function<void(int)> callback);
+	//void loadDitlString(int blockSize, std::function<void(int)> callback);
+	bool processDitlData(std::vector<unsigned char> data, std::vector<DitlInfo>& ditl_vec);
 	void loadDitl(int blockSize, std::function<void(int)> callback);
 	bool createFont();
 	void createButton(std::function<void(int)> callback);
@@ -250,7 +271,7 @@ private:
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 	void calculateRects();
 	void finishedCallback(int button);
-
+	short getDitlShort(std::vector<unsigned char> data, int& address);
 	
 
 	U3Button m_backButton;

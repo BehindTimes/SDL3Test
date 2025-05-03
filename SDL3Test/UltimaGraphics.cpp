@@ -1567,6 +1567,10 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
             m_misc->CheckAllDead();
             m_misc->WhirlPool();
             updateGame = false;
+            if (m_misc->m_checkDead)
+            {
+                //m_scrollArea->
+            }
         }
     }
 

@@ -74,7 +74,6 @@ static constexpr std::string_view ResourceLoc = "Resources";
 static constexpr std::string_view MusicLoc = "Music";
 static constexpr std::string_view SfxLoc = "Sounds";
 static constexpr std::string_view Standard = "Standard";
-static constexpr std::string_view TextLoc = "Text";
 static constexpr std::string_view FontLoc = "Fonts";
 static constexpr std::string_view ImagesLoc = "Images";
 static constexpr std::string_view BinLoc = "Bin";

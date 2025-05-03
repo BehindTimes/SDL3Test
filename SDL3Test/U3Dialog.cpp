@@ -264,23 +264,186 @@ void U3Dialog::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
+short U3Dialog::getDitlShort(std::vector<unsigned char> data, int& address)
+{
+	short value = 0;
+	for (int byte = 0; byte < 2; ++byte)
+	{
+		value <<= 8;
+		value += data[address];
+		address++;
+	}
+	return value;
+}
+
+bool U3Dialog::processDitlData(std::vector<unsigned char> data, std::vector<DitlInfo>& ditl_vec)
+{
+	int numitems = 0;
+	int address = 0;
+	numitems = getDitlShort(data, address);
+	numitems++;
+
+	std::string strFromApostrophe;
+	std::string strToApostrophe;
+	std::string strFromLeftQuote;
+	std::string strToLeftQuote;
+	std::string strFromRightQuote;
+	std::string strToRightQuote;
+
+	strFromApostrophe += static_cast<char>(0xd5);
+
+	strToApostrophe += static_cast<char>(0xe2);
+	strToApostrophe += static_cast<char>(0x80);
+	strToApostrophe += static_cast<char>(0x99);
+
+	strFromLeftQuote += static_cast<char>(0xd2);
+
+	strToLeftQuote += static_cast<char>(0xe2);
+	strToLeftQuote += static_cast<char>(0x80);
+	strToLeftQuote += static_cast<char>(0x9c);
+
+	strFromRightQuote += static_cast<char>(0xd3);
+
+	strToRightQuote += static_cast<char>(0xe2);
+	strToRightQuote += static_cast<char>(0x80);
+	strToRightQuote += static_cast<char>(0x9d);
+
+	for (int byte = 0; byte < numitems; byte++)
+	{
+		DitlInfo curInfo;
+
+		address += 4; // ?  What's this?
+		curInfo.y1 = getDitlShort(data, address);
+		curInfo.x1 = getDitlShort(data, address);
+		curInfo.y2 = getDitlShort(data, address);
+		curInfo.x2 = getDitlShort(data, address);
+		curInfo.type = data[address];
+		address++;
+		int len = data[address];
+		address++;
+		std::vector<char> vec_text;
+		switch (curInfo.type)
+		{
+		case 4: // button
+			vec_text.resize(len);
+			std::copy(data.begin() + address,
+				data.begin() + address + len, vec_text.begin());
+			vec_text.push_back(0);
+			address += len;
+			if (len % 2 != 0)
+			{
+				address++; // Seems to be 16 bit aligned
+			}
+			curInfo.text = std::string(vec_text.data());
+			break;
+		case 0x88: // text
+			vec_text.resize(len);
+			std::copy(data.begin() + address,
+				data.begin() + address + len, vec_text.begin());
+			vec_text.push_back(0);
+			address += len;
+			if (len % 2 != 0)
+			{
+				address++; // Seems to be 16 bit aligned
+			}
+			curInfo.text = std::string(vec_text.data());
+			break;
+		case 0xA0: // icon
+			if (len != 2)
+			{
+				return false; // Guess I'm wrong
+			}
+			curInfo.id = getDitlShort(data, address);
+			break;
+		}
+
+		curInfo.text = m_utilities->replaceAll(curInfo.text, std::string("\r"), std::string("\n"));
+		curInfo.text = m_utilities->replaceAll(curInfo.text, strFromApostrophe, strToApostrophe);
+		curInfo.text = m_utilities->replaceAll(curInfo.text, strFromLeftQuote, strToLeftQuote);
+		curInfo.text = m_utilities->replaceAll(curInfo.text, strFromRightQuote, strToRightQuote);
+		
+		ditl_vec.push_back(curInfo);
+
+	}
+	
+	return true;
+}
+
 // I'm completely guessing on this stuff
 void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 {
+	Uint32 file_size = 0;
 	size_t start_address = 0x253b; // This I know is 1
-	for (int index = 1; index < m_message; index++)
+
+	for (int index = 1; index < (m_message - BASERES) - 1; index++)
 	{
-		Uint32 file_size = 0;
+		file_size = 0;
 		for (int byte = 0; byte < 4; ++byte)
 		{
 			file_size <<= 8;
-			file_size += m_resources->m_vecResourceData[start_address];
+			file_size += m_resources->m_vecResourceData[start_address + byte];
 		}
-		start_address += file_size + 1;
+		start_address += file_size + 4;
 	}
-	int j = 9;
-}
+	file_size <<= 8;
+	for (int byte = 0; byte < 4; ++byte)
+	{
+		file_size <<= 8;
+		file_size += m_resources->m_vecResourceData[start_address + byte];
+	}
+	std::vector<unsigned char> data;
+	data.resize(file_size);
+	std::copy(m_resources->m_vecResourceData.begin() + (start_address + 4),
+		m_resources->m_vecResourceData.begin() + (start_address + 4) + file_size, data.begin());
+	
+	std::vector<DitlInfo> ditl_data;
+	if (!processDitlData(data, ditl_data))
+	{
+		return;
+	}
 
+	int curId = 0;
+
+	m_strMessage.clear();
+
+	for (auto& temp_data : ditl_data)
+	{
+		if (temp_data.type == 0xA0) // Icon
+		{
+			std::string icon_str = std::to_string(temp_data.id);
+			m_utilities->trim(icon_str);
+			std::filesystem::path IconPathMessage = std::filesystem::current_path();
+			IconPathMessage /= ResourceLoc;
+			IconPathMessage /= BinLoc;
+			IconPathMessage /= IconPathMessage;
+			IconPathMessage /= std::string("MainResources.rsrc_cicn_");
+			IconPathMessage += icon_str;
+			IconPathMessage += std::string(".bmp");
+
+			if (std::filesystem::exists(IconPathMessage) && !m_icon)
+			{
+				m_icon = IMG_LoadTexture(m_renderer, IconPathMessage.string().c_str());
+			}
+		}
+		else if (ditl_data[curId].type == 0x04) // Button
+		{
+			std::string strText = std::string(" ") + temp_data.text + std::string(" "); // just to give some extra padding
+			//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
+
+			curId++;
+			auto curButton = std::make_unique<U3Button>();
+			m_vecButtons.push_back(std::move(curButton));
+			m_vecButtons.back()->CreateTextButton(blockSize, m_renderer, m_engine_surface, m_font, strText);
+			m_vecButtons.back()->SetButtonCallback(callback, curId);
+		}
+		else if (ditl_data[curId].type == 0x88) // Text
+		{
+			m_strMessage = temp_data.text;
+			RewrapMessage(m_strMessage);
+		}
+	}
+}
+/*
 void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
 {
 	std::filesystem::path currentPathMessage = std::filesystem::current_path();
@@ -432,7 +595,7 @@ void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
 
 	m_strTitle.clear();
 	RewrapMessage(m_strMessage);
-}
+}*/
 
 void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 {
@@ -1333,10 +1496,10 @@ CreateCharacterDialog::~CreateCharacterDialog()
 
 void CreateCharacterDialog::loadPresets()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	/*std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	currentPath /= TextLoc;
-	currentPath /= "MainResources.rsrc_STR#_415_Class Preset Values_";
+	currentPath /= "MainResources.rsrc_STR#_415_Class Preset Values_";*/
 
 	m_Presets.resize((int)m_resources->m_plistMap["Classes"].size());
 

@@ -1076,6 +1076,8 @@ void Game()
 	int mouseState = 0;
 	changeMode = false;
 	m_misc->m_lastCard = 0x1E;
+	m_resources->m_newMove = true;
+	m_scrollArea->blockPrompt(true);
 
 	Uint64 startTick = SDL_GetTicks();
 	Uint64 elapsedTime = 0;

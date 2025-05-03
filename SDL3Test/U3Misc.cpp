@@ -671,7 +671,7 @@ void U3Misc::LoadUltimaMap(short map)
 			{
 				start_loc += (260 * (size_t)(map - 8));
 			}
-			
+			file_size = 0;
 			for (int byte = 0; byte < 4; ++byte)
 			{
 				file_size <<= 8;

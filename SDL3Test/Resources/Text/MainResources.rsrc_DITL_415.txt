@@ -1,7 +1,0 @@
-# 2 entries
-# item 0: BUTTON (0x04) enabled
-#   bounds: x1=278 y1=79 x2=336 y2=99
-#   text: "Okay"
-# item 1: TEXT (0x88) disabled
-#   bounds: x1=72 y1=9 x2=339 y2=62
-#   text: "The roster is full.  You need to terminate a character from the roster before you can create a new character."

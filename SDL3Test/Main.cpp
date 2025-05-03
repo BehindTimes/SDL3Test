@@ -516,6 +516,7 @@ void MainMenu()
 		}
 
 		updateMouse = false;
+		int mouse_buttons;
 
 		SDL_PollEvent(&event);
 		switch (event.type)
@@ -549,12 +550,20 @@ void MainMenu()
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-			mouseState = 1;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+			{
+				mouseState = 1;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			mouseState = 2;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+			{
+				mouseState = 2;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_MOTION:
 			mouseState = 0;
@@ -781,6 +790,7 @@ void Organize()
 	bool updateMouse = false;
 	changeMode = false;
 	bool hasAlert = false;
+	int mouse_buttons;
 
 	while (1)
 	{
@@ -836,12 +846,20 @@ void Organize()
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-			mouseState = 1;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+			{
+				mouseState = 1;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			mouseState = 2;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+			{
+				mouseState = 2;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_MOTION:
 			mouseState = 0;
@@ -1095,6 +1113,7 @@ void Game()
 		}
 
 		updateMouse = false;
+		int mouse_buttons;
 
 		SDL_PollEvent(&event);
 		switch (event.type)
@@ -1128,12 +1147,20 @@ void Game()
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-			mouseState = 1;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+			{
+				mouseState = 1;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			mouseState = 2;
-			updateMouse = true;
+			mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+			if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+			{
+				mouseState = 2;
+				updateMouse = true;
+			}
 			break;
 		case SDL_EVENT_MOUSE_MOTION:
 			mouseState = 0;

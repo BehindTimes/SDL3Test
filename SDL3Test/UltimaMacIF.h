@@ -2,3 +2,4 @@
 
 void ReflectNewCursor(int newCursor);
 void CursorUpdate(float x, float y);
+void HandleMouseDown();

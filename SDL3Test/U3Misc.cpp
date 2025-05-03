@@ -7,6 +7,7 @@
 #include "U3Utilities.h"
 #include "UltimaDungeon.h"
 #include "UltimaSound.h"
+#include "UltimaMacIF.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
@@ -79,7 +80,9 @@ U3Misc::U3Misc() :
 	m_value(0),
 	m_storeBool(false),
 	m_lastSaveNumberOfMoves(0),
-	m_demoSong(0)
+	m_demoSong(0),
+	m_mouseDown(false),
+	m_elapsedMouseTime(0)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -1808,6 +1811,8 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 	bool updateMouse = false;
 	int mouseState = 0;
 	bool retVal = false;
+	int mouse_buttons;
+	bool mouse_was_clicked = false;
 
 	switch (event.type)
 	{
@@ -1821,8 +1826,15 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		mouseState = 1;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+		{
+			mouseState = 1;
+			updateMouse = true;
+			m_mouseDown = true;
+			m_elapsedMouseTime = 0;
+			mouse_was_clicked = true;
+		}
 		if (m_inputType == InputType::AnyKey)
 		{
 			HandleAnyKey();
@@ -1835,8 +1847,12 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		mouseState = 2;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+		{
+			mouseState = 2;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_MOTION:
 		mouseState = 0;
@@ -1846,10 +1862,17 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 		break;
 	}
 
+	mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+	if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+	{
+		m_mouseDown = false;
+	}
+
 	if (updateMouse)
 	{
 		if (m_inputType == InputType::ZStats)
 		{
+			m_mouseDown = false;
 			bool isCaptured = false;
 
 			if (m_resources->m_zstatbuttons.size() > 0)
@@ -1864,8 +1887,28 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 			{
 				HandleAnyKey();
 			}
+			return retVal;
 		}
 	}
+	
+	if (m_mouseDown)
+	{
+		if(m_misc->m_elapsedMouseTime > mouse_delay || mouse_was_clicked)
+		{
+			m_misc->m_elapsedMouseTime %= mouse_delay;
+			if (m_gameMode == GameStateMode::Map ||
+				m_gameMode == GameStateMode::Dungeon ||
+				m_gameMode == GameStateMode::Combat)
+			{
+
+				if ((mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+				{
+					HandleMouseDown();
+				}
+			}
+		}
+	}
+
 	return retVal;
 }
 
@@ -4340,6 +4383,7 @@ bool U3Misc::HandleDeadResponse()
 	{
 		m_callbackStack.pop();
 	}
+	m_misc->m_InputDeque.clear();
 	int resurrectChoice = m_resources->AlertReturn();
 	if (resurrectChoice == 1)
 	{
@@ -6415,6 +6459,7 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 	bool updateMouse = false;
 	int mouseState = 0;
 	bool retVal = false;
+	int mouse_buttons;
 
 	switch (event.type)
 	{
@@ -6431,8 +6476,12 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		mouseState = 1;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+		{
+			mouseState = 1;
+			updateMouse = true;
+		}
 		/*if (m_inputType == InputType::AnyKey)
 		{
 			HandleAnyKey();
@@ -6445,8 +6494,12 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 		}*/
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		mouseState = 2;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+		{
+			mouseState = 2;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_MOTION:
 		mouseState = 0;

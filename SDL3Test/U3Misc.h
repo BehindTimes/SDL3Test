@@ -238,6 +238,8 @@ public:
 	std::deque<SDL_Keycode> m_InputDeque;
 	int m_lastSaveNumberOfMoves;
 	int m_demoSong;
+	bool m_mouseDown;
+	Uint64 m_elapsedMouseTime;
 
 private:
 	void Attack();
@@ -507,6 +509,7 @@ private:
 	bool transactFinishCallback();
 	bool StealFailCallback();
 
+	static const Uint64 mouse_delay = 80;
 	static const Uint64 exodus_death_time = 50;
 	static const Uint64 screen_flicker_time = 200;
 	static const Uint64 whirlpool_time = 3000;

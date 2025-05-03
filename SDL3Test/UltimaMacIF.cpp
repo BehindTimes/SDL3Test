@@ -29,6 +29,7 @@ int gCurCursor;
 Uint32 gCurMouseDir;
 short gMouseState = 0;
 
+
 bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
 {
 	if (topOfRect.x <= mousH && mousH <= topOfRect.x + topOfRect.w &&
@@ -38,6 +39,208 @@ bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
 	}
 	return false;
 }
+
+void HandleMouseDown()
+{
+	SDL_FRect topOfRect{};
+	short cleric;
+	short left;
+
+	short tilesWidth = (short)m_resources->m_blockSize * 24;
+	float mousH;
+	float mousV;
+	short num = 0;
+	SDL_GetMouseState(&mousH, &mousV);
+
+	topOfRect.x = tilesWidth;
+	topOfRect.y = (float)m_resources->m_blockSize;
+	topOfRect.w = (float)(m_resources->m_blockSize * 15) - 1;
+	topOfRect.h = (float)(m_resources->m_blockSize * 3) - 1;
+
+	if (isInRect(mousH, mousV, topOfRect))
+	{
+		num = 1;
+	}
+	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+	if (isInRect(mousH, mousV, topOfRect))
+	{
+		num = 2;
+	}
+	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+	if (isInRect(mousH, mousV, topOfRect))
+	{
+		num = 3;
+	}
+	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+	if (isInRect(mousH, mousV, topOfRect))
+	{
+		num = 4;
+	}
+	if (num > 0)
+	{
+		if (m_misc->m_inputType == InputType::Transact)
+		{
+			m_misc->m_InputDeque.push_back(gCurMouseDir);
+			m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
+		}
+		else
+		{
+			if (m_graphics->m_curMode != U3GraphicsMode::Combat)
+			{
+				m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
+				m_misc->m_InputDeque.push_back(SDLK_Z);
+			}
+			else
+			{
+				m_misc->m_InputDeque.push_back(SDLK_Z);
+			}
+		}
+		return;
+	}
+
+	if (gCurCursor >= 0)
+	{
+		switch (gCurCursor)
+		{
+		case 0:
+			m_misc->m_InputDeque.push_back(SDLK_SPACE);
+			break;
+		case 1:
+			m_misc->m_InputDeque.push_back(SDLK_UP);
+			break;
+		case 2:
+			m_misc->m_InputDeque.push_back(SDLK_DOWN);
+			break;
+		case 3:
+			m_misc->m_InputDeque.push_back(SDLK_LEFT);
+			break;
+		case 4:
+			m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+			break;
+		case 5:
+			m_misc->m_InputDeque.push_back(gCurMouseDir);
+			m_misc->m_InputDeque.push_back(SDLK_A);
+			break;
+		case 6:
+			m_misc->m_InputDeque.push_back(SDLK_T);
+			break;
+		case 7:    // open chest
+			cleric = 0;
+			num = 0;
+			while (!cleric && num < 4)
+			{
+				left = m_misc->m_Party[num + 6];
+				if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
+				{
+					if (m_misc->m_Player[left][25] > 4)
+					{
+						if (m_misc->m_Player[left][23] == m_misc->m_careerTable[8] ||
+							m_misc->m_Player[left][23] == m_misc->m_careerTable[10])
+						{
+							m_misc->m_InputDeque.push_back(SDLK_B);
+							m_misc->m_InputDeque.push_back(SDLK_1 + num);
+							m_misc->m_InputDeque.push_back(SDLK_C);
+							m_misc->m_InputDeque.push_back(SDLK_C);
+							cleric = 1;
+						}
+						if (m_misc->m_Player[left][23] == m_misc->m_careerTable[1] ||
+							m_misc->m_Player[left][23] == m_misc->m_careerTable[4] ||
+							m_misc->m_Player[left][23] == m_misc->m_careerTable[7])
+						{
+							m_misc->m_InputDeque.push_back(SDLK_B);
+							m_misc->m_InputDeque.push_back(SDLK_1 + num);
+							m_misc->m_InputDeque.push_back(SDLK_C);
+							cleric = 1;
+						}
+					}
+				}
+				num++;
+			}
+			if (!cleric)
+			{
+				m_misc->m_InputDeque.push_back(SDLK_G);
+			}
+			break;
+		case 8:
+			m_misc->m_InputDeque.push_back(SDLK_E);
+			break;
+		case 9:
+			m_misc->m_InputDeque.push_back(SDLK_B);
+			break;
+		case 10:
+			m_misc->m_InputDeque.push_back(gCurMouseDir);
+			m_misc->m_InputDeque.push_back(SDLK_F);
+			break;
+		case 11:
+			m_misc->m_InputDeque.push_back(gCurMouseDir);
+			m_misc->m_InputDeque.push_back(SDLK_U);
+			break;
+		case 12:
+			m_misc->m_InputDeque.push_back(SDLK_X);
+			break;
+		case 13:
+			break;
+		case 14:
+			m_misc->m_InputDeque.push_back(SDLK_K);
+			break;
+		case 15:
+			m_misc->m_InputDeque.push_back(SDLK_D);
+			break;
+		case 16:
+			m_misc->m_InputDeque.push_back(SDLK_LEFT);
+			break;
+		case 17:
+			m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+			break;
+		case 18:
+			m_misc->m_InputDeque.push_back(SDLK_UP);
+			break;
+		case 19:
+			m_misc->m_InputDeque.push_back(SDLK_DOWN);
+			break;
+		case 20:    // Ignite (cleric means who has a torch)
+			cleric = -1;
+			num = 0;
+			while (cleric < 0 && num < 4)
+			{
+				left = m_misc->m_Party[num + 6];
+				if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
+				{
+					if (m_misc->m_Player[left][15] > 0)
+					{
+						cleric = num;
+					}
+				}
+				num++;
+			}
+			if (cleric > -1)
+			{
+				m_misc->m_InputDeque.push_back(SDLK_1 + cleric);
+				m_misc->m_InputDeque.push_back(SDLK_I);
+			}
+			else   // no one had a torch, just press I and let 'em figure it out.
+			{
+				m_misc->m_InputDeque.push_back(SDLK_I);
+			}
+			break;
+		case 22:
+			m_misc->m_InputDeque.push_back(SDLK_KP_7);
+			break;
+		case 23:
+			m_misc->m_InputDeque.push_back(SDLK_KP_9);
+			break;
+		case 24:
+			m_misc->m_InputDeque.push_back(SDLK_KP_1);
+			break;
+		case 25:
+			m_misc->m_InputDeque.push_back(SDLK_KP_3);
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 
 void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 {
@@ -128,7 +331,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 				mouseTileX = (short)(mousH - (short)m_resources->m_blockSize) / tileSiz;
 				mouseTileY = (short)(mousV - (short)m_resources->m_blockSize) / tileSiz;
 				cX = cY = 5;
-				if (m_misc->m_Party[3] == 0x80)
+				if (m_misc->m_Party[2] == 0x80)
 				{   // in combat
 					cX = m_misc->m_CharX[m_spellCombat->m_gChnum];
 					cY = m_misc->m_CharY[m_spellCombat->m_gChnum];
@@ -215,7 +418,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 				if ((value >= 0x1A && value < 0x3E) || value == 0x7E || value >= 0xA0)   // a being; standard range or a variant tile.
 				{
 					gCurMouseDir = keyEquiv[newCursor];
-					if (m_misc->m_Party[2] == 0x80 && gMouseState != 3) // in combat & not GetDirection
+					if (m_misc->m_Party[2] == 0x80 && m_misc->m_inputType != InputType::GetDirection) // in combat & not GetDirection
 					{
 						aimedAt = (cX == mouseTileX || cY == mouseTileY);
 						if (allowDiagonal)
@@ -251,7 +454,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 							}
 						}
 					}
-					if (m_misc->m_Party[2] > 1 && m_misc->m_Party[2] < 4 && gMouseState != 3) // indoors & not GetDir
+					if (m_misc->m_Party[2] > 1 && m_misc->m_Party[2] < 4 && m_misc->m_inputType != InputType::GetDirection) // indoors & not GetDir
 					{
 						if (cX == mouseTileX && (mouseTileY == cY - 1 || mouseTileY == cY + 1))
 						{
@@ -314,33 +517,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					}
 				}
 
-				if (m_misc->m_Party[0] == 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia Ship
-				{
-					aimedAt = ((cX == mouseTileX && (mouseTileY > cY - 4 && mouseTileY < cY + 4)) ||
-						(cY == mouseTileY && (mouseTileX > cX - 4 && mouseTileX < cX + 4)));
-					if (!aimedAt && allowDiagonal)
-					{
-						aimedAt = ((m_utilities->Absolute(cX - mouseTileX) == m_utilities->Absolute(cY - mouseTileY)) &&
-							(mouseTileX > cX - 4 && mouseTileX < cX + 4 && mouseTileY > cY - 4 && mouseTileY < cY + 4));
-					}
-					if (aimedAt)
-					{
-						newCursor = 10;    // Fire Cannon
-					}
-				}
-				if (m_misc->m_Party[0] != 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia non-ship
-				{
-					aimedAt = (cX == mouseTileX && (mouseTileY > cY - 2 && mouseTileY < cY + 2));
-					aimedAt |= (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));
-					if (allowDiagonal)
-					{
-						aimedAt |= (mouseTileY > cY - 2 && mouseTileY < cY + 2 && mouseTileX > cX - 2 && mouseTileX < cX + 2);
-					}
-					if (aimedAt)
-					{
-						newCursor = 5;
-					}
-				}
+				
 				if (isInRect(mousH, mousV, topOfRect))
 				{
 					newCursor = 0; // nothing
@@ -372,7 +549,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 			newCursor = -1; /* just arrow */
 			//if (gUpdateWhere == 3 || gUpdateWhere == 4 || gUpdateWhere == 8 || gUpdateWhere == 9 || gUpdateWhere > 19)
 			{
-				if (gMouseState != 4)
+				//if (gMouseState != 4)
 				{
 					topOfRect.x = tilesWidth;
 					topOfRect.y = (float)m_resources->m_blockSize;
@@ -418,7 +595,14 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 			}
 		}
 	}
-	
+	if (m_resources->HasAlert())
+	{
+		newCursor = -1;
+	}
+	if (m_graphics->m_staydead)
+	{
+		newCursor = 21;
+	}
 
 	ReflectNewCursor(newCursor);
 }

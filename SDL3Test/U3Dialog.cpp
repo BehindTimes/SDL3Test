@@ -686,6 +686,7 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 {
 	bool updateMouse = false;
 	int mouseState = 0;
+	int mouse_buttons;
 
 	switch (event.type)
 	{
@@ -702,12 +703,20 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		mouseState = 1;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT))
+		{
+			mouseState = 1;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		mouseState = 2;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+		{
+			mouseState = 2;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_MOTION:
 		mouseState = 0;
@@ -887,6 +896,7 @@ void ChooseOptionsDialog::HandleEvent(SDL_Event& event)
 {
 	bool updateMouse = false;
 	int mouseState = 0;
+	int mouse_buttons;
 
 	switch (event.type)
 	{
@@ -895,12 +905,20 @@ void ChooseOptionsDialog::HandleEvent(SDL_Event& event)
 	case SDL_EVENT_KEY_DOWN:
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		mouseState = 1;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if ((mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+		{
+			mouseState = 1;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
-		mouseState = 2;
-		updateMouse = true;
+		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
+		if (!(mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
+		{
+			mouseState = 2;
+			updateMouse = true;
+		}
 		break;
 	case SDL_EVENT_MOUSE_MOTION:
 		mouseState = 0;

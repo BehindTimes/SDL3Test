@@ -1477,6 +1477,16 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
                     }
                 }
             }
+            else
+            {
+                if (!m_misc->m_InputDeque.empty())
+                {
+                    event.type = SDL_EVENT_KEY_DOWN;
+                    event.key.key = m_misc->m_InputDeque.back();
+                    event.key.mod = 0;
+                    m_misc->m_InputDeque.pop_back();
+                }
+            }
 
             m_misc->ProcessEvent(event);
             m_resources->updateGameTime(deltaTime);

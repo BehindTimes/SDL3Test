@@ -3786,6 +3786,11 @@ void U3Resources::updateGameTime(Uint64 deltaTime)
 	{
 		if (m_misc->m_inputType == InputType::Default)
 		{
+			if (m_misc->m_mouseDown)
+			{
+				m_misc->m_elapsedMouseTime += m_delta_time;
+			}
+
 			m_elapsedMoveTime += m_delta_time;
 			m_elapsedAutoHealTime += m_delta_time;
 			if (m_elapsedAutoHealTime > AutoHealTime)

@@ -1562,6 +1562,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
     {
         if (m_resources->m_newMove)
         {
+            m_misc->m_inTransaction = false;
             //m_scrollArea->blockPrompt(false);
             m_resources->m_newMove = false;
             m_misc->CheckAllDead();

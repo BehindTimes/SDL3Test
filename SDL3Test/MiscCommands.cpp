@@ -2762,6 +2762,7 @@ bool U3Misc::AttackCallback()
 	}
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -2814,6 +2815,7 @@ bool U3Misc::FireCallback()
 	}
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -2956,6 +2958,7 @@ bool U3Misc::CastCallback()
 
 	if (m_chNum < 0 || m_chNum > 3)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -3043,6 +3046,7 @@ bool U3Misc::ClericChooseCallback()
 
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_input_num = -2;
 	}
 	else
@@ -3082,6 +3086,7 @@ bool U3Misc::WizardChooseCallback()
 
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_input_num = -2;
 	}
 	if (m_input_num > 15)
@@ -3123,6 +3128,7 @@ bool U3Misc::EitherChooseCallback()
 	}
 	else
 	{
+		m_InputDeque.clear();
 		m_input_num = -2;
 	}
 
@@ -3158,6 +3164,7 @@ bool U3Misc::ProcessMagic()
 	//magicreq = 0;
 	if (magicreq > m_Player[m_rosNum][25])
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(122);
 		return false;
 	}

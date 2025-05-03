@@ -81,7 +81,10 @@ void HandleMouseDown(bool mouseclicked)
 		{
 			if (m_misc->m_inputType == InputType::Transact)
 			{
-				m_misc->m_InputDeque.push_back(gCurMouseDir);
+				if (m_misc->m_inTransaction)
+				{
+					m_misc->m_InputDeque.push_back(gCurMouseDir);
+				}
 				m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
 			}
 			else
@@ -126,6 +129,7 @@ void HandleMouseDown(bool mouseclicked)
 				m_misc->m_InputDeque.push_back(SDLK_A);
 				break;
 			case 6:
+				m_misc->m_inTransaction = true;
 				m_misc->m_InputDeque.push_back(SDLK_T);
 				break;
 			case 7:    // open chest

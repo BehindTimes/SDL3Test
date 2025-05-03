@@ -82,7 +82,8 @@ U3Misc::U3Misc() :
 	m_lastSaveNumberOfMoves(0),
 	m_demoSong(0),
 	m_mouseDown(false),
-	m_elapsedMouseTime(0)
+	m_elapsedMouseTime(0),
+	m_inTransaction(false)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -1857,18 +1858,21 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 
 void U3Misc::What() // $5135
 {
+	m_InputDeque.clear();
 	m_audio->playSfx(SFX_ERROR2);
 	m_scrollArea->UPrintMessage(106);
 }
 
 void U3Misc::What2() // $5279
 {
+	m_InputDeque.clear();
 	m_scrollArea->UPrintMessage(107);
 	m_audio->playSfx(SFX_ERROR1);
 }
 
 void U3Misc::NotHere() // $5288
 {
+	m_InputDeque.clear();
 	m_scrollArea->UPrintMessage(108);
 	m_audio->playSfx(SFX_ERROR1);
 }
@@ -2795,6 +2799,7 @@ bool U3Misc::grocerCallback()
 	short gold;
 	if (m_input_num == 0)
 	{
+		m_InputDeque.clear();
 		InverseChnum((char)m_transactNum, false);
 		m_scrollArea->UPrintWin("\n\n");
 		return false;
@@ -2802,6 +2807,7 @@ bool U3Misc::grocerCallback()
 	int existingFood = (m_Player[m_rosNum][32] * 100) + m_Player[m_rosNum][33];
 	if (m_input_num > (9999 - existingFood))
 	{
+		m_InputDeque.clear();
 		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessageRewrapped(260);
 		m_scrollArea->UPrintWin("\n\n");
@@ -2812,6 +2818,7 @@ bool U3Misc::grocerCallback()
 	gold = (m_Player[m_rosNum][35] * 256) + m_Player[m_rosNum][36];
 	if (gold < m_input_num)
 	{
+		m_InputDeque.clear();
 		m_audio->playSfx(SFX_ERROR1);
 		InverseChnum((char)m_transactNum, false);
 		m_scrollArea->UPrintMessageRewrapped(193);
@@ -3871,6 +3878,7 @@ bool U3Misc::IgniteCallback()
 	m_chNum = m_input_num;
 	if (m_chNum < 0 || m_chNum > 3)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -3878,6 +3886,7 @@ bool U3Misc::IgniteCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[6 + m_chNum] == 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -3886,6 +3895,7 @@ bool U3Misc::IgniteCallback()
 
 	if (m_Player[rosNum][15] < 1)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(67);
 		return false;
 	}
@@ -3913,6 +3923,7 @@ bool U3Misc::JoinGoldCallback()
 	}
 	if (m_input_num < 0 || m_input_num > 3)
 	{
+		m_InputDeque.clear();
 		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
@@ -3970,12 +3981,14 @@ bool U3Misc::PeerGemCallback()
 
 	if (m_input_num > 3 || m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n\n");
 		return false;
 	}
 
 	if (m_Party[6 + m_input_num] == 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
 		m_scrollArea->UPrintWin("\n");
@@ -4036,6 +4049,7 @@ bool U3Misc::StealCallback()
 	}
 	if (m_input_num < 0 || m_input_num > 3)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -4062,6 +4076,7 @@ bool U3Misc::StealCallback1()
 	}
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -4070,11 +4085,13 @@ bool U3Misc::StealCallback1()
 
 	if (m_Party[6 + m_rosNum] == 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 	if (CheckAlive(m_rosNum) == false)
 	{
+		m_InputDeque.clear();
 		m_spellCombat->Incap();
 		return false;
 	}
@@ -4145,6 +4162,7 @@ bool U3Misc::UnlockCallback()
 	m_resources->SetPreference(U3PreferencesType::Allow_Diagonal, m_storeBool);
 	if (m_input_num < 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
@@ -5186,6 +5204,7 @@ bool U3Misc::GetChestCallback()
 	}
 	if (m_input_num < 0 || m_input_num > 3)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		//m_scrollArea->blockPrompt(false);
 		return false;
@@ -5194,6 +5213,7 @@ bool U3Misc::GetChestCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[6 + m_input_num] == 0)
 	{
+		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
 		//m_scrollArea->blockPrompt(false);

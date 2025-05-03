@@ -205,6 +205,7 @@ void MainLoop()
 				DoSplashScreen();
 				m_audio->m_currentSong = 0;
 				m_audio->m_nextSong = 0;
+				m_misc->m_demoSong = 0;
 				m_graphics->CreateIntroData();
 				m_graphics->CreateMenuData();
 				CreateButtonCallbacks();
@@ -948,8 +949,8 @@ void JourneyOnward()
 
 	Uint64 startTick = SDL_GetTicks();
 	Uint64 elapsedTime = 0;
-	//const Uint64 gameDelay = 750;
-	const Uint64 gameDelay = 0;
+	const Uint64 gameDelay = 750;
+	//const Uint64 gameDelay = 0;
 
 	//journey = false;
 
@@ -1085,6 +1086,7 @@ void Game()
 	m_resources->ShowChars(true);
 	m_misc->m_inputType = InputType::Default;
 	m_graphics->m_staydead = false;
+	memset(m_graphics->m_maskArray, 0xFF, sizeof(unsigned char) * 128);
 
 	m_audio->m_currentSong = 1;
 	m_audio->m_nextSong = 1;

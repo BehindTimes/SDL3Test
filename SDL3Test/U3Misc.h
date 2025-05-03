@@ -240,6 +240,7 @@ public:
 	int m_demoSong;
 	bool m_mouseDown;
 	Uint64 m_elapsedMouseTime;
+	bool m_inTransaction;
 
 private:
 	void Attack();

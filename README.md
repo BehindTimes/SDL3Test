@@ -15,3 +15,7 @@ C++20
 Just including a Visual Studio project at the moment, as that's what I'm developing this with.  It should build with any C++20 compiler that supports the above packages though.
 
 SDL3 Mixer doesn't have an official release yet, so you'll have to build from the main repository.
+
+You will also need the resources file (MainResources.rsrc) from the creator of the original program this work is based off of.
+
+https://github.com/beastie/ultima3

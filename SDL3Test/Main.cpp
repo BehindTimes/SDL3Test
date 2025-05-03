@@ -1138,7 +1138,6 @@ void Game()
 		case SDL_EVENT_MOUSE_MOTION:
 			mouseState = 0;
 			updateMouse = true;
-			CursorUpdate(event.motion.x, event.motion.y);
 			break;
 		default:
 			break;
@@ -1156,6 +1155,20 @@ void Game()
 		elapsedTime += deltaTime;
 
 		m_misc->m_gResurrect = false;
+
+		float mousex = 0;
+		float mousey = 0;
+		SDL_GetMouseState(&mousex, &mousey);
+		if (m_graphics->m_curMode == U3GraphicsMode::Dungeon ||
+			m_graphics->m_curMode == U3GraphicsMode::Map ||
+			m_graphics->m_curMode == U3GraphicsMode::Combat)
+		{
+			CursorUpdate(mousex, mousey);
+		}
+		else
+		{
+			ReflectNewCursor(-1);
+		}
 
 		SDL_SetRenderTarget(renderer, NULL);
 		SDL_RenderClear(renderer);

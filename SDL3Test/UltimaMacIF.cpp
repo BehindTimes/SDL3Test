@@ -26,10 +26,23 @@ extern short screenOffsetX;
 extern short screenOffsetY;
 
 int gCurCursor;
+Uint32 gCurMouseDir;
+short gMouseState = 0;
+
+bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
+{
+	if (topOfRect.x <= mousH && mousH <= topOfRect.x + topOfRect.w &&
+		topOfRect.y <= mousV && mousV <= topOfRect.y + topOfRect.h)
+	{
+		return true;
+	}
+	return false;
+}
 
 void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 {
 	SDL_FRect topOfRect{};
+	SDL_FRect gameRect{};
 	short mouseTileX;
 	short mouseTileY;
 	short tileSiz;
@@ -40,61 +53,372 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 	short cYBig;
 	unsigned char value;
 	int newCursor = -1;
+	short offVal;
+	bool aimedAt;
+	unsigned char wpn;
+
+	mousH -= screenOffsetX;
+	mousV -= screenOffsetY;
 
 	tileSiz = (short)m_resources->m_blockSize * 2;
 	tilesWidth = (short)m_resources->m_blockSize * 24;
+	gameRect.x = (float)m_resources->m_blockSize;
+	gameRect.y = (float)m_resources->m_blockSize;
+	gameRect.h = 22.0f * m_resources->m_blockSize;
+	gameRect.w = 22.0f * m_resources->m_blockSize;
 
-	if (m_misc->m_Party[2] == 1) // is in dungeon
+	SDL_Keycode keyEquiv[26] = { SDLK_SPACE, SDLK_UP,  SDLK_DOWN,  SDLK_LEFT, SDLK_RIGHT, SDLK_A, SDLK_T, SDLK_G, SDLK_E, SDLK_B, SDLK_F, SDLK_U, SDLK_X,
+											  SDLK_Z, SDLK_K, SDLK_D, SDLK_LEFT, SDLK_RIGHT, SDLK_UP,  SDLK_DOWN,  SDLK_I, 0,   SDLK_KP_7, SDLK_KP_9, SDLK_KP_1, SDLK_KP_3 };
+
+	if (m_resources->m_overrideImage == 9)
 	{
 	}
-	else // not a dungeon
+	else
 	{
-		mouseTileX = (short)(mousH - (short)m_resources->m_blockSize) / tileSiz;
-		mouseTileY = (short)(mousV - (short)m_resources->m_blockSize) / tileSiz;
-		cX = cY = 5;
-		if (m_misc->m_Party[3] == 0x80)
-		{   // in combat
-			cX = m_misc->m_CharX[m_spellCombat->m_gChnum];
-			cY = m_misc->m_CharY[m_spellCombat->m_gChnum];
-		}
-
-		if (cX == mouseTileX && cY == mouseTileY && m_misc->m_Party[2] != 0x80)
+		if (isInRect(mousH, mousV, gameRect))
 		{
-			value = m_misc->GetXYVal(m_misc->m_xpos, m_misc->m_ypos) / 2;
+			if (m_misc->m_Party[2] == 1) // is in dungeon
+			{
+				if (m_misc->m_gTorch == 0 && m_dungeon->GetXYDng(m_misc->m_xs, m_misc->m_ys) != 3)   // no light but not on strange wind
+				{
+					newCursor = 20;    // ignite torch
+				}
+				else
+				{
+					gCurMouseDir = 0;
+					value = m_dungeon->GetXYDng(m_misc->m_xpos, m_misc->m_ypos);
+					if (mousH > mousV)
+					{
+						if ((tilesWidth - mousH) > mousV)
+						{
+							newCursor = 18;    // forward
+							if ((value & 0x10) && mousV < ((short)m_resources->m_blockSize * 8))
+							{
+								newCursor = 14;    // klimb
+							}
+						}
+						else
+						{
+							newCursor = 17;    // right
+						}
+					}
+					else
+					{
+						if ((tilesWidth - mousH) > mousV)
+						{
+							newCursor = 16;    // left
+						}
+						else
+						{
+							newCursor = 19;    // backward
+							if ((value < 128) && (value & 0x20) && mousV > ((short)m_resources->m_blockSize * 16))
+							{
+								newCursor = 15;    // descend
+							}
+							if ((value == 0x40) && mousV > ((short)m_resources->m_blockSize * 16))
+							{
+								newCursor = 7;    // get chest
+							}
+						}
+					}
+				}
+			}
+			else // not a dungeon
+			{
+				mouseTileX = (short)(mousH - (short)m_resources->m_blockSize) / tileSiz;
+				mouseTileY = (short)(mousV - (short)m_resources->m_blockSize) / tileSiz;
+				cX = cY = 5;
+				if (m_misc->m_Party[3] == 0x80)
+				{   // in combat
+					cX = m_misc->m_CharX[m_spellCombat->m_gChnum];
+					cY = m_misc->m_CharY[m_spellCombat->m_gChnum];
+				}
+
+				if (cX == mouseTileX && cY == mouseTileY && m_misc->m_Party[2] != 0x80)
+				{
+					value = m_misc->GetXYVal(m_misc->m_xpos, m_misc->m_ypos) / 2;
+				}
+				else
+				{
+					value = m_misc->GetXYTile(mouseTileX, mouseTileY);
+				}
+
+				topOfRect.x = cX * tileSiz + (float)m_resources->m_blockSize;
+				topOfRect.w = tileSiz;
+				topOfRect.y = cY * tileSiz + (float)m_resources->m_blockSize;
+				topOfRect.h = tileSiz;
+				cXBig = (cX - 5) * tileSiz;
+				cYBig = (cY - 5) * tileSiz;
+				if (mousH - cXBig > mousV - cYBig)
+				{
+					if ((tilesWidth - mousH) + cXBig > mousV - cYBig)
+					{
+						newCursor = 1;    // North
+					}
+					else {
+						newCursor = 4;    // East
+					}
+				}
+				else
+				{
+					if ((tilesWidth - mousH) + cXBig > mousV - cYBig)
+					{
+						newCursor = 3;    // West
+					}
+					else
+					{
+						newCursor = 2;    // South
+					}
+				}
+
+				bool allowDiagonal;
+				m_resources->GetPreference(U3PreferencesType::Allow_Diagonal, allowDiagonal);
+				if (allowDiagonal)
+				{
+					offVal = (short)(m_resources->m_blockSize * 6);
+					if (((mousV - cYBig) / m_resources->m_blockSize) > 12)
+					{   // bottom half
+						if ((((mousH - cXBig) - offVal) * 2 < tilesWidth - (mousV - cYBig)) &&
+							((tilesWidth - (mousV - cYBig)) - offVal) * 2 < mousH - cXBig)
+						{
+							newCursor = 24;    // Southeast
+						}
+						if ((((tilesWidth - (mousH - cXBig)) - offVal) * 2 < tilesWidth - (mousV - cYBig)) &&
+							((tilesWidth - (mousV - cYBig)) - offVal) * 2 < tilesWidth - (mousH - cXBig))
+						{
+							newCursor = 25;    // Southwest
+						}
+					}
+					else                     // top half
+					{
+						if ((((mousH - cXBig) - offVal) * 2 < mousV - cYBig) && ((mousV - cYBig) - offVal) * 2 < mousH - cXBig)
+						{
+							newCursor = 22;    // Northwest
+						}
+						if ((((tilesWidth - (mousH - cXBig)) - offVal) * 2 < mousV - cYBig) &&
+							((mousV - cYBig) - offVal) * 2 < tilesWidth - (mousH - cXBig))
+						{
+							newCursor = 23;    // Northeast
+						}
+					}
+				}
+				if (m_misc->m_Party[0] != 1 && value >= 0x5C && value < 0x5E)
+				{
+					aimedAt = (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));    // only west or east!
+					if (aimedAt)
+					{
+						gCurMouseDir = keyEquiv[newCursor];
+						newCursor = 11;    // Key (unlock)
+					}
+				}
+
+				if ((value >= 0x1A && value < 0x3E) || value == 0x7E || value >= 0xA0)   // a being; standard range or a variant tile.
+				{
+					gCurMouseDir = keyEquiv[newCursor];
+					if (m_misc->m_Party[2] == 0x80 && gMouseState != 3) // in combat & not GetDirection
+					{
+						aimedAt = (cX == mouseTileX || cY == mouseTileY);
+						if (allowDiagonal)
+						{
+							aimedAt |= (m_utilities->Absolute(cX - mouseTileX) == m_utilities->Absolute(cY - mouseTileY));
+						}
+						if (aimedAt)
+						{
+							wpn = m_misc->m_Player[m_misc->m_Party[m_spellCombat->m_gChnum + 6]][48];
+							if (wpn == 1 || wpn == 3 || wpn == 5 || wpn == 9 || wpn == 13)
+							{
+								newCursor = 5;
+							}
+							else
+							{
+								aimedAt = (cX == mouseTileX && (mouseTileY == cY - 1 || mouseTileY == cY + 1));
+								if (aimedAt)
+								{
+									newCursor = 5;    // Attack
+								}
+								aimedAt = (cY == mouseTileY && (mouseTileX == cX - 1 || mouseTileX == cX + 1));
+								if (aimedAt)
+								{
+									newCursor = 5;    // Attack
+								}
+								if (allowDiagonal)
+								{
+									if (mouseTileY > cY - 2 && mouseTileY < cY + 2 && mouseTileX > cX - 2 && mouseTileX < cX + 2)
+									{
+										newCursor = 5;    // Attack all 'round!
+									}
+								}
+							}
+						}
+					}
+					if (m_misc->m_Party[2] > 1 && m_misc->m_Party[2] < 4 && gMouseState != 3) // indoors & not GetDir
+					{
+						if (cX == mouseTileX && (mouseTileY == cY - 1 || mouseTileY == cY + 1))
+						{
+							newCursor = 6;    // Transact
+						}
+						if (cY == mouseTileY && (mouseTileX == cX - 1 || mouseTileX == cX + 1))
+						{
+							newCursor = 6;    // Transact
+						}
+						if (allowDiagonal)
+						{
+							if (mouseTileY > cY - 2 && mouseTileY < cY + 2 && mouseTileX > cX - 2 && mouseTileX < cX + 2)
+							{
+								newCursor = 6;    // Transact all 'round!
+							}
+						}
+						if (cX == mouseTileX && mouseTileY == cY - 2 && m_misc->GetXYTile(cX, cY - 1) > 0x48)
+						{
+							newCursor = 6;    // Transact
+						}
+						if (cX == mouseTileX && mouseTileY == cY + 2 && m_misc->GetXYTile(cX, cY + 1) > 0x48)
+						{
+							newCursor = 6;    // Transact
+						}
+						if (cY == mouseTileY && mouseTileX == cX - 2 && m_misc->GetXYTile(cX - 1, cY) > 0x48)
+						{
+							newCursor = 6;    // Transact
+						}
+						if (cY == mouseTileY && mouseTileX == cX + 2 && m_misc->GetXYTile(cX + 1, cY) > 0x48)
+						{
+							newCursor = 6;    // Transact
+						}
+					}
+					if (m_misc->m_Party[0] == 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia Ship
+					{
+						aimedAt = ((cX == mouseTileX && (mouseTileY > cY - 4 && mouseTileY < cY + 4)) ||
+							(cY == mouseTileY && (mouseTileX > cX - 4 && mouseTileX < cX + 4)));
+						if (!aimedAt && allowDiagonal)
+						{
+							aimedAt = ((m_utilities->Absolute(cX - mouseTileX) == m_utilities->Absolute(cY - mouseTileY)) &&
+								(mouseTileX > cX - 4 && mouseTileX < cX + 4 && mouseTileY > cY - 4 && mouseTileY < cY + 4));
+						}
+						if (aimedAt)
+						{
+							newCursor = 10;    // Fire Cannon
+						}
+					}
+					if (m_misc->m_Party[0] != 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia non-ship
+					{
+						aimedAt = (cX == mouseTileX && (mouseTileY > cY - 2 && mouseTileY < cY + 2));
+						aimedAt |= (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));
+						if (allowDiagonal)
+						{
+							aimedAt |= (mouseTileY > cY - 2 && mouseTileY < cY + 2 && mouseTileX > cX - 2 && mouseTileX < cX + 2);
+						}
+						if (aimedAt)
+						{
+							newCursor = 5;
+						}
+					}
+				}
+
+				if (m_misc->m_Party[0] == 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia Ship
+				{
+					aimedAt = ((cX == mouseTileX && (mouseTileY > cY - 4 && mouseTileY < cY + 4)) ||
+						(cY == mouseTileY && (mouseTileX > cX - 4 && mouseTileX < cX + 4)));
+					if (!aimedAt && allowDiagonal)
+					{
+						aimedAt = ((m_utilities->Absolute(cX - mouseTileX) == m_utilities->Absolute(cY - mouseTileY)) &&
+							(mouseTileX > cX - 4 && mouseTileX < cX + 4 && mouseTileY > cY - 4 && mouseTileY < cY + 4));
+					}
+					if (aimedAt)
+					{
+						newCursor = 10;    // Fire Cannon
+					}
+				}
+				if (m_misc->m_Party[0] != 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia non-ship
+				{
+					aimedAt = (cX == mouseTileX && (mouseTileY > cY - 2 && mouseTileY < cY + 2));
+					aimedAt |= (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));
+					if (allowDiagonal)
+					{
+						aimedAt |= (mouseTileY > cY - 2 && mouseTileY < cY + 2 && mouseTileX > cX - 2 && mouseTileX < cX + 2);
+					}
+					if (aimedAt)
+					{
+						newCursor = 5;
+					}
+				}
+				if (isInRect(mousH, mousV, topOfRect))
+				{
+					newCursor = 0; // nothing
+					if (m_misc->m_Party[0] == 0x14 || m_misc->m_Party[0] == 0x16)
+					{
+						newCursor = 12; // X-it
+					}
+					if (value > 0x11 && value < 0x14)
+					{
+						newCursor = 7; // Get Chest
+					}
+					if ((value > 0x09 && value < 0x10) || value == 0x7C)
+					{
+						newCursor = 8; // Enter
+					}
+					if (value == 0x14 || value == 0x16)
+					{
+						newCursor = 9; // Board/Mount
+					}
+					if (m_misc->m_Party[2] == 0x80)
+					{
+						newCursor = 0;
+					}
+				}
+			}
 		}
 		else
 		{
-			value = m_misc->GetXYTile(mouseTileX, mouseTileY);
-		}
+			newCursor = -1; /* just arrow */
+			//if (gUpdateWhere == 3 || gUpdateWhere == 4 || gUpdateWhere == 8 || gUpdateWhere == 9 || gUpdateWhere > 19)
+			{
+				if (gMouseState != 4)
+				{
+					topOfRect.x = tilesWidth;
+					topOfRect.y = (float)m_resources->m_blockSize;
+					topOfRect.w = (float)(m_resources->m_blockSize * 15) - 1;
+					topOfRect.h = (float)(m_resources->m_blockSize * 3) - 1;
 
-		topOfRect.x = cX * tileSiz + (float)m_resources->m_blockSize;
-		topOfRect.w = tileSiz;
-		topOfRect.y = cY * tileSiz + (float)m_resources->m_blockSize;
-		topOfRect.h = tileSiz;
-		cXBig = (cX - 5) * tileSiz;
-		cYBig = (cY - 5) * tileSiz;
-		if (mousH - cXBig > mousV - cYBig)
-		{
-			if ((tilesWidth - mousH) + cXBig > mousV - cYBig)
-			{
-				newCursor = 1;    // North
-			}
-			else {
-				newCursor = 4;    // East
-			}
-		}
-		else
-		{
-			if ((tilesWidth - mousH) + cXBig > mousV - cYBig)
-			{
-				newCursor = 3;    // West
-			}
-			else
-			{
-				newCursor = 2;    // South
+					if (isInRect(mousH, mousV, topOfRect))
+					{
+						newCursor = 13;
+						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 0)
+						{
+							newCursor = -1;
+						}
+					}
+					topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+					if (isInRect(mousH, mousV, topOfRect))
+					{
+						newCursor = 13;
+						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 1)
+						{
+							newCursor = -1;
+						}
+					}
+					topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+					if (isInRect(mousH, mousV, topOfRect))
+					{
+						newCursor = 13;
+						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 2)
+						{
+							newCursor = -1;
+						}
+					}
+					topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+					if (isInRect(mousH, mousV, topOfRect))
+					{
+						newCursor = 13;
+						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 3)
+						{
+							newCursor = -1;
+						}
+					}
+				}
 			}
 		}
 	}
+	
 
 	ReflectNewCursor(newCursor);
 }

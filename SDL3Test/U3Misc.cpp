@@ -1903,7 +1903,7 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 
 				if ((mouse_buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)))
 				{
-					HandleMouseDown();
+					HandleMouseDown(mouse_was_clicked);
 				}
 			}
 		}

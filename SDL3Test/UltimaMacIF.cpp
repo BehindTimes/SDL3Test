@@ -40,7 +40,7 @@ bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
 	return false;
 }
 
-void HandleMouseDown()
+void HandleMouseDown(bool mouseclicked)
 {
 	SDL_FRect topOfRect{};
 	short cleric;
@@ -57,186 +57,237 @@ void HandleMouseDown()
 	topOfRect.w = (float)(m_resources->m_blockSize * 15) - 1;
 	topOfRect.h = (float)(m_resources->m_blockSize * 3) - 1;
 
-	if (isInRect(mousH, mousV, topOfRect))
+	if (mouseclicked)
 	{
-		num = 1;
-	}
-	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
-	if (isInRect(mousH, mousV, topOfRect))
-	{
-		num = 2;
-	}
-	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
-	if (isInRect(mousH, mousV, topOfRect))
-	{
-		num = 3;
-	}
-	topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
-	if (isInRect(mousH, mousV, topOfRect))
-	{
-		num = 4;
-	}
-	if (num > 0)
-	{
-		if (m_misc->m_inputType == InputType::Transact)
+		if (isInRect(mousH, mousV, topOfRect))
 		{
-			m_misc->m_InputDeque.push_back(gCurMouseDir);
-			m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
+			num = 1;
 		}
-		else
+		topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+		if (isInRect(mousH, mousV, topOfRect))
 		{
-			if (m_graphics->m_curMode != U3GraphicsMode::Combat)
+			num = 2;
+		}
+		topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+		if (isInRect(mousH, mousV, topOfRect))
+		{
+			num = 3;
+		}
+		topOfRect.y += m_resources->m_blockSize + (m_resources->m_blockSize * 3);
+		if (isInRect(mousH, mousV, topOfRect))
+		{
+			num = 4;
+		}
+		if (num > 0)
+		{
+			if (m_misc->m_inputType == InputType::Transact)
 			{
+				m_misc->m_InputDeque.push_back(gCurMouseDir);
 				m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
-				m_misc->m_InputDeque.push_back(SDLK_Z);
 			}
 			else
 			{
-				m_misc->m_InputDeque.push_back(SDLK_Z);
+				if (m_graphics->m_curMode != U3GraphicsMode::Combat)
+				{
+					m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
+					m_misc->m_InputDeque.push_back(SDLK_Z);
+				}
+				else
+				{
+					m_misc->m_InputDeque.push_back(SDLK_Z);
+				}
 			}
+			return;
 		}
-		return;
 	}
 
 	if (gCurCursor >= 0)
 	{
-		switch (gCurCursor)
+		if (mouseclicked)
 		{
-		case 0:
-			m_misc->m_InputDeque.push_back(SDLK_SPACE);
-			break;
-		case 1:
-			m_misc->m_InputDeque.push_back(SDLK_UP);
-			break;
-		case 2:
-			m_misc->m_InputDeque.push_back(SDLK_DOWN);
-			break;
-		case 3:
-			m_misc->m_InputDeque.push_back(SDLK_LEFT);
-			break;
-		case 4:
-			m_misc->m_InputDeque.push_back(SDLK_RIGHT);
-			break;
-		case 5:
-			m_misc->m_InputDeque.push_back(gCurMouseDir);
-			m_misc->m_InputDeque.push_back(SDLK_A);
-			break;
-		case 6:
-			m_misc->m_InputDeque.push_back(SDLK_T);
-			break;
-		case 7:    // open chest
-			cleric = 0;
-			num = 0;
-			while (!cleric && num < 4)
+			switch (gCurCursor)
 			{
-				left = m_misc->m_Party[num + 6];
-				if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
+			case 0:
+				m_misc->m_InputDeque.push_back(SDLK_SPACE);
+				break;
+			case 1:
+				m_misc->m_InputDeque.push_back(SDLK_UP);
+				break;
+			case 2:
+				m_misc->m_InputDeque.push_back(SDLK_DOWN);
+				break;
+			case 3:
+				m_misc->m_InputDeque.push_back(SDLK_LEFT);
+				break;
+			case 4:
+				m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+				break;
+			case 5:
+				m_misc->m_InputDeque.push_back(gCurMouseDir);
+				m_misc->m_InputDeque.push_back(SDLK_A);
+				break;
+			case 6:
+				m_misc->m_InputDeque.push_back(SDLK_T);
+				break;
+			case 7:    // open chest
+				cleric = 0;
+				num = 0;
+				while (!cleric && num < 4)
 				{
-					if (m_misc->m_Player[left][25] > 4)
+					left = m_misc->m_Party[num + 6];
+					if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
 					{
-						if (m_misc->m_Player[left][23] == m_misc->m_careerTable[8] ||
-							m_misc->m_Player[left][23] == m_misc->m_careerTable[10])
+						if (m_misc->m_Player[left][25] > 4)
 						{
-							m_misc->m_InputDeque.push_back(SDLK_B);
-							m_misc->m_InputDeque.push_back(SDLK_1 + num);
-							m_misc->m_InputDeque.push_back(SDLK_C);
-							m_misc->m_InputDeque.push_back(SDLK_C);
-							cleric = 1;
-						}
-						if (m_misc->m_Player[left][23] == m_misc->m_careerTable[1] ||
-							m_misc->m_Player[left][23] == m_misc->m_careerTable[4] ||
-							m_misc->m_Player[left][23] == m_misc->m_careerTable[7])
-						{
-							m_misc->m_InputDeque.push_back(SDLK_B);
-							m_misc->m_InputDeque.push_back(SDLK_1 + num);
-							m_misc->m_InputDeque.push_back(SDLK_C);
-							cleric = 1;
+							if (m_misc->m_Player[left][23] == m_misc->m_careerTable[8] ||
+								m_misc->m_Player[left][23] == m_misc->m_careerTable[10])
+							{
+								m_misc->m_InputDeque.push_back(SDLK_B);
+								m_misc->m_InputDeque.push_back(SDLK_1 + num);
+								m_misc->m_InputDeque.push_back(SDLK_C);
+								m_misc->m_InputDeque.push_back(SDLK_C);
+								cleric = 1;
+							}
+							if (m_misc->m_Player[left][23] == m_misc->m_careerTable[1] ||
+								m_misc->m_Player[left][23] == m_misc->m_careerTable[4] ||
+								m_misc->m_Player[left][23] == m_misc->m_careerTable[7])
+							{
+								m_misc->m_InputDeque.push_back(SDLK_B);
+								m_misc->m_InputDeque.push_back(SDLK_1 + num);
+								m_misc->m_InputDeque.push_back(SDLK_C);
+								cleric = 1;
+							}
 						}
 					}
+					num++;
 				}
-				num++;
-			}
-			if (!cleric)
-			{
-				m_misc->m_InputDeque.push_back(SDLK_G);
-			}
-			break;
-		case 8:
-			m_misc->m_InputDeque.push_back(SDLK_E);
-			break;
-		case 9:
-			m_misc->m_InputDeque.push_back(SDLK_B);
-			break;
-		case 10:
-			m_misc->m_InputDeque.push_back(gCurMouseDir);
-			m_misc->m_InputDeque.push_back(SDLK_F);
-			break;
-		case 11:
-			m_misc->m_InputDeque.push_back(gCurMouseDir);
-			m_misc->m_InputDeque.push_back(SDLK_U);
-			break;
-		case 12:
-			m_misc->m_InputDeque.push_back(SDLK_X);
-			break;
-		case 13:
-			break;
-		case 14:
-			m_misc->m_InputDeque.push_back(SDLK_K);
-			break;
-		case 15:
-			m_misc->m_InputDeque.push_back(SDLK_D);
-			break;
-		case 16:
-			m_misc->m_InputDeque.push_back(SDLK_LEFT);
-			break;
-		case 17:
-			m_misc->m_InputDeque.push_back(SDLK_RIGHT);
-			break;
-		case 18:
-			m_misc->m_InputDeque.push_back(SDLK_UP);
-			break;
-		case 19:
-			m_misc->m_InputDeque.push_back(SDLK_DOWN);
-			break;
-		case 20:    // Ignite (cleric means who has a torch)
-			cleric = -1;
-			num = 0;
-			while (cleric < 0 && num < 4)
-			{
-				left = m_misc->m_Party[num + 6];
-				if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
+				if (!cleric)
 				{
-					if (m_misc->m_Player[left][15] > 0)
-					{
-						cleric = num;
-					}
+					m_misc->m_InputDeque.push_back(SDLK_G);
 				}
-				num++;
+				break;
+			case 8:
+				m_misc->m_InputDeque.push_back(SDLK_E);
+				break;
+			case 9:
+				m_misc->m_InputDeque.push_back(SDLK_B);
+				break;
+			case 10:
+				m_misc->m_InputDeque.push_back(gCurMouseDir);
+				m_misc->m_InputDeque.push_back(SDLK_F);
+				break;
+			case 11:
+				m_misc->m_InputDeque.push_back(gCurMouseDir);
+				m_misc->m_InputDeque.push_back(SDLK_U);
+				break;
+			case 12:
+				m_misc->m_InputDeque.push_back(SDLK_X);
+				break;
+			case 13:
+				break;
+			case 14:
+				m_misc->m_InputDeque.push_back(SDLK_K);
+				break;
+			case 15:
+				m_misc->m_InputDeque.push_back(SDLK_D);
+				break;
+			case 16:
+				m_misc->m_InputDeque.push_back(SDLK_LEFT);
+				break;
+			case 17:
+				m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+				break;
+			case 18:
+				m_misc->m_InputDeque.push_back(SDLK_UP);
+				break;
+			case 19:
+				m_misc->m_InputDeque.push_back(SDLK_DOWN);
+				break;
+			case 20:    // Ignite (cleric means who has a torch)
+				cleric = -1;
+				num = 0;
+				while (cleric < 0 && num < 4)
+				{
+					left = m_misc->m_Party[num + 6];
+					if ((m_misc->m_Player[left][17] == 'G') || (m_misc->m_Player[left][17] == 'P'))
+					{
+						if (m_misc->m_Player[left][15] > 0)
+						{
+							cleric = num;
+						}
+					}
+					num++;
+				}
+				if (cleric > -1)
+				{
+					m_misc->m_InputDeque.push_back(SDLK_1 + cleric);
+					m_misc->m_InputDeque.push_back(SDLK_I);
+				}
+				else   // no one had a torch, just press I and let 'em figure it out.
+				{
+					m_misc->m_InputDeque.push_back(SDLK_I);
+				}
+				break;
+			case 22:
+				m_misc->m_InputDeque.push_back(SDLK_KP_7);
+				break;
+			case 23:
+				m_misc->m_InputDeque.push_back(SDLK_KP_9);
+				break;
+			case 24:
+				m_misc->m_InputDeque.push_back(SDLK_KP_1);
+				break;
+			case 25:
+				m_misc->m_InputDeque.push_back(SDLK_KP_3);
+				break;
+			default:
+				break;
 			}
-			if (cleric > -1)
+		}
+		else
+		{
+			// Only allow movement when holding down buttons.  Everything else requires a new click
+			switch (gCurCursor)
 			{
-				m_misc->m_InputDeque.push_back(SDLK_1 + cleric);
-				m_misc->m_InputDeque.push_back(SDLK_I);
+			case 1:
+				m_misc->m_InputDeque.push_back(SDLK_UP);
+				break;
+			case 2:
+				m_misc->m_InputDeque.push_back(SDLK_DOWN);
+				break;
+			case 3:
+				m_misc->m_InputDeque.push_back(SDLK_LEFT);
+				break;
+			case 4:
+				m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+				break;
+			case 16:
+				m_misc->m_InputDeque.push_back(SDLK_LEFT);
+				break;
+			case 17:
+				m_misc->m_InputDeque.push_back(SDLK_RIGHT);
+				break;
+			case 18:
+				m_misc->m_InputDeque.push_back(SDLK_UP);
+				break;
+			case 19:
+				m_misc->m_InputDeque.push_back(SDLK_DOWN);
+				break;
+			case 22:
+				m_misc->m_InputDeque.push_back(SDLK_KP_7);
+				break;
+			case 23:
+				m_misc->m_InputDeque.push_back(SDLK_KP_9);
+				break;
+			case 24:
+				m_misc->m_InputDeque.push_back(SDLK_KP_1);
+				break;
+			case 25:
+				m_misc->m_InputDeque.push_back(SDLK_KP_3);
+				break;
+			default:
+				break;
 			}
-			else   // no one had a torch, just press I and let 'em figure it out.
-			{
-				m_misc->m_InputDeque.push_back(SDLK_I);
-			}
-			break;
-		case 22:
-			m_misc->m_InputDeque.push_back(SDLK_KP_7);
-			break;
-		case 23:
-			m_misc->m_InputDeque.push_back(SDLK_KP_9);
-			break;
-		case 24:
-			m_misc->m_InputDeque.push_back(SDLK_KP_1);
-			break;
-		case 25:
-			m_misc->m_InputDeque.push_back(SDLK_KP_3);
-			break;
-		default:
-			break;
 		}
 	}
 }

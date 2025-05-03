@@ -248,6 +248,7 @@ public:
 	Uint64 m_elapsedWindTime;
 	int m_demoDelay;
 	int m_demoptr;
+	std::vector<unsigned char> m_vecResourceData;
 
 private:
 	void LoadResource(std::string strFile);
@@ -261,6 +262,7 @@ private:
 	bool loadCursors();
 	void loadButtons();
 	
+	bool loadResourceFile();
 	bool loadPLists();
 	bool loadCons();
 	bool checkFiles();
@@ -330,7 +332,6 @@ private:
 	std::vector<unsigned char> m_vecSigData;
 	std::vector< U3Button> m_buttons;
 	std::vector< short> m_currentButtons;
-	
 
 	int m_exodusWidth;
 	int m_exodusHeight;

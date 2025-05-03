@@ -241,6 +241,7 @@ private:
 	void DrawFramePiece(int part, int x, int y);
 	void adjustRect(SDL_FRect& myRect);
 	void loadString();
+	void loadDitlString(int blockSize, std::function<void(int)> callback);
 	void loadDitl(int blockSize, std::function<void(int)> callback);
 	bool createFont();
 	void createButton(std::function<void(int)> callback);

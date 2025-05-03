@@ -264,7 +264,24 @@ void U3Dialog::adjustRect(SDL_FRect& myRect)
 	myRect.y += screenOffsetY;
 }
 
+// I'm completely guessing on this stuff
 void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
+{
+	size_t start_address = 0x253b; // This I know is 1
+	for (int index = 1; index < m_message; index++)
+	{
+		Uint32 file_size = 0;
+		for (int byte = 0; byte < 4; ++byte)
+		{
+			file_size <<= 8;
+			file_size += m_resources->m_vecResourceData[start_address];
+		}
+		start_address += file_size + 1;
+	}
+	int j = 9;
+}
+
+void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
 {
 	std::filesystem::path currentPathMessage = std::filesystem::current_path();
 	currentPathMessage /= ResourceLoc;
@@ -423,7 +440,7 @@ void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 	m_strMessage.clear();
 	bool maxLineCountHit = false;
 	const int MAX_LEN_TOKEN = 40;
-	const int MAX_LINE_COUNT = 12;
+	const int MAX_LINE_COUNT = 16;
 	int line_count = 0;
 	for (auto& curLineToken : newLineTokens)
 	{
@@ -445,7 +462,6 @@ void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 		{
 			if (curToken == std::string("\n"))
 			{
-				m_strMessage += std::string("\n");
 				nCurLen = 0;
 				line_count++;
 				if (line_count > MAX_LINE_COUNT)
@@ -481,66 +497,63 @@ void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 
 void U3Dialog::loadString()
 {
-	std::filesystem::path currentPathTitle = std::filesystem::current_path();
-	currentPathTitle /= ResourceLoc;
-	currentPathTitle /= TextLoc;
-	currentPathTitle /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2) + std::string(".txt");
+	std::string strFromApostrophe;
+	std::string strToApostrophe;
+	std::string strFromLeftQuote;
+	std::string strToLeftQuote;
+	std::string strFromRightQuote;
+	std::string strToRightQuote;
 
-	std::filesystem::path currentPathMessage = std::filesystem::current_path();
-	currentPathMessage /= ResourceLoc;
-	currentPathMessage /= TextLoc;
-	currentPathMessage /= std::string("MainResources.rsrc_STR#_418_Alert Messages_") + std::to_string(m_message * 2 + 1) + std::string(".txt");
+	// Probably a better way to handle all of this
 
-	if (!std::filesystem::exists(currentPathTitle))
-	{
-		return;
-	}
+	strFromApostrophe += static_cast<char>(0xd5);
 
-	if (!std::filesystem::exists(currentPathMessage))
-	{
-		return;
-	}
+	strToApostrophe += static_cast<char>(0xe2);
+	strToApostrophe += static_cast<char>(0x80);
+	strToApostrophe += static_cast<char>(0x99);
 
-	std::uintmax_t file_size = std::filesystem::file_size(currentPathTitle);
-	std::string strTemp = m_utilities->PathToSDLString(currentPathTitle);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
+	strFromLeftQuote += static_cast<char>(0xd2);
 
-	if (!file)
-	{
-		return;
-	}
+	strToLeftQuote += static_cast<char>(0xe2);
+	strToLeftQuote += static_cast<char>(0x80);
+	strToLeftQuote += static_cast<char>(0x9c);
+
+	strFromRightQuote += static_cast<char>(0xd3);
+
+	strToRightQuote += static_cast<char>(0xe2);
+	strToRightQuote += static_cast<char>(0x80);
+	strToRightQuote += static_cast<char>(0x9d);
+
 	std::vector<char> fileTitleData;
-	fileTitleData.resize(file_size);
-
-	SDL_ReadIO(file, fileTitleData.data(), file_size);
-	SDL_CloseIO(file);
-	fileTitleData.emplace_back(0);
-
-	file_size = std::filesystem::file_size(currentPathMessage);
-	strTemp = m_utilities->PathToSDLString(currentPathMessage);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-
-	if (!file)
-	{
-		return;
-	}
 	std::vector<char> fileData;
-	fileData.resize(file_size);
+	size_t start_address = 0x29c01;
+	unsigned char dispStrSize;
+	char str255[256];
 
-	SDL_ReadIO(file, fileData.data(), file_size);
-	SDL_CloseIO(file);
-	fileData.emplace_back(0);
-
-	m_strTitle = std::string(fileTitleData.data());
-	m_strMessage = std::string(fileData.data());
+	for (int index = 0; index < m_message * 2; ++index)
+	{
+		dispStrSize = m_resources->m_vecResourceData[start_address];
+		start_address += static_cast<size_t>(dispStrSize + 1);
+	}
+	dispStrSize = m_resources->m_vecResourceData[start_address];
+	memset(str255, 0, sizeof(char) * 256);
+	start_address++;
+	memcpy(str255, m_resources->m_vecResourceData.data() + start_address, sizeof(char) * dispStrSize);
+	str255[255] = 0; // Get rid of the pesky warning that was already taken care of
+	std::string strTemp = std::string(str255);
+	m_strTitle = m_utilities->replaceAll(strTemp, strFromApostrophe, strToApostrophe);
+	m_strTitle = m_utilities->replaceAll(m_strTitle, strFromLeftQuote, strToLeftQuote);
+	m_strTitle = m_utilities->replaceAll(m_strTitle, strFromRightQuote, strToRightQuote);
+	start_address += dispStrSize;
+	dispStrSize = m_resources->m_vecResourceData[start_address];
+	memset(str255, 0, sizeof(char) * 256);
+	start_address++;
+	memcpy(str255, m_resources->m_vecResourceData.data() + start_address, sizeof(char) * dispStrSize);
+	strTemp = std::string(str255);
+	m_strMessage = m_utilities->replaceAll(strTemp, std::string("\r"), std::string("\n"));
+	m_strMessage = m_utilities->replaceAll(m_strMessage, strFromApostrophe, strToApostrophe);
+	m_strMessage = m_utilities->replaceAll(m_strMessage, strFromLeftQuote, strToLeftQuote);
+	m_strMessage = m_utilities->replaceAll(m_strMessage, strFromRightQuote, strToRightQuote);
 	
 	RewrapMessage(m_strMessage);
 }
@@ -1327,47 +1340,32 @@ void CreateCharacterDialog::loadPresets()
 
 	m_Presets.resize((int)m_resources->m_plistMap["Classes"].size());
 
+	size_t startAddress = 0x29b56;
+	char curData[16];
+	memset(curData, 0, sizeof(char) * 16);
+
 	for (int index = 0; index < (int)m_resources->m_plistMap["Classes"].size(); ++index)
 	{
 		m_Presets[index][4] = 0;
-
-		std::filesystem::path tempPath = currentPath;
-		tempPath += std::to_string(index);
-		tempPath += std::string(".txt");
-
-		std::string strTemp = m_utilities->PathToSDLString(tempPath);
-		if (strTemp.empty())
+		unsigned char dispStringLen = m_resources->m_vecResourceData[startAddress];
+		startAddress++;
+		if (dispStringLen != 14)
 		{
 			m_Presets[index][0] = 5;
 			m_Presets[index][1] = 5;
 			m_Presets[index][2] = 5;
 			m_Presets[index][3] = 5;
-
-			continue;
 		}
-		SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-		if (!file)
+		else
 		{
-			m_Presets[index][0] = 5;
-			m_Presets[index][1] = 5;
-			m_Presets[index][2] = 5;
-			m_Presets[index][3] = 5;
-
-			continue;
+			memcpy(curData, m_resources->m_vecResourceData.data() + startAddress, sizeof(char) * 14);
+			startAddress += 14;
 		}
-		Sint64 fSize = SDL_GetIOSize(file);
-		std::vector<char> file_data;
 
-		if (fSize > 0)
-		{
-			file_data.resize(fSize);
-			SDL_ReadIO(file, file_data.data(), fSize);
-		}
-		
-		SDL_CloseIO(file);
-		file_data.emplace_back(0);
-		std::string strData = std::string(file_data.data());
+		curData[15] = 0; // Get rid of that pesky warning
+		std::string strData = std::string(curData);
 		auto vals = m_utilities->splitString(strData, ' ');
+
 		if (vals.size() != 5)
 		{
 			m_Presets[index][0] = 5;

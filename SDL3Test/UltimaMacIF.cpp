@@ -11,7 +11,6 @@
 #include "UltimaDungeon.h"
 #include "UltimaSpellCombat.h"
 #include "U3Resources.h"
-#include "UltimaSpellCombat.h"
 
 extern SDL_Window* window;
 extern std::unique_ptr<U3Resources> m_resources;
@@ -30,7 +29,7 @@ Uint32 gCurMouseDir;
 short gMouseState = 0;
 
 
-bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
+static bool isInRect(float mousH, float mousV, SDL_FRect topOfRect)
 {
 	if (topOfRect.x <= mousH && mousH <= topOfRect.x + topOfRect.w &&
 		topOfRect.y <= mousV && mousV <= topOfRect.y + topOfRect.h)
@@ -143,8 +142,8 @@ void HandleMouseDown(bool mouseclicked)
 								m_misc->m_Player[left][23] == m_misc->m_careerTable[10])
 							{
 								m_misc->m_InputDeque.push_back(SDLK_B);
-								m_misc->m_InputDeque.push_back(SDLK_1 + num);
 								m_misc->m_InputDeque.push_back(SDLK_C);
+								m_misc->m_InputDeque.push_back(SDLK_1 + num);
 								m_misc->m_InputDeque.push_back(SDLK_C);
 								cleric = 1;
 							}

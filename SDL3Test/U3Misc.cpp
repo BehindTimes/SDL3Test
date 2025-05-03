@@ -133,42 +133,24 @@ bool U3Misc::OpenRstr()
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 
-	//std::filesystem::path partyPath = currentPath / "PARTY.ULT";
 	std::filesystem::path rosterPath = currentPath / "Roster.ult";
-	//std::filesystem::path sosariaPath = currentPath / "SOSARIA.ULT";
 
 	std::filesystem::path resourcePath = std::filesystem::current_path();
 	resourcePath /= ResourceLoc;
 	resourcePath /= BinLoc;
 
-	std::vector<std::string> orig_files = {
-		"Sosaria_Monsters.ult",
-		"Preferences.ult",
-		"MainResources.rsrc_MAPS_420.bin",
-		"Sosaria_Current.ult",
-		"MainResources.rsrc_PRTY_500_Party.bin",
-		"Party.ult",
-		"MainResources.rsrc_MISC_400.bin",
-		"Moongate_Locations.ult",
-		/*"MainResources.rsrc_MISC_401.bin",
-		"Type Initial Table.ult",
-		"MainResources.rsrc_MISC_402.bin",
-		"Weapon Use By class.ult",
-		"MainResources.rsrc_MISC_403.bin",
-		"Armour Use By class.ult",*/
-		"MainResources.rsrc_MISC_404.bin",
-		"Location_Table.ult",
-		/*"MainResources.rsrc_MISC_405.bin",
-		"Experience Table.ult",*/
-		"MainResources.rsrc_ROST_500_Roster.bin",
-		"Roster.ult"
+	std::vector<std::pair<size_t, std::string>> orig_files = {
+		{ 0x17425, "Sosaria_Current.ult" },
+		{ 0x2889d, "Party.ult" },
+		{ 0x197ec, "Moongate_Locations.ult" },
+		{ 0x1982d, "Location_Table.ult" },
+		{ 0x2b95f, "Roster.ult" }
 	};
 
 	try
 	{
 		if (!std::filesystem::is_directory(currentPath))
 		{
-
 			bool valid = std::filesystem::create_directory(currentPath);
 			if (!valid)
 			{
@@ -176,37 +158,40 @@ bool U3Misc::OpenRstr()
 			}
 
 		}
-		// New game, so copy stuff
-		std::vector<char> dummy;
+
 		if (!std::filesystem::exists(rosterPath))
 		{
-			std::filesystem::path monsterFile = currentPath / orig_files[0];
-			dummy.resize(256);
-			std::string strTemp = m_utilities->PathToSDLString(monsterFile);
-			if (strTemp.empty())
+			// New game, so copy stuff
+
+			for (size_t index = 0; index < orig_files.size(); ++index)
 			{
-				return false;
+				Uint32 file_size = 0;
+				for (int byte = 0; byte < 4; ++byte)
+				{
+					file_size <<= 8;
+					file_size += m_resources->m_vecResourceData[orig_files[index].first + byte];
+				}
+				std::filesystem::path fileFile = currentPath / std::string(orig_files[index].second);
+
+				SDL_IOStream* file = SDL_IOFromFile(fileFile.string().c_str(), "wb");
+				SDL_WriteIO(file, m_resources->m_vecResourceData.data() + orig_files[index].first + 4, file_size);
+				SDL_CloseIO(file);
 			}
-			SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
-			SDL_WriteIO(file, dummy.data(), dummy.size());
-			SDL_CloseIO(file);
-			dummy.clear();
-			dummy.resize(32);
-			memset(dummy.data(), 1, sizeof(char) * 8);
-			std::filesystem::path preferencesFile = currentPath / orig_files[1];
-			strTemp = m_utilities->PathToSDLString(preferencesFile);
-			if (strTemp.empty())
+
+			std::vector<char> dummy;
+			std::filesystem::path monsterFile = currentPath / std::string("Sosaria_Monsters.ult");
+
+			if (!std::filesystem::exists(monsterFile))
 			{
-				return false;
-			}
-			file = SDL_IOFromFile(strTemp.c_str(), "wb");
-			SDL_WriteIO(file, dummy.data(), dummy.size());
-			SDL_CloseIO(file);
-			for (int index = 2; index < orig_files.size(); index += 2)
-			{
-				std::filesystem::path sosariaFileOrig = resourcePath / orig_files[index];
-				std::filesystem::path sosariaFileCurrent = currentPath / orig_files[index + 1];
-				std::filesystem::copy(sosariaFileOrig, sosariaFileCurrent, std::filesystem::copy_options::overwrite_existing);
+				dummy.resize(256);
+				std::string strTemp = m_utilities->PathToSDLString(monsterFile);
+				if (strTemp.empty())
+				{
+					return false;
+				}
+				SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "wb");
+				SDL_WriteIO(file, dummy.data(), dummy.size());
+				SDL_CloseIO(file);
 			}
 		}
 	}
@@ -272,119 +257,103 @@ void U3Misc::PutMiscStuff() const
 
 void U3Misc::GetMiscStuff(bool defaultData)
 {
-	std::vector<std::string> orig_files = {
-		"Moongate_Locations.ult",
-		"Type Initial Table.ult",
-		"Weapon Use By class.ult",
-		"Armour Use By class.ult",
-		"Location_Table.ult",
-		"Experience Table.ult",
-		"MainResources.rsrc_MISC_400.bin",
-		"MainResources.rsrc_MISC_401.bin",
-		"MainResources.rsrc_MISC_402.bin",
-		"MainResources.rsrc_MISC_403.bin",
-		"MainResources.rsrc_MISC_404.bin",
-		"MainResources.rsrc_MISC_405.bin"
-	};
-	unsigned short byte;
-	std::filesystem::path moongateFile;
-	std::filesystem::path typeFile;
-	std::filesystem::path weaponFile;
-	std::filesystem::path armourFile;
-	std::filesystem::path locationFile;
-	std::filesystem::path experienceFile;
-
-	std::filesystem::path currentPath = std::filesystem::current_path();
-	std::filesystem::path currentPath1 = std::filesystem::current_path();
-
-	currentPath /= ResourceLoc;
-	currentPath1 /= ResourceLoc;
-	if (defaultData)
-	{
-		currentPath /= BinLoc;
-		moongateFile = currentPath / orig_files[6];
-		typeFile = currentPath / orig_files[7];
-		weaponFile = currentPath / orig_files[8];
-		armourFile = currentPath / orig_files[9];
-		locationFile = currentPath / orig_files[10];
-		experienceFile = currentPath / orig_files[11];
-	}
-	else
-	{
-		currentPath /= SaveLoc;
-		currentPath1 /= BinLoc;
-		moongateFile = currentPath / orig_files[0];
-		typeFile = currentPath1 / orig_files[7];
-		weaponFile = currentPath1 / orig_files[8];
-		armourFile = currentPath1 / orig_files[9];
-		locationFile = currentPath / orig_files[4];
-		experienceFile = currentPath1 / orig_files[11];
-	}
-
-	std::vector<std::filesystem::path> m_filePaths = { typeFile, weaponFile, armourFile, experienceFile };
-	std::vector<unsigned char*> m_fileData = { m_careerTable, m_wpnUseTable, m_armUseTable, m_Experience };
-	std::vector<size_t> m_arraySize = {12, 12, 12, 17};
-
-	std::uintmax_t file_size = std::filesystem::file_size(moongateFile);
+	size_t start_offset = 0x197ec;
+	const int num_files = 6;
 	std::vector<unsigned char> dummy;
+	unsigned short byte;
 
-	dummy.resize(file_size);
-	std::string strTemp = m_utilities->PathToSDLString(moongateFile);
-	if (strTemp.empty())
+	std::vector<unsigned char*> m_fileData = { nullptr, m_careerTable, m_wpnUseTable, m_armUseTable, nullptr, m_Experience };
+	std::vector<size_t> m_arraySize = { 16, 11, 11, 11, 64, 16 };
+
+	for (size_t index = 0; index < num_files; ++index)
 	{
-		return;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-
-	for (byte = 0; byte < 8; byte++)
-	{
-		m_MoonXTable[byte] = dummy[byte];
-		m_MoonYTable[byte] = dummy[static_cast<size_t>(byte + 8)];
-	}
-
-	for (size_t index = 0; index < m_filePaths.size(); ++index)
-	{
-		memset(m_fileData[index], 0, sizeof(unsigned char) * m_arraySize[index]);
-
-		if (!std::filesystem::exists(m_filePaths[0]))
+		Uint32 file_size = 0;
+		for (byte = 0; byte < 4; ++byte)
+		{
+			file_size <<= 8;
+			file_size += m_resources->m_vecResourceData[start_offset];
+			start_offset++;
+		}
+		if (file_size != m_arraySize[index])
 		{
 			return;
 		}
 
-		file_size = std::filesystem::file_size(m_filePaths[index]);
-		dummy.resize(file_size);
-		strTemp = m_utilities->PathToSDLString(m_filePaths[index]);
-		if (strTemp.empty())
+		if (index == 0) // moongates
 		{
-			return;
+			if (defaultData)
+			{
+				dummy.resize(file_size);
+				memcpy(dummy.data(), m_resources->m_vecResourceData.data() + start_offset, sizeof(unsigned char) * file_size);
+			}
+			else
+			{
+				std::filesystem::path currentPath = std::filesystem::current_path();
+
+				currentPath /= ResourceLoc;
+				currentPath /= SaveLoc;
+				currentPath /= std::string("Moongate_Locations.ult");
+
+				file_size = (Uint32)std::filesystem::file_size(currentPath.string().c_str());
+				dummy.resize(file_size);
+				std::string strTemp = m_utilities->PathToSDLString(currentPath.string());
+				if (strTemp.empty())
+				{
+					return;
+				}
+				SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
+				SDL_ReadIO(file, dummy.data(), dummy.size());
+				SDL_CloseIO(file);
+			}
+
+			for (byte = 0; byte < 8; byte++)
+			{
+				m_MoonXTable[byte] = dummy[byte];
+				m_MoonYTable[byte] = dummy[static_cast<size_t>(byte + 8)];
+			}
 		}
-		file = SDL_IOFromFile(strTemp.c_str(), "rb");
-		SDL_ReadIO(file, dummy.data(), dummy.size());
-		SDL_CloseIO(file);
-		if (dummy.size() < m_arraySize[index])
+		else if (index == 4) // locations
 		{
-			memcpy(m_fileData[index], dummy.data(), m_arraySize[index]);
+			if (defaultData)
+			{
+				dummy.resize(file_size);
+				memcpy(dummy.data(), m_resources->m_vecResourceData.data() + start_offset, sizeof(unsigned char) * file_size);
+			}
+			else
+			{
+				std::filesystem::path currentPath = std::filesystem::current_path();
+
+				currentPath /= ResourceLoc;
+				currentPath /= SaveLoc;
+				currentPath /= std::string("Location_Table.ult");
+
+				file_size = (Uint32)std::filesystem::file_size(currentPath.string().c_str());
+				dummy.resize(file_size);
+				std::string strTemp = m_utilities->PathToSDLString(currentPath.string());
+				if (strTemp.empty())
+				{
+					return;
+				}
+				SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
+				SDL_ReadIO(file, dummy.data(), dummy.size());
+				SDL_CloseIO(file);
+			}
+
+			for (byte = 0; byte < 20; byte++)
+			{
+				m_LocationX[byte] = dummy[byte];
+				m_LocationY[byte] = dummy[static_cast<size_t>(byte + 32)];
+			}
 		}
-	}
-
-
-	file_size = std::filesystem::file_size(locationFile);
-	dummy.resize(file_size);
-	strTemp = m_utilities->PathToSDLString(locationFile);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	SDL_ReadIO(file, dummy.data(), dummy.size());
-	SDL_CloseIO(file);
-
-	for (byte = 0; byte < 20; byte++)
-	{
-		m_LocationX[byte] = dummy[byte];
-		m_LocationY[byte] = dummy[static_cast<size_t>(byte + 32)];
+		else
+		{
+			if (m_fileData[index] != nullptr)
+			{
+				memset(m_fileData[index], 0, (m_arraySize[index] + 1) * sizeof(unsigned char));
+				memcpy(m_fileData[index], m_resources->m_vecResourceData.data() + start_offset, sizeof(unsigned char) * file_size);
+			}
+		}
+		start_offset += file_size;
 	}
 }
 
@@ -628,160 +597,129 @@ void U3Misc::BlockExodus()
 
 void U3Misc::LoadUltimaMap(short map)
 {
-	std::map<int, std::string> mapList = {
-		{ 0, "MainResources.rsrc_MAPS_400" },
-		{ 1, "MainResources.rsrc_MAPS_401" },
-		{ 2, "MainResources.rsrc_MAPS_402" },
-		{ 3, "MainResources.rsrc_MAPS_403" },
-		{ 4, "MainResources.rsrc_MAPS_404" },
-		{ 5, "MainResources.rsrc_MAPS_405" },
-		{ 6, "MainResources.rsrc_MAPS_406" },
-		{ 7, "MainResources.rsrc_MAPS_407" },
-		{ 8, "MainResources.rsrc_MAPS_408" },
-		{ 9, "MainResources.rsrc_MAPS_409" },
-		{ 10, "MainResources.rsrc_MAPS_410" },
-		{ 11, "MainResources.rsrc_MAPS_411" },
-		{ 12, "MainResources.rsrc_MAPS_412" },
-		{ 13, "MainResources.rsrc_MAPS_413" },
-		{ 14, "MainResources.rsrc_MAPS_414" },
-		{ 15, "MainResources.rsrc_MAPS_415" },
-		{ 16, "MainResources.rsrc_MAPS_416" },
-		{ 17, "MainResources.rsrc_MAPS_417" },
-		{ 18, "MainResources.rsrc_MAPS_418" },
-		{ 19, "Sosaria_Current" },
-		{ 20, "MainResources.rsrc_MAPS_420" },
-		{ 21, "MainResources.rsrc_MAPS_421" },
-	};
-
-	std::map<int, std::string> monsterList = {
-		{ 0, "MainResources.rsrc_MONS_400" },
-		{ 1, "MainResources.rsrc_MONS_401" },
-		{ 2, "MainResources.rsrc_MONS_402" },
-		{ 3, "MainResources.rsrc_MONS_403" },
-		{ 4, "MainResources.rsrc_MONS_404" },
-		{ 5, "MainResources.rsrc_MONS_405" },
-		{ 6, "MainResources.rsrc_MONS_406" },
-		{ 7, "MainResources.rsrc_MONS_407" },
-		{ 8, "MainResources.rsrc_MONS_408" },
-		{ 9, "MainResources.rsrc_MONS_409" },
-		{ 10, "MainResources.rsrc_MONS_410" },
-		{ 11, "MainResources.rsrc_MONS_411" },
-		{ 19, "Sosaria_Monsters" },
-		{ 20, "MainResources.rsrc_MONS_420" },
-		{ 21, "MainResources.rsrc_MONS_421" },
-	};
-
-	std::map<int, std::string> talkList = {
-		{ 0, "MainResources.rsrc_TLKS_400" },
-		{ 1, "MainResources.rsrc_TLKS_401" },
-		{ 2, "MainResources.rsrc_TLKS_402" },
-		{ 3, "MainResources.rsrc_TLKS_403" },
-		{ 4, "MainResources.rsrc_TLKS_404" },
-		{ 5, "MainResources.rsrc_TLKS_405" },
-		{ 6, "MainResources.rsrc_TLKS_406" },
-		{ 7, "MainResources.rsrc_TLKS_407" },
-		{ 8, "MainResources.rsrc_TLKS_408" },
-		{ 9, "MainResources.rsrc_TLKS_409" },
-		{ 10, "MainResources.rsrc_TLKS_410" },
-		{ 11, "MainResources.rsrc_TLKS_411" },
-		{ 12, "MainResources.rsrc_TLKS_412" },
-		{ 13, "MainResources.rsrc_TLKS_413" },
-		{ 14, "MainResources.rsrc_TLKS_414" },
-		{ 15, "MainResources.rsrc_TLKS_415" },
-		{ 16, "MainResources.rsrc_TLKS_416" },
-		{ 17, "MainResources.rsrc_TLKS_417" },
-		{ 18, "MainResources.rsrc_TLKS_418" },
-		{ 21, "MainResources.rsrc_TLKS_421" },
-	};
-
-	if (mapList.find(map) == mapList.end())
+	// This should never happen
+	if (map == 20)
 	{
-		return;
+		map = 19;
 	}
+
 	m_map_id = map;
 	std::filesystem::path currentPath = std::filesystem::current_path();
 	currentPath /= ResourceLoc;
 	std::filesystem::path monsterPath = std::filesystem::current_path();
 	monsterPath /= ResourceLoc;
-	std::filesystem::path talkPath = std::filesystem::current_path();
-	talkPath /= ResourceLoc;
+
 	if (map == 19)
 	{
 		currentPath /= SaveLoc;
-		currentPath /= mapList[map];
-		currentPath += std::string(".ult");
+		currentPath /= std::string("Sosaria_Current.ult");
 
 		monsterPath /= SaveLoc;
-		monsterPath /= monsterList[map];
-		monsterPath += std::string(".ult");
-	}
-	else
-	{
-		currentPath /= BinLoc;
-		currentPath /= mapList[map];
-		currentPath += std::string(".bin");
-
-		monsterPath /= BinLoc;
-		monsterPath /= monsterList[map];
-		monsterPath += std::string(".bin");
+		monsterPath /= std::string("Sosaria_Monsters.ult");
 	}
 
 	std::vector<unsigned char> map_data;
 	std::vector<unsigned char> monster_data;
+	std::uintmax_t file_size;
+	std::string strTemp;
+	SDL_IOStream* file;
+	int mapLength = 0;
 
 	try
 	{
-		std::uintmax_t file_size = std::filesystem::file_size(currentPath);
-		map_data.resize(file_size);
+		if (map < 12 || map > 20)
+		{
+			file_size = 0;
 
-		std::string strTemp = m_utilities->PathToSDLString(currentPath);
-		if (strTemp.empty())
-		{
-			return;
-		}
-		SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-		if (!file)
-		{
-			return;
-		}
-		SDL_ReadIO(file, map_data.data(), file_size);
-		SDL_CloseIO(file);
+			// Map locations
+			size_t start_loc;
+			if (map < 12)
+			{
+				start_loc = 0x7bcd + 4101 * (size_t)map;
+			}
+			else
+			{
+				start_loc = 0x1842e;
+			}
 
-		if (map > 11 && map < 19)
-		{
-			if (file_size != 2048)
+			for (int byte = 0; byte < 4; ++byte)
+			{
+				file_size <<= 8;
+				file_size += m_resources->m_vecResourceData[start_loc + byte];
+			}
+			if (file_size != 4097)
 			{
 				return;
 			}
-			memcpy(m_Dungeon, map_data.data(), sizeof(unsigned char) * file_size);
-		}
-		else
-		{
-			if (map == 19 && file_size == 4100)
+			m_mapSize = m_resources->m_vecResourceData[start_loc + 4];
+			if (m_mapSize == 0)
 			{
-				map_data.insert(map_data.begin(), 64);
+				m_mapSize = 256;
+			}
+			mapLength = m_mapSize * m_mapSize;
+			m_map.resize(mapLength);
+			std::copy(m_resources->m_vecResourceData.begin() + (start_loc + 5),
+				m_resources->m_vecResourceData.begin() + (start_loc + 5) + mapLength, m_map.begin());
+
+			// Monster locations
+			start_loc = 0x19885;
+			if (map < 12)
+			{
+				start_loc += (260 * (size_t)map);
+			}
+			else
+			{
+				start_loc += (260 * (size_t)(map - 8));
+			}
+			
+			for (int byte = 0; byte < 4; ++byte)
+			{
+				file_size <<= 8;
+				file_size += m_resources->m_vecResourceData[start_loc + byte];
+			}
+			if (file_size != 256)
+			{
+				return;
+			}
+			memcpy(m_Monsters, m_resources->m_vecResourceData.data() + (start_loc + 4), sizeof(unsigned char) * file_size);
+		}
+		else if (map == 19)
+		{
+			file_size = std::filesystem::file_size(currentPath);
+			if (file_size == 4101)
+			{
+				map_data.resize(file_size);
 				strTemp = m_utilities->PathToSDLString(currentPath);
 				if (strTemp.empty())
 				{
 					return;
 				}
-				file = SDL_IOFromFile(strTemp.c_str(), "wb");
-				SDL_WriteIO(file, map_data.data(), map_data.size());
+				file = SDL_IOFromFile(strTemp.c_str(), "rb");
+				SDL_ReadIO(file, map_data.data(), file_size);
 				SDL_CloseIO(file);
-			}
 
-			m_mapSize = map_data[0];
-			if (m_mapSize == 0)
-			{
-				m_mapSize = 256;
+				m_mapSize = map_data[0];
+				if (m_mapSize == 0)
+				{
+					m_mapSize = 256;
+				}
+				mapLength = m_mapSize * m_mapSize;
+				m_map.resize(mapLength);
+				if (map_data.size() < mapLength)
+				{
+					return;
+				}
+				std::copy(map_data.begin() + 1, map_data.begin() + 1 + mapLength, m_map.begin());
+
+				m_WhirlX = map_data[static_cast<size_t>(mapLength + 1)];
+				m_WhirlY = map_data[static_cast<size_t>(mapLength + 2)];
+				m_WhirlDX = map_data[static_cast<size_t>(mapLength + 3)];
+				m_WhirlDY = map_data[static_cast<size_t>(mapLength + 4)];
 			}
-			int mapLength = m_mapSize * m_mapSize;
-			m_map.resize(mapLength);
-			if (map_data.size() < mapLength)
+			else
 			{
 				return;
 			}
-			std::copy(map_data.begin() + 1, map_data.begin() + 1 + mapLength, m_map.begin());
 
 			file_size = std::filesystem::file_size(monsterPath);
 			if (file_size == 256)
@@ -802,42 +740,47 @@ void U3Misc::LoadUltimaMap(short map)
 			{
 				return;
 			}
-			if (map == 19)
-			{
-				m_WhirlX = map_data[static_cast<size_t>(mapLength + 1)];
-				m_WhirlY = map_data[static_cast<size_t>(mapLength + 2)];
-				m_WhirlDX = map_data[static_cast<size_t>(mapLength + 3)];
-				m_WhirlDY = map_data[static_cast<size_t>(mapLength + 4)];
-			}
 		}
+		else
+		{
+			// Dungeon locations
+			size_t start_loc = 0x13c09 + static_cast<size_t>((map - 12) * 2052);
+			file_size = 0;
+			for (int byte = 0; byte < 4; ++byte)
+			{
+				file_size <<= 8;
+				file_size += m_resources->m_vecResourceData[start_loc + byte];
+			}
+			if (file_size != 2048)
+			{
+				return;
+			}
+			memcpy(m_Dungeon, m_resources->m_vecResourceData.data() + (start_loc + 4), sizeof(unsigned char) * file_size);
+		}
+
 		if (map < 19 || map == 21) // "<419" *was* "<420", big mistake.
 		{
-			talkPath /= BinLoc;
-			talkPath /= talkList[map];
-			talkPath += std::string(".bin");
-			std::vector<unsigned char> talk_data;
+			size_t start_loc = 0x2a1a7;
+			if (map < 19)
+			{
+				start_loc += (260 * (size_t)map);
+			}
+			else
+			{
+				start_loc += (size_t)(260 * 19);
+			}
 
-			file_size = std::filesystem::file_size(talkPath);
+			file_size = 0;
+			for (int byte = 0; byte < 4; ++byte)
+			{
+				file_size <<= 8;
+				file_size += m_resources->m_vecResourceData[start_loc + byte];
+			}
 			if (file_size != 256)
 			{
 				return;
 			}
-			talk_data.resize(file_size);
-
-			strTemp = m_utilities->PathToSDLString(talkPath);
-			if (strTemp.empty())
-			{
-				return;
-			}
-			file = SDL_IOFromFile(strTemp.c_str(), "rb");
-			if (!file)
-			{
-				return;
-			}
-			SDL_ReadIO(file, talk_data.data(), file_size);
-			SDL_CloseIO(file);
-
-			memcpy(m_Talk, talk_data.data(), sizeof(unsigned char) * file_size);
+			memcpy(m_Talk, m_resources->m_vecResourceData.data() + (start_loc + 4), sizeof(unsigned char) * file_size);
 		}
 
 	}
@@ -1890,10 +1833,10 @@ bool U3Misc::ProcessEvent(SDL_Event event)
 			return retVal;
 		}
 	}
-	
+
 	if (m_mouseDown)
 	{
-		if(m_misc->m_elapsedMouseTime > mouse_delay || mouse_was_clicked)
+		if (m_misc->m_elapsedMouseTime > mouse_delay || mouse_was_clicked)
 		{
 			m_misc->m_elapsedMouseTime %= mouse_delay;
 			if (m_gameMode == GameStateMode::Map ||
@@ -2191,7 +2134,7 @@ void U3Misc::PrintMonster(short which, bool plural, char variant) // $8457
 	}
 }
 
-void U3Misc::Speak(short perNum, [[maybe_unused]]short shnum) const
+void U3Misc::Speak(short perNum, [[maybe_unused]] short shnum) const
 {
 	short talk;
 	std::string speechStr;
@@ -3441,7 +3384,7 @@ bool U3Misc::healingPayCallback()
 	return false;
 }
 
-void U3Misc::SpellNoize(short opnum, [[maybe_unused]]short opnum2)
+void U3Misc::SpellNoize(short opnum, [[maybe_unused]] short opnum2)
 {
 	//m_resources->m_inverses.func = std::bind(&U3Misc::FinalizeHealingCallback, this);
 	m_callbackStack.push(std::bind(&U3Misc::FinalizeHealingCallback, this));
@@ -4045,7 +3988,7 @@ bool U3Misc::PeerGemCallback()
 	m_scrollArea->UPrintWin(strRosNum);
 	/*if (m_Player[rosnum][37] < 1)
 	{
-		
+
 		m_scrollArea->UPrintMessage(67);
 	}
 	else*/
@@ -4076,7 +4019,7 @@ void U3Misc::StealFail()
 	m_scrollArea->UPrintMessage(87);
 	m_audio->playSfx(SFX_OUCH);
 	m_callbackStack.push(std::bind(&U3Misc::StealFailCallback, this));
-	
+
 }
 
 bool U3Misc::StealFailCallback()
@@ -4425,25 +4368,24 @@ void U3Misc::ResetSosaria()
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 
-	std::filesystem::path resourcePath = std::filesystem::current_path();
-	resourcePath /= ResourceLoc;
-	resourcePath /= BinLoc;
-
-	std::vector<std::string> orig_files = {
-		"MainResources.rsrc_MAPS_420.bin",
-		"Sosaria_Current.ult",
-		"MainResources.rsrc_MISC_400.bin",
-		"Moongate_Locations.ult",
-		"MainResources.rsrc_MISC_404.bin",
-		"Location_Table.ult",
+	std::vector<std::pair<size_t, std::string>> orig_files = {
+		{0x17425, "Sosaria_Current.ult"},
+		{0x197ec, "Moongate_Locations.ult" },
+		{0x1982d, "Location_Table.ult"}
 	};
 
-	// Resetting the map, so copy stuff
-	for (int index = 0; index < orig_files.size(); index += 2)
+	for (size_t index = 0; index < orig_files.size(); ++index)
 	{
-		std::filesystem::path sosariaFileOrig = resourcePath / orig_files[index];
-		std::filesystem::path sosariaFileCurrent = currentPath / orig_files[index + 1];
-		std::filesystem::copy(sosariaFileOrig, sosariaFileCurrent, std::filesystem::copy_options::overwrite_existing);
+		Uint32 file_size = 0;
+		for (int byte = 0; byte < 4; ++byte)
+		{
+			file_size <<= 8;
+			file_size += m_resources->m_vecResourceData[orig_files[index].first + byte];
+		}
+		std::filesystem::path tempFile = currentPath / orig_files[index].second;
+		SDL_IOStream* file = SDL_IOFromFile(tempFile.string().c_str(), "wb");
+		SDL_WriteIO(file, m_resources->m_vecResourceData.data() + orig_files[index].first + 4, file_size);
+		SDL_CloseIO(file);
 	}
 
 	std::vector<char> dummy;
@@ -4657,7 +4599,7 @@ bool U3Misc::OtherCallback1()
 	{
 		std::string dispString(ScreamString);
 		m_scrollArea->UPrintWin(dispString);
-		
+
 		if (m_Player[m_rosNum][24] == 'F')
 		{
 			m_audio->playSfx(SFX_DEATHFEMALE);
@@ -6014,7 +5956,7 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_xpos = 32;
 		m_ypos = 54;
 		m_Party[2] = 255;
-		
+
 		m_resources->setInversed(true);
 		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback1, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
@@ -6043,7 +5985,7 @@ bool U3Misc::GoWhirlPoolCallback()
 			PutRoster();
 			PutParty();
 		}
-		
+
 	}
 	else if (m_Party[2] < 128)
 	{
@@ -6532,7 +6474,7 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 	return retVal;
 }
 
-void U3Misc::DoAutoHeal()
+void U3Misc::DoAutoHeal() const
 {
 	short c;
 	bool autoheal;

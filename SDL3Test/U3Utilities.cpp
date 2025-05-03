@@ -6,6 +6,17 @@ U3Utilities::U3Utilities()
 	m_rGen.seed(m_rd());
 }
 
+std::string U3Utilities::replaceAll(std::string str, const std::string& from, const std::string& to)
+{
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+	{
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+	return str;
+}
+
 std::vector<std::string> U3Utilities::splitString(const std::string& str, char delimiter, bool keepDelim)
 {
 	std::vector<std::string> tokens;

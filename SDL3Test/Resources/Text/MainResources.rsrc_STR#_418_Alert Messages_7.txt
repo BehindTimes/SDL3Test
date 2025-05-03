@@ -1,1 +1,0 @@
-The registration information for Ultima III is incorrect.  Please use the “Register...” command under the Ultima III menu to enter your user name and registration code again.

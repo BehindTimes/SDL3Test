@@ -2083,8 +2083,8 @@ void U3Misc::ReadyWeapon(short chnum, char weapon, bool preset)
 	if ((weapon > 0) && (m_Player[m_rosNum][weapon + 48] < 1))
 	{
 		m_scrollArea->UPrintMessage(81);
-		return;
 		m_audio->playSfx(SFX_ERROR1);
+		return;
 	}
 	m_Player[m_rosNum][48] = weapon;
 	if (!preset)

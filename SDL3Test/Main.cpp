@@ -161,21 +161,7 @@ bool DoSplashScreen()
 	SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
 
 	m_resources->CalculateBlockSize();
-	/* OpenChannel();
-	 SetUpFont();
-	 DisableMenus();
-	 SetUpGWorlds();
-	 GetFont();
-	 GetGraphics();
-	 GetMiscStuff(100);
-	 GetRoster();
-	 GetParty();
-	 SetUpSpeech();
-	 SetUpMusic();
-	 SetUpDragRect();
-	 InitMacro();
-	 InitCursor();
-	 ObscureCursor();*/
+
 	return true;
 }
 

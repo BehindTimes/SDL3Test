@@ -588,104 +588,6 @@ void U3Resources::setTickCount(Uint64 curTick, bool initializeTimer)
 
 bool U3Resources::checkFiles()
 {
-	std::vector<std::string> mapList = {
-		{ "MainResources.rsrc_MAPS_400" },
-		{ "MainResources.rsrc_MAPS_401" },
-		{ "MainResources.rsrc_MAPS_402" },
-		{ "MainResources.rsrc_MAPS_403" },
-		{ "MainResources.rsrc_MAPS_404" },
-		{ "MainResources.rsrc_MAPS_405" },
-		{ "MainResources.rsrc_MAPS_406" },
-		{ "MainResources.rsrc_MAPS_407" },
-		{ "MainResources.rsrc_MAPS_408" },
-		{ "MainResources.rsrc_MAPS_409" },
-		{ "MainResources.rsrc_MAPS_410" },
-		{ "MainResources.rsrc_MAPS_411" },
-		{ "MainResources.rsrc_MAPS_412" },
-		{ "MainResources.rsrc_MAPS_413" },
-		{ "MainResources.rsrc_MAPS_414" },
-		{ "MainResources.rsrc_MAPS_415" },
-		{ "MainResources.rsrc_MAPS_416" },
-		{ "MainResources.rsrc_MAPS_417" },
-		{ "MainResources.rsrc_MAPS_418" },
-		{ "MainResources.rsrc_MAPS_420" },
-		{ "MainResources.rsrc_MAPS_421" },
-	};
-
-	std::vector<std::string> monsterList = {
-		{ "MainResources.rsrc_MONS_400" },
-		{ "MainResources.rsrc_MONS_401" },
-		{ "MainResources.rsrc_MONS_402" },
-		{ "MainResources.rsrc_MONS_403" },
-		{ "MainResources.rsrc_MONS_404" },
-		{ "MainResources.rsrc_MONS_405" },
-		{ "MainResources.rsrc_MONS_406" },
-		{ "MainResources.rsrc_MONS_407" },
-		{ "MainResources.rsrc_MONS_408" },
-		{ "MainResources.rsrc_MONS_409" },
-		{ "MainResources.rsrc_MONS_410" },
-		{ "MainResources.rsrc_MONS_411" },
-		{ "MainResources.rsrc_MONS_420" },
-		{ "MainResources.rsrc_MONS_421" },
-	};
-
-	std::vector<std::string> talkList = {
-		{ "MainResources.rsrc_TLKS_400" },
-		{ "MainResources.rsrc_TLKS_401" },
-		{ "MainResources.rsrc_TLKS_402" },
-		{ "MainResources.rsrc_TLKS_403" },
-		{ "MainResources.rsrc_TLKS_404" },
-		{ "MainResources.rsrc_TLKS_405" },
-		{ "MainResources.rsrc_TLKS_406" },
-		{ "MainResources.rsrc_TLKS_407" },
-		{ "MainResources.rsrc_TLKS_408" },
-		{ "MainResources.rsrc_TLKS_409" },
-		{ "MainResources.rsrc_TLKS_410" },
-		{ "MainResources.rsrc_TLKS_411" },
-		{ "MainResources.rsrc_TLKS_412" },
-		{ "MainResources.rsrc_TLKS_413" },
-		{ "MainResources.rsrc_TLKS_414" },
-		{ "MainResources.rsrc_TLKS_415" },
-		{ "MainResources.rsrc_TLKS_416" },
-		{ "MainResources.rsrc_TLKS_417" },
-		{ "MainResources.rsrc_TLKS_418" },
-		{ "MainResources.rsrc_TLKS_421" },
-	};
-
-	std::filesystem::path currentPath = std::filesystem::current_path();
-	currentPath /= ResourceLoc;
-	currentPath /= BinLoc;
-
-	for (const std::string tempFile : mapList)
-	{
-		std::filesystem::path tempPath = currentPath;
-		tempPath /= tempFile;
-		tempPath += std::string(".bin");
-		if (!std::filesystem::exists(tempPath))
-		{
-			return false;
-		}
-	}
-	for (const std::string tempFile : monsterList)
-	{
-		std::filesystem::path tempPath = currentPath;
-		tempPath /= tempFile;
-		tempPath += std::string(".bin");
-		if (!std::filesystem::exists(tempPath))
-		{
-			return false;
-		}
-	}
-	for (const std::string tempFile : talkList)
-	{
-		std::filesystem::path tempPath = currentPath;
-		tempPath /= tempFile;
-		tempPath += std::string(".bin");
-		if (!std::filesystem::exists(tempPath))
-		{
-			return false;
-		}
-	}
 	return true;
 }
 
@@ -698,6 +600,10 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	m_renderer = renderer;
 	m_scrollArea->setRenderer(m_renderer);
 	if (!checkFiles())
+	{
+		return false;
+	}
+	if (!loadResourceFile())
 	{
 		return false;
 	}
@@ -1240,51 +1146,55 @@ void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec
 	}
 }
 
+bool U3Resources::loadResourceFile()
+{
+	std::filesystem::path currentPath;
+	currentPath = std::filesystem::current_path();
+	currentPath /= ResourceLoc;
+	currentPath /= BinLoc;
+	currentPath /= std::string("MainResources.rsrc");
+	std::string strTemp = m_utilities->PathToSDLString(currentPath);
+	if (strTemp.empty())
+	{
+		return false;
+	}
+	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
+	if (!file)
+	{
+		return false;
+	}
+	Sint64 fSize = SDL_GetIOSize(file);
+	m_vecResourceData.resize(fSize);
+	SDL_ReadIO(file, m_vecResourceData.data(), fSize);
+	SDL_CloseIO(file);
+
+	return true;
+}
+
 bool U3Resources::loadCons()
 {
 	std::filesystem::path currentPath;
 
-	std::vector<std::string> cons_files =
+	const int num_cons_files = 9;
+	size_t start_address = 0x122e;
+
+	m_cons_data.resize(num_cons_files);
+
+	for (size_t index = 0; index < num_cons_files; ++index)
 	{
-		{ "MainResources.rsrc_CONS_400_CONA.bin" },
-		{ "MainResources.rsrc_CONS_401_CONB.bin" },
-		{ "MainResources.rsrc_CONS_402_CONC.bin" },
-		{ "MainResources.rsrc_CONS_403_CONF.bin" },
-		{ "MainResources.rsrc_CONS_404_CONG.bin" },
-		{ "MainResources.rsrc_CONS_405_CONM.bin" },
-		{ "MainResources.rsrc_CONS_406_CONQ.bin" },
-		{ "MainResources.rsrc_CONS_407_CONR.bin" },
-		{ "MainResources.rsrc_CONS_408_CONS.bin" },
-	};
-
-	m_cons_data.resize(cons_files.size());
-
-	for (size_t index = 0; index < cons_files.size(); ++index)
-	{
-		currentPath = std::filesystem::current_path();
-		currentPath /= ResourceLoc;
-		currentPath /= BinLoc;
-		currentPath /= cons_files[index];
-
-		std::string strTemp = m_utilities->PathToSDLString(currentPath);
-		if (strTemp.empty())
+		Uint32 file_size = 0;
+		for (int byte = 0; byte < 4; ++byte)
+		{
+			file_size <<= 8;
+			file_size += m_vecResourceData[start_address];
+			start_address++;
+		}
+		if (file_size != 200)
 		{
 			return false;
 		}
-		SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-		if (!file)
-		{
-			return false;
-		}
-		Sint64 fSize = SDL_GetIOSize(file);
-		if (fSize != 200)
-		{
-			SDL_CloseIO(file);
-			return false;
-		}
-
-		SDL_ReadIO(file, m_cons_data[index].data(), fSize);
-		SDL_CloseIO(file);
+		memcpy(m_cons_data[index].data(), m_vecResourceData.data() + start_address, sizeof(unsigned char) * file_size);
+		start_address += file_size;
 	}
 
 	return true;
@@ -2240,29 +2150,19 @@ void U3Resources::drawBy()
 
 void U3Resources::loadSignatureData()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
-	currentPath /= ResourceLoc;
-	currentPath /= BinLoc;
-	currentPath /= "MainResources.rsrc_SGNT_400_Signature Data.bin";
+	size_t start_loc = 0x288e1;
+	Uint32 file_size = 0;
+	for (int byte = 0; byte < 4; ++byte)
+	{
+		file_size <<= 8;
+		file_size += m_vecResourceData[start_loc + byte];
+	}
+	m_vecSigData.clear();
 
-	std::string strTemp = m_utilities->PathToSDLString(currentPath);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	if (!file)
-	{
-		return;
-	}
-	Sint64 fSize = SDL_GetIOSize(file);
-	if (fSize > 0)
-	{
-		m_vecSigData.resize(fSize);
-		SDL_ReadIO(file, m_vecSigData.data(), fSize);
-	}
-	//
-	SDL_CloseIO(file);
+	auto start_itr = m_vecResourceData.begin() + start_loc + 4;
+	auto end_itr = m_vecResourceData.begin() + start_loc + file_size + 4;
+
+	std::copy(start_itr, end_itr, std::back_inserter(m_vecSigData));
 }
 
 void U3Resources::DrawMoongates()

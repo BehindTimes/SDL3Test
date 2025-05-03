@@ -144,7 +144,7 @@ public:
 	bool ShowOptions();
 	void AddOptions();
 	void AddQuitSave();
-	void DoAutoHeal();
+	void DoAutoHeal() const;
 
 	unsigned char m_Player[21][65];
 	unsigned char m_Party[64];

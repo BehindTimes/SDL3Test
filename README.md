@@ -16,6 +16,6 @@ Just including a Visual Studio project at the moment, as that's what I'm develop
 
 SDL3 Mixer doesn't have an official release yet, so you'll have to build from the main repository.
 
-You will also need the resources file (MainResources.rsrc) from the creator of the original program this work is based off of.
+You will also need the resources file (MainResources.rsrc) from the creator of the original program this work is based off of.  Place it in the bin folder of this program.
 
 https://github.com/beastie/ultima3

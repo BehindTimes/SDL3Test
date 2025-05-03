@@ -481,10 +481,6 @@ void UltimaDungeon::DungeonStart(short mode)
 		m_misc->PutParty();
 		m_misc->PutSosaria();
 	}
-	else
-	{
-		m_misc->PullSosaria();
-	}
 	m_forceRedraw = true;
 }
 
@@ -520,6 +516,9 @@ void UltimaDungeon::Routine6E6B()
 	{
 		m_misc->PullSosaria();
 	}
+	m_audio->m_nextSong = 1;
+	m_audio->m_currentSong = 1;
+	m_audio->musicUpdate();
 }
 
 void UltimaDungeon::DngInfo() const

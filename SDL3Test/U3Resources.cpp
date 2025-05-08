@@ -1019,7 +1019,7 @@ void U3Resources::changeTheme(int theme)
 	if (theme >= 0 && theme < m_themes.size())
 	{
 		m_currentTheme = theme;
-		if (theme == 2)
+		/*if (theme == 2)
 		{
 			m_graphics->ChangeClassic();
 			m_scrollArea->forceRedraw();
@@ -1032,7 +1032,7 @@ void U3Resources::changeTheme(int theme)
 			m_scrollArea->forceRedraw();
 			m_graphics->setForceRedraw();
 			return;
-		}
+		}*/
 
 		std::string strMode = m_themes[theme];
 		if (m_allGraphics.find(strMode) != m_allGraphics.end())

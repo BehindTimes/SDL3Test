@@ -27,11 +27,14 @@ U3Audio::U3Audio() :
 	m_playingSong(0),
 	m_cachedSong(0)
 {
+#if HAVE_SDL3_MIXER
 	Mix_HookMusicFinished(musicFinished);
+#endif
 }
 
 U3Audio::~U3Audio()
 {
+#if HAVE_SDL3_MIXER
 	for (auto& curMusic : m_music)
 	{
 		if (curMusic)
@@ -47,10 +50,12 @@ U3Audio::~U3Audio()
 			Mix_FreeChunk(curSfx);
 		}
 	}
+#endif
 }
 
 bool U3Audio::initMusic()
 {
+#if HAVE_SDL3_MIXER
 	std::vector<std::string> musicList = {
 		{ "Song_1.ogg" },
 		{ "Song_2.ogg" },
@@ -136,12 +141,14 @@ bool U3Audio::initMusic()
 			return false;
 		}
 	}
+#endif
 
 	return true;
 }
 
 void U3Audio::playMusic([[maybe_unused]] int song)
 {
+#if HAVE_SDL3_MIXER
 	m_playingSong = song;
 	song--;
 	if (!m_resources->m_preferences.play_music)
@@ -159,33 +166,41 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 			Mix_PlayMusic(m_music[song], 0);
 		}
 	}
+#endif
 }
 
 void U3Audio::stopSfx()
 {
+#if HAVE_SDL3_MIXER
 	Mix_HaltChannel(-1);
 #ifdef NDEBUG
 	Mix_HaltMusic();
+#endif
 #endif
 }
 
 
 void U3Audio::stopMusic()
 {
+#if HAVE_SDL3_MIXER
 	if (Mix_PausedMusic())
 	{
 		Mix_ResumeMusic();
 	}
 	Mix_HaltMusic();
+#endif
 }
 
 void U3Audio::pauseMusic()
 {
+#if HAVE_SDL3_MIXER
 	Mix_PauseMusic();
+#endif
 }
 
 void U3Audio::playSfx([[maybe_unused]] int sfx)
 {
+#if HAVE_SDL3_MIXER
 	if (!m_resources->m_preferences.play_sfx)
 	{
 		return;
@@ -195,10 +210,12 @@ void U3Audio::playSfx([[maybe_unused]] int sfx)
 		return;
 	}
 	Mix_PlayChannel(-1, m_sfx[sfx], 0);
+#endif
 }
 
 void U3Audio::musicUpdate()
 {
+#if HAVE_SDL3_MIXER
 	if (!m_resources->m_preferences.play_music)
 	{
 		stopMusic();
@@ -226,4 +243,5 @@ void U3Audio::musicUpdate()
 	{
 		playMusic(m_currentSong);
 	}
+#endif
 }

@@ -3,11 +3,13 @@ CC = gcc
 CXX = g++
 CFLAGS = -w -std=c++20
 CXXFLAGS = $(CFLAGS)
+
+HAVE_SDL3_MIXER = $(shell ! pkg-config --libs sdl3-mixer 2> /dev/null ; echo $$?)
  
 # Find SDL3 packages using pkg-config
 PKGS = sdl3 sdl3-image sdl3-ttf libxml-2.0
 CFLAGS += $(shell pkg-config --cflags $(PKGS))
-CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
+CXXFLAGS += $(shell pkg-config --cflags $(PKGS)) -DHAVE_SDL3_MIXER=$(HAVE_SDL3_MIXER)
 LIBS = $(shell pkg-config --libs $(PKGS))
  
 # Directories

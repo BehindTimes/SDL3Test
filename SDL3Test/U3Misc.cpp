@@ -1,15 +1,16 @@
-#include "U3Misc.h"
-#include "UltimaGraphics.h"
-#include "U3ScrollArea.h"
-#include "U3Resources.h"
-#include "UltimaSpellCombat.h"
-#include "UltimaIncludes.h"
-#include "U3Utilities.h"
-#include "UltimaDungeon.h"
-#include "UltimaSound.h"
-#include "UltimaMacIF.h"
 #include <SDL3/SDL.h>
 #include <iostream>
+
+#include "UltimaDungeon.h"
+#include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
+#include "UltimaMacIF.h"
+#include "UltimaSpellCombat.h"
+#include "UltimaSound.h"
+#include "U3Misc.h"
+#include "U3ScrollArea.h"
+#include "U3Resources.h"
+#include "U3Utilities.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
@@ -418,7 +419,7 @@ bool U3Misc::PutParty() const
 
 bool U3Misc::PutSosaria()
 {
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		return false;
 	}
@@ -547,10 +548,10 @@ bool U3Misc::GetParty()
 	SDL_ReadIO(file, m_Party, party_size);
 	SDL_CloseIO(file);
 
-	m_xpos = m_Party[3];
-	m_ypos = m_Party[4];
+	m_xpos = m_Party[PARTY_XPOS];
+	m_ypos = m_Party[PARTY_YPOS];
 
-	if (m_Party[6] == 0)   // none should belong to a party
+	if (m_Party[PARTY_ROSTERPOS1] == 0)   // none should belong to a party
 	{
 		m_partyFormed = false;
 		for (short i = 1; i < 21; i++)
@@ -575,7 +576,7 @@ bool U3Misc::GetSosaria()
 
 void U3Misc::BlockExodus()
 {
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		return;
 	}
@@ -829,7 +830,7 @@ unsigned char U3Misc::GetXYVal(short x, short y)
 	m_mapOffset = (m_graphics->MapConstrain(y) * m_mapSize);
 	m_mapOffset += m_graphics->MapConstrain(x);
 	value = m_map[m_mapOffset];
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		if (x < 0 || x >= m_mapSize || y < 0 || y >= m_mapSize)
 		{
@@ -909,14 +910,14 @@ short U3Misc::MaxMana(char rosNum) const
 
 bool U3Misc::ValidTrans(char value) const
 {
-	if (m_Party[15])
+	if (m_Party[PARTY_EXODUSDEFEATED])
 	{
 		return true;
 	}
 	bool cango = true;
 	bool includeWind;
 	m_resources->GetPreference(U3PreferencesType::Include_Wind, includeWind);
-	if (m_Party[1] == 0x16 && includeWind)
+	if (m_Party[PARTY_SIZE] == 0x16 && includeWind)
 	{
 		if ((value != m_WindDir) && (m_WindDir != 0))
 		{
@@ -951,7 +952,7 @@ void U3Misc::HandleForceField()
 
 	for (char byte = 0; byte < 4; byte++)
 	{
-		if (m_Party[6 + byte] != 0)
+		if (m_Party[PARTY_ROSTERPOS1 + byte] != 0)
 		{
 			if (!(m_Player[m_Party[byte + 6]][14] & 0x10))
 			{
@@ -996,7 +997,7 @@ bool U3Misc::HandleLavaCallback()
 		return false;
 	}
 	m_callbackStack.push(std::bind(&U3Misc::HandleLavaCallback1, this));
-	if (m_Party[6 + m_opnum] != 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_opnum] != 0)
 	{
 		char byte2 = m_Party[m_opnum + 6];
 		if (!(m_Player[byte2][14] & 0x20))
@@ -1043,7 +1044,7 @@ bool U3Misc::ValidDir()
 	m_GoodPlace = false;
 	unsigned char value = m_validDirValue;
 
-	if (m_Party[0] == 0x16) // Ship
+	if (m_Party[PARTY_ICON] == 0x16) // Ship
 	{
 		if ((value == 00) || (value == 48))
 		{
@@ -1070,7 +1071,7 @@ bool U3Misc::ValidDir()
 		if ((value < 48) && (value != 0) && (value != 16))
 		{
 			m_GoodPlace = true;
-			if (m_Party[0] == 20)
+			if (m_Party[PARTY_ICON] == 20)
 			{
 				m_audio->playSfx(SFX_HORSEWALK);
 			}
@@ -1886,22 +1887,22 @@ int movenum = 0;
 void U3Misc::IncMoves() // $3AF
 {
 	movenum++;
-	m_Party[10] += m_Party[1];
-	if (m_Party[10] > 99)
+	m_Party[PARTY_MOVE1] += m_Party[PARTY_SIZE];
+	if (m_Party[PARTY_MOVE1] > 99)
 	{
-		m_Party[10] -= 100;
-		m_Party[11]++;
-		if (m_Party[11] > 99)
+		m_Party[PARTY_MOVE1] -= 100;
+		m_Party[PARTY_MOVE2]++;
+		if (m_Party[PARTY_MOVE2] > 99)
 		{
-			m_Party[11] -= 100;
-			m_Party[12]++;
-			if (m_Party[12] > 99)
+			m_Party[PARTY_MOVE2] -= 100;
+			m_Party[PARTY_MOVE3]++;
+			if (m_Party[PARTY_MOVE3] > 99)
 			{
-				m_Party[12] -= 100;
-				m_Party[13]++;
-				if (m_Party[13] > 99)
+				m_Party[PARTY_MOVE3] -= 100;
+				m_Party[PARTY_MOVE4]++;
+				if (m_Party[PARTY_MOVE4] > 99)
 				{
-					m_Party[10] = m_Party[11] = m_Party[12] = m_Party[13] = 99;
+					m_Party[PARTY_MOVE1] = m_Party[PARTY_MOVE2] = m_Party[PARTY_MOVE3] = m_Party[PARTY_MOVE4] = 99;
 				}
 			}
 		}
@@ -1912,13 +1913,13 @@ void U3Misc::Routine6E6B()
 {
 	m_xpos = m_zp[0xE3];
 	m_ypos = m_zp[0xE4];
-	m_Party[2] = 0;    // back to surface
+	m_Party[PARTY_LOCATION] = 0;    // back to surface
 	//if (!gResurrect)
 	{
 		m_scrollArea->UPrintMessage(182);
 	}
-	m_Party[3] = (unsigned char)m_xpos;
-	m_Party[4] = (unsigned char)m_ypos;
+	m_Party[PARTY_XPOS] = (unsigned char)m_xpos;
+	m_Party[PARTY_YPOS] = (unsigned char)m_ypos;
 
 	m_audio->m_currentSong = 0;
 	m_audio->m_nextSong = 1;
@@ -1948,7 +1949,7 @@ void U3Misc::Routine6E35()
 
 	// if $E2=#$80 (combat?), see $6E5C.  Apparently unneccessary
 	//   code, since the combat routines never touch this area while in effect.
-	if (m_Party[2] > 1) // Town or castle, IOW
+	if (m_Party[PARTY_LOCATION] > 1) // Town or castle, IOW
 	{
 		if (m_xpos == 0 || m_ypos == 0)
 		{
@@ -2024,7 +2025,7 @@ bool U3Misc::FinishAll2()
 	}
 	//m_tx = 0x18;
 	//m_ty = 0x17;
-	if (m_Party[0] == 0x14 || m_Party[0] == 0x16)
+	if (m_Party[PARTY_ICON] == 0x14 || m_Party[PARTY_ICON] == 0x16)
 	{
 		m_zp[0xCD] = 255 - m_zp[0xCD];
 		if (m_zp[0xCD] < 128)
@@ -2080,7 +2081,7 @@ void U3Misc::PullSosaria()
 	}
 
 	// If Exodus has been defeated, make land creatures placid.
-	if (m_Party[15] == 1)
+	if (m_Party[PARTY_EXODUSDEFEATED] == 1)
 	{
 		int i;
 		for (i = 0; i < 32; i++)
@@ -2234,7 +2235,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 		shopNum = 7;
 	}*/
 
-	rosNum = m_Party[6 + chnum];
+	rosNum = m_Party[PARTY_ROSTERPOS1 + chnum];
 	switch (shopNum)
 	{
 	case 0:
@@ -2257,7 +2258,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	case 3:
 		m_opnum = 'I';
-		if (m_Party[3] == 37)
+		if (m_Party[PARTY_XPOS] == 37)
 		{
 			m_opnum = 'P';    // x location of party on Sosaria
 		}
@@ -2266,7 +2267,7 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	case 4:
 		m_opnum = 'F';
-		if (m_Party[3] == 37)
+		if (m_Party[PARTY_XPOS] == 37)
 		{
 			m_opnum = 'H';    // x location of party on Sosaria
 		}
@@ -2289,9 +2290,9 @@ void U3Misc::Shop(short shopNum, short chnum)
 		break;
 	case 7:
 		m_scrollArea->UPrintMessage(225);
-		m_scrollArea->UPrintWin(std::to_string(m_Party[1]));
+		m_scrollArea->UPrintWin(std::to_string(m_Party[PARTY_SIZE]));
 		m_scrollArea->UPrintMessage(226);
-		m_opnum = m_Party[1] * 200;
+		m_opnum = m_Party[PARTY_SIZE] * 200;
 		m_scrollArea->UPrintWin(std::to_string(m_opnum));
 		m_scrollArea->UPrintMessage(227);
 		setInputTypeYesNo(std::bind(&U3Misc::horseVendorCallback, this));
@@ -2334,7 +2335,7 @@ bool U3Misc::horseVendorCallback()
 	m_Player[m_rosNum][36] = (unsigned char)(gold - (m_Player[m_rosNum][35] * 256));
 	m_scrollArea->UPrintWin("\n\n");
 	m_scrollArea->UPrintMessageRewrapped(230);
-	m_Party[0] = 0x14;
+	m_Party[PARTY_ICON] = 0x14;
 	InverseChnum((char)m_transactNum, false);
 
 	return false;
@@ -3411,25 +3412,25 @@ bool U3Misc::FinalizeHealingCallback()
 	switch (m_opnum)
 	{
 	case 0:
-		if (m_Player[m_Party[6 + m_input_num]][17] == 'P')
+		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'P')
 		{
-			m_Player[m_Party[6 + m_input_num]][17] = 'G';
+			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
 		}
 		break;
 	case 1:
-		m_Player[m_Party[6 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
-		m_Player[m_Party[6 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
+		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
+		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
 		break;
 	case 2:
-		if (m_Player[m_Party[6 + m_input_num]][17] == 'D')
+		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'D')
 		{
-			m_Player[m_Party[6 + m_input_num]][17] = 'G';
+			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
 		}
 		break;
 	case 3:
-		if (m_Player[m_Party[6 + m_input_num]][17] == 'A')
+		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'A')
 		{
-			m_Player[m_Party[6 + m_input_num]][17] = 'G';
+			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
 		}
 		break;
 	default:
@@ -3486,7 +3487,7 @@ bool U3Misc::AddGold(short rosNum, short gold, bool overflow) // $70BB
 
 void U3Misc::GetMonsterDir(short monNum) // $7C37
 {
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		m_zp[0xF5] = m_xpos - m_Monsters[monNum + XMON];
 		m_dx = GetHeading(m_zp[0xF5]);
@@ -3744,7 +3745,7 @@ bool U3Misc::movemon() // $7A85
 		m_callbackStack.push(std::bind(&U3Misc::movemon, this));
 		return false;
 	}
-	if (m_Party[2] == 0 && m_Party[15] == 0)
+	if (m_Party[PARTY_LOCATION] == 0 && m_Party[PARTY_EXODUSDEFEATED] == 0)
 	{
 		m_callbackStack.push(std::bind(&U3Misc::moveoutside, this));
 		return false;
@@ -3781,7 +3782,7 @@ bool U3Misc::movemon() // $7A85
 				return false;
 			}
 			// Sosaria, and user has already defeated Exodus.  Handle monsters running into one another.
-			if (m_Party[15] != 0 && m_Party[2] == 0)
+			if (m_Party[PARTY_EXODUSDEFEATED] != 0 && m_Party[PARTY_LOCATION] == 0)
 			{
 				m_value = GetXYVal(m_xs, m_ys);
 				if (m_value > 0x27)
@@ -3884,14 +3885,14 @@ bool U3Misc::IgniteCallback()
 	}
 	std::string dispString = std::to_string(m_chNum + 1) + std::string("\n");
 	m_scrollArea->UPrintWin(dispString);
-	if (m_Party[6 + m_chNum] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
 		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 
-	rosNum = m_Party[6 + m_chNum];
+	rosNum = m_Party[PARTY_ROSTERPOS1 + m_chNum];
 
 	if (m_Player[rosNum][15] < 1)
 	{
@@ -3986,7 +3987,7 @@ bool U3Misc::PeerGemCallback()
 		return false;
 	}
 
-	if (m_Party[6 + m_input_num] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
 		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
@@ -3996,7 +3997,7 @@ bool U3Misc::PeerGemCallback()
 	}
 
 	m_chNum = m_input_num;
-	rosnum = m_Party[6 + m_input_num];
+	rosnum = m_Party[PARTY_ROSTERPOS1 + m_input_num];
 	std::string strRosNum = std::to_string(m_chNum + 1) + std::string("\n\n");
 	m_scrollArea->UPrintWin(strRosNum);
 	/*if (m_Player[rosnum][37] < 1)
@@ -4083,7 +4084,7 @@ bool U3Misc::StealCallback1()
 
 	short byte = 0;
 
-	if (m_Party[6 + m_rosNum] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_rosNum] == 0)
 	{
 		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(41);
@@ -4200,7 +4201,7 @@ bool U3Misc::UnlockKeyCallback()
 		m_scrollArea->UPrintWin("\n");
 		return false;
 	}
-	if (m_input_num > 3 || m_Party[6 + m_input_num] == 0)
+	if (m_input_num > 3 || m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
 		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
 		m_scrollArea->UPrintWin(dispString);
@@ -4209,7 +4210,7 @@ bool U3Misc::UnlockKeyCallback()
 	}
 	else
 	{
-		rosNum = m_Party[6 + m_input_num];
+		rosNum = m_Party[PARTY_ROSTERPOS1 + m_input_num];
 		if (m_Player[rosNum][38] < 1)
 		{
 			m_scrollArea->UPrintMessage(67);
@@ -4455,12 +4456,12 @@ bool U3Misc::ResurrectCallback()
 		m_Player[m_rosNum][27] = 100;      // Current Hit Points
 		m_Player[m_rosNum][26] = 0;        // Current Hit Points
 	}
-	m_Party[2] = 0;
-	m_Party[0] = 0x7E;
+	m_Party[PARTY_LOCATION] = 0;
+	m_Party[PARTY_ICON] = 0x7E;
 	m_xpos = 42;
 	m_ypos = 20;
-	m_Party[3] = (unsigned char)m_xpos;
-	m_Party[4] = (unsigned char)m_ypos;
+	m_Party[PARTY_XPOS] = (unsigned char)m_xpos;
+	m_Party[PARTY_YPOS] = (unsigned char)m_ypos;
 	m_zp[0xE3] = (unsigned char)m_xpos;
 	m_zp[0xE4] = (unsigned char)m_ypos;
 
@@ -4548,12 +4549,12 @@ bool U3Misc::OtherCallback()
 	{
 		return false;
 	}
-	if (m_Party[6 + m_chNum] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
-	m_rosNum = m_Party[6 + m_chNum];
+	m_rosNum = m_Party[PARTY_ROSTERPOS1 + m_chNum];
 	if (CheckAlive(m_chNum) == false)
 	{
 		m_audio->playSfx(SFX_ERROR1);
@@ -4589,7 +4590,7 @@ bool U3Misc::OtherCallback1()
 		m_scrollArea->UPrintMessage(254);
 		for (chnum = 0; chnum < 32; chnum++)
 		{
-			if (m_Monsters[chnum] && m_Party[2] != 0)
+			if (m_Monsters[chnum] && m_Party[PARTY_LOCATION] != 0)
 			{
 				if (m_Monsters[chnum + XMON] > m_xpos - 6 && m_Monsters[chnum + XMON] < m_xpos + 6 && m_Monsters[chnum + YMON] > m_ypos - 6 &&
 					m_Monsters[chnum + YMON] < m_ypos + 6 && m_Monsters[chnum + HPMON] == 0xC0)
@@ -4638,7 +4639,7 @@ bool U3Misc::OtherCallback1()
 	}
 	else if (0 == m_input.compare("DIG"))
 	{
-		if (m_Party[2] != 0)
+		if (m_Party[PARTY_LOCATION] != 0)
 		{
 			NotHere();
 			return false;
@@ -4669,12 +4670,12 @@ bool U3Misc::OtherCallback1()
 	}
 	else if (0 == m_input.compare("PRAY"))
 	{
-		if (m_Party[2] != 2)
+		if (m_Party[PARTY_LOCATION] != 2)
 		{
 			NoEffect();
 			return false;
 		}
-		if (m_Party[3] != m_LocationX[4])
+		if (m_Party[PARTY_XPOS] != m_LocationX[4])
 		{
 			NoEffect();
 			return false;
@@ -4848,7 +4849,7 @@ bool U3Misc::ExodusDieCallback1()
 
 	//exodus_death
 
-	m_Party[15] = 1;
+	m_Party[PARTY_EXODUSDEFEATED] = 1;
 	bool classic;
 	std::string dispString;
 	m_audio->m_currentSong = 9;
@@ -4865,7 +4866,7 @@ bool U3Misc::ExodusDieCallback1()
 		dispString = m_scrollArea->RewrapString(dispString);
 	}
 	m_scrollArea->UPrintWin(dispString);
-	int time = m_Party[10] + m_Party[11] * 100 + m_Party[12] * 10000 + m_Party[13] * 1000000;
+	int time = m_Party[PARTY_MOVE1] + m_Party[PARTY_MOVE2] * 100 + m_Party[PARTY_MOVE3] * 10000 + m_Party[PARTY_MOVE4] * 1000000;
 	dispString = std::to_string(time);
 	if (!classic)
 	{
@@ -4940,7 +4941,7 @@ void U3Misc::BombTrap() // $5C63
 	m_inputType = InputType::None;
 	m_input_num = 0;
 
-	if (0 < m_Party[1])
+	if (0 < m_Party[PARTY_SIZE])
 	{
 		if (CheckAlive(0))
 		{
@@ -4968,12 +4969,12 @@ bool U3Misc::BombTrapCallback()
 	if (CheckAlive(m_input_num))
 	{
 		int val = m_utilities->getRandom(0, 255);
-		HPSubtract(m_Party[6 + m_input_num], val & 0x77);
-		HPSubtract(m_Party[6 + m_input_num], (m_zp[0x13] + 1) * 8);
+		HPSubtract(m_Party[PARTY_ROSTERPOS1 + m_input_num], val & 0x77);
+		HPSubtract(m_Party[PARTY_ROSTERPOS1 + m_input_num], (m_zp[0x13] + 1) * 8);
 	}
 
 	m_input_num++;
-	if (m_input_num < m_Party[1])
+	if (m_input_num < m_Party[PARTY_SIZE])
 	{
 		if (CheckAlive(m_input_num))
 		{
@@ -5031,8 +5032,8 @@ bool U3Misc::HPSubtract(short rosNum, short amount) // $7181
 		m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 		if (autosave)
 		{
-			m_Party[3] = (unsigned char)m_xpos;
-			m_Party[4] = (unsigned char)m_ypos;
+			m_Party[PARTY_XPOS] = (unsigned char)m_xpos;
+			m_Party[PARTY_YPOS] = (unsigned char)m_ypos;
 			PutParty();
 			PutRoster();
 		}
@@ -5127,7 +5128,7 @@ void U3Misc::Yell(short mode)
 	}
 
 	chnum = mode - 2;
-	rosNum = m_Party[6 + chnum];
+	rosNum = m_Party[PARTY_ROSTERPOS1 + chnum];
 	if ((m_Player[rosNum][14] & 0x40) == 0)
 	{
 		NoEffect();
@@ -5179,7 +5180,7 @@ void U3Misc::GetChest(short spell, short chnum)
 {
 	if (spell == 2)
 	{
-		m_rosNum = m_Party[6 + chnum];
+		m_rosNum = m_Party[PARTY_ROSTERPOS1 + chnum];
 		GetChestBooty();
 		return;
 	}
@@ -5211,7 +5212,7 @@ bool U3Misc::GetChestCallback()
 	}
 	std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
 	m_scrollArea->UPrintWin(dispString);
-	if (m_Party[6 + m_input_num] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
 		m_InputDeque.clear();
 		m_scrollArea->UPrintWin("\n");
@@ -5234,10 +5235,10 @@ bool U3Misc::GetChestCallback()
 void U3Misc::GetChest1(short chnum)
 {
 	char tile;
-	m_rosNum = m_Party[6 + chnum];
+	m_rosNum = m_Party[PARTY_ROSTERPOS1 + chnum];
 	m_xs = m_xpos;
 	m_ys = m_ypos;
-	if (m_Party[2] != 1) // party not in dungeon
+	if (m_Party[PARTY_LOCATION] != 1) // party not in dungeon
 	{
 		tile = GetXYVal(m_xpos, m_ypos);
 		if ((tile < 0x24) || (tile > 0x27)) // izzit not a chest?
@@ -5382,7 +5383,7 @@ bool U3Misc::ChestGasCallback()
 	{
 		m_callbackStack.pop();
 	}
-	m_Player[m_Party[6 + m_input_num]][17] = 'P';
+	m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'P';
 	m_input_num++;
 
 	if (m_input_num < 4)
@@ -5539,7 +5540,7 @@ void U3Misc::DelayGame(Uint64 delay_time, std::function<bool()> callback)
 
 void U3Misc::AgeChars() // $7470
 {
-	if (m_Party[2] > 0)
+	if (m_Party[PARTY_LOCATION] > 0)
 	{
 		m_gTime[0]--;
 		if (m_gTime[0] > 0)
@@ -5749,7 +5750,7 @@ bool U3Misc::InverseCallback()
 void U3Misc::EatFood(short member, short amount, std::function<bool()> callback) // member = 0-3 $761D
 {
 	short rosNum;
-	rosNum = m_Party[6 + member];
+	rosNum = m_Party[PARTY_ROSTERPOS1 + member];
 	m_rosNum = rosNum;
 	m_Player[rosNum][34] -= (unsigned char)amount;
 	if (m_Player[rosNum][34] > 127)
@@ -5859,7 +5860,7 @@ void U3Misc::WhirlPool() // $7665
 	}
 	m_gWhirlCtr = 4;
 
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		return;
 	}
@@ -5900,7 +5901,7 @@ void U3Misc::WhirlPool() // $7665
 
 void U3Misc::GoWhirlPool() // 772D
 {
-	m_Party[0] = 24; // Be one with the whirlpool
+	m_Party[PARTY_ICON] = 24; // Be one with the whirlpool
 
 	bool classic;
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
@@ -5933,16 +5934,16 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_callbackStack.pop();
 	}
 
-	if (m_Party[2] == 0)
+	if (m_Party[PARTY_LOCATION] == 0)
 	{
-		m_Party[3] = (unsigned char)m_xpos;
+		m_Party[PARTY_XPOS] = (unsigned char)m_xpos;
 		m_xs = m_xpos;
-		m_Party[4] = (unsigned char)m_ypos;
+		m_Party[PARTY_YPOS] = (unsigned char)m_ypos;
 		m_ys = m_ypos;
 		PutXYVal(0, (unsigned char)m_xpos, (unsigned char)m_ypos);
 		m_WhirlX = 2;
 		m_WhirlY = 0x3E;
-		m_Party[0] = 0x16; // frigate
+		m_Party[PARTY_ICON] = 0x16; // frigate
 		//gSongCurrent=gSongNext=0;
 		PushSosaria();
 		bool autosave;
@@ -5972,16 +5973,16 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_resources->m_inverses.fill = true;
 		m_resources->m_inverses.elapsedTileTime = 0;
 		m_resources->m_inverses.inverseTileTime = whirlpool_time;
-		m_Party[0] = 0x7E;
+		m_Party[PARTY_ICON] = 0x7E;
 		m_xpos = 32;
 		m_ypos = 54;
-		m_Party[2] = 255;
+		m_Party[PARTY_LOCATION] = 255;
 
 		m_resources->setInversed(true);
 		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback1, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
 	}
-	else if (m_Party[2] == 0xFF)
+	else if (m_Party[PARTY_LOCATION] == 0xFF)
 	{
 		PullSosaria();
 		m_scrollArea->UPrintMessage(114);
@@ -5994,10 +5995,10 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_resources->m_inverses.inverseTileTime = whirlpool_time;
 		m_callbackStack.push(std::bind(&U3Misc::GoWhirlPoolCallback2, this));
 		m_callbackStack.push(std::bind(&U3Misc::InverseCallback, this));
-		m_xpos = m_Party[3];
-		m_ypos = m_Party[4];
-		m_Party[2] = 0;
-		m_Party[0] = 0x16;
+		m_xpos = m_Party[PARTY_XPOS];
+		m_ypos = m_Party[PARTY_YPOS];
+		m_Party[PARTY_LOCATION] = 0;
+		m_Party[PARTY_ICON] = 0x16;
 		bool autosave;
 		m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 		if (autosave)
@@ -6007,7 +6008,7 @@ bool U3Misc::GoWhirlPoolCallback()
 		}
 
 	}
-	else if (m_Party[2] < 128)
+	else if (m_Party[PARTY_LOCATION] < 128)
 	{
 		short temp;
 
@@ -6062,7 +6063,7 @@ bool U3Misc::GoWhirlPoolCallback1()
 
 void U3Misc::MoonGateUpdate() // $6F5D
 {
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		return; // only if on surface!
 	}
@@ -6103,7 +6104,7 @@ bool U3Misc::HandleMoonStepCallback()
 		m_callbackStack.pop();
 	}
 	short value;
-	if (m_Party[2] == 0)
+	if (m_Party[PARTY_LOCATION] == 0)
 	{
 		value = m_gMoonDisp[1] - '0';
 		m_xpos = m_MoonXTable[value];
@@ -6153,7 +6154,7 @@ bool U3Misc::EnterShrineCallback()
 	}
 	std::string dispString(std::to_string(m_chNum + 1) + std::string("\n"));
 	m_scrollArea->UPrintWin(dispString);
-	if (m_Party[6 + m_chNum] == 0)
+	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
 		m_scrollArea->UPrintMessage(41);
 		return false;
@@ -6179,7 +6180,7 @@ void U3Misc::Shrine(short chnum)
 
 	bool classic;
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
-	m_rosNum = m_Party[6 + chnum];
+	m_rosNum = m_Party[PARTY_ROSTERPOS1 + chnum];
 
 	if (classic)
 	{
@@ -6271,7 +6272,7 @@ bool U3Misc::shrineCallback()
 		{
 			m_Player[m_rosNum][statnum] = 99;
 		}
-		if ((m_Player[m_rosNum][statnum] > maxval) && (m_Party[15] == 0))
+		if ((m_Player[m_rosNum][statnum] > maxval) && (m_Party[PARTY_EXODUSDEFEATED] == 0))
 		{
 			m_Player[m_rosNum][statnum] = (unsigned char)maxval;
 		}
@@ -6318,7 +6319,7 @@ void U3Misc::SpawnMonster() // $7A0C
 	bool allFirst;
 	long hpmax;
 	short type, chnum;
-	if (m_Party[2] != 0)
+	if (m_Party[PARTY_LOCATION] != 0)
 	{
 		return;
 	}
@@ -6381,7 +6382,7 @@ void U3Misc::SpawnMonster() // $7A0C
 			var = (unsigned char)m_utilities->getRandom(1, 2);
 		}
 		m_Monsters[offset + VARMON] = var;
-		if (m_Party[15] != 0 && m_Monsters[offset] != 0x3C)
+		if (m_Party[PARTY_EXODUSDEFEATED] != 0 && m_Monsters[offset] != 0x3C)
 		{
 			m_Monsters[offset + HPMON] = 0x40;
 		}
@@ -6406,7 +6407,7 @@ void U3Misc::AttackCode(short whichMon) // $52B3
 	m_Monsters[whichMon] = 0;
 	if (m_gMonType == 0x1E) // Pirate
 	{
-		if (m_Party[0] != 0x16)
+		if (m_Party[PARTY_ICON] != 0x16)
 		{
 			PutXYVal(0x2C, (unsigned char)m_xs, (unsigned char)m_ys);
 		}
@@ -6516,8 +6517,8 @@ void U3Misc::DoAutoHeal() const
 		for (c = 0; c <= 3; c++)
 		{
 
-			hp = m_Player[m_Party[6 + c]][26] * 256 + m_Player[m_Party[6 + c]][27];
-			maxhp = m_Player[m_Party[6 + c]][28] * 256 + m_Player[m_Party[6 + c]][29];
+			hp = m_Player[m_Party[PARTY_ROSTERPOS1 + c]][26] * 256 + m_Player[m_Party[PARTY_ROSTERPOS1 + c]][27];
+			maxhp = m_Player[m_Party[PARTY_ROSTERPOS1 + c]][28] * 256 + m_Player[m_Party[PARTY_ROSTERPOS1 + c]][29];
 			if (hp < lowest && hp <= (maxhp - 25))
 			{
 				if (CheckAlive(c))
@@ -6532,10 +6533,10 @@ void U3Misc::DoAutoHeal() const
 				{
 					if (CheckAlive(c))
 					{
-						clss = m_Player[m_Party[6 + c]][23];
+						clss = m_Player[m_Party[PARTY_ROSTERPOS1 + c]][23];
 						isMulti = (clss == m_careerTable[8] || clss == m_careerTable[10]);
 						isCler = (clss == m_careerTable[1] || clss == m_careerTable[4] || clss == m_careerTable[7] || isMulti);
-						if ((isCler || isMulti) && m_Player[m_Party[6 + c]][25] >= 10)
+						if ((isCler || isMulti) && m_Player[m_Party[PARTY_ROSTERPOS1 + c]][25] >= 10)
 						{
 							whoToCast = c;
 							whoToCastHealIsMulti = isMulti;

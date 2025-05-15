@@ -2,15 +2,16 @@
 #include <SDL3/SDL.h>
 #include <stdexcept>
 #include <string>
-#include "UltimaMacIF.h"
-#include "U3Misc.h"
-#include "U3ScrollArea.h"
+
+#include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
-#include "U3Utilities.h"
-#include "UltimaDungeon.h"
+#include "UltimaMacIF.h"
 #include "UltimaSpellCombat.h"
+#include "U3Misc.h"
 #include "U3Resources.h"
+#include "U3ScrollArea.h"
+#include "U3Utilities.h"
 
 extern SDL_Window* window;
 extern std::unique_ptr<U3Resources> m_resources;
@@ -336,7 +337,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 	{
 		if (isInRect(mousH, mousV, gameRect))
 		{
-			if (m_misc->m_Party[2] == 1) // is in dungeon
+			if (m_misc->m_Party[PARTY_LOCATION] == 1) // is in dungeon
 			{
 				if (m_misc->m_gTorch == 0 && m_dungeon->GetXYDng(m_misc->m_xs, m_misc->m_ys) != 3)   // no light but not on strange wind
 				{
@@ -387,13 +388,13 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 				mouseTileX = (short)(mousH - (short)m_resources->m_blockSize) / tileSiz;
 				mouseTileY = (short)(mousV - (short)m_resources->m_blockSize) / tileSiz;
 				cX = cY = 5;
-				if (m_misc->m_Party[2] == 0x80)
+				if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 				{   // in combat
 					cX = m_misc->m_CharX[m_spellCombat->m_gChnum];
 					cY = m_misc->m_CharY[m_spellCombat->m_gChnum];
 				}
 
-				if (cX == mouseTileX && cY == mouseTileY && m_misc->m_Party[2] != 0x80)
+				if (cX == mouseTileX && cY == mouseTileY && m_misc->m_Party[PARTY_LOCATION] != 0x80)
 				{
 					value = m_misc->GetXYVal(m_misc->m_xpos, m_misc->m_ypos) / 2;
 				}
@@ -461,7 +462,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 						}
 					}
 				}
-				if (m_misc->m_Party[0] != 1 && value >= 0x5C && value < 0x5E)
+				if (m_misc->m_Party[PARTY_ICON] != 1 && value >= 0x5C && value < 0x5E)
 				{
 					aimedAt = (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));    // only west or east!
 					if (aimedAt)
@@ -474,7 +475,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 				if ((value >= 0x1A && value < 0x3E) || value == 0x7E || value >= 0xA0)   // a being; standard range or a variant tile.
 				{
 					gCurMouseDir = keyEquiv[newCursor];
-					if (m_misc->m_Party[2] == 0x80 && m_misc->m_inputType != InputType::GetDirection) // in combat & not GetDirection
+					if (m_misc->m_Party[PARTY_LOCATION] == 0x80 && m_misc->m_inputType != InputType::GetDirection) // in combat & not GetDirection
 					{
 						aimedAt = (cX == mouseTileX || cY == mouseTileY);
 						if (allowDiagonal)
@@ -510,7 +511,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 							}
 						}
 					}
-					if (m_misc->m_Party[2] > 1 && m_misc->m_Party[2] < 4 && m_misc->m_inputType != InputType::GetDirection) // indoors & not GetDir
+					if (m_misc->m_Party[PARTY_LOCATION] > 1 && m_misc->m_Party[PARTY_LOCATION] < 4 && m_misc->m_inputType != InputType::GetDirection) // indoors & not GetDir
 					{
 						if (cX == mouseTileX && (mouseTileY == cY - 1 || mouseTileY == cY + 1))
 						{
@@ -544,7 +545,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 							newCursor = 6;    // Transact
 						}
 					}
-					if (m_misc->m_Party[0] == 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia Ship
+					if (m_misc->m_Party[PARTY_ICON] == 0x16 && (m_misc->m_Party[PARTY_LOCATION] == 0 || m_misc->m_Party[PARTY_LOCATION] == 0xFF)) // Sosaria/Ambrosia Ship
 					{
 						aimedAt = ((cX == mouseTileX && (mouseTileY > cY - 4 && mouseTileY < cY + 4)) ||
 							(cY == mouseTileY && (mouseTileX > cX - 4 && mouseTileX < cX + 4)));
@@ -558,7 +559,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 							newCursor = 10;    // Fire Cannon
 						}
 					}
-					if (m_misc->m_Party[0] != 0x16 && (m_misc->m_Party[2] == 0 || m_misc->m_Party[2] == 0xFF)) // Sosaria/Ambrosia non-ship
+					if (m_misc->m_Party[PARTY_ICON] != 0x16 && (m_misc->m_Party[PARTY_LOCATION] == 0 || m_misc->m_Party[PARTY_LOCATION] == 0xFF)) // Sosaria/Ambrosia non-ship
 					{
 						aimedAt = (cX == mouseTileX && (mouseTileY > cY - 2 && mouseTileY < cY + 2));
 						aimedAt |= (cY == mouseTileY && (mouseTileX > cX - 2 && mouseTileX < cX + 2));
@@ -577,7 +578,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 				if (isInRect(mousH, mousV, topOfRect))
 				{
 					newCursor = 0; // nothing
-					if (m_misc->m_Party[0] == 0x14 || m_misc->m_Party[0] == 0x16)
+					if (m_misc->m_Party[PARTY_ICON] == 0x14 || m_misc->m_Party[PARTY_ICON] == 0x16)
 					{
 						newCursor = 12; // X-it
 					}
@@ -593,7 +594,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					{
 						newCursor = 9; // Board/Mount
 					}
-					if (m_misc->m_Party[2] == 0x80)
+					if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 					{
 						newCursor = 0;
 					}
@@ -615,7 +616,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					if (isInRect(mousH, mousV, topOfRect))
 					{
 						newCursor = 13;
-						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 0)
+						if (m_misc->m_Party[PARTY_LOCATION] == 0x80 && m_spellCombat->m_gChnum != 0)
 						{
 							newCursor = -1;
 						}
@@ -624,7 +625,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					if (isInRect(mousH, mousV, topOfRect))
 					{
 						newCursor = 13;
-						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 1)
+						if (m_misc->m_Party[PARTY_LOCATION] == 0x80 && m_spellCombat->m_gChnum != 1)
 						{
 							newCursor = -1;
 						}
@@ -633,7 +634,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					if (isInRect(mousH, mousV, topOfRect))
 					{
 						newCursor = 13;
-						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 2)
+						if (m_misc->m_Party[PARTY_LOCATION] == 0x80 && m_spellCombat->m_gChnum != 2)
 						{
 							newCursor = -1;
 						}
@@ -642,7 +643,7 @@ void CursorUpdate(float mousH, float mousV) // figure what cursor to show where
 					if (isInRect(mousH, mousV, topOfRect))
 					{
 						newCursor = 13;
-						if (m_misc->m_Party[2] == 0x80 && m_spellCombat->m_gChnum != 3)
+						if (m_misc->m_Party[PARTY_LOCATION] == 0x80 && m_spellCombat->m_gChnum != 3)
 						{
 							newCursor = -1;
 						}

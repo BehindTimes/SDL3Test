@@ -1,13 +1,14 @@
 #include <SDL3_image/SDL_image.h>
+
 #include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
+#include "UltimaSound.h"
+#include "UltimaSpellCombat.h"
 #include "U3Misc.h"
 #include "U3Resources.h"
 #include "U3ScrollArea.h"
-#include "UltimaSpellCombat.h"
 #include "U3Utilities.h"
-#include "UltimaIncludes.h"
-#include "UltimaSound.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Graphics> m_graphics;
@@ -492,15 +493,15 @@ void UltimaDungeon::Routine6E6B()
 	m_misc->m_gameMode = GameStateMode::Map;
 	m_graphics->m_mode_switch = true;
 	m_resources->m_wasMove = true;
-	m_misc->m_Party[2] = 0;    // back to surface
+	m_misc->m_Party[PARTY_LOCATION] = 0;    // back to surface
 
 	if (!m_misc->m_checkDead)
 	{
 		m_scrollArea->UPrintMessage(182);
 	}
 
-	m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
-	m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
+	m_misc->m_Party[PARTY_XPOS] = (unsigned char)m_misc->m_xpos;
+	m_misc->m_Party[PARTY_YPOS] = (unsigned char)m_misc->m_ypos;
 
 	bool autosave;
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
@@ -1324,12 +1325,12 @@ bool UltimaDungeon::PeerGemCallback()
 
 	short rosnum;
 
-	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0 || m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0 || m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n\n");
 		return false;
 	}
-	rosnum = m_misc->m_Party[6 + m_misc->m_input_num];
+	rosnum = m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
 	/*if (m_misc->m_Player[rosnum][37] < 1)
 	{
@@ -1535,7 +1536,7 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
 		m_scrollArea->UPrintMessage(159);
 		m_audio->playSfx(SFX_STEP);
-		if (m_misc->StealDisarmFail(m_misc->m_Party[6]))
+		if (m_misc->StealDisarmFail(m_misc->m_Party[PARTY_ROSTERPOS1]))
 		{
 			m_scrollArea->UPrintMessage(160);
 			return;
@@ -1558,10 +1559,10 @@ void UltimaDungeon::dngnotcombat(short value)
 	case 6: // $92DA gremlins
 	{
 		m_spellCombat->PutXYDng(0, m_misc->m_xs, m_misc->m_ys);
-		short rngNum = (short)m_utilities->getRandom(0, m_misc->m_Party[1] - 1);
+		short rngNum = (short)m_utilities->getRandom(0, m_misc->m_Party[PARTY_SIZE] - 1);
 		if (m_misc->CheckAlive(rngNum))
 		{
-			short rosNum = m_misc->m_Party[6 + rngNum];
+			short rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + rngNum];
 			if (m_misc->m_Player[rosNum][32] < 1)
 			{
 				m_misc->m_Player[rosNum][32] = 0;
@@ -1650,7 +1651,7 @@ bool UltimaDungeon::FountainCallback()
 		m_resources->m_overrideImage = -1;
 		return false;
 	}
-	if (m_misc->m_Party[6 + chNum] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + chNum] == 0)
 	{
 		m_audio->m_currentSong = 4;
 		m_audio->m_nextSong = 4;
@@ -1670,7 +1671,7 @@ bool UltimaDungeon::FountainCallback()
 		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
-	m_misc->m_rosNum = m_misc->m_Party[6 + chNum];
+	m_misc->m_rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chNum];
 	switch (m_misc->m_xpos & 0x03)
 	{
 	case 0: // Poison fountain
@@ -1747,7 +1748,7 @@ bool UltimaDungeon::MarkCallback()
 		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
-	if (m_misc->m_Party[6 + chNum] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + chNum] == 0)
 	{
 		m_audio->m_currentSong = 4;
 		m_audio->m_nextSong = 4;
@@ -1765,7 +1766,7 @@ bool UltimaDungeon::MarkCallback()
 		m_scrollArea->UPrintMessage(126);
 		return false;
 	}
-	m_misc->m_rosNum = m_misc->m_Party[6 + chNum];
+	m_misc->m_rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chNum];
 	m_misc->m_Player[chNum][14] = m_misc->m_Player[chNum][14] | bits[(m_misc->m_xpos & 3) + 4];
 
 	m_misc->InverseCharDetails(chNum, true);

@@ -1,19 +1,20 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
-#include <iostream>
 #include <libxml/xmlwriter.h>
+#include <iostream>
 #include <iterator>
-#include "U3Resources.h"
-#include "U3Misc.h"
-#include "U3ScrollArea.h"
+
+#include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
-#include "U3Utilities.h"
-#include "UltimaDungeon.h"
-#include "UltimaSpellCombat.h"
-#include "UltimaSound.h"
 #include "UltimaMacIF.h"
+#include "UltimaSound.h"
+#include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3ScrollArea.h"
+#include "U3Utilities.h"
 
 extern short screenOffsetX;
 extern short screenOffsetY;
@@ -1308,17 +1309,17 @@ void U3Resources::zStatDistributeCallback([[maybe_unused]] int button)
 	short num;
 	int longVal = 0;
 
-	for (i = 1; i <= m_misc->m_Party[1]; i++)
+	for (i = 1; i <= m_misc->m_Party[PARTY_SIZE]; i++)
 	{
 		num = (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100) + m_misc->m_Player[m_misc->m_Party[5 + i]][33];
 		longVal += num;
 	}
-	for (i = 1; i <= m_misc->m_Party[1]; i++)
+	for (i = 1; i <= m_misc->m_Party[PARTY_SIZE]; i++)
 	{
 		num = (short)longVal;
-		if (i < m_misc->m_Party[1])
+		if (i < m_misc->m_Party[PARTY_SIZE])
 		{
-			num = (short)(longVal / (m_misc->m_Party[1] - (i - 1)));
+			num = (short)(longVal / (m_misc->m_Party[PARTY_SIZE] - (i - 1)));
 		}
 		m_misc->m_Player[m_misc->m_Party[5 + i]][32] = (unsigned char)(num / 100);
 		m_misc->m_Player[m_misc->m_Party[5 + i]][33] = (unsigned char)(num - (m_misc->m_Player[m_misc->m_Party[5 + i]][32] * 100));
@@ -2229,7 +2230,7 @@ void U3Resources::DrawMoongates()
 		renderDisplayString(m_font, strX, xPos, 0, sdl_text_color, 2);
 		renderDisplayString(m_font, strY, yPos, 0, sdl_text_color, 2);
 	}
-	if (m_misc->m_Party[2] != 0)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0)
 	{
 		return;
 	}
@@ -2286,7 +2287,7 @@ void U3Resources::DrawWind()
 
 void U3Resources::DoWind()
 {
-	if (m_misc->m_Party[2] == 1)
+	if (m_misc->m_Party[PARTY_LOCATION] == 1)
 	{
 		return;
 	}
@@ -3259,7 +3260,7 @@ void U3Resources::DrawOrganizePartyRect()
 
 bool U3Resources::CheckJourneyOnward()
 {
-	if (!m_misc->m_Party[6])
+	if (!m_misc->m_Party[PARTY_ROSTERPOS1])
 	{
 		return false;
 	}
@@ -3425,11 +3426,11 @@ void U3Resources::DrawTiles()
 void U3Resources::HideMonsters()
 {
 	short mon, xm, ym, offset, value;
-	if (m_misc->m_Party[2] == 1)
+	if (m_misc->m_Party[PARTY_LOCATION] == 1)
 	{
 		return;
 	}
-	if (m_misc->m_Party[2] != 0x80)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 	{
 		// first hide the actual monster tiles.
 		for (mon = 0; mon < 32; mon++)
@@ -3437,12 +3438,12 @@ void U3Resources::HideMonsters()
 			if (m_misc->m_Monsters[mon] != 0)
 			{
 				xm = (m_misc->m_Monsters[mon + XMON] - m_misc->m_stx);
-				if (m_misc->m_Party[2] == 0)
+				if (m_misc->m_Party[PARTY_LOCATION] == 0)
 				{
 					xm = m_graphics->MapConstrain(xm);
 				}
 				ym = (m_misc->m_Monsters[mon + YMON] - m_misc->m_sty);
-				if (m_misc->m_Party[2] == 0)
+				if (m_misc->m_Party[PARTY_LOCATION] == 0)
 				{
 					ym = m_graphics->MapConstrain(ym);
 				}
@@ -3590,7 +3591,7 @@ void U3Resources::HideMonsters()
 void U3Resources::ShowMonsters()
 {
 	short mon, xm, ym, value, offset;
-	if (m_misc->m_Party[2] == 1)
+	if (m_misc->m_Party[PARTY_LOCATION] == 1)
 	{
 		return;
 	}
@@ -3612,19 +3613,19 @@ void U3Resources::ShowMonsters()
 	}
 
 	// Then either the outdoor party symbol ...
-	if (m_misc->m_Party[2] != 0x80)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 	{
 		if (m_TileArray[0x3C] < 120 || m_TileArray[0x3C] > 122)
 		{
-			if (m_misc->m_Party[0] == 0x14 && m_misc->m_gHorseFacingEast)
+			if (m_misc->m_Party[PARTY_ICON] == 0x14 && m_misc->m_gHorseFacingEast)
 			{
-				SwapShape(m_misc->m_Party[0]);
-				DrawMasked(m_misc->m_Party[0], 5, 5);
-				SwapShape(m_misc->m_Party[0]);
+				SwapShape(m_misc->m_Party[PARTY_ICON]);
+				DrawMasked(m_misc->m_Party[PARTY_ICON], 5, 5);
+				SwapShape(m_misc->m_Party[PARTY_ICON]);
 			}
 			else
 			{
-				DrawMasked(m_misc->m_Party[0], 5, 5);
+				DrawMasked(m_misc->m_Party[PARTY_ICON], 5, 5);
 			}
 
 			//m_misc->m_gShapeSwapped[10] = false;
@@ -3767,7 +3768,7 @@ void U3Resources::ShowChars(bool force) // $7338 methinx
 		rect.w = (float)(15 * m_blockSize);
 		rect.y = (float)(i * (m_blockSize * 4) + m_blockSize);
 		rect.h = (float)(m_blockSize * 3);
-		ros = m_misc->m_Party[6 + i];
+		ros = m_misc->m_Party[PARTY_ROSTERPOS1 + i];
 
 		thisChanged = force;
 		num = m_misc->m_Player[ros][17];
@@ -3824,7 +3825,7 @@ void U3Resources::DrawPortrait(char charNum)
 	short sx;
 	char charRaces[5] = { 'H', 'E', 'D', 'B', 'F' };
 	char usePortrait[12] = { 0, 1, 2, 3, 0, 3, 2, 2, 1, 2, 0, 0 };
-	rosNum = m_misc->m_Party[6 + charNum];
+	rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + charNum];
 	short clss = 0;
 	for (value = 0; value < 11; value++)
 	{

@@ -1,10 +1,11 @@
-#include "UltimaSound.h"
-#include "UltimaIncludes.h"
-#include "U3Resources.h"
-#include "U3Misc.h"
-#include <string>
 #include <filesystem>
 #include <iostream>
+#include <string>
+
+#include "UltimaIncludes.h"
+#include "UltimaSound.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
 
 extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3Resources> m_resources;

@@ -1,7 +1,7 @@
+#include "UltimaGraphics.h"
 #include "U3ScrollArea.h"
 #include "U3Resources.h"
 #include "U3Utilities.h"
-#include "UltimaGraphics.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Graphics> m_graphics;

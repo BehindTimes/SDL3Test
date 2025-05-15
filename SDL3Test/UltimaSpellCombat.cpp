@@ -1,12 +1,12 @@
-#include "UltimaSpellCombat.h"
-#include "U3ScrollArea.h"
-#include "U3Misc.h"
 #include "UltimaDungeon.h"
-#include "U3Resources.h"
-#include "U3Utilities.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
 #include "UltimaSound.h"
+#include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3ScrollArea.h"
+#include "U3Utilities.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
@@ -106,21 +106,21 @@ bool UltimaSpellCombat::CombatCallback()
 	PrintMonster(m_misc->m_gMonType, (numMon > 0), m_misc->m_gMonVarType);
 	m_scrollArea->UPrintWin("\n\n");
 	GetScreen(BackGround(m_misc->m_gMonType));
-	m_g835E = m_misc->m_Party[2];
-	m_misc->m_Party[2] = 0x80;
+	m_g835E = m_misc->m_Party[PARTY_LOCATION];
+	m_misc->m_Party[PARTY_LOCATION] = 0x80;
 	short health;
 	short mon;
 
-	for (short chnum = m_misc->m_Party[1] - 1; chnum >= 0; chnum--)
+	for (short chnum = m_misc->m_Party[PARTY_SIZE] - 1; chnum >= 0; chnum--)
 	{
-		health = m_misc->m_Player[m_misc->m_Party[6 + chnum]][17];
+		health = m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][17];
 		if (health == 'G' || health == 'P')
 		{
 			// The game was originally written so that it reads both of the tiles for a character
 			// then moves down to the next one, whereas I wrote it just reading down row by row.
 			// Maybe for the future, to give a slight speed increase, change everything to match,
 			// but for now, just finish
-			int charTile = DetermineShape(m_misc->m_Player[m_misc->m_Party[6 + chnum]][23]);
+			int charTile = DetermineShape(m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][23]);
 			int offset = (charTile % 16);
 			m_misc->m_CharShape[chnum] = (unsigned char)(charTile + offset);
 			m_misc->m_CharTile[chnum] = m_misc->GetXYTile(m_misc->m_CharX[chnum], m_misc->m_CharY[chnum]);
@@ -270,7 +270,7 @@ bool UltimaSpellCombat::ShowHitCallback() const
 void UltimaSpellCombat::Poison(short chnum) // $8881
 {
 	short rosNum;
-	rosNum = m_misc->m_Party[6 + chnum];
+	rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chnum];
 	int rngNum = m_utilities->getRandom(0, 255);
 	if ((rngNum & 0x03) != 0)
 	{
@@ -297,7 +297,7 @@ void UltimaSpellCombat::Missed() // $8414
 void UltimaSpellCombat::Pilfer(short chnum) // $881F
 {
 	short rosNum, item;
-	rosNum = m_misc->m_Party[6 + chnum];
+	rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chnum];
 	int rngNum = m_utilities->getRandom(0, 255);
 	if (rngNum < 128)
 	{
@@ -418,8 +418,8 @@ unsigned char UltimaSpellCombat::CombatMonsterHere(short x, short y) // $7D24
 unsigned char UltimaSpellCombat::ExodusCastle() const // $6F43
 {
 	short value;
-	value = m_misc->m_Party[2];
-	if (m_misc->m_Party[15] == 1)
+	value = m_misc->m_Party[PARTY_LOCATION];
+	if (m_misc->m_Party[PARTY_EXODUSDEFEATED] == 1)
 	{
 		return 0xFF;
 	}
@@ -431,7 +431,7 @@ unsigned char UltimaSpellCombat::ExodusCastle() const // $6F43
 	{
 		return 0xFF;
 	}
-	if (m_misc->m_Party[3] != m_misc->m_LocationX[1])
+	if (m_misc->m_Party[PARTY_XPOS] != m_misc->m_LocationX[1])
 	{
 		return 0xFF;
 	}
@@ -453,11 +453,11 @@ unsigned char UltimaSpellCombat::HowMany() const // $80DE
 		return 7;
 	}
 	unsigned char rngNum = (unsigned char)m_utilities->getRandom(0, 7);
-	if (m_misc->m_Party[2] < 2)
+	if (m_misc->m_Party[PARTY_LOCATION] < 2)
 	{
 		return rngNum;    // Party[2]'s were g835E, which wasn't set yet!
 	}
-	if (m_misc->m_Party[2] > 3)
+	if (m_misc->m_Party[PARTY_LOCATION] > 3)
 	{
 		return rngNum;
 	}
@@ -467,7 +467,7 @@ unsigned char UltimaSpellCombat::HowMany() const // $80DE
 short UltimaSpellCombat::BackGround(short montype) // A, +1=B, +2=C, +3=F, +4=G, +5=M, +6=Q, +7=R, +8=S
 {
 	short tile;
-	if (m_misc->m_Party[2] == 1)
+	if (m_misc->m_Party[PARTY_LOCATION] == 1)
 	{
 		return 2;
 	}
@@ -482,13 +482,13 @@ short UltimaSpellCombat::BackGround(short montype) // A, +1=B, +2=C, +3=F, +4=G,
 	if (montype == 0x1E)       // Frigate filled with
 	{
 		m_misc->m_gMonType = 0x2E;    // Thieves
-		if (m_misc->m_Party[0] == 0x16)
+		if (m_misc->m_Party[PARTY_ICON] == 0x16)
 		{
 			return 8;
 		}
 		return 0;
 	}
-	if (m_misc->m_Party[0] == 0x16)
+	if (m_misc->m_Party[PARTY_ICON] == 0x16)
 	{
 		if (montype < 0x20)
 		{
@@ -532,7 +532,8 @@ void UltimaSpellCombat::Flashriek() // $5885
 {
 	short SpellSound[34] = { 0, 1, 2, 3, 4, 1, 5, 1, 2, 7, 0, 1, 7, 0, 0, 0, 0, 7, 6, 2, 4, 3, 5, 6, 5, 2, 6, 7, 1, 6, 0, 6, 7, 0 };
 	m_misc->InverseTiles(true);
-	switch (SpellSound[m_spellnum]) {
+	switch (SpellSound[m_spellnum])
+	{
 	case 0:
 		m_audio->playSfx(SFX_BIGDEATH);
 		break;    // was 0xE0
@@ -563,7 +564,7 @@ void UltimaSpellCombat::Flashriek() // $5885
 
 void UltimaSpellCombat::BigDeath(short damage, short chnum) // $5600
 {
-	if (m_misc->m_Party[2] != 0x80)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 	{
 		Failed();
 		return;
@@ -624,7 +625,7 @@ bool UltimaSpellCombat::BigDeathCallback1()
 void UltimaSpellCombat::AddExp(short chnum, short amount) // $7091
 {
 	short rosNum, experience;
-	rosNum = m_misc->m_Party[6 + chnum];
+	rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chnum];
 	experience = (m_misc->m_Player[rosNum][30] * 100) + m_misc->m_Player[rosNum][31];
 	int oldLvl = (experience / 100);
 	experience += amount;
@@ -731,7 +732,7 @@ bool UltimaSpellCombat::FinishCombatTurn()
 	m_misc->m_wx = 0x18;
 	m_g835D++;
 
-	if (m_g835D < m_misc->m_Party[1])
+	if (m_g835D < m_misc->m_Party[PARTY_SIZE])
 	{
 		return false;
 	}
@@ -766,7 +767,7 @@ bool UltimaSpellCombat::VictoryCallback() const
 	m_audio->m_currentSong = m_g835F;
 	m_audio->m_nextSong = m_g835F;
 	m_audio->musicUpdate();
-	m_misc->m_Party[2] = m_g835E;
+	m_misc->m_Party[PARTY_LOCATION] = m_g835E;
 	m_graphics->m_queuedMode = m_graphics->m_lastMode;
 	m_misc->m_gameMode = m_misc->m_lastMode;
 	m_dungeon->setForceRedraw();
@@ -1045,7 +1046,7 @@ void UltimaSpellCombat::monmagic() // $864A
 	int rngNum = m_utilities->getRandom(0, 255);
 	m_gChnum = rngNum &= 3;
 
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][17] != 'G')
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][17] != 'G')
 	{
 		nextplr();
 		return;
@@ -1094,7 +1095,7 @@ void UltimaSpellCombat::monshoot2() // $86B5
 		m_misc->DelayGame(80);
 		return;
 	}
-	for (short chnum = m_misc->m_Party[1] - 1; chnum >= 0; chnum--)
+	for (short chnum = m_misc->m_Party[PARTY_SIZE] - 1; chnum >= 0; chnum--)
 	{
 		if (m_misc->m_xs == m_misc->m_CharX[chnum] && m_misc->m_ys == m_misc->m_CharY[chnum])
 		{
@@ -1148,13 +1149,13 @@ void UltimaSpellCombat::afternext()
 	m_audio->playSfx(SFX_ATTACK);
 
 	// If in Exodus Castle and the character is not wearing Exotic, it's an automatic hit.
-	if (m_g835E == 3 && m_misc->m_Party[3] == m_misc->m_LocationX[1] && m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][40] != 7)
+	if (m_g835E == 3 && m_misc->m_Party[PARTY_XPOS] == m_misc->m_LocationX[1] && m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][40] != 7)
 	{
 		plrhit();
 		return;
 	}
 	// Random from 0 to armour+16 -- less than 8 is a hit.
-	int rngNum = m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][40] + 0x10);
+	int rngNum = m_utilities->getRandom(0, m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][40] + 0x10);
 	if (rngNum < 8)
 	{
 		plrhit();
@@ -1175,12 +1176,12 @@ void UltimaSpellCombat::c8777()
 
 	short temp;
 
-	temp = ((m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][28] * 256) + m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][29]) / 100;
+	temp = ((m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][28] * 256) + m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][29]) / 100;
 	temp = ((monhpstart[(m_misc->m_gMonType / 2) & 0x0F] / 8) + temp) | 1;
 	int rngNum = m_utilities->getRandom(0, temp) + 1;
 	temp = (short)rngNum;
-	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], temp);
-	m_misc->HPSubtract(m_misc->m_Party[6 + m_gChnum], (m_g835E & 3) * 16);
+	m_misc->HPSubtract(m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum], temp);
+	m_misc->HPSubtract(m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum], (m_g835E & 3) * 16);
 
 	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::c8777Callback, this));
 
@@ -1203,7 +1204,7 @@ bool UltimaSpellCombat::c8777Callback()
 	}
 
 	m_misc->PutXYTile(m_misc->m_CharShape[m_gChnum], m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum]);
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_gChnum]][17] == 'D')
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_gChnum]][17] == 'D')
 	{
 		m_scrollArea->UPrintMessage(144);
 		m_misc->PutXYTile(m_misc->m_CharTile[m_gChnum], m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum]);
@@ -1232,9 +1233,9 @@ short UltimaSpellCombat::FigureNewMonPosition(short mon) // $7E85
 	short plrTarget = 0xFF;
 	short plrNum = -1;
  
-	for (plrNum = 0; plrNum < m_misc->m_Party[1]; ++plrNum)
+	for (plrNum = 0; plrNum < m_misc->m_Party[PARTY_SIZE]; ++plrNum)
 	{
-		rosNum = m_misc->m_Party[6 + plrNum];
+		rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + plrNum];
 		health = m_misc->m_Player[rosNum][17];
 		if (health == 'D' || health == 'A')
 		{
@@ -1324,7 +1325,7 @@ bool UltimaSpellCombat::CombatAttack() // $8360
 	}
 
 	m_misc->m_zp[0x1F] = 0x7A; // Red ball
-	m_misc->m_rosNum = m_misc->m_Party[6 + m_activePlayer];
+	m_misc->m_rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + m_activePlayer];
 	m_chNum = m_activePlayer;
 	m_wpn = m_misc->m_Player[m_misc->m_rosNum][48];
 
@@ -1538,7 +1539,7 @@ void UltimaSpellCombat::updateGameTime(Uint64 deltaTime)
 
 void UltimaSpellCombat::Projectile(short chnum, short damage) // $552B
 {
-	if (m_misc->m_Party[2] != 0x80)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 	{
 		Failed();
 		return;
@@ -1613,7 +1614,7 @@ void UltimaSpellCombat::RelocateDungeon() // $572B
 
 void UltimaSpellCombat::DownLevel()
 {
-	if (m_misc->m_Party[2] != 1)
+	if (m_misc->m_Party[PARTY_LOCATION] != 1)
 	{
 		Failed();
 		return;
@@ -1641,7 +1642,7 @@ bool UltimaSpellCombat::DownLevelCallback()
 
 void UltimaSpellCombat::UpLevel()
 {
-	if (m_misc->m_Party[2] != 1)
+	if (m_misc->m_Party[PARTY_LOCATION] != 1)
 	{
 		Failed();
 		return;
@@ -1674,12 +1675,12 @@ bool UltimaSpellCombat::DagAcronCallback()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	if ((m_misc->m_Party[2] != 0) || (m_misc->m_Party[0] == 0x16 && m_misc->m_Party[15] == 0))
+	if ((m_misc->m_Party[PARTY_LOCATION] != 0) || (m_misc->m_Party[PARTY_ICON] == 0x16 && m_misc->m_Party[PARTY_EXODUSDEFEATED] == 0))
 	{
 		Failed();
 		return false;
 	}
-	int matchValue = (m_misc->m_Party[0] == 0x16) ? 0 : 4;
+	int matchValue = (m_misc->m_Party[PARTY_ICON] == 0x16) ? 0 : 4;
 	short value = -1;
 	while (value != matchValue)
 	{
@@ -1706,7 +1707,7 @@ bool UltimaSpellCombat::FalDiviCallback()
 
 void UltimaSpellCombat::Necorp() // $5677
 {
-	if (m_misc->m_Party[2] != 0x80)
+	if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 	{
 		Failed();
 		return;
@@ -1820,7 +1821,7 @@ bool UltimaSpellCombat::AlcortCallback()
 		Failed();
 		return false;
 	}
-	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n");
 		Failed();
@@ -1842,12 +1843,12 @@ bool UltimaSpellCombat::AlcortCallback1()
 		m_misc->m_callbackStack.pop();
 	}
 
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'P')
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] != 'P')
 	{
 		Failed();
 		return false;
 	}
-	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
+	m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] = 'G';
 
 	return false;
 }
@@ -1875,7 +1876,7 @@ bool UltimaSpellCombat::HealCallback()
 		Failed();
 		return false;
 	}
-	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n");
 		Failed();
@@ -1898,7 +1899,7 @@ bool UltimaSpellCombat::HealCallback1() const
 		m_misc->m_callbackStack.pop();
 	}
 
-	m_misc->HPAdd(m_misc->m_Party[6 + m_misc->m_input_num], m_damage);
+	m_misc->HPAdd(m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num], m_damage);
 
 	return false;
 }
@@ -1909,7 +1910,7 @@ bool UltimaSpellCombat::LibRekCallback()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	if (m_misc->m_Party[2] != 1)
+	if (m_misc->m_Party[PARTY_LOCATION] != 1)
 	{
 		Failed();
 		return false;
@@ -1952,7 +1953,7 @@ bool UltimaSpellCombat::SurmandumCallback()
 		Failed();
 		return false;
 	}
-	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n");
 		Failed();
@@ -1975,7 +1976,7 @@ bool UltimaSpellCombat::SurmandumCallback1()
 		m_misc->m_callbackStack.pop();
 	}
 
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'D')
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] != 'D')
 	{
 		Failed();
 		return false;
@@ -1983,11 +1984,11 @@ bool UltimaSpellCombat::SurmandumCallback1()
 	int rngNum = m_utilities->getRandom(0, 255) & 0x03;
 	if (rngNum == 0)
 	{
-		m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'A';
+		m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] = 'A';
 		Failed();
 		return false;
 	}
-	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
+	m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] = 'G';
 
 	return false;
 }
@@ -2013,7 +2014,7 @@ bool UltimaSpellCombat::AnjuSermaniCallback()
 		Failed();
 		return false;
 	}
-	if (m_misc->m_Party[6 + m_misc->m_input_num] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n");
 		Failed();
@@ -2036,20 +2037,20 @@ bool UltimaSpellCombat::AnjuSermaniCallback1()
 		m_misc->m_callbackStack.pop();
 	}
 
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] != 'A')
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] != 'A')
 	{
 		Failed();
 		return false;
 	}
 
-	m_misc->m_Player[m_misc->m_Party[6 + m_misc->m_input_num]][17] = 'G';
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] > 5)
+	m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num]][17] = 'G';
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_chNum]][21] > 5)
 	{
-		m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] -= 5; // Caster's wisdom-5
+		m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_chNum]][21] -= 5; // Caster's wisdom-5
 	}
-	if (m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] < 5)
+	if (m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_chNum]][21] < 5)
 	{
-		m_misc->m_Player[m_misc->m_Party[6 + m_chNum]][21] = 5;
+		m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + m_chNum]][21] = 5;
 	}
 
 	return false;
@@ -2216,11 +2217,11 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 	m_chNum = chnum;
 	m_spellnum = spellnum;
 
-	rosNum = m_misc->m_Party[6 + chnum];
+	rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chnum];
 	switch (spellnum)
 	{
 	case 0: // Repond
-		if ((m_misc->m_Party[2] != 0x80) || (m_misc->m_gMonType != 0x30) || (m_g5521 != 0))
+		if ((m_misc->m_Party[PARTY_LOCATION] != 0x80) || (m_misc->m_gMonType != 0x30) || (m_g5521 != 0))
 		{
 			Failed();
 			return;
@@ -2285,7 +2286,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(255, chnum);
 		break;
 	case 16: // Pontori
-		if (m_misc->m_Party[2] != 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] != 0x80)
 		{
 			Failed();
 			return;
@@ -2335,7 +2336,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Alcort();
 		break;
 	case 24: // Sequitu
-		if (m_misc->m_Party[2] != 1)
+		if (m_misc->m_Party[PARTY_LOCATION] != 1)
 		{
 			Failed();
 			return;
@@ -2352,7 +2353,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Heal(rngNum);
 		break;
 	case 27: // Vieda
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			// The original Ultima 3 doesn't allow casting this in combat, though the LairWare version does.
 			// A little extra logic would have to be put in if keeping directly to that, so let's keep
@@ -2381,7 +2382,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Projectile(chnum, 255);
 		break;
 	case 29: // Surmandum
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			Failed();
 			return;
@@ -2392,7 +2393,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		BigDeath(255, chnum);
 		break;
 	case 31: // Anju Sermani
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			Failed();
 			return;
@@ -2400,7 +2401,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		AnjuSermani();
 		break;
 	case 32: // Terramorph
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			Failed();
 			return;
@@ -2408,7 +2409,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Terramorph();
 		break;
 	case 33: // Armageddon
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			Failed();
 			return;
@@ -2416,7 +2417,7 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		Armageddon();
 		break;
 	case 34: // Flotellum
-		if (m_misc->m_Party[2] == 0x80)
+		if (m_misc->m_Party[PARTY_LOCATION] == 0x80)
 		{
 			Failed();
 			return;

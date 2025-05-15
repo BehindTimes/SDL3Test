@@ -6,16 +6,17 @@
 
 #include <iostream>
 
-#include "U3Misc.h"
-#include "U3Resources.h"
+#include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
 #include "UltimaMacIF.h"
 #include "UltimaMain.h"
 #include "UltimaSound.h"
 #include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
 #include "U3ScrollArea.h"
 #include "U3Utilities.h"
-#include "UltimaDungeon.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -113,7 +114,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	Mix_AllocateChannels(8);
 #endif
 
-	//SDL_SetRenderVSync(renderer, 1);
+	SDL_SetRenderVSync(renderer, 1);
 
 	bool valid = m_resources->init(renderer);
 	bool valid2 = m_audio->initMusic();
@@ -333,7 +334,7 @@ void disperseParty([[maybe_unused]] int button)
 	{
 		m_misc->m_Player[byte][16] = 0;
 	}
-	if (m_misc->m_Party[6] == 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1] == 0)
 	{
 		altMessage = true;
 	}
@@ -399,7 +400,7 @@ void removeCharacter([[maybe_unused]] int button)
 
 void formParty([[maybe_unused]] int button)
 {
-	if (m_misc->m_Party[6] != 0)
+	if (m_misc->m_Party[PARTY_ROSTERPOS1] != 0)
 	{
 		m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
 		m_resources->SetButtonVisibility(3, false);
@@ -434,15 +435,15 @@ void partyFormed([[maybe_unused]] int button)
 		m_misc->m_Player[curChar][16] = 255;
 		m_misc->m_Party[index + 6] = (unsigned char)curChar;
 	}
-	m_misc->m_Party[1] = (unsigned char)m_resources->m_selectedCharacters.size();
+	m_misc->m_Party[PARTY_SIZE] = (unsigned char)m_resources->m_selectedCharacters.size();
 
-	m_misc->m_Party[2] = 0;
-	m_misc->m_Party[0] = 0x7E;
+	m_misc->m_Party[PARTY_LOCATION] = 0;
+	m_misc->m_Party[PARTY_ICON] = 0x7E;
 	m_misc->m_Party[5] = 255;    // WTF is this?
 	m_misc->m_xpos = 42;
 	m_misc->m_ypos = 20;
-	m_misc->m_Party[3] = (unsigned char)m_misc->m_xpos;
-	m_misc->m_Party[4] = (unsigned char)m_misc->m_ypos;
+	m_misc->m_Party[PARTY_XPOS] = (unsigned char)m_misc->m_xpos;
+	m_misc->m_Party[PARTY_YPOS] = (unsigned char)m_misc->m_ypos;
 	m_misc->PutParty();
 	m_misc->PutRoster();
 	m_misc->ResetSosaria();
@@ -1073,7 +1074,7 @@ void Game()
 	m_misc->m_Player[1][14] = 0xFF;
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
-	m_misc->m_Party[15] = 1;
+	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 1;
 #endif
 
 	bool quit = false;

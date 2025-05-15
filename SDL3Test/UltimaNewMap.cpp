@@ -1,14 +1,15 @@
-#include "U3Misc.h"
-#include "UltimaGraphics.h"
-#include "U3ScrollArea.h"
-#include "U3Resources.h"
-#include "UltimaSpellCombat.h"
-#include "UltimaIncludes.h"
-#include "U3Utilities.h"
-#include "UltimaDungeon.h"
-#include "UltimaSound.h"
 #include <SDL3/SDL.h>
 #include <iostream>
+
+#include "UltimaDungeon.h"
+#include "UltimaGraphics.h"
+#include "UltimaIncludes.h"
+#include "UltimaSound.h"
+#include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3ScrollArea.h"
+#include "U3Utilities.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3ScrollArea> m_scrollArea;
@@ -196,12 +197,12 @@ bool U3Graphics::Kreate13()
     {
         m_misc->m_callbackStack.pop();
     }
-    m_misc->m_Party[2] = 0;
+    m_misc->m_Party[PARTY_LOCATION] = 0;
     m_forceRedraw = true;
 
     unsigned short value = 0xFF;
     unsigned short target = 0x04;
-    if (m_misc->m_Party[1] == 0x16)
+    if (m_misc->m_Party[PARTY_SIZE] == 0x16)
     {
         target = 0;
     }
@@ -601,7 +602,7 @@ bool U3Graphics::Kreate1()
         m_misc->m_callbackStack.pop();
     }
     
-    m_misc->m_Party[2] = 255; // Will prevent the moongates from being shown
+    m_misc->m_Party[PARTY_LOCATION] = 255; // Will prevent the moongates from being shown
 
     m_misc->DelayGame(DelayKreate, std::bind(&U3Graphics::Kreate2, this));
 

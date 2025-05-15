@@ -1,12 +1,13 @@
-#include <filesystem>
 #include <SDL3_image/SDL_image.h>
-#include "U3Dialog.h"
-#include "U3Button.h"
-#include "U3Utilities.h"
-#include "U3Resources.h"
+#include <filesystem>
+
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "U3Button.h"
+#include "U3Dialog.h"
 #include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3Utilities.h"
 
 extern SDL_Window* window;
 extern short screenOffsetX;

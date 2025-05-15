@@ -1,17 +1,15 @@
 #include <SDL3/SDL_rect.h>
 #include <iostream>
 
-#include "U3Resources.h"
-#include "U3Misc.h"
+#include "UltimaDungeon.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
-#include "U3ScrollArea.h"
-#include "UltimaSpellCombat.h"
-#include "UltimaDungeon.h"
 #include "UltimaMain.h"
 #include "UltimaSound.h"
-
-extern short blkSiz;
+#include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3ScrollArea.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;

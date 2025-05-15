@@ -1,11 +1,11 @@
-#include "UltimaSpellCombat.h"
-#include "U3ScrollArea.h"
-#include "U3Misc.h"
 #include "UltimaDungeon.h"
-#include "U3Resources.h"
-#include "U3Utilities.h"
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "UltimaSpellCombat.h"
+#include "U3Misc.h"
+#include "U3Resources.h"
+#include "U3ScrollArea.h"
+#include "U3Utilities.h"
 
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Misc> m_misc;
@@ -97,7 +97,7 @@ bool UltimaSpellCombat::NearlyDead(short who)   // 0=anybody, otherwise 1-4
     if (who > 0)   // a specific character
     {
         chnum = who - 1;
-        hp = m_misc->m_Player[m_misc->m_Party[6 + chnum]][26] * 256 + m_misc->m_Player[m_misc->m_Party[6 + chnum]][27];
+        hp = m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][26] * 256 + m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][27];
         if (hp < 50)
         {
             nearlyDead = true;
@@ -114,7 +114,7 @@ bool UltimaSpellCombat::NearlyDead(short who)   // 0=anybody, otherwise 1-4
             }
             else
             {
-                hp = m_misc->m_Player[m_misc->m_Party[6 + chnum]][26] * 256 + m_misc->m_Player[m_misc->m_Party[6 + chnum]][27];
+                hp = m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][26] * 256 + m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum]][27];
                 if (hp < 50)
                 {
                     nearlyDead = true;
@@ -613,7 +613,7 @@ void UltimaSpellCombat::AutoCombat(short chnum)
     short hp;
     bool isWiz, isCler, isMulti, castMittar;
 
-    rosNum = m_misc->m_Party[6 + chnum];
+    rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chnum];
     magic = m_misc->m_Player[rosNum][25];
     clss = m_misc->m_Player[rosNum][23];
     isMulti = (clss == m_misc->m_careerTable[8] || clss == m_misc->m_careerTable[10]);
@@ -724,7 +724,7 @@ void UltimaSpellCombat::AutoCombat(short chnum)
         lowChar = -1;
         for (chnum2 = 0; chnum2 < 4; chnum2++)
         {
-            hp = m_misc->m_Player[m_misc->m_Party[6 + chnum2]][26] * 256 + m_misc->m_Player[m_misc->m_Party[6 + chnum2]][27];
+            hp = m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum2]][26] * 256 + m_misc->m_Player[m_misc->m_Party[PARTY_ROSTERPOS1 + chnum2]][27];
             if (m_misc->CheckAlive(chnum2) && hp < lowestHP)
             {
                 lowestHP = hp;

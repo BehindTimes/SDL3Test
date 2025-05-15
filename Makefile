@@ -13,7 +13,7 @@ LIBS = $(shell pkg-config --libs $(PKGS))
 # Directories
 SRC_DIR = SDL3Test
 OBJ_DIR = obj
-BIN_DIR = bin
+BIN_DIR = Bin
  
 # Find all source files
 SRCS = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*.cpp)

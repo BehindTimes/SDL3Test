@@ -1,6 +1,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#if HAVE_SDL3_MIXER
 #include <SDL3_mixer/SDL_mixer.h>
+#endif
 
 #include <iostream>
 
@@ -94,6 +96,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		engine_surface = TTF_CreateRendererTextEngine(renderer);
 	}
 
+#if HAVE_SDL3_MIXER
 	int result = 0;
 	int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
 	if (flags != (result = Mix_Init(flags)))
@@ -108,6 +111,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	Mix_OpenAudio(0, &curSpec);
 	// Allocate a number of channels
 	Mix_AllocateChannels(8);
+#endif
 
 	//SDL_SetRenderVSync(renderer, 1);
 
@@ -142,7 +146,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	TTF_DestroyRendererTextEngine(engine_surface);
 
 	//Mix_FreeMusic(music);
+#if HAVE_SDL3_MIXER
 	Mix_CloseAudio();
+#endif
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();

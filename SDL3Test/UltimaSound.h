@@ -1,6 +1,12 @@
 #pragma once
 
+#if HAVE_SDL3_MIXER
 #include <SDL3_mixer/SDL_mixer.h>
+#else
+struct Mix_Music;
+struct Mix_Chunk;
+#endif
+
 #include <vector>
 #include <string_view>
 

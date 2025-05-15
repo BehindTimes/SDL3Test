@@ -25,7 +25,8 @@ extern short screenOffsetX;
 extern short screenOffsetY;
 
 int gCurCursor;
-Uint32 gCurMouseDir;
+Uint32 gCurMouseDir = 0;
+Uint32 gTransactMouseDir = 0;
 short gMouseState = 0;
 
 
@@ -83,7 +84,7 @@ void HandleMouseDown(bool mouseclicked)
 			{
 				if (m_misc->m_inTransaction)
 				{
-					m_misc->m_InputDeque.push_back(gCurMouseDir);
+					m_misc->m_InputDeque.push_back(gTransactMouseDir);
 				}
 				m_misc->m_InputDeque.push_back(SDLK_1 + (num - 1));
 			}
@@ -130,6 +131,7 @@ void HandleMouseDown(bool mouseclicked)
 				break;
 			case 6:
 				m_misc->m_inTransaction = true;
+				gTransactMouseDir = gCurMouseDir;
 				m_misc->m_InputDeque.push_back(SDLK_T);
 				break;
 			case 7:    // open chest

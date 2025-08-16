@@ -1104,6 +1104,9 @@ void Game()
 
 	while (1)
 	{
+#if HAVE_OPEN_AL
+		m_audio->checkIsPlaying();
+#endif
 		if (gInterrupt)
 		{
 			break;

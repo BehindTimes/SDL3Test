@@ -29,6 +29,9 @@ I tried compiling on a Mac, and everything seems to work, but I haven't done tho
 For OpenAL, you'll need
 
 libsndfile
+
 libogg
+
 libvorbis
+
 OpenAL

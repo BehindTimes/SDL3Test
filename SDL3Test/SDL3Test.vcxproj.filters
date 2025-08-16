@@ -60,7 +60,7 @@
     <ClCompile Include="UltimaNewMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UltimaAuotcombat.cpp">
+    <ClCompile Include="UltimaAutocombat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

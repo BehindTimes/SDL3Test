@@ -233,7 +233,8 @@ U3Resources::U3Resources() :
 	m_currentTheme(-1),
 	m_texSpellList(nullptr),
 	m_texCommands(nullptr),
-	m_texMiscTables(nullptr)
+	m_texMiscTables(nullptr),
+    m_resizeScreen(false)
 {
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -1150,7 +1151,7 @@ void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec
 bool U3Resources::loadResourceFile()
 {
 	std::filesystem::path currentPath;
-	currentPath = std::filesystem::current_path();
+	currentPath = std::filesystem::current_path();  
 	currentPath /= ResourceLoc;
 	currentPath /= BinLoc;
 	currentPath /= std::string("MainResources.rsrc");
@@ -3037,9 +3038,10 @@ void U3Resources::OptionsDlgClosed(int button)
 
 		if (changeScreen)
 		{
-			SDL_SetWindowFullscreen(window, m_preferences.full_screen);
+            m_resizeScreen = changeScreen;
+			/*SDL_SetWindowFullscreen(window, m_preferences.full_screen);
 			SDL_SyncWindow(window);
-			CalculateBlockSize();
+			CalculateBlockSize();*/
 		}
 
 		savePreferences();

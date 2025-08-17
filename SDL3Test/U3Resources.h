@@ -249,6 +249,8 @@ public:
 	int m_demoDelay;
 	int m_demoptr;
 	std::vector<unsigned char> m_vecResourceData;
+    
+    bool m_resizeScreen;
 
 private:
 	void LoadResource(std::string strFile);

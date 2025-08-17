@@ -166,6 +166,7 @@ bool DoSplashScreen()
 
 	m_resources->changeTheme(m_resources->m_preferences.theme);
 	SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+    SDL_SyncWindow(window);
 
 	m_resources->CalculateBlockSize();
 
@@ -246,7 +247,7 @@ void MainLoop()
 				break;
 			case GameMode::Options:
 				m_resources->CreateOptionsDlg();
-					break;
+                break;
 			case GameMode::Demo:
 			{
 				m_audio->stopSfx();
@@ -608,6 +609,14 @@ void MainMenu()
 		{
 			gInterrupt = true;
 		}
+        
+        if(m_resources->m_resizeScreen)
+        {
+            SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+            SDL_SyncWindow(window);
+            m_resources->CalculateBlockSize();
+            m_resources->m_resizeScreen = false;
+        }
 	}
 }
 
@@ -626,7 +635,10 @@ void Demo()
 
 	while (1)
 	{
-		if (gInterrupt)
+#if HAVE_OPEN_AL
+        m_audio->checkIsPlaying();
+#endif
+        if (gInterrupt)
 		{
 			changeMode = true;
 			newMode = GameMode::MainMenu;
@@ -1105,7 +1117,7 @@ void Game()
 	while (1)
 	{
 #if HAVE_OPEN_AL
-		m_audio->checkIsPlaying();
+        m_audio->checkIsPlaying();
 #endif
 		if (gInterrupt)
 		{
@@ -1217,6 +1229,14 @@ void Game()
 		{
 			gInterrupt = true;
 		}
+        
+        if(m_resources->m_resizeScreen)
+        {
+            SDL_SetWindowFullscreen(window, m_resources->m_preferences.full_screen);
+            SDL_SyncWindow(window);
+            m_resources->CalculateBlockSize();
+            m_resources->m_resizeScreen = false;
+        }
 	}
 }
 

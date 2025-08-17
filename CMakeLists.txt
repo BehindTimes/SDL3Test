@@ -15,6 +15,12 @@ find_package(LibXml2 REQUIRED)
 find_package(Ogg REQUIRED)
 find_package(Sndfile REQUIRED)
 find_package(OpenAL REQUIRED)
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(Vorbis REQUIRED IMPORTED_TARGET Vorbis)
+pkg_check_modules(Vorbisenc REQUIRED IMPORTED_TARGET Vorbisenc)
+pkg_check_modules(Vorbisfile REQUIRED IMPORTED_TARGET Vorbisfile)
+
 add_executable(U3Lairware)
 
 target_sources(U3Lairware PRIVATE
@@ -36,13 +42,9 @@ target_sources(U3Lairware PRIVATE
 	${SOURCE_DIR}/UltimaSpellCombat.cpp
 )
 
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/homebrew/lib)
-
 target_link_libraries(U3Lairware PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image
 					LibXml2::LibXml2 Ogg::ogg OpenAL::OpenAL SndFile::sndfile
-					/opt/homebrew/lib/libvorbis.a
-					/opt/homebrew/lib/libvorbisfile.a
-					/opt/homebrew/lib/libvorbisenc.a
+					PkgConfig::Vorbis PkgConfig::Vorbisenc PkgConfig::Vorbisfile
 )
 
 target_include_directories(U3Lairware PRIVATE ${SDL3_INCLUDE_DIRS})

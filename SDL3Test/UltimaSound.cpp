@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sndfile.h>
 #endif
-
 #include "UltimaIncludes.h"
 #include "UltimaSound.h"
 #include "U3Misc.h"
@@ -26,10 +25,10 @@ void U3Audio::checkIsPlaying()
     ALint state;
     if(m_playingSong >= 0)
     {
-        if(m_music[m_playingSong].m_source > 0)
+        if(m_playingSong > 0 && m_music[m_playingSong].m_source > 0)
         {
-            alGetSourcei(m_music[m_playingSong].m_source, AL_SOURCE_STATE, &state);
-            if(state != AL_PLAYING)
+            alGetSourcei(m_music[m_playingSong - 1].m_source, AL_SOURCE_STATE, &state);
+            if(state == AL_STOPPED)
             {
                 m_audio->playNextSong();
             }
@@ -126,7 +125,7 @@ bool U3Audio::read_wav_file(std::string fname, size_t index)
     SF_INFO inFileInfo;
     inFile = sf_open(fname.c_str(), SFM_READ, &inFileInfo);
     if (!inFile) {
-        fprintf(stderr, "Error opening sound file: %s %s\n", fname.c_str(), sf_strerror(NULL));
+        fprintf(stderr, "Error opening sound file: %s\n", sf_strerror(NULL));
         return false;
     }
     
@@ -451,7 +450,7 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 		}
 	}
 #elif HAVE_OPEN_AL
-    
+    m_playingSong = song;
     song--;
     if (!m_resources->m_preferences.play_music)
     {
@@ -459,7 +458,7 @@ void U3Audio::playMusic([[maybe_unused]] int song)
     }
     if (song >= 0 && song < m_music.size())
     {
-        m_playingSong = song;
+        
         /*if (Mix_PausedMusic())
         {
             Mix_ResumeMusic();
@@ -504,7 +503,13 @@ void U3Audio::stopMusic()
 	}
 	Mix_HaltMusic();
 #elif HAVE_OPEN_AL
-    alSourceStop(m_music[m_playingSong].m_source);
+    for(auto& curMusic : m_music)
+    {
+        if(curMusic.m_source > 0)
+        {
+            alSourceStop(curMusic.m_source);
+        }
+    }
 #endif
 }
 
@@ -594,6 +599,9 @@ void U3Audio::musicUpdate()
         stopMusic();
         m_currentSong = m_nextSong;
         playMusic(m_currentSong);
+    }
+    else
+    {
     }
     /*else if (Mix_PlayingMusic() == 0)
     {

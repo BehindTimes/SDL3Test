@@ -145,13 +145,13 @@ bool U3Audio::read_wav_file(std::string fname, size_t index)
         return false;
     }
 
-    printf("Index = %d\n", index);
+    /*printf("Index = %d\n", index);
     printf("Sample Rate = %d Hz\n", inFileInfo.samplerate);
     printf("Channels = %d\n", inFileInfo.channels);
-    printf("Frames = %lld\n", inFileInfo.frames);
+    printf("Frames = %lld\n", inFileInfo.frames);*/
 
     // Check for common PCM integer formats
-    if ((inFileInfo.format & SF_FORMAT_PCM_16) == SF_FORMAT_PCM_16) {
+    /*if ((inFileInfo.format & SF_FORMAT_PCM_16) == SF_FORMAT_PCM_16) {
         printf("Bit depth: 16-bit PCM\n");
     }
     else if ((inFileInfo.format & SF_FORMAT_PCM_24) == SF_FORMAT_PCM_24) {
@@ -168,7 +168,7 @@ bool U3Audio::read_wav_file(std::string fname, size_t index)
     }
     else {
         printf("Could not determine specific bit depth from format flags.\n");
-    }
+    }*/
 
     // Calculate buffer size based on frames, channels, and sample format
     size_t buffer_size = inFileInfo.frames * inFileInfo.channels * sizeof(short); // Assuming 16-bit PCM

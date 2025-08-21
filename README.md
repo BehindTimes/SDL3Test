@@ -18,6 +18,8 @@ SDL3 Mixer doesn't have an official release yet, so you'll have to build from th
 
 You will also need the resources file (MainResources.rsrc) from the creator of the original program this work is based off of.  Place it in the bin folder of this program.
 
+There are also a few files which didn't seem to be uploaded to the repo, but you can find them in the zip under the Releases.
+
 https://github.com/beastie/ultima3
 
 *******************************************************************************

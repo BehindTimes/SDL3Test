@@ -213,7 +213,7 @@ void U3Dialog::createButton(std::function<void(int)> callback)
 	short butWidth = 212;
 	short butHeight = 100;
 
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Buttons.png";
@@ -236,7 +236,7 @@ void U3Dialog::createButton(std::function<void(int)> callback)
 bool U3Dialog::createFont()
 {
 	bool retVal = false;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";
@@ -413,7 +413,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 		{
 			std::string icon_str = std::to_string(temp_data.id);
 			m_utilities->trim(icon_str);
-			std::filesystem::path IconPathMessage = std::filesystem::current_path();
+			std::filesystem::path IconPathMessage = m_resources->m_exePath;
 			IconPathMessage /= ResourceLoc;
 			IconPathMessage /= BinLoc;
 			IconPathMessage /= IconPathMessage;
@@ -447,7 +447,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 /*
 void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
 {
-	std::filesystem::path currentPathMessage = std::filesystem::current_path();
+	std::filesystem::path currentPathMessage = m_resources->m_exePath;
 	currentPathMessage /= ResourceLoc;
 	currentPathMessage /= TextLoc;
 	currentPathMessage /= std::string("MainResources.rsrc_DITL_") + std::to_string(m_message + 1) + std::string(".txt");
@@ -578,7 +578,7 @@ void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
 			{
 				std::string icon_str = linetokens[1];
 				m_utilities->trim(icon_str);
-				std::filesystem::path IconPathMessage = std::filesystem::current_path();
+				std::filesystem::path IconPathMessage = m_resources->m_exePath;
 				IconPathMessage /= ResourceLoc;
 				IconPathMessage /= BinLoc;
 				IconPathMessage /= IconPathMessage;
@@ -1323,7 +1323,7 @@ bool ChooseOptionsDialog::display()
 bool ChooseOptionsDialog::createFont()
 {
 	bool retVal = false;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";
@@ -1497,7 +1497,7 @@ CreateCharacterDialog::~CreateCharacterDialog()
 
 void CreateCharacterDialog::loadPresets()
 {
-	/*std::filesystem::path currentPath = std::filesystem::current_path();
+	/*std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= TextLoc;
 	currentPath /= "MainResources.rsrc_STR#_415_Class Preset Values_";*/
@@ -2164,7 +2164,7 @@ void CreateCharacterDialog::addTextBox(int x, int y, int width)
 bool CreateCharacterDialog::createFont()
 {
 	bool retVal = false;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";

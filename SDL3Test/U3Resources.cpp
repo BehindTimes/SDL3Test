@@ -48,7 +48,7 @@ bool U3Resources::loadPreferences()
 
 		bool valid = true;
 	xmlDocPtr docPtr = nullptr;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 	currentPath /= "settings.xml";
@@ -136,7 +136,7 @@ void U3Resources::savePreferences()
 {
 	LIBXML_TEST_VERSION
 
-		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 	currentPath /= "settings.xml";
@@ -681,7 +681,7 @@ bool U3Resources::init(SDL_Renderer* renderer)
 
 bool U3Resources::loadDemo()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= BinLoc;
 	currentPath /= "MainResources.rsrc_DEMO_400_WhereWhatHow.bin";
@@ -738,7 +738,7 @@ bool U3Resources::createFont()
 {
 	float scaler = (float)m_blockSize / 16.0f;
 
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
 	currentPath /= "FreeSerif.ttf";
@@ -1151,7 +1151,7 @@ void U3Resources::processDoc(xmlDocPtr docPtr, std::vector<std::string >& curVec
 bool U3Resources::loadResourceFile()
 {
 	std::filesystem::path currentPath;
-	currentPath = std::filesystem::current_path();  
+	currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= BinLoc;
 	currentPath /= std::string("MainResources.rsrc");
@@ -1208,7 +1208,7 @@ bool U3Resources::loadPLists()
 
 		bool valid = true;
 	xmlDocPtr docPtr = nullptr;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= PListLoc;
 
@@ -1271,7 +1271,7 @@ void U3Resources::loadButtons()
 
 	m_buttons.resize(9);
 
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Buttons.png";
@@ -1409,7 +1409,7 @@ bool U3Resources::loadCursors()
 	};
 
 	std::filesystem::path currentPath;
-	currentPath = std::filesystem::current_path();
+	currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= CursorsLoc;
 
@@ -1469,7 +1469,7 @@ bool U3Resources::loadImages()
 
 	for (auto& cur_pair : image_pair)
 	{
-		currentPath = std::filesystem::current_path();
+		currentPath = m_exePath;
 		currentPath /= ResourceLoc;
 		currentPath /= ImagesLoc;
 		currentPath /= cur_pair.first;
@@ -1648,7 +1648,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 
 void U3Resources::loadGraphics()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= GraphicsLoc;
 

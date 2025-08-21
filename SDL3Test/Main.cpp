@@ -87,8 +87,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		return 3;
 	}
 
+	const char* szBasePath = SDL_GetBasePath();
+	if (szBasePath == nullptr)
+	{
+		return 4;
+	}
+	m_resources->m_exePath = szBasePath;
+
 	if (!TTF_Init())
 	{
+		SDL_DestroyWindow(window);
+		SDL_Quit();
 		return -1;
 	}
 
@@ -102,6 +111,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
 	if (flags != (result = Mix_Init(flags)))
 	{
+		SDL_DestroyWindow(window);
+		SDL_Quit();
 		return 3;
 	}
 

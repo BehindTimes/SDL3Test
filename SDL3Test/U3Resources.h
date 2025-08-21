@@ -251,6 +251,7 @@ public:
 	std::vector<unsigned char> m_vecResourceData;
     
     bool m_resizeScreen;
+	std::filesystem::path m_exePath;
 
 private:
 	void LoadResource(std::string strFile);

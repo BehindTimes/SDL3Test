@@ -188,7 +188,7 @@ bool UltimaDungeon::HandleDefaultKeyPress(SDL_Keycode key)
 
 bool UltimaDungeon::loadGraphics()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "DungeonShapes.png";
@@ -200,7 +200,7 @@ bool UltimaDungeon::loadGraphics()
 	}
 	SDL_SetTextureScaleMode(m_texDungeonShapes, SDL_SCALEMODE_NEAREST);
 
-	/*currentPath = std::filesystem::current_path();
+	/*currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Fountain.jpg";
@@ -212,7 +212,7 @@ bool UltimaDungeon::loadGraphics()
 	}
 	SDL_SetTextureScaleMode(m_texFountain, SDL_SCALEMODE_NEAREST);
 
-	currentPath = std::filesystem::current_path();
+	currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Shrine.jpg";
@@ -224,7 +224,7 @@ bool UltimaDungeon::loadGraphics()
 	}
 	SDL_SetTextureScaleMode(m_texShrine, SDL_SCALEMODE_NEAREST);
 
-	currentPath = std::filesystem::current_path();
+	currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "TimeLord.jpg";
@@ -237,7 +237,7 @@ bool UltimaDungeon::loadGraphics()
 
 	SDL_SetTextureScaleMode(m_texTimeLord, SDL_SCALEMODE_NEAREST);
 
-	currentPath = std::filesystem::current_path();
+	currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= ImagesLoc;
 	currentPath /= "Rod.jpg";

@@ -131,13 +131,13 @@ U3Misc::~U3Misc()
 
 bool U3Misc::OpenRstr()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 
 	std::filesystem::path rosterPath = currentPath / "Roster.ult";
 
-	std::filesystem::path resourcePath = std::filesystem::current_path();
+	std::filesystem::path resourcePath = m_resources->m_exePath;
 	resourcePath /= ResourceLoc;
 	resourcePath /= BinLoc;
 
@@ -206,12 +206,12 @@ bool U3Misc::OpenRstr()
 
 void U3Misc::PutMiscStuff() const
 {
-	std::filesystem::path moongatePath = std::filesystem::current_path();
+	std::filesystem::path moongatePath = m_resources->m_exePath;
 	moongatePath /= ResourceLoc;
 	moongatePath /= SaveLoc;
 	moongatePath /= std::string("Moongate_Locations.ult");
 
-	std::filesystem::path locationPath = std::filesystem::current_path();
+	std::filesystem::path locationPath = m_resources->m_exePath;
 	locationPath /= ResourceLoc;
 	locationPath /= SaveLoc;
 	locationPath /= std::string("Location_Table.ult");
@@ -290,7 +290,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 			}
 			else
 			{
-				std::filesystem::path currentPath = std::filesystem::current_path();
+				std::filesystem::path currentPath = m_resources->m_exePath;
 
 				currentPath /= ResourceLoc;
 				currentPath /= SaveLoc;
@@ -323,7 +323,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 			}
 			else
 			{
-				std::filesystem::path currentPath = std::filesystem::current_path();
+				std::filesystem::path currentPath = m_resources->m_exePath;
 
 				currentPath /= ResourceLoc;
 				currentPath /= SaveLoc;
@@ -361,7 +361,7 @@ void U3Misc::GetMiscStuff(bool defaultData)
 
 bool U3Misc::PutRoster() const
 {
-	std::filesystem::path rosterPath = std::filesystem::current_path();
+	std::filesystem::path rosterPath = m_resources->m_exePath;
 	rosterPath /= ResourceLoc;
 	rosterPath /= SaveLoc;
 	rosterPath /= std::string("Roster.ult");
@@ -394,7 +394,7 @@ bool U3Misc::PutRoster() const
 
 bool U3Misc::PutParty() const
 {
-	std::filesystem::path partyPath = std::filesystem::current_path();
+	std::filesystem::path partyPath = m_resources->m_exePath;
 	partyPath /= ResourceLoc;
 	partyPath /= SaveLoc;
 	partyPath /= std::string("Party.ult");
@@ -425,7 +425,7 @@ bool U3Misc::PutSosaria()
 	}
 	int mapLength = m_misc->m_mapSize * m_misc->m_mapSize;
 
-	std::filesystem::path mapPath = std::filesystem::current_path();
+	std::filesystem::path mapPath = m_resources->m_exePath;
 	mapPath /= ResourceLoc;
 	mapPath /= SaveLoc;
 	mapPath /= std::string("Sosaria_Current.ult");
@@ -458,7 +458,7 @@ bool U3Misc::PutSosaria()
 
 	SDL_CloseIO(file);
 
-	std::filesystem::path monsterPath = std::filesystem::current_path();
+	std::filesystem::path monsterPath = m_resources->m_exePath;
 	monsterPath /= ResourceLoc;
 	monsterPath /= SaveLoc;
 	monsterPath /= std::string("Sosaria_Monsters.ult");
@@ -483,7 +483,7 @@ bool U3Misc::PutSosaria()
 
 bool U3Misc::GetRoster()
 {
-	std::filesystem::path rosterPath = std::filesystem::current_path();
+	std::filesystem::path rosterPath = m_resources->m_exePath;
 	rosterPath /= ResourceLoc;
 	rosterPath /= SaveLoc;
 	rosterPath /= std::string("Roster.ult");
@@ -523,7 +523,7 @@ bool U3Misc::GetRoster()
 
 bool U3Misc::GetParty()
 {
-	std::filesystem::path partyPath = std::filesystem::current_path();
+	std::filesystem::path partyPath = m_resources->m_exePath;
 	partyPath /= ResourceLoc;
 	partyPath /= SaveLoc;
 	partyPath /= std::string("Party.ult");
@@ -606,9 +606,9 @@ void U3Misc::LoadUltimaMap(short map)
 	}
 
 	m_map_id = map;
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
-	std::filesystem::path monsterPath = std::filesystem::current_path();
+	std::filesystem::path monsterPath = m_resources->m_exePath;
 	monsterPath /= ResourceLoc;
 
 	if (map == 19)
@@ -4383,7 +4383,7 @@ bool  U3Misc::HandleDeadResponse1()
 
 void U3Misc::ResetSosaria()
 {
-	std::filesystem::path currentPath = std::filesystem::current_path();
+	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= SaveLoc;
 

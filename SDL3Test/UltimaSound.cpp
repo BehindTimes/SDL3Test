@@ -361,7 +361,7 @@ bool U3Audio::initMusic()
 
 	for (size_t index = 0; index < m_music.size(); ++index)
 	{
-		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::path currentPath = m_resources->m_exePath;
 		currentPath /= ResourceLoc;
 		currentPath /= MusicLoc;
 		currentPath /= Standard;
@@ -378,7 +378,7 @@ bool U3Audio::initMusic()
 
 	for (size_t index = 0; index < sfxList.size(); ++index)
 	{
-		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::filesystem::path currentPath = m_resources->m_exePath;
 		currentPath /= ResourceLoc;
 		currentPath /= SfxLoc;
 		currentPath /= sfxList[index];
@@ -406,7 +406,7 @@ bool U3Audio::initMusic()
     
     for(size_t index = 0; index < sfxList.size(); ++index)
     {
-        std::filesystem::path currentPath = std::filesystem::current_path();
+        std::filesystem::path currentPath = m_resources->m_exePath;
         currentPath /= ResourceLoc;
         currentPath /= SfxLoc;
         currentPath /= sfxList[index];
@@ -416,7 +416,7 @@ bool U3Audio::initMusic()
     
     for(size_t index = 0; index < musicList.size(); ++index)
     {
-        std::filesystem::path currentPath = std::filesystem::current_path();
+        std::filesystem::path currentPath = m_resources->m_exePath;
         currentPath /= ResourceLoc;
         currentPath /= MusicLoc;
         currentPath /= Standard;

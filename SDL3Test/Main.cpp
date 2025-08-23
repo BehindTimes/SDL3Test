@@ -1100,6 +1100,7 @@ void Game()
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 1;
 #endif
 
+	static bool showFPS = false;
 	bool quit = false;
 	bool gInterrupt = false;
 	bool updateMouse = false;
@@ -1159,6 +1160,10 @@ void Game()
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
+				}
+				if (event.key.key == SDLK_F)
+				{
+					showFPS = !showFPS;
 				}
 			}
 			else if (event.key.key == SDLK_ESCAPE)
@@ -1225,7 +1230,10 @@ void Game()
 
 		m_graphics->render(event, deltaTime);
 
-		m_resources->displayFPS(fps);
+		if (showFPS)
+		{
+			m_resources->displayFPS(fps);
+		}
 
 		SDL_RenderPresent(renderer);
 

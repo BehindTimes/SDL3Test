@@ -22,6 +22,8 @@ There are also a few files which didn't seem to be uploaded to the repo, but you
 
 https://github.com/beastie/ultima3
 
+For debugging purposes, press Alt-F to show the fps.
+
 *******************************************************************************
 
 As an alternative to SDL Mixer 3, I added some barebones support for OpenAL.

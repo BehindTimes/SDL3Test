@@ -4038,6 +4038,11 @@ void U3Misc::StealFail()
 
 bool U3Misc::StealFailCallback()
 {
+	if (m_callbackStack.size() > 0)
+	{
+		m_callbackStack.pop();
+	}
+
 	m_audio->playSfx(SFX_ALARM);
 	return false;
 }

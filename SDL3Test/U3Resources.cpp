@@ -3610,6 +3610,13 @@ void U3Resources::ShowMonsters()
 				DrawMasked(m_graphics->m_maskArray[offset], xm, ym);
 				m_graphics->m_maskArray[offset] = 255;
 			}
+			if (xm == m_misc->m_ballX && ym == m_misc->m_ballY)
+			{
+				if (m_misc->m_ballVal > 0)
+				{
+					DrawMasked(m_misc->m_ballVal, xm, ym);
+				}
+			}
 			offset++;
 		}
 	}

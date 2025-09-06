@@ -84,7 +84,10 @@ U3Misc::U3Misc() :
 	m_demoSong(0),
 	m_mouseDown(false),
 	m_elapsedMouseTime(0),
-	m_inTransaction(false)
+	m_inTransaction(false),
+	m_ballX(-1),
+	m_ballY(-1),
+	m_ballVal(-1)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -3553,6 +3556,21 @@ short U3Misc::GetXY(short x, short y) // $7E18
 void U3Misc::PutXY(short a, short x, short y)
 {
 	m_resources->m_TileArray[y * 11 + x] = (unsigned char)a;
+	if (a == 0x78 || a == 0x7a)
+	{
+		m_ballVal = a;
+		m_ballX = x;
+		m_ballY = y;
+	}
+	else
+	{
+		if (x == m_ballX && y == m_ballY)
+		{
+			x = -1;
+			y = -1;
+			m_ballVal = -1;
+		}
+	}
 }
 
 bool U3Misc::moveshoot2Callback()
@@ -3562,6 +3580,9 @@ bool U3Misc::moveshoot2Callback()
 		m_callbackStack.pop();
 	}
 	PutXY(m_value, m_xs, m_ys);
+	m_ballVal = -1;
+	m_ballX = -1;
+	m_ballY = -1;
 	if (m_xs == 5 && m_ys == 5)
 	{
 		m_callbackStack.push(std::bind(&U3Misc::movemon, this));

@@ -69,6 +69,7 @@ public:
 
 	unsigned char GetXYTile(short x, short y);
 	unsigned char GetXYVal(short x, short y);
+	short GetXY(short x, short y);
 	void PutXYVal(unsigned char value, unsigned char x, unsigned char y);
 	void PutXYTile(short value, short x, short y);
 	bool CheckAlive(short member) const;
@@ -241,6 +242,9 @@ public:
 	bool m_mouseDown;
 	Uint64 m_elapsedMouseTime;
 	bool m_inTransaction;
+	short m_ballX;
+	short m_ballY;
+	short m_ballVal;
 
 private:
 	void Attack();
@@ -501,7 +505,7 @@ private:
 	bool HandleLavaCallback1();
 	bool movemon();
 	bool moveoutside();
-	short GetXY(short x, short y);
+	
 	void PutXY(short a, short x, short y);
 	bool moveshoot2Callback();
 	bool movemonCallback();

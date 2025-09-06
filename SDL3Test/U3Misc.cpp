@@ -3738,6 +3738,7 @@ bool U3Misc::movemon() // $7A85
 	m_moveMonsterOffset--;
 	if (m_moveMonsterOffset < 0)
 	{
+		m_inputType = InputType::Default;
 		return false;
 	}
 	if (m_Monsters[m_moveMonsterOffset] == 0)

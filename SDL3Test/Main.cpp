@@ -1094,10 +1094,13 @@ void Game()
 	//m_misc->m_xpos = 10;
 	//m_misc->m_ypos = 10;
 	//m_misc->m_Player[1][17] = 'A';
+	m_misc->m_Player[1][30] = 10;
+	m_misc->m_Player[2][30] = 10;
+	m_misc->m_Player[3][30] = 10;
 	m_misc->m_Player[1][14] = 0xFF;
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
-	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 1;
+	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;
 #endif
 
 	static bool showFPS = false;

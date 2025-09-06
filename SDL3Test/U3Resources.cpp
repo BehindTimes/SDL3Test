@@ -681,33 +681,8 @@ bool U3Resources::init(SDL_Renderer* renderer)
 
 bool U3Resources::loadDemo()
 {
-	std::filesystem::path currentPath = m_exePath;
-	currentPath /= ResourceLoc;
-	currentPath /= BinLoc;
-	currentPath /= "MainResources.rsrc_DEMO_400_WhereWhatHow.bin";
-
-	std::string strTemp = m_utilities->PathToSDLString(currentPath);
-	if (strTemp.empty())
-	{
-		return false;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-	if (!file)
-	{
-		return false;
-	}
-	Sint64 fSize = SDL_GetIOSize(file);
-	if (fSize > 0)
-	{
-		m_demoData.resize(fSize);
-		SDL_ReadIO(file, m_demoData.data(), fSize);
-	}
-	SDL_CloseIO(file);
-
-	if (fSize != 1280)
-	{
-		return false;
-	}
+	m_demoData.clear();
+	std::copy(m_vecResourceData.begin() + 0x1d26, m_vecResourceData.begin() + 0x2226, std::back_inserter(m_demoData));
 
 	memcpy(m_TileArray, m_demoData.data() + 1024, sizeof(unsigned char) * 128);
 	memcpy(m_demoBgndTiles, m_TileArray, sizeof(unsigned char) * 114);

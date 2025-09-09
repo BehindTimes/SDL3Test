@@ -1767,7 +1767,7 @@ bool UltimaDungeon::MarkCallback()
 		return false;
 	}
 	m_misc->m_rosNum = m_misc->m_Party[PARTY_ROSTERPOS1 + chNum];
-	m_misc->m_Player[chNum][14] = m_misc->m_Player[chNum][14] | bits[(m_misc->m_xpos & 3) + 4];
+	m_misc->m_Player[m_misc->m_rosNum][14] = m_misc->m_Player[m_misc->m_rosNum][14] | bits[(m_misc->m_xpos & 3) + 4];
 
 	m_misc->InverseCharDetails(chNum, true);
 	m_resources->m_inverses.elapsedTileTime = 0;

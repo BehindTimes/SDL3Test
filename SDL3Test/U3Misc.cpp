@@ -6364,7 +6364,7 @@ void U3Misc::SpawnMonster() // $7A0C
 		allFirst = true;
 		for (chnum = 0; chnum < 4; chnum++)   // is everyone hpmax = 150?
 		{
-			hpmax = m_Player[m_Party[chnum + 6]][28] * 256 + m_Player[m_Party[chnum + 6]][29];
+			hpmax = m_Player[m_Party[chnum + PARTY_ROSTERPOS1]][28] * 256 + m_Player[m_Party[chnum + PARTY_ROSTERPOS1]][29];
 			if (hpmax > 150)
 			{
 				allFirst = false;

@@ -51,5 +51,7 @@ TO DO: In the future, something similar will be there to allow easy replacement 
 Controls:
 
 Escape quits the game regardless of where you are.  Yes, this is often a cancel selection or a menu hotkey in most games, but for the time being, it just exits.
+
 To bring up the Options screen, press tab.
+
 For debugging purposes, press Alt-F to show the fps.

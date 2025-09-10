@@ -22,8 +22,6 @@ There are also a few files which didn't seem to be uploaded to the repo, but you
 
 https://github.com/beastie/ultima3
 
-For debugging purposes, press Alt-F to show the fps.
-
 *******************************************************************************
 
 As an alternative to SDL Mixer 3, I added some barebones support for OpenAL.
@@ -39,3 +37,19 @@ libogg
 libvorbis
 
 OpenAL
+
+*******************************************************************************
+
+Adding new tilesets:
+
+In the graphics directory, provided the image is a multiple of 12x16 (e.g. 192x256 for 16x16 tiles), and ends with **-Tiles**.gif/png, the game should pick it up automatically.  The same holds true for Font, Mini, and UI images.  But, you will need a Tiles image for the others to work.
+
+TO DO: In the future, something similar will be there to allow easy replacement of audio.  For the time being, only the default ogg files are played, but you can replace them.  The ogg files currently need to be 22050 Hz and Mono channel in order to work with OpenAL.  (I believe the SDL Mixer version has more support.)
+
+*******************************************************************************
+
+Controls:
+
+Escape quits the game regardless of where you are.  Yes, this is often a cancel selection or a menu hotkey in most games, but for the time being, it just exits.
+To bring up the Options screen, press tab.
+For debugging purposes, press Alt-F to show the fps.

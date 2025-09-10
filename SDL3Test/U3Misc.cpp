@@ -6554,33 +6554,33 @@ void U3Misc::DoAutoHeal() const
 					whoToHeal = c;
 				}
 			}
-			if (whoToHeal > -1)
+		}
+		if (whoToHeal > -1)
+		{
+			for (c = 0; c <= 3; c++)
 			{
-				for (c = 0; c <= 3; c++)
+				if (CheckAlive(c))
 				{
-					if (CheckAlive(c))
+					clss = m_Player[m_Party[PARTY_ROSTERPOS1 + c]][23];
+					isMulti = (clss == m_careerTable[8] || clss == m_careerTable[10]);
+					isCler = (clss == m_careerTable[1] || clss == m_careerTable[4] || clss == m_careerTable[7] || isMulti);
+					if ((isCler || isMulti) && m_Player[m_Party[PARTY_ROSTERPOS1 + c]][25] >= 10)
 					{
-						clss = m_Player[m_Party[PARTY_ROSTERPOS1 + c]][23];
-						isMulti = (clss == m_careerTable[8] || clss == m_careerTable[10]);
-						isCler = (clss == m_careerTable[1] || clss == m_careerTable[4] || clss == m_careerTable[7] || isMulti);
-						if ((isCler || isMulti) && m_Player[m_Party[PARTY_ROSTERPOS1 + c]][25] >= 10)
-						{
-							whoToCast = c;
-							whoToCastHealIsMulti = isMulti;
-						}
+						whoToCast = c;
+						whoToCastHealIsMulti = isMulti;
 					}
 				}
-				if (whoToCast > -1)
+			}
+			if (whoToCast > -1)
+			{
+				m_misc->m_InputDeque.push_back(SDLK_1 + whoToHeal);
+				if (whoToCastHealIsMulti)
 				{
-					m_misc->m_InputDeque.push_back(SDLK_1 + whoToHeal);
-					if (whoToCastHealIsMulti)
-					{
-						m_misc->m_InputDeque.push_back(SDLK_C);
-					}
-					m_misc->m_InputDeque.push_back(SDLK_C);
-					m_misc->m_InputDeque.push_back(SDLK_1 + whoToCast);
 					m_misc->m_InputDeque.push_back(SDLK_C);
 				}
+				m_misc->m_InputDeque.push_back(SDLK_C);
+				m_misc->m_InputDeque.push_back(SDLK_1 + whoToCast);
+				m_misc->m_InputDeque.push_back(SDLK_C);
 			}
 		}
 	}

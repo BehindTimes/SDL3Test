@@ -124,6 +124,30 @@ bool U3Resources::loadPreferences()
 			m_preferences.theme = curMap["Theme"];
 			changeTheme(m_preferences.theme);
 		}
+		if (curMap.find("auto_heal_amount") != curMap.end())
+		{
+			int val = std::stoi(curMap["auto_heal_amount"]);
+			if (val >= 0 && val < 10000)
+			{
+				m_preferences.auto_heal_amount = val;
+			}
+		}
+		if (curMap.find("volume_music") != curMap.end())
+		{
+			int val = std::stoi(curMap["volume_music"]);
+			if (val >= 0 && val <= 100)
+			{
+				m_preferences.volume_music = val;
+			}
+		}
+		if (curMap.find("volume_sfx") != curMap.end())
+		{
+			int val = std::stoi(curMap["volume_sfx"]);
+			if (val >= 0 && val <= 100)
+			{
+				m_preferences.volume_music = val;
+			}
+		}
 	}
 	catch ([[maybe_unused]] const std::exception& e)
 	{
@@ -142,6 +166,7 @@ void U3Resources::savePreferences()
 	currentPath /= "settings.xml";
 
 	xmlTextWriterPtr writer;
+	std::string str_number;
 	writer = xmlNewTextWriterFilename(currentPath.string().c_str(), 0);
 	xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
 	xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
@@ -155,6 +180,12 @@ void U3Resources::savePreferences()
 	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_heal", BAD_CAST(m_preferences.auto_heal ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "play_music", BAD_CAST(m_preferences.play_music ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "play_sfx", BAD_CAST(m_preferences.play_sfx ? "1" : "0"));
+	str_number = std::to_string(m_preferences.auto_heal_amount);
+	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_heal_amount", BAD_CAST(str_number.c_str()));
+	str_number = std::to_string(m_preferences.volume_music);
+	xmlTextWriterWriteElement(writer, BAD_CAST  "volume_music", BAD_CAST(str_number.c_str()));
+	str_number = std::to_string(m_preferences.volume_sfx);
+	xmlTextWriterWriteElement(writer, BAD_CAST  "volume_sfx", BAD_CAST(str_number.c_str()));
 	xmlTextWriterEndElement(writer);
 	xmlTextWriterEndDocument(writer);
 	xmlFreeTextWriter(writer);

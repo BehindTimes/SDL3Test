@@ -6540,7 +6540,7 @@ void U3Misc::DoAutoHeal() const
 	if (autoheal)
 	{
 		// pick someone to heal (lowest hp as long as need 25 hp or more)
-		lowest = 750; // To do (need to add threshold)
+		lowest = m_resources->m_preferences.auto_heal_amount; // To do (need to add threshold)
 		for (c = 0; c <= 3; c++)
 		{
 

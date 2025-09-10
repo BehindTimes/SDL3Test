@@ -34,7 +34,10 @@ struct U3Preferences
 		auto_combat(true),
 		auto_heal(true),
 		play_music(true),
-		play_sfx(true)
+		play_sfx(true),
+		auto_heal_amount(750),
+		volume_music(100),
+		volume_sfx(100)
 	{
 	}
 
@@ -48,6 +51,9 @@ struct U3Preferences
 	bool allow_diagonal;
 	bool play_music;
 	bool play_sfx;
+	int auto_heal_amount;
+	int volume_music;
+	int volume_sfx;
 };
 
 struct InverseStruct

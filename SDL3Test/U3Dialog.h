@@ -105,7 +105,10 @@ struct codData
 		play_music(false),
 		play_sfx(false),
 		is_full_screen(false),
-		allow_diagonals(false)
+		allow_diagonals(false),
+		auto_heal_amount(750),
+		volume_music(100),
+		volume_sfx(100)
 	{
 	}
 	int theme;
@@ -118,6 +121,9 @@ struct codData
 	bool play_sfx;
 	bool is_full_screen;
 	bool allow_diagonals;
+	int auto_heal_amount;
+	int volume_music;
+	int volume_sfx;
 };
 
 class ChooseOptionsDialog

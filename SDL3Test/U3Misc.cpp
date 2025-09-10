@@ -3421,8 +3421,8 @@ bool U3Misc::FinalizeHealingCallback()
 		}
 		break;
 	case 1:
-		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][26] = m_Player[m_Party[5 + m_input_num]][28];
-		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][27] = m_Player[m_Party[5 + m_input_num]][29];
+		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][26] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][28];
+		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][27] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][29];
 		break;
 	case 2:
 		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'D')

@@ -2816,9 +2816,14 @@ void U3Resources::DrawDemo(Uint64 curTick)
 
 	SDL_SetRenderDrawColor(m_renderer, 64, 255, 64, 255);
 
-	for (shapeRect.y = m_blockSize * 11.0f + screenOffsetY; shapeRect.y < (m_blockSize * 23.0f) + screenOffsetY; shapeRect.y += shapSize)
+	unsigned char xpos = 0;
+	unsigned char ypos = 0;
+	const unsigned char MAX_DEMO_X = 19;
+	const unsigned char MAX_DEMO_Y = 6;
+
+	for (shapeRect.y = m_blockSize * 11.0f + screenOffsetY, ypos = 0; shapeRect.y < (m_blockSize * 23.0f) + screenOffsetY; shapeRect.y += shapSize, ypos++)
 	{
-		for (shapeRect.x = (float)m_blockSize + screenOffsetX; shapeRect.x < (m_blockSize * 39.0f) + screenOffsetX; shapeRect.x += shapSize)
+		for (shapeRect.x = (float)m_blockSize + screenOffsetX, xpos = 0; shapeRect.x < (m_blockSize * 39.0f) + screenOffsetX; shapeRect.x += shapSize, xpos++)
 		{
 			unsigned char thisTile = m_TileArray[demoffset];
 
@@ -2846,6 +2851,45 @@ void U3Resources::DrawDemo(Uint64 curTick)
 						realTile += 16;
 					}
 					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+					if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
+					{
+						if (ypos > 0)
+						{
+							unsigned char tempval = (ypos - 1) * MAX_DEMO_X + xpos;
+							unsigned char temptile = m_demoBgndTiles[tempval];
+							if (temptile >= 2 && temptile <= 16)
+							{
+								SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &shapeRect);
+							}
+						}
+						if (ypos < (MAX_DEMO_Y - 1))
+						{
+							unsigned char tempval = (ypos + 1) * MAX_DEMO_X + xpos;
+							unsigned char temptile = m_demoBgndTiles[tempval];
+							if (temptile >= 2 && temptile <= 16)
+							{
+								SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &shapeRect);
+							}
+						}
+						if (xpos > 0)
+						{
+							unsigned char tempval = ypos * MAX_DEMO_X + (xpos - 1);
+							unsigned char temptile = m_demoBgndTiles[tempval];
+							if (temptile >= 2 && temptile <= 16)
+							{
+								SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &shapeRect);
+							}
+						}
+						if (xpos < (MAX_DEMO_X - 1))
+						{
+							unsigned char tempval = ypos * MAX_DEMO_X + (xpos + 1);
+							unsigned char temptile = m_demoBgndTiles[tempval];
+							if (temptile >= 2 && temptile <= 16)
+							{
+								SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &shapeRect);
+							}
+						}
+					}
 				}
 			}
 			else
@@ -2858,6 +2902,46 @@ void U3Resources::DrawDemo(Uint64 curTick)
 					realTile += 16;
 				}
 				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+
+				if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
+				{
+					if (ypos > 0)
+					{
+						unsigned char tempval = (ypos - 1) * MAX_DEMO_X + xpos;
+						unsigned char temptile = m_demoBgndTiles[tempval];
+						if (temptile >= 2 && temptile <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &shapeRect);
+						}
+					}
+					if (ypos < (MAX_DEMO_Y - 1))
+					{
+						unsigned char tempval = (ypos + 1) * MAX_DEMO_X + xpos;
+						unsigned char temptile = m_demoBgndTiles[tempval];
+						if (temptile >= 2 && temptile <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &shapeRect);
+						}
+					}
+					if (xpos > 0)
+					{
+						unsigned char tempval = ypos * MAX_DEMO_X + (xpos - 1);
+						unsigned char temptile = m_demoBgndTiles[tempval];
+						if (temptile >= 2 && temptile <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &shapeRect);
+						}
+					}
+					if (xpos < (MAX_DEMO_X - 1))
+					{
+						unsigned char tempval = ypos * MAX_DEMO_X + (xpos + 1);
+						unsigned char temptile = m_demoBgndTiles[tempval];
+						if (temptile >= 2 && temptile <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &shapeRect);
+						}
+					}
+				}
 
 				tileY = (thisTile / 2) % TILES_NUM_Y;
 				tileX = ((thisTile / 2) / TILES_NUM_Y) * 2;

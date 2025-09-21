@@ -1,6 +1,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
+#include <algorithm>
 #include <libxml/xmlwriter.h>
 #include <iostream>
 #include <iterator>

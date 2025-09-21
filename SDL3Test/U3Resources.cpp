@@ -3483,7 +3483,7 @@ void U3Resources::DrawTiles()
 			{
 				if (ypos > 0)
 				{
-					int tempval = (ypos - 1) * 11 + xpos;
+					unsigned char tempval = (ypos - 1) * 11 + xpos;
 					unsigned char temptile = m_TileArray[tempval];
 					if (temptile >= 2 && temptile <= 16)
 					{
@@ -3491,8 +3491,8 @@ void U3Resources::DrawTiles()
 					}
 					else if (temptile == 0x48)
 					{
-						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos - 1));
-						if (tempval >= 2 && tempval <= 16)
+						tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos - 1));
+						if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 						{
 							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &offRect);
 						}
@@ -3501,14 +3501,14 @@ void U3Resources::DrawTiles()
 				else
 				{
 					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, m_misc->m_ypos - 6);
-					if (tempval >= 2 && tempval <= 16)
+					if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 					{
 						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &offRect);
 					}
 				}
 				if (ypos < 10)
 				{
-					int tempval = (ypos + 1) * 11 + xpos;
+					unsigned char tempval = (ypos + 1) * 11 + xpos;
 					unsigned char temptile = m_TileArray[tempval];
 					if (temptile >= 2 && temptile <= 16)
 					{
@@ -3516,8 +3516,8 @@ void U3Resources::DrawTiles()
 					}
 					else if (temptile == 0x48)
 					{
-						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos + 1));
-						if (tempval >= 2 && tempval <= 16)
+						tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos + 1));
+						if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 						{
 							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &offRect);
 						}
@@ -3526,14 +3526,14 @@ void U3Resources::DrawTiles()
 				else
 				{
 					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, m_misc->m_ypos + 6);
-					if (tempval >= 2 && tempval <= 16)
+					if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 					{
 						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &offRect);
 					}
 				}
 				if (xpos > 0)
 				{
-					int tempval = ypos * 11 + (xpos - 1);
+					unsigned char tempval = ypos * 11 + (xpos - 1);
 					unsigned char temptile = m_TileArray[tempval];
 					if (temptile >= 2 && temptile <= 16)
 					{
@@ -3541,8 +3541,8 @@ void U3Resources::DrawTiles()
 					}
 					else if (temptile == 0x48)
 					{
-						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos - 1), (m_misc->m_ypos - 5) + ypos);
-						if (tempval >= 2 && tempval <= 16)
+						tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos - 1), (m_misc->m_ypos - 5) + ypos);
+						if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 						{
 							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &offRect);
 						}
@@ -3551,14 +3551,14 @@ void U3Resources::DrawTiles()
 				else
 				{
 					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 6), (m_misc->m_ypos - 5) + ypos);
-					if (tempval >= 2 && tempval <= 16)
+					if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 					{
 						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &offRect);
 					}
 				}
 				if (xpos < 10)
 				{
-					int tempval = ypos * 11 + (xpos + 1);
+					unsigned char tempval = ypos * 11 + (xpos + 1);
 					unsigned char temptile = m_TileArray[tempval];
 					if (temptile >= 2 && temptile <= 16)
 					{
@@ -3566,8 +3566,8 @@ void U3Resources::DrawTiles()
 					}
 					else if (temptile == 0x48)
 					{
-						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos + 1), (m_misc->m_ypos - 5) + ypos);
-						if (tempval >= 2 && tempval <= 16)
+						tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos + 1), (m_misc->m_ypos - 5) + ypos);
+						if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 						{
 							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &offRect);
 						}
@@ -3576,7 +3576,7 @@ void U3Resources::DrawTiles()
 				else
 				{
 					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos + 6), (m_misc->m_ypos - 5) + ypos);
-					if (tempval >= 2 && tempval <= 16)
+					if ((tempval >= 2 && tempval <= 32) || (tempval >= 64 && tempval <= 124))
 					{
 						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &offRect);
 					}

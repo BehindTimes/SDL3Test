@@ -40,6 +40,17 @@ OpenAL
 
 *******************************************************************************
 
+Building for non Visual Studio:
+
+Navigate to the directory of CMakeLists.txt
+
+mkdir build
+cd build
+cmake ../
+make
+
+*******************************************************************************
+
 Adding new tilesets:
 
 In the graphics directory, provided the image is a multiple of 12x16 (e.g. 192x256 for 16x16 tiles), and ends with **-Tiles**.gif/png, the game should pick it up automatically.  The same holds true for Font, Mini, and UI images.  But, you will need a Tiles image for the others to work.

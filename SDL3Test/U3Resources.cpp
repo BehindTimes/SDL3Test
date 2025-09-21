@@ -38,6 +38,9 @@ constexpr int TILES_NUM_Y = 16;
 constexpr int MINITILES_NUM_X = 64;
 constexpr int MINITILES_NUM_Y = 1;
 
+constexpr int EXTENDED_TILES_NUM_X = 4;
+constexpr int EXTENDED_TILES_NUM_Y = 1;
+
 constexpr int NUM_PORTRAITS = 40;
 
 void backToMenu(int button);
@@ -331,6 +334,11 @@ U3Resources::~U3Resources()
 			curTex = nullptr;
 		}
 		for (auto& curTex : mode.second.mini_tiles)
+		{
+			SDL_DestroyTexture(curTex);
+			curTex = nullptr;
+		}
+		for (auto& curTex : mode.second.extended_tiles)
 		{
 			SDL_DestroyTexture(curTex);
 			curTex = nullptr;
@@ -1543,6 +1551,56 @@ void U3Resources::GetTileRectForIndex(int tileNum, SDL_FRect& myRect, float tile
 	myRect.h = tileYSize;
 }
 
+void U3Resources::loadExtendedTiles(ModeGraphics& curGraphics, std::string strFile)
+{
+	float xSize;
+	float ySize;
+
+	curGraphics.extended_tiles.resize(static_cast<size_t>(EXTENDED_TILES_NUM_X) * EXTENDED_TILES_NUM_Y);
+
+	SDL_Texture* curTexture = nullptr;
+
+	curTexture = IMG_LoadTexture(m_renderer, strFile.c_str());
+	SDL_SetTextureScaleMode(curTexture, SDL_SCALEMODE_NEAREST);
+	SDL_GetTextureSize(curTexture, &xSize, &ySize);
+	float tileXSize = xSize / EXTENDED_TILES_NUM_X;
+	float tileYSize = ySize / EXTENDED_TILES_NUM_Y;
+
+	// Forcing the tiles to be 128x128.  This will allow for consistent smooth scrolling on super small tiles.
+	int tempWidth = TEXTURE_SIZE_X;
+	int tempHeight = TEXTURE_SIZE_Y;
+
+	for (size_t index = 0; index < static_cast<size_t>(EXTENDED_TILES_NUM_X) * EXTENDED_TILES_NUM_Y; ++index)
+	{
+		curGraphics.extended_tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+		SDL_SetTextureScaleMode(curGraphics.extended_tiles[index], SDL_SCALEMODE_NEAREST);
+	}
+
+	int curVecPos = 0;
+	SDL_FRect frameRect;
+
+	for (int indexX = 0; indexX < EXTENDED_TILES_NUM_X; ++indexX)
+	{
+		for (int indexY = 0; indexY < EXTENDED_TILES_NUM_Y; ++indexY)
+		{
+			GetTileRectForIndex(curVecPos, frameRect, tileXSize, tileYSize, 1);
+			SDL_SetRenderTarget(m_renderer, curGraphics.extended_tiles[curVecPos]);
+			SDL_RenderClear(m_renderer);
+			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+
+			curVecPos++;
+		}
+	}
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+
+	SDL_SetRenderTarget(m_renderer, NULL);
+
+	if (curTexture)
+	{
+		SDL_DestroyTexture(curTexture);
+	}
+}
+
 void U3Resources::loadMiniTiles(ModeGraphics& curGraphics, std::string strFile)
 {
 	float xSize;
@@ -1702,6 +1760,10 @@ void U3Resources::loadGraphics()
 		else if (type == "mini")
 		{
 			loadMiniTiles(m_allGraphics[mode], dirEntry.path().string());
+		}
+		else if (type == "extiles")
+		{
+			loadExtendedTiles(m_allGraphics[mode], dirEntry.path().string());
 		}
 		else if (type == "tiles")
 		{
@@ -3392,9 +3454,12 @@ void U3Resources::DrawTiles()
 	shapeRect.w = shapSize;
 	shapeRect.h = shapSize;
 
-	for (shapeRect.y = 0; shapeRect.y < final; shapeRect.y += shapSize)
+	unsigned char xpos = 0;
+	unsigned char ypos = 0;
+
+	for (shapeRect.y = 0, ypos = 0; shapeRect.y < final; shapeRect.y += shapSize, ypos++)
 	{
-		for (shapeRect.x = 0; shapeRect.x < final; shapeRect.x += shapSize)
+		for (shapeRect.x = 0, xpos = 0; shapeRect.x < final; shapeRect.x += shapSize, xpos++)
 		{
 			unsigned char tile = m_TileArray[offset];
 			int realTile = GetRealTile(tile);
@@ -3414,6 +3479,109 @@ void U3Resources::DrawTiles()
 				realTile += 16;
 			}
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
+			if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
+			{
+				if (ypos > 0)
+				{
+					int tempval = (ypos - 1) * 11 + xpos;
+					unsigned char temptile = m_TileArray[tempval];
+					if (temptile >= 2 && temptile <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &offRect);
+					}
+					else if (temptile == 0x48)
+					{
+						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos - 1));
+						if (tempval >= 2 && tempval <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &offRect);
+						}
+					}
+				}
+				else
+				{
+					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, m_misc->m_ypos - 6);
+					if (tempval >= 2 && tempval <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[0], NULL, &offRect);
+					}
+				}
+				if (ypos < 10)
+				{
+					int tempval = (ypos + 1) * 11 + xpos;
+					unsigned char temptile = m_TileArray[tempval];
+					if (temptile >= 2 && temptile <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &offRect);
+					}
+					else if (temptile == 0x48)
+					{
+						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, (m_misc->m_ypos - 5) + (ypos + 1));
+						if (tempval >= 2 && tempval <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &offRect);
+						}
+					}
+				}
+				else
+				{
+					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + xpos, m_misc->m_ypos + 6);
+					if (tempval >= 2 && tempval <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[1], NULL, &offRect);
+					}
+				}
+				if (xpos > 0)
+				{
+					int tempval = ypos * 11 + (xpos - 1);
+					unsigned char temptile = m_TileArray[tempval];
+					if (temptile >= 2 && temptile <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &offRect);
+					}
+					else if (temptile == 0x48)
+					{
+						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos - 1), (m_misc->m_ypos - 5) + ypos);
+						if (tempval >= 2 && tempval <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &offRect);
+						}
+					}
+				}
+				else
+				{
+					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 6), (m_misc->m_ypos - 5) + ypos);
+					if (tempval >= 2 && tempval <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[2], NULL, &offRect);
+					}
+				}
+				if (xpos < 10)
+				{
+					int tempval = ypos * 11 + (xpos + 1);
+					unsigned char temptile = m_TileArray[tempval];
+					if (temptile >= 2 && temptile <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &offRect);
+					}
+					else if (temptile == 0x48)
+					{
+						unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos - 5) + (xpos + 1), (m_misc->m_ypos - 5) + ypos);
+						if (tempval >= 2 && tempval <= 16)
+						{
+							SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &offRect);
+						}
+					}
+				}
+				else
+				{
+					unsigned char tempval = m_misc->GetXYVal((m_misc->m_xpos + 6), (m_misc->m_ypos - 5) + ypos);
+					if (tempval >= 2 && tempval <= 16)
+					{
+						SDL_RenderTexture(m_renderer, m_currentGraphics->extended_tiles[3], NULL, &offRect);
+					}
+				}
+			}
 		}
 	}
 

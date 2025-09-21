@@ -29,6 +29,7 @@ struct ModeGraphics
 	SDL_Texture* ui;
 
 	std::vector<SDL_Texture*> tiles;
+	std::vector<SDL_Texture*> extended_tiles;
 	std::vector< SDL_Texture*> tile_target;
 	std::vector<SDL_Texture*> mini_tiles;
 

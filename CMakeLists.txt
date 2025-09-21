@@ -5,8 +5,9 @@ project(U3Lairware CXX) # Defines the project name and language (C++ in this cas
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/SDL3Test")
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
 find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)

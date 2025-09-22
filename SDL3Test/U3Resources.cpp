@@ -3563,7 +3563,18 @@ void U3Resources::DrawTiles()
 			{
 				realTile += 16;
 			}
+
+			// This is a hack to fix Death Gulch.  Several of the vendors exist outside the monsters file,
+			// so the program doesn't have data for them.  Because they don't have data, unlike other
+			// vendors, they won't move at the moment, but at least this will draw a floor tile
+			// underneath them for the time being.
+			if (realTile == 32 || realTile == 48)
+			{
+				const int FLOOR_TILE = 8;
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[FLOOR_TILE], NULL, &offRect);
+			}
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
+			
 			if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 			{
 				if (ypos > 0)

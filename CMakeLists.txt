@@ -18,9 +18,9 @@ find_package(Sndfile REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(Vorbis REQUIRED IMPORTED_TARGET Vorbis)
-pkg_check_modules(Vorbisenc REQUIRED IMPORTED_TARGET Vorbisenc)
-pkg_check_modules(Vorbisfile REQUIRED IMPORTED_TARGET Vorbisfile)
+pkg_check_modules(Vorbis REQUIRED IMPORTED_TARGET vorbis)
+pkg_check_modules(Vorbisenc REQUIRED IMPORTED_TARGET vorbisenc)
+pkg_check_modules(Vorbisfile REQUIRED IMPORTED_TARGET vorbisfile)
 
 add_executable(U3Lairware)
 

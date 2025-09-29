@@ -212,12 +212,21 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
     short* pcmout = 0;
     
     // open the file in read binary mode
+#if defined(_MSC_VER)
     auto err = fopen_s(&fp, fname.c_str(), "rb");
     if(err != 0)
     {
         fprintf(stderr, "Could not open file `%s`\n", fname.c_str());
         return false;
     }
+#else
+    fp = fopen(fname.c_str(), "rb");
+    if (fp == 0)
+    {
+        fprintf(stderr, "Could not open file `%s`\n", fname.c_str());
+        return false;
+    }
+#endif
     
     // make a buffer
     alGenBuffers(1, &m_music[index].m_buffer);

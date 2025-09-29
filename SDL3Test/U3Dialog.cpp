@@ -1198,22 +1198,25 @@ void ChooseOptionsDialog::init()
 	addLabel(std::string(DiagonalMovementStr), 194, 60);
 	addLabel(std::string(AutoCombatStr), 194, 80);
 	addLabel(std::string(AutoHealStr), 194, 100);
-	addLabel(std::string(AutoSaveStr), 194, 120);
-	addLabel(std::string(AudioStr), 4, 100);
-	addLabel(std::string(FullScreenStr), 4, 120);
+	addLabel(std::string(LimitStr), 198, 120);
+	addLabel(std::string(AutoSaveStr), 194, 140);
+	addLabel(std::string(FullScreenStr), 8, 100);
+	addLabel(std::string(AudioStr), 4, 120);
 	addLabel(std::string(MusicStr), 8, 140);
-	addLabel(std::string(SFXStr), 8, 160);
+	addLabel(std::string(VolumeStr), 12, 160);
+	addLabel(std::string(SFXStr), 8, 180);
+	addLabel(std::string(VolumeStr), 12, 200);
 
 	addCheckBox((int)(m_Rect.w - 20), 40);
 	addCheckBox((int)(m_Rect.w - 20), 60);
 	addCheckBox((int)(m_Rect.w - 20), 80);
 	addCheckBox((int)(m_Rect.w - 20), 100);
-	addCheckBox((int)(m_Rect.w - 20), 120);
+	addCheckBox((int)(m_Rect.w - 20), 140);
 
 	addCheckBox(80, 40);
-	addCheckBox(80, 120);
+	addCheckBox(80, 100);
 	addCheckBox(80, 140);
-	addCheckBox(80, 160);
+	addCheckBox(80, 180);
 
 	m_checkBoxes[0]->setChecked(m_resources->m_preferences.include_wind);
 	m_checkBoxes[1]->setChecked(m_resources->m_preferences.allow_diagonal);
@@ -1227,13 +1230,22 @@ void ChooseOptionsDialog::init()
 	m_checkBoxes[8]->setChecked(m_resources->m_preferences.play_sfx);
 
 	addTextBox(50, 68, 110);
+	addTextBox(60, 160, 36);
+	addTextBox(60, 200, 36);
+	addTextBox((int)m_Rect.w - 80, 120, 76);
 	std::string strTheme = m_resources->m_themes[m_curTheme];
 	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+	std::string strMusVol = std::to_string(m_resources->m_preferences.volume_music);
+	m_textBoxes[1]->setText(m_engine_surface, m_font, strMusVol);
+	std::string strSfxVol = std::to_string(m_resources->m_preferences.volume_sfx);
+	m_textBoxes[2]->setText(m_engine_surface, m_font, strSfxVol);
+	std::string strHealAmount = std::to_string(m_resources->m_preferences.auto_heal_amount);
+	m_textBoxes[3]->setText(m_engine_surface, m_font, strHealAmount);
 
 	addButton(m_upArrow, 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1));
 	addButton(m_downArrow, 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1));
-	addButton(std::string(CancelString), 176, 176, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
-	addButton(std::string(OKString), 256, 176, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
+	addButton(std::string(CancelString), 176, 216, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
+	addButton(std::string(OKString), 256, 216, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
 }
 
 void ChooseOptionsDialog::changeBlockSize(int blockSize)

@@ -167,6 +167,8 @@ static constexpr std::string_view AudioStr = "Audio:";
 static constexpr std::string_view MusicStr = "Music";
 static constexpr std::string_view SFXStr = "SFX";
 static constexpr std::string_view FullScreenStr = "Full Screen";
+static constexpr std::string_view VolumeStr = "Volume";
+static constexpr std::string_view LimitStr = "Limit";
 
 static constexpr std::string_view OptionsStr = "Options";
 static constexpr std::string_view CommandListStr = "Command List";

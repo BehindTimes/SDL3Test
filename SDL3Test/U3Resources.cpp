@@ -149,7 +149,7 @@ bool U3Resources::loadPreferences()
 			int val = std::stoi(curMap["volume_sfx"]);
 			if (val >= 0 && val <= 100)
 			{
-				m_preferences.volume_music = val;
+				m_preferences.volume_sfx = val;
 			}
 		}
 	}
@@ -3203,12 +3203,12 @@ void U3Resources::OptionsDlgClosed(int button)
 
 void U3Resources::CreateOptionsDlg()
 {
-	// Initial size is 640x384 with a block size of 16
+	// Initial screen size is 640x384.  This will be scaled later on depending on the block size
 	m_SetOptionsDlg = std::make_unique<ChooseOptionsDialog>(m_renderer, engine_surface);
-	m_SetOptionsDlg->m_Rect.x = 144;
-	m_SetOptionsDlg->m_Rect.y = ((384 - (200)) / 2.0f);
+	m_SetOptionsDlg->m_Rect.x = 152;
+	m_SetOptionsDlg->m_Rect.y = ((384 - (240)) / 2.0f);
 	m_SetOptionsDlg->m_Rect.w = 336;
-	m_SetOptionsDlg->m_Rect.h = 200;
+	m_SetOptionsDlg->m_Rect.h = 240;
 	m_SetOptionsDlg->changeBlockSize(m_blockSize);
 	m_SetOptionsDlg->SetDialogFinishedCallback(std::bind(&U3Resources::OptionsDlgClosed, this, std::placeholders::_1));
 }

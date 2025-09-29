@@ -14,10 +14,12 @@ extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Audio> m_audio;
 
+#if HAVE_SDL3_MIXER
 static void musicFinished()
 {
 	m_audio->playNextSong();
 }
+#endif
 
 #if HAVE_OPEN_AL
 void U3Audio::checkIsPlaying()
@@ -167,7 +169,7 @@ bool U3Audio::read_wav_file(std::string fname, size_t index)
     }
     
     // send data to openal, sfinfo.rate is your freq in Hz, dont assume 44100
-    alBufferData(m_sfx[index].m_buffer, format, audio_data, buffer_size, inFileInfo.samplerate);
+    alBufferData(m_sfx[index].m_buffer, format, audio_data, (ALsizei)buffer_size, inFileInfo.samplerate);
     if ((error = alGetError()) != AL_NO_ERROR) {
         printf("Failed to send audio information buffer to OpenAL! 0x%06x\n", error);
         free(audio_data);
@@ -210,8 +212,8 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
     short* pcmout = 0;
     
     // open the file in read binary mode
-    fp = fopen(fname.c_str(), "rb");
-    if(fp == 0)
+    auto err = fopen_s(&fp, fname.c_str(), "rb");
+    if(err != 0)
     {
         fprintf(stderr, "Could not open file `%s`\n", fname.c_str());
         return false;
@@ -269,7 +271,7 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
     }
     
     // send data to openal, vi->rate is your freq in Hz, dont assume 44100
-    alBufferData(m_music[index].m_buffer, AL_FORMAT_MONO16, pcmout, data_len, vi->rate);
+    alBufferData(m_music[index].m_buffer, AL_FORMAT_MONO16, pcmout, (ALsizei)data_len, vi->rate);
     if ((error = alGetError()) != AL_NO_ERROR) {
         printf("Failed to send audio information buffer to OpenAL! 0x%06x\n", error);
         free(pcmout);

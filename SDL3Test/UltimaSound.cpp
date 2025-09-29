@@ -620,6 +620,17 @@ void U3Audio::setVolumeSfx(int volume)
         Mix_Volume(new_volume, -1);
     }
 #elif HAVE_OPEN_AL
+    if (volume >= 0 && volume <= 100)
+    {
+        float volume_percent = float(volume) / 100.0f;
+        for (auto& curSfx : m_sfx)
+        {
+            if (curSfx.m_source >= 0)
+            {
+                alSourcef(curSfx.m_source, AL_GAIN, volume_percent);
+            }
+        }
+    }
 #endif
 }
 
@@ -633,5 +644,16 @@ void U3Audio::setVolumeMusic(int volume)
         Mix_VolumeMusic(new_volume);
     }
 #elif HAVE_OPEN_AL
+    if (volume >= 0 && volume <= 100)
+    {
+        float volume_percent = float(volume) / 100.0f;
+        for (auto& curMusic : m_music)
+        {
+            if (curMusic.m_source >= 0)
+            {
+                alSourcef(curMusic.m_source, AL_GAIN, volume_percent);
+            }
+        }
+    }
 #endif
 }

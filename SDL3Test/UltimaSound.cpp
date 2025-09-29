@@ -609,3 +609,29 @@ void U3Audio::musicUpdate()
     }*/
 #endif
 }
+
+void U3Audio::setVolumeSfx(int volume)
+{
+#if HAVE_SDL3_MIXER
+    if (volume >= 0 && volume <= 100)
+    {
+        float volume_percent = float(volume) / MIX_MAX_VOLUME;
+        int new_volume = (int)(volume_percent * MIX_MAX_VOLUME);
+        Mix_Volume(new_volume, -1);
+    }
+#elif HAVE_OPEN_AL
+#endif
+}
+
+void U3Audio::setVolumeMusic(int volume)
+{
+#if HAVE_SDL3_MIXER
+    if (volume >= 0 && volume <= 100)
+    {
+        float volume_percent = float(volume) / MIX_MAX_VOLUME;
+        int new_volume = (int)(volume_percent * MIX_MAX_VOLUME);
+        Mix_VolumeMusic(new_volume);
+    }
+#elif HAVE_OPEN_AL
+#endif
+}

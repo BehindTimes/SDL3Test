@@ -48,6 +48,8 @@ public:
 	void stopSfx();
 	void musicUpdate();
 	void playNextSong();
+	void setVolumeSfx(int volume);
+	void setVolumeMusic(int volume);
 
 #if HAVE_SDL3_MIXER
 	std::vector<Mix_Music*> m_music;

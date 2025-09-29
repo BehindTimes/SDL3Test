@@ -131,7 +131,7 @@ bool U3Resources::loadPreferences()
 		if (curMap.find("auto_heal_amount") != curMap.end())
 		{
 			int val = std::stoi(curMap["auto_heal_amount"]);
-			if (val >= 0 && val < 10000)
+			if (val >= 0 && val <= 10000)
 			{
 				m_preferences.auto_heal_amount = val;
 			}
@@ -3187,7 +3187,13 @@ void U3Resources::OptionsDlgClosed(int button)
 		m_preferences.play_sfx = m_SetOptionsDlg->m_codData.play_sfx;
 		m_preferences.classic_appearance = m_SetOptionsDlg->m_codData.classic;
 
+		m_preferences.auto_heal_amount = m_SetOptionsDlg->m_codData.auto_heal_amount;
+		m_preferences.volume_music = m_SetOptionsDlg->m_codData.volume_music;
+		m_preferences.volume_sfx = m_SetOptionsDlg->m_codData.volume_sfx;
+
 		changeTheme(tempTheme);
+		m_audio->setVolumeSfx(m_preferences.volume_sfx);
+		m_audio->setVolumeMusic(m_preferences.volume_music);
 
 		if (changeScreen)
 		{

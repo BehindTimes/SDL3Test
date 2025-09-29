@@ -181,6 +181,9 @@ bool DoSplashScreen()
 
 	m_resources->CalculateBlockSize();
 
+	m_audio->setVolumeSfx(m_resources->m_preferences.volume_sfx);
+	m_audio->setVolumeMusic(m_resources->m_preferences.volume_music);
+
 	return true;
 }
 

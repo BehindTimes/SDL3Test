@@ -55,6 +55,7 @@ public:
 	void U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize);
 	void render(SDL_Renderer* renderer, int x, int y);
 	void setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text);
+	std::string getText() const { return m_strText; }
 
 	int m_x;
 	int m_y;
@@ -154,6 +155,12 @@ private:
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 	void themeUp(int id);
 	void themeDown(int id);
+	void sfxVolumeUp(int id);
+	void sfxVolumeDown(int id);
+	void musicVolumeUp(int id);
+	void musicVolumeDown(int id);
+	void healLimitUp(int id);
+	void healLimitDown(int id);
 
 	int m_blockSize;
 	SDL_Renderer* m_renderer;
@@ -169,6 +176,9 @@ private:
 	std::function<void(int)> m_callBack;
 	int m_closeValue;
 	int m_curTheme;
+	int m_healLimit;
+	int m_sfxVolume;
+	int m_musicVolume;
 	
 };
 

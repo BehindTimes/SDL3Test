@@ -1105,6 +1105,10 @@ void Game()
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;
+	
+	
+	//m_misc->m_Player[1][17] = 'D';
+
 #endif
 
 	static bool showFPS = false;

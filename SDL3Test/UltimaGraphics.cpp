@@ -1244,12 +1244,12 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
     m_misc->m_currentEvent = event;
     DrawFrame(1);
     m_resources->ShowChars(true);
-    if (m_resources->m_overrideImage >= 0)
+    /*if (m_resources->m_overrideImage >= 0)
     {
         m_resources->ImageDisplay();
     }
     else
-    {
+    {*/
         float scaler = (float)m_blockSize / 16.0f;
 
         SDL_FRect theRect{};
@@ -1266,7 +1266,7 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
             curButton->render(m_resources->m_renderer, m_blockSize, (int)(curButton->m_x * scaler + theRect.x),
                 (int)(curButton->m_y * scaler + theRect.y));
         }
-    }
+    //}
     m_scrollArea->render(deltaTime);
 
     if (m_scrollArea->isPrompt())

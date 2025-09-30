@@ -8,9 +8,15 @@ C++20
 
 [SDL3 TTF](https://github.com/libsdl-org/SDL_ttf/releases/preview-3.1.0)
 
-[SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
-
 [LibXML2](https://github.com/GNOME/libxml2)
+
+libsndfile
+
+libogg
+
+libvorbis
+
+OpenAL
 
 Just including a Visual Studio project at the moment, as that's what I'm developing this with.  It should build with any C++20 compiler that supports the above packages though.
 
@@ -24,19 +30,9 @@ https://github.com/beastie/ultima3
 
 *******************************************************************************
 
-As an alternative to SDL Mixer 3, I added some barebones support for OpenAL.
+While it initially supported SDL Mixer 3, due to there being no official version yet, development on that has been paused, and went to a purely OpenAL approach.
 
-I tried compiling on a Mac, and everything seems to work, but I haven't done thorough testing.  I'm still not sure how to use that ecosystem properly, so I'm not encluding an XCode project or release.
-
-For OpenAL, you'll need
-
-libsndfile
-
-libogg
-
-libvorbis
-
-OpenAL
+[SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
 
 *******************************************************************************
 

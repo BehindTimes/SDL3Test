@@ -4932,6 +4932,8 @@ void U3Resources::GenerateZStatImage(int rosNum)
 
 	SDL_Color sdl_text_color = { 0, 0, 0 };
 	SDL_Color sdl_text_color_red = { 255, 0, 0 };
+	SDL_Color sdl_text_color_green = { 0, 128, 0 };
+	SDL_Color sdl_text_color_blue = { 0, 0, 255 };
 	SDL_Color sdl_text_color_black = { 0, 0, 0 };
 
 	SDL_RenderTexture(m_renderer, m_texCharacterRecord, NULL, &myRect);
@@ -5140,52 +5142,52 @@ void U3Resources::GenerateZStatImage(int rosNum)
 	cx = 36;
 	cy = 296;
 
-	if (m_misc->m_Player[rosNum][14] & 0x08)
+	if (m_misc->m_Player[rosNum][14] & 0x08) // Card of Death
 	{
 		tempStr = m_plistMap["MoreMessages"][75];
 		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x02)
+	if (m_misc->m_Player[rosNum][14] & 0x02) // Card of Sol
 	{
 		tempStr = m_plistMap["MoreMessages"][76];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_green, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x01)
+	if (m_misc->m_Player[rosNum][14] & 0x01) // Card of Love
 	{
 		tempStr = m_plistMap["MoreMessages"][77];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_red, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x04)
+	if (m_misc->m_Player[rosNum][14] & 0x04) // Card of Moons
 	{
 		tempStr = m_plistMap["MoreMessages"][78];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_blue, 0, false);
 		cy += 12;
 	}
 	// marks
 	cx = 130;
 	cy = 296;
-	if (m_misc->m_Player[rosNum][14] & 0x10)
+	if (m_misc->m_Player[rosNum][14] & 0x10) // Mark of Force
 	{
 		tempStr = m_plistMap["MoreMessages"][79];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_blue, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x20)
+	if (m_misc->m_Player[rosNum][14] & 0x20) // Mark of Fire
 	{
 		tempStr = m_plistMap["MoreMessages"][80];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_red, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x40)
+	if (m_misc->m_Player[rosNum][14] & 0x40) // Mark of Snake
 	{
 		tempStr = m_plistMap["MoreMessages"][81];
-		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);
+		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color_green, 0, false);
 		cy += 12;
 	}
-	if (m_misc->m_Player[rosNum][14] & 0x80)
+	if (m_misc->m_Player[rosNum][14] & 0x80) // Mark of Kings
 	{
 		tempStr = m_plistMap["MoreMessages"][82];
 		renderDisplayString(m_font_10, tempStr, (int)(((cx)*scaler) + hOff), (int)((cy * scaler) + vOff), sdl_text_color, 0, false);

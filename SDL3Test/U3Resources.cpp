@@ -3469,10 +3469,6 @@ bool U3Resources::U3Resources::HasAlert()
 	return m_AlertDlg.get();
 }
 
-void U3Resources::LoadResource(std::string /*strFile*/)
-{
-}
-
 SDL_FRect U3Resources::GetTileRectForIndex(short index) const
 {
 	SDL_FRect theRect{};

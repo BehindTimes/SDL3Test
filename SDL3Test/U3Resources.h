@@ -260,7 +260,6 @@ public:
 	std::filesystem::path m_exePath;
 
 private:
-	void LoadResource(std::string strFile);
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
 	void loadMiniTiles(ModeGraphics& curGraphics, std::string strFile);
 	void loadExtendedTiles(ModeGraphics& curGraphics, std::string strFile);

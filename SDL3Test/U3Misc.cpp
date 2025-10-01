@@ -5776,7 +5776,7 @@ bool U3Misc::InverseCallback()
 	return true;
 }
 
-void U3Misc::EatFood(short member, short amount, std::function<bool()> callback) // member = 0-3 $761D
+void U3Misc::EatFood(short member, short amount, std::function<bool()> /*callback*/) // member = 0-3 $761D
 {
 	short rosNum;
 	rosNum = m_Party[PARTY_ROSTERPOS1 + member];
@@ -6542,7 +6542,7 @@ void U3Misc::DoAutoHeal() const
 	if (autoheal)
 	{
 		// pick someone to heal (lowest hp as long as need 25 hp or more)
-		lowest = m_resources->m_preferences.auto_heal_amount; // To do (need to add threshold)
+		lowest = (short)m_resources->m_preferences.auto_heal_amount; // To do (need to add threshold)
 		for (c = 0; c <= 3; c++)
 		{
 

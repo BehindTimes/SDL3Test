@@ -3469,7 +3469,7 @@ bool U3Resources::U3Resources::HasAlert()
 	return m_AlertDlg.get();
 }
 
-void U3Resources::LoadResource(std::string strFile)
+void U3Resources::LoadResource(std::string /*strFile*/)
 {
 }
 

@@ -4238,6 +4238,8 @@ bool U3Misc::UnlockKeyCallback()
 	else
 	{
 		rosNum = m_Party[PARTY_ROSTERPOS1 + m_input_num];
+		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
+		m_scrollArea->UPrintWin(dispString);
 		if (m_Player[rosNum][38] < 1)
 		{
 			m_scrollArea->UPrintMessage(67);

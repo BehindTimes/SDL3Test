@@ -1188,6 +1188,7 @@ void Game()
 					event.key.key = 0;
 					m_graphics->m_menu_stack.push(m_graphics->m_curMode);
 					m_graphics->m_curMode = U3GraphicsMode::Menu;
+					m_misc->m_inputTypeStack.push(m_misc->m_inputType);
 					m_graphics->m_menuInit = false;
 					m_misc->m_callbackStack_backup = m_misc->m_callbackStack;
 					while (!m_misc->m_callbackStack.empty())

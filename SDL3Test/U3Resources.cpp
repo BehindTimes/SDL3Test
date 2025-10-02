@@ -251,6 +251,7 @@ U3Resources::U3Resources() :
 	m_texShrine(nullptr),
 	m_texTimeLord(nullptr),
 	m_overrideImage(-1),
+	m_overrideImageMenu(-1),
 	m_elapsedMoveTime(0),
 	m_elapsedAutoHealTime(0),
 	m_newMove(false),
@@ -4640,42 +4641,55 @@ void U3Resources::GenerateRect(SDL_FRect* FromRect, int left, int top, int right
 void U3Resources::ImageDisplay()
 {
 	SDL_Texture* curTexture = nullptr;
-	switch (m_overrideImage)
+	bool isMenu = false;
+	switch (m_overrideImageMenu)
 	{
 	case 1:
 		curTexture = m_texCommands;
+		isMenu = true;
 		break;
 	case 2:
 		curTexture = m_texSpellList;
+		isMenu = true;
 		break;
 	case 3:
 		curTexture = m_texMiscTables;
-		break;
-	case 4:
-		curTexture = m_texSosariaMap;
-		break;
-	case 5:
-		curTexture = m_texFountain;
-		break;
-	case 6:
-		curTexture = m_texRod;
-		break;
-	case 7:
-		curTexture = m_texShrine;
-		break;
-	case 8:
-		curTexture = m_texTimeLord;
-		break;
-	case 9: // ZStats
-		if (m_fullUpdate)
-		{
-			GenerateZStatImage(m_misc->m_rosNum);
-		}
-		curTexture = m_graphics->m_texMap;
+		isMenu = true;
 		break;
 	default:
-		m_overrideImage = -1;
+		isMenu = false;
 		break;
+	}
+	if (!isMenu)
+	{
+		switch (m_overrideImage)
+		{
+		case 4:
+			curTexture = m_texSosariaMap;
+			break;
+		case 5:
+			curTexture = m_texFountain;
+			break;
+		case 6:
+			curTexture = m_texRod;
+			break;
+		case 7:
+			curTexture = m_texShrine;
+			break;
+		case 8:
+			curTexture = m_texTimeLord;
+			break;
+		case 9: // ZStats
+			if (m_fullUpdate)
+			{
+				GenerateZStatImage(m_misc->m_rosNum);
+			}
+			curTexture = m_graphics->m_texMap;
+			break;
+		default:
+			m_overrideImage = -1;
+			break;
+		}
 	}
 	if (curTexture != nullptr)
 	{

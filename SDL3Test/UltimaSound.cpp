@@ -27,7 +27,7 @@ void U3Audio::checkIsPlaying()
     ALint state;
     if(m_playingSong >= 0)
     {
-        if(m_playingSong > 0 && m_music[m_playingSong].m_source > 0)
+        if(m_playingSong > 0 && m_playingSong - 1 < m_music.size() && m_music[m_playingSong - 1].m_source > 0)
         {
             alGetSourcei(m_music[m_playingSong - 1].m_source, AL_SOURCE_STATE, &state);
             if(state == AL_STOPPED)

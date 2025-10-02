@@ -1151,6 +1151,7 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
         m_resources->m_wasMove = true;
         //m_scrollArea->blockPrompt(false);
         m_scrollArea->UPrintWin("");
+        m_misc->AddFinishTurn();
     }
 }
 
@@ -1167,16 +1168,17 @@ void U3Graphics::returnToGame([[maybe_unused]]int button)
 {
     m_misc->m_callbackStack = m_misc->m_callbackStack_backup;
     while (!m_misc->m_callbackStack_backup.empty())
-    {
-        m_misc->m_callbackStack_backup.pop();
-    }
-
-    if (m_menu_stack.empty())
-    {
-        // Something went seriously wrong here
-        newMode = GameMode::Unknown;
-    }
-    m_curMode = m_menu_stack.top();
+	{
+		m_misc->m_callbackStack_backup.pop();
+	}
+	m_misc->m_inputType = m_misc->m_inputTypeStack.top();
+	m_misc->m_inputTypeStack.pop();
+	if (m_menu_stack.empty())
+	{
+		// Something went seriously wrong here
+		newMode = GameMode::Unknown;
+	}
+	m_curMode = m_menu_stack.top();
     m_menu_stack.pop();
 }
 
@@ -1197,14 +1199,14 @@ bool U3Graphics::closeImage()
         m_misc->m_callbackStack.pop();
     }
 
-    m_resources->m_overrideImage = -1;
+    m_resources->m_overrideImageMenu = -1;
 
     return false;
 }
 
 void U3Graphics::goCommandList([[maybe_unused]] int button)
 {
-    m_resources->m_overrideImage = 1;
+    m_resources->m_overrideImageMenu = 1;
     m_misc->m_inputType = InputType::AnyKey;
     m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
     m_misc->AddProcessEvent();
@@ -1212,7 +1214,7 @@ void U3Graphics::goCommandList([[maybe_unused]] int button)
 
 void U3Graphics::goSpellList([[maybe_unused]] int button)
 {
-    m_resources->m_overrideImage = 2;
+    m_resources->m_overrideImageMenu = 2;
     m_misc->m_inputType = InputType::AnyKey;
     m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
     m_misc->AddProcessEvent();
@@ -1220,7 +1222,7 @@ void U3Graphics::goSpellList([[maybe_unused]] int button)
 
 void U3Graphics::goTables([[maybe_unused]] int button)
 {
-    m_resources->m_overrideImage = 3;
+    m_resources->m_overrideImageMenu = 3;
     m_misc->m_inputType = InputType::AnyKey;
     m_misc->m_callbackStack.push(std::bind(&U3Graphics::closeImage, this));
     m_misc->AddProcessEvent();
@@ -1250,12 +1252,12 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
     m_misc->m_currentEvent = event;
     DrawFrame(1);
     m_resources->ShowChars(true);
-    /*if (m_resources->m_overrideImage >= 0)
+    if (m_resources->m_overrideImageMenu >= 0)
     {
         m_resources->ImageDisplay();
     }
     else
-    {*/
+    {
         float scaler = (float)m_blockSize / 16.0f;
 
         SDL_FRect theRect{};
@@ -1272,7 +1274,7 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
             curButton->render(m_resources->m_renderer, m_blockSize, (int)(curButton->m_x * scaler + theRect.x),
                 (int)(curButton->m_y * scaler + theRect.y));
         }
-    //}
+    }
     m_scrollArea->render(deltaTime);
 
     if (m_scrollArea->isPrompt())
@@ -1594,6 +1596,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
     if (m_resources->m_overrideImage >= 0)
     {
         m_resources->ImageDisplay();
+        m_dungeon->setForceRedraw();
     }
     else
     {

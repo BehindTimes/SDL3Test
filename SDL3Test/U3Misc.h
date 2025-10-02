@@ -220,6 +220,7 @@ public:
 	short m_rosNum;
 	short m_chNum;
 
+	std::stack<InputType> m_inputTypeStack;
 	std::stack<std::function<bool()>> m_callbackStack;
 	std::stack<std::function<bool()>> m_callbackStack_backup;
 	std::string m_input;

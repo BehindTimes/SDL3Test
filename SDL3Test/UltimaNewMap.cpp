@@ -235,6 +235,7 @@ bool U3Graphics::Kreate14()
     {
         m_misc->m_callbackStack.pop();
     }
+    m_miniMapInit = false;
     m_queuedMode = U3GraphicsMode::MiniMap;
     m_menuInit = false;
     return false;

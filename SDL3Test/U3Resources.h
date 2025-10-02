@@ -226,6 +226,7 @@ public:
 
 	int m_blockSize;
 	int m_overrideImage;
+	int m_overrideImageMenu;
 	bool m_newMove;
 	Uint64 m_elapsedMoveTime;
 	Uint64 m_elapsedAutoHealTime;

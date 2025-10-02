@@ -101,6 +101,7 @@ public:
 	bool m_writeLordBritish;
 	IntroEnum m_curIntro;
 	Uint64 m_startFightTick;
+	bool m_miniMapInit;
 
 private:
 	void renderMiniMapDungeon();
@@ -169,5 +170,4 @@ private:
 	unsigned char m_storeIcons[19];
 	bool m_hasLava;
 	unsigned short m_counter;
-	bool m_miniMapInit;
 };

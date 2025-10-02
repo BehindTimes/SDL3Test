@@ -2358,11 +2358,13 @@ void UltimaSpellCombat::Spell(short chnum, short spellnum)
 		{
 			if (m_graphics->m_curMode == U3GraphicsMode::Map)
 			{
+				m_graphics->m_miniMapInit = false;
 				m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;
 				m_graphics->m_menuInit = false;
 			}
 			else if (m_graphics->m_curMode == U3GraphicsMode::Dungeon)
 			{
+				m_graphics->m_miniMapInit = false;
 				m_graphics->m_queuedMode = U3GraphicsMode::MiniMapDungeon;
 				m_graphics->m_menuInit = false;
 			}

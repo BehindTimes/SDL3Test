@@ -1307,7 +1307,6 @@ bool UltimaDungeon::CommandPeerGem()
 
 void UltimaDungeon::PeerGem()
 {
-	m_misc->AddFinishTurn();
 	m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::CommandPeerGem, this));
 }
 
@@ -1323,21 +1322,24 @@ bool UltimaDungeon::PeerGemCallback()
 	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0 || m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
 	{
 		m_scrollArea->UPrintWin("\n\n");
+		m_misc->AddFinishTurn();
 		return false;
 	}
 	rosnum = m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num];
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
-	/*if (m_misc->m_Player[rosnum][37] < 1)
+	if (m_misc->m_Player[rosnum][37] < 1)
 	{
 		m_scrollArea->UPrintWin(strRosNum);
 		m_scrollArea->UPrintMessage(67);
+		m_misc->AddFinishTurn();
 	}
-	else*/
+	else
 	{
 		//m_scrollArea->blockPrompt(true);
 		m_scrollArea->UPrintWin(strRosNum);
 		m_misc->m_Player[rosnum][37]--;
 		m_scrollArea->forceRedraw();
+		m_graphics->m_miniMapInit = false;
 		m_graphics->m_queuedMode = U3GraphicsMode::MiniMapDungeon;
 		m_graphics->m_menuInit = false;
 	}

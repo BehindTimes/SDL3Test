@@ -221,6 +221,7 @@ public:
 	short m_chNum;
 
 	std::stack<std::function<bool()>> m_callbackStack;
+	std::stack<std::function<bool()>> m_callbackStack_backup;
 	std::string m_input;
 	short m_input_num;
 	short m_maxInputLength;

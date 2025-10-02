@@ -115,11 +115,6 @@ bool U3Misc::HandleDefaultKeyPress(SDL_Keycode key)
 	{
 		switch (key)
 		{
-		case SDLK_TAB:
-			m_graphics->m_menu_stack.push(m_graphics->m_curMode);
-			m_graphics->m_curMode = U3GraphicsMode::Menu;
-			m_graphics->m_menuInit = false;
-			break;
 		case SDLK_KP_8:
 		case SDLK_UP:
 			North();
@@ -957,8 +952,14 @@ bool U3Misc::TransactCallback()
 	{
 		m_transactNum = m_input_num;
 		m_rosNum = m_Party[PARTY_ROSTERPOS1 + m_transactNum];
-		std::string strRosNum = std::to_string(m_rosNum) + std::string("\n");
+		std::string strRosNum = std::to_string(m_input_num + 1) + std::string("\n");
 		m_scrollArea->UPrintWin(strRosNum);
+		if (m_rosNum == 0)
+		{
+			m_InputDeque.clear();
+			m_scrollArea->UPrintMessage(41);
+			return false;
+		}
 		if (CheckAlive((short)m_transactNum) == 0)
 		{
 			m_spellCombat->Incap();

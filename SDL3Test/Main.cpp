@@ -1181,8 +1181,20 @@ void Game()
 			{
 				quit = true;
 			}
-			else
+			else if (event.key.key == SDLK_TAB)
 			{
+				if (m_graphics->m_curMode != U3GraphicsMode::Menu)
+				{
+					event.key.key = 0;
+					m_graphics->m_menu_stack.push(m_graphics->m_curMode);
+					m_graphics->m_curMode = U3GraphicsMode::Menu;
+					m_graphics->m_menuInit = false;
+					m_misc->m_callbackStack_backup = m_misc->m_callbackStack;
+					while (!m_misc->m_callbackStack.empty())
+					{
+						m_misc->m_callbackStack.pop();
+					}
+				}
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:

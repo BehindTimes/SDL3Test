@@ -857,13 +857,16 @@ bool U3Misc::CheckAlive(short member) const // $75BA
 {
 	short rosNum;
 	rosNum = m_Party[member + 6];
-	if (m_Player[rosNum][17] == 'G')
+	if (rosNum > 0)
 	{
-		return true;
-	}
-	if (m_Player[rosNum][17] == 'P')
-	{
-		return true;
+		if (m_Player[rosNum][17] == 'G')
+		{
+			return true;
+		}
+		if (m_Player[rosNum][17] == 'P')
+		{
+			return true;
+		}
 	}
 	return false;
 }
@@ -3412,32 +3415,35 @@ bool U3Misc::FinalizeHealingCallback()
 		m_callbackStack.pop();
 	}
 
-	switch (m_opnum)
+	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] != 0)
 	{
-	case 0:
-		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'P')
+		switch (m_opnum)
 		{
-			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
+		case 0:
+			if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'P')
+			{
+				m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
+			}
+			break;
+		case 1:
+			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][26] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][28];
+			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][27] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][29];
+			break;
+		case 2:
+			if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'D')
+			{
+				m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
+			}
+			break;
+		case 3:
+			if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'A')
+			{
+				m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-	case 1:
-		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][26] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][28];
-		m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][27] = m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][29];
-		break;
-	case 2:
-		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'D')
-		{
-			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
-		}
-		break;
-	case 3:
-		if (m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] == 'A')
-		{
-			m_Player[m_Party[PARTY_ROSTERPOS1 + m_input_num]][17] = 'G';
-		}
-		break;
-	default:
-		break;
 	}
 	//m_scrollArea->blockPrompt(false);
 	InverseChnum((char)m_transactNum, false);
@@ -4467,23 +4473,26 @@ bool U3Misc::ResurrectCallback()
 	for (chNum = 0; chNum < 4; chNum++)
 	{
 		m_rosNum = m_Party[chNum + 6];
-		for (byte = 35; byte < 64; byte++)
+		if (m_rosNum != 0)
 		{
-			m_Player[m_rosNum][byte] = 0;
+			for (byte = 35; byte < 64; byte++)
+			{
+				m_Player[m_rosNum][byte] = 0;
+			}
+			m_Player[m_rosNum][15] = 0;    // no torches too
+			if (m_Player[m_rosNum][32] < 1)
+			{
+				m_Player[m_rosNum][32] = 1;    // Some food
+			}
+			m_Player[m_rosNum][36] = 150;      // Gold Pieces
+			m_Player[m_rosNum][41] = 1;        // Cloth
+			m_Player[m_rosNum][40] = 1;        //  in use
+			m_Player[m_rosNum][49] = 1;        // Dagger
+			m_Player[m_rosNum][48] = 1;        //  in use
+			m_Player[m_rosNum][17] = 'G';      // Good Health
+			m_Player[m_rosNum][27] = 100;      // Current Hit Points
+			m_Player[m_rosNum][26] = 0;        // Current Hit Points
 		}
-		m_Player[m_rosNum][15] = 0;    // no torches too
-		if (m_Player[m_rosNum][32] < 1)
-		{
-			m_Player[m_rosNum][32] = 1;    // Some food
-		}
-		m_Player[m_rosNum][36] = 150;      // Gold Pieces
-		m_Player[m_rosNum][41] = 1;        // Cloth
-		m_Player[m_rosNum][40] = 1;        //  in use
-		m_Player[m_rosNum][49] = 1;        // Dagger
-		m_Player[m_rosNum][48] = 1;        //  in use
-		m_Player[m_rosNum][17] = 'G';      // Good Health
-		m_Player[m_rosNum][27] = 100;      // Current Hit Points
-		m_Player[m_rosNum][26] = 0;        // Current Hit Points
 	}
 	m_Party[PARTY_LOCATION] = 0;
 	m_Party[PARTY_ICON] = 0x7E;

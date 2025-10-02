@@ -238,6 +238,20 @@ void MainLoop()
 				m_resources->m_curTickDemo = 0;
 				m_resources->m_demoDelay = 0;
 				m_resources->m_demoptr = 0;
+				m_resources->m_inverses.additive = false;
+				m_resources->m_inverses.character_num[0] = false;
+				m_resources->m_inverses.character_num[1] = false;
+				m_resources->m_inverses.character_num[2] = false;
+				m_resources->m_inverses.character_num[3] = false;
+				m_resources->m_inverses.char_details[0] = false;
+				m_resources->m_inverses.char_details[1] = false;
+				m_resources->m_inverses.char_details[2] = false;
+				m_resources->m_inverses.char_details[3] = false;
+				m_resources->m_inverses.elapsedTileTime = 0;
+				m_resources->m_inverses.inverseTileTime = 0;
+				m_resources->m_inverses.fill = false;
+				m_resources->m_inverses.tiles = false;
+				m_resources->m_inverses.stayInversed = false;
 
 				m_misc->m_zp[0xCF] = 0;
 				m_misc->m_zp[0x10] = 0;

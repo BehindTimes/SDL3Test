@@ -1543,7 +1543,7 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_misc->BombTrap();
 		break;
 	case 5: // $931C brand
-		m_audio->m_currentSong = 0;
+		m_audio->m_currentSong = 9;
 		m_audio->m_nextSong = 9;
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = 6;

@@ -4028,14 +4028,14 @@ bool U3Misc::PeerGemCallback()
 	rosnum = m_Party[PARTY_ROSTERPOS1 + m_input_num];
 	std::string strRosNum = std::to_string(m_chNum + 1) + std::string("\n\n");
 	m_scrollArea->UPrintWin(strRosNum);
-	/*if (m_Player[rosnum][37] < 1)
+	if (m_Player[rosnum][37] < 1)
 	{
 
 		m_scrollArea->UPrintMessage(67);
 	}
-	else*/
+	else
 	{
-		//m_Player[rosnum][37]--;
+		m_Player[rosnum][37]--;
 		m_scrollArea->forceRedraw();
 		m_graphics->m_miniMapInit = false;
 		m_graphics->m_queuedMode = U3GraphicsMode::MiniMap;

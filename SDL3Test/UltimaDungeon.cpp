@@ -1501,6 +1501,8 @@ bool UltimaDungeon::FinishAge()
 	}
 	value += 0x18;
 	m_misc->m_gMonType = value * 2;
+	m_audio->m_currentSong = 4;
+	m_audio->m_nextSong = 4;
 	m_spellCombat->Combat();
 
 	return false;
@@ -1711,6 +1713,9 @@ bool UltimaDungeon::FountainCallback()
 		break;
 	default:
 		m_resources->m_overrideImage = -1;
+		m_audio->m_currentSong = 4;
+		m_audio->m_nextSong = 4;
+		m_audio->musicUpdate();
 		break;
 	}
 	return false;
@@ -1787,5 +1792,8 @@ bool UltimaDungeon::MarkCallback2()
 	m_misc->HPSubtract(m_misc->m_rosNum, 50);
 	m_scrollArea->UPrintMessage(162);
 	//m_scrollArea->blockPrompt(false);
+	m_audio->m_currentSong = 4;
+	m_audio->m_nextSong = 4;
+	m_audio->musicUpdate();
 	return false;
 }

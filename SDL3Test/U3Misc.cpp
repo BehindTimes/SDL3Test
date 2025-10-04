@@ -397,6 +397,11 @@ bool U3Misc::PutRoster() const
 
 bool U3Misc::PutParty() const
 {
+	if (m_Party[PARTY_LOCATION] != 0)
+	{
+		return false;
+	}
+
 	std::filesystem::path partyPath = m_resources->m_exePath;
 	partyPath /= ResourceLoc;
 	partyPath /= SaveLoc;

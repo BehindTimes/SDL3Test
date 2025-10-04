@@ -5760,9 +5760,19 @@ bool U3Misc::FinishTurnCallback()
 	{
 		m_callbackStack.pop();
 	}
-	if (m_gTime[1] == 0)
+	if (m_Player[m_rosNum][17] != 'D')
 	{
-		HPAdd(m_rosNum, 1);
+		if (m_gTime[1] == 0)
+		{
+			HPAdd(m_rosNum, 1);
+		}
+	}
+	else
+	{
+		if (m_graphics->m_curMode == U3GraphicsMode::Combat)
+		{
+			m_spellCombat->poisonDeath(m_rosNum);
+		}
 	}
 	//m_inputType = InputType::Callback;
 	m_chNum--;

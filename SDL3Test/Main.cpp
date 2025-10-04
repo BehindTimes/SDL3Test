@@ -1118,6 +1118,14 @@ void Game()
 	m_misc->m_Player[1][14] = 0xFF;
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
+	m_misc->m_Player[1][17] = 'P';
+	m_misc->m_Player[1][27] = 10;      // Current Hit Points
+	m_misc->m_Player[1][26] = 0;       // Current Hit Points
+	m_misc->m_Player[2][27] = 10;      // Current Hit Points
+	m_misc->m_Player[2][26] = 0;       // Current Hit Points
+	m_misc->m_Player[2][17] = 'P';
+	//m_misc->m_Player[3][17] = 'P';
+	//m_misc->m_Player[16][17] = 'P';
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;
 	
 	

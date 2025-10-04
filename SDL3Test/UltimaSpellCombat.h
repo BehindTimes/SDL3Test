@@ -27,6 +27,8 @@ public:
 	void updateGameTime(Uint64 deltaTime);
 	void AutoCombat(short chnum);
 	bool FutureMonsterHere(short x, short y) const;
+	bool c8777Callback();
+	void poisonDeath(unsigned char player);
 
 	unsigned char m_g5521;
 	unsigned char m_g835D;
@@ -74,7 +76,6 @@ private:
 	void plrhit();
 	void c8777();
 	bool HandleMonsterMoveCallback();
-	bool c8777Callback();
 	bool monmagicCallback();
 	bool monshootCallback();
 	bool CombatAttack();

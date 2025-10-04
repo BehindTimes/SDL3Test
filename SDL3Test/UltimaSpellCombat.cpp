@@ -1190,6 +1190,32 @@ void UltimaSpellCombat::c8777()
 	ShowHit(m_misc->m_CharX[m_gChnum], m_misc->m_CharY[m_gChnum], 0x7A, m_misc->m_CharTile[m_gChnum]);
 }
 
+void UltimaSpellCombat::poisonDeath(unsigned char player)
+{
+	// Another hack incase the player dies in combat due to poison.
+	// Unlike the original, since everything is queued up, we need to locate the position of the dead player
+	// to properly assign death functionality.
+	bool found = false;
+	unsigned char tempPos = 0;
+	for (unsigned char index = 0; index < 4; ++index)
+	{
+		if (m_misc->m_Party[PARTY_ROSTERPOS1 + index] == player)
+		{
+			found = true;
+			tempPos = index;
+			break;
+		}
+	}
+	if (found)
+	{
+		m_scrollArea->UPrintMessage(144);
+		m_misc->PutXYTile(m_misc->m_CharTile[tempPos], m_misc->m_CharX[tempPos], m_misc->m_CharY[tempPos]);
+		m_misc->m_CharX[tempPos] = 0xFF;
+		m_misc->m_CharY[tempPos] = 0xFF;
+		m_misc->CheckAllDead();
+	}
+}
+
 bool UltimaSpellCombat::c8777Callback()
 {
 	if (m_misc->m_callbackStack.size() > 0)

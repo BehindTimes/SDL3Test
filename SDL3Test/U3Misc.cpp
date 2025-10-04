@@ -5733,6 +5733,10 @@ bool U3Misc::FinishEatFood()
 	int temp = m_Player[m_rosNum][17];
 	if ((temp == 'D') || (temp == 'A') || (temp == 0))
 	{
+		if (m_graphics->m_curMode == U3GraphicsMode::Combat)
+		{
+			m_spellCombat->poisonDeath((unsigned char)m_rosNum);
+		}
 		m_chNum--;
 	}
 	else

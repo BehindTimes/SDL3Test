@@ -2014,15 +2014,15 @@ void CreateCharacterDialog::okPushed([[maybe_unused]] int id)
 	memcpy(m_curPlayer, m_ccdData.name.c_str(), copySize);
 	if (m_ccdData.sex == 0)
 	{
-		m_curPlayer[24] = 'M';
+		m_curPlayer[PLAYER_SEX] = 'M';
 	}
 	else if (m_ccdData.sex == 1)
 	{
-		m_curPlayer[24] = 'F';
+		m_curPlayer[PLAYER_SEX] = 'F';
 	}
 	else
 	{
-		m_curPlayer[24] = 'O';
+		m_curPlayer[PLAYER_SEX] = 'O';
 	}
 	if(m_resources->m_plistMap["Races"].size() > m_ccdData.race)
 	{
@@ -2054,16 +2054,16 @@ void CreateCharacterDialog::okPushed([[maybe_unused]] int id)
 	{
 		m_curPlayer[23] = 'F';
 	}
-	m_curPlayer[18] = m_ccdData.strength;		// Strength
-	m_curPlayer[19] = m_ccdData.dexterity;		// Dexterity
-	m_curPlayer[20] = m_ccdData.intelligence;   // Intelligence
-	m_curPlayer[21] = m_ccdData.wisdom;			// Wisdom
+	m_curPlayer[PLAYER_STR] = m_ccdData.strength;		// Strength
+	m_curPlayer[PLAYER_DEX] = m_ccdData.dexterity;		// Dexterity
+	m_curPlayer[PLAYER_INT] = m_ccdData.intelligence;   // Intelligence
+	m_curPlayer[PLAYER_WIS] = m_ccdData.wisdom;			// Wisdom
 
-	m_curPlayer[17] = 'G';    // Good Health
+	m_curPlayer[PLAYER_STATUS] = 'G';    // Good Health
 	m_curPlayer[27] = 100;    // Current Hit Points
-	m_curPlayer[29] = 100;    // Max Hit Points
-	m_curPlayer[32] = 1;
-	m_curPlayer[33] = 50;     // Food
+	m_curPlayer[PLAYER_MAX_HP] = 100;    // Max Hit Points
+	m_curPlayer[PLAYER_FOOD_1] = 1;
+	m_curPlayer[PLAYER_FOOD_2] = 50;     // Food
 	m_curPlayer[36] = 150;    // Gold Pieces
 	m_curPlayer[41] = 1;      // Cloth
 	m_curPlayer[40] = 1;      // pre-readied

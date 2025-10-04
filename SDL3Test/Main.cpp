@@ -568,6 +568,34 @@ void MainMenu()
 			{
 				quit = true;
 			}
+			else if (event.key.key == SDLK_R)
+			{
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					returnToView(-1);
+				}
+			}
+			else if (event.key.key == SDLK_O)
+			{
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					organizeParty(-1);
+				}
+			}
+			else if (event.key.key == SDLK_A)
+			{
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					changeOptions(-1);
+				}
+			}
+			else if (event.key.key == SDLK_J)
+			{
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					journeyOnward(-1);
+				}
+			}
 			else
 			{
 			}
@@ -1111,7 +1139,7 @@ void Game()
 	//m_misc->m_xpos = 10;
 	//m_misc->m_ypos = 10;
 	//m_misc->m_Player[1][17] = 'A';
-	m_misc->m_Player[1][30] = 40;
+	/*m_misc->m_Player[1][30] = 40;
 	m_misc->m_Player[2][30] = 40;
 	m_misc->m_Player[3][30] = 40;
 	m_misc->m_Player[4][30] = 40;
@@ -1123,7 +1151,7 @@ void Game()
 	m_misc->m_Player[1][26] = 0;       // Current Hit Points
 	m_misc->m_Player[2][27] = 10;      // Current Hit Points
 	m_misc->m_Player[2][26] = 0;       // Current Hit Points
-	m_misc->m_Player[2][17] = 'P';
+	m_misc->m_Player[2][17] = 'P';*/
 	//m_misc->m_Player[3][17] = 'P';
 	//m_misc->m_Player[16][17] = 'P';
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;

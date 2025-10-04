@@ -5771,7 +5771,7 @@ bool U3Misc::FinishTurnCallback()
 	{
 		if (m_graphics->m_curMode == U3GraphicsMode::Combat)
 		{
-			m_spellCombat->poisonDeath(m_rosNum);
+			m_spellCombat->poisonDeath((unsigned char)m_rosNum);
 		}
 	}
 	//m_inputType = InputType::Callback;

@@ -16,7 +16,7 @@ libogg
 
 libvorbis
 
-OpenAL
+[OpenAL](https://www.openal.org/downloads/)
 
 Just including a Visual Studio project at the moment, as that's what I'm developing this with.  It should build with any C++20 compiler that supports the above packages though.
 

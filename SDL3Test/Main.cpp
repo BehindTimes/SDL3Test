@@ -3,6 +3,10 @@
 #if HAVE_SDL3_MIXER
 #include <SDL3_mixer/SDL_mixer.h>
 #endif
+#if TARGET_MAC_OSX
+#include <sysdir.h>
+#include <glob.h>
+#endif
 
 #include <iostream>
 
@@ -58,6 +62,36 @@ void partyFormed(int button);
 void backToOrganize(int button);
 void createCharacterChooseSlot(int button);
 
+#if TARGET_MAC_OSX
+std::string expandTilde(const char* str) {
+	if (!str) return {};
+
+	glob_t globbuf;
+	if (glob(str, GLOB_TILDE, nullptr, &globbuf) == 0) {
+		std::string result(globbuf.gl_pathv[0]);
+		globfree(&globbuf);
+		return result;
+	}
+	else {
+		throw std::runtime_error("Unable to expand tilde");
+	}
+	return "";
+}
+
+std::string settingsPath(const char* str) {
+	char path[PATH_MAX];
+	auto state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT,
+		SYSDIR_DOMAIN_MASK_USER);
+	if ((state = sysdir_get_next_search_path_enumeration(state, path))) {
+		return expandTilde(path);
+	}
+	else {
+		throw std::runtime_error("Failed to get settings folder");
+	}
+	return "";
+}
+#endif
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
 	m_resources = std::make_unique<U3Resources>();
@@ -87,7 +121,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		return 3;
 	}
 
+#if TARGET_MAC_OSX
+	std::string strOut = settingsPath();
+	strOut += std::string("/U3LW");
+	const char* szBasePath = strOut.c_str();
+#else
 	const char* szBasePath = SDL_GetBasePath();
+#endif
 	if (szBasePath == nullptr)
 	{
 		return 4;
@@ -1139,7 +1179,7 @@ void Game()
 	//m_misc->m_xpos = 10;
 	//m_misc->m_ypos = 10;
 	//m_misc->m_Player[1][17] = 'A';
-	/*m_misc->m_Player[1][30] = 40;
+	m_misc->m_Player[1][30] = 40;
 	m_misc->m_Player[2][30] = 40;
 	m_misc->m_Player[3][30] = 40;
 	m_misc->m_Player[4][30] = 40;
@@ -1157,7 +1197,7 @@ void Game()
 	m_misc->m_Player[1][27] = 10;      // Current Hit Points
 	m_misc->m_Player[1][26] = 0;       // Current Hit Points
 	m_misc->m_Player[2][27] = 10;      // Current Hit Points
-	m_misc->m_Player[2][26] = 0;       // Current Hit Points*/
+	m_misc->m_Player[2][26] = 0;       // Current Hit Points
 	//m_misc->m_Player[3][17] = 'P';
 	//m_misc->m_Player[16][17] = 'P';
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;

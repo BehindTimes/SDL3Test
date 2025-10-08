@@ -86,6 +86,8 @@ cmake ../
 make
 ```
 
+After you make the files, place the Resources Directory in the same directory of the compiled executable, and the Mainresources.rsrc in the /Resources/Bin directory, and you should now be able to run the game.
+
 *******************************************************************************
 
 Adding new tilesets:

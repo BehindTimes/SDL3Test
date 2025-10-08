@@ -36,6 +36,42 @@ While it initially supported SDL Mixer 3, due to there being no official version
 
 *******************************************************************************
 
+Building for Mac
+
+I'm not familiar with the ecosystem, so this is what I did to get it to compile.  Unfortunately, I can't distribute this, as it wants to sandbox everything.  The only way I know how to get it up and running is to do a local build.
+
+Open up the Terminal.
+
+Install Brew:
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+Install Brew packages:
+
+brew install llvm
+brew install cmake
+brew install libogg
+brew install libsndfile
+brew install libvorbis
+brew install openal-soft
+
+Download and install the necessary SDL3 Libraries (SDL3, SDL3Image, SDL3TTF) according to their directions.
+It's basically downloading the appropriate library, and placing them in ~/Library/Frameworks.
+
+You may have to also remove the quarantine attributes:
+Go to the the library directory:
+
+cd ~/Library/Frameworks
+
+xattr -r -d com.apple.quarantine SDL3.xcframework
+xattr -r -d com.apple.quarantine SDL3_image.xcframework
+xattr -r -d com.apple.quarantine SDL3_ttf.xcframework
+xattr -r -d com.apple.quarantine share
+
+At this point, you should now have everything necessary to build.
+
+*******************************************************************************
+
 Building for non Visual Studio:
 
 Navigate to the directory of CMakeLists.txt

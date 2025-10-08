@@ -78,7 +78,7 @@ std::string expandTilde(const char* str) {
 	return "";
 }
 
-std::string settingsPath(const char* str) {
+std::string settingsPath() {
 	char path[PATH_MAX];
 	auto state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT,
 		SYSDIR_DOMAIN_MASK_USER);

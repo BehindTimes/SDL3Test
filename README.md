@@ -77,7 +77,7 @@ At this point, you should now have everything necessary to build.
 
 Building for non Visual Studio:
 
-Navigate to the directory of CMakeLists.txt
+Navigate to the directory of the LairWare U3 CMakeLists.txt
 
 ```
 mkdir build

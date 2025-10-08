@@ -79,10 +79,12 @@ Building for non Visual Studio:
 
 Navigate to the directory of CMakeLists.txt
 
+```
 mkdir build
 cd build
 cmake ../
 make
+```
 
 *******************************************************************************
 

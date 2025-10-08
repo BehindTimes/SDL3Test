@@ -124,6 +124,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 #if TARGET_MAC_OSX
 	std::string strOut = settingsPath();
 	strOut += std::string("/U3LW");
+	std::cout << "Data directory for Ultime 3 - LairWare: " << strOut << std::endl;
 	const char* szBasePath = strOut.c_str();
 #else
 	const char* szBasePath = SDL_GetBasePath();

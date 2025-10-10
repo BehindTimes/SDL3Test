@@ -104,3 +104,24 @@ std::string U3Utilities::GetPaddedNum(int num, int length)
 	ss << std::setw(length) << std::setfill('0') << num;
 	return ss.str();
 }
+
+void U3Utilities::copy_be_16(const unsigned char* data_file, uint16_t* outval)
+{
+	memcpy(outval, data_file, sizeof(unsigned char) * 2);
+
+	if (std::endian::native == std::endian::little)
+	{
+		*outval = (*outval << 8) | (*outval >> 8);
+	}
+}
+
+void U3Utilities::copy_be_32(const unsigned char* data_file, uint32_t* outval)
+{
+	memcpy(outval, data_file, sizeof(unsigned char) * 4);
+
+	if (std::endian::native == std::endian::little)
+	{
+		*outval = ((*outval << 8) & 0xFF00FF00) | ((*outval >> 8) & 0xFF00FF);
+		*outval = (*outval << 16) | ((*outval >> 16) & 0xFFFF);
+	}
+}

@@ -274,6 +274,7 @@ U3Resources::U3Resources() :
 {
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
+	memset(m_texIcons, 0, sizeof(m_texIcons));
 	m_animFlag[0] = 0;
 	m_animFlag[1] = 16;
 	m_animFlag[2] = 0;
@@ -437,6 +438,15 @@ U3Resources::~U3Resources()
 		{
 			SDL_DestroyTexture(m_texIntro[index]);
 			m_texIntro[index] = nullptr;
+		}
+	}
+
+	for (int index = 0; index < 2; ++index)
+	{
+		if (m_texIcons[index])
+		{
+			SDL_DestroyTexture(m_texIcons[index]);
+			m_texIcons[index] = nullptr;
 		}
 	}
 
@@ -669,6 +679,11 @@ bool U3Resources::init(SDL_Renderer* renderer)
 	}
 
 	if (!loadCursors())
+	{
+		return false;
+	}
+
+	if (!loadIcons())
 	{
 		return false;
 	}
@@ -1169,7 +1184,7 @@ bool U3Resources::loadResourceFile()
 	std::filesystem::path currentPath;
 	currentPath = m_exePath;
 	currentPath /= ResourceLoc;
-	currentPath /= BinLoc;
+	//currentPath /= BinLoc;
 	currentPath /= std::string("MainResources.rsrc");
 	std::string strTemp = m_utilities->PathToSDLString(currentPath);
 	if (strTemp.empty())
@@ -1444,6 +1459,24 @@ bool U3Resources::loadCursors()
 		m_cursor_surface.push_back(newSurface);
 		SDL_Cursor*  newCursor = SDL_CreateColorCursor(newSurface, 0, 0);
 		m_cursors.push_back(newCursor);
+	}
+	return true;
+}
+
+bool U3Resources::loadIcons()
+{
+	size_t startPos = 0x05e0;
+	for (size_t index = 0; index < 2; ++index)
+	{
+		uint32_t data_size;
+		m_utilities->copy_be_32(m_vecResourceData.data() + startPos, &data_size);
+
+		std::vector<unsigned char> icon_vec;
+		icon_vec.resize(data_size);
+		std::copy(m_vecResourceData.data() + startPos + 4, m_vecResourceData.data() + startPos + 4 + data_size, icon_vec.begin());
+		decode_cicn(index, icon_vec);
+		startPos += (data_size + 4);
+
 	}
 	return true;
 }
@@ -5349,4 +5382,232 @@ void U3Resources::ExodusLights()
 		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[tile_size], NULL, NULL);
 		SDL_SetRenderTarget(m_renderer, NULL);
 	}
+}
+
+// Adapted from phosg library (https://github.com/fuzziqersoftware/phosg)
+// as well as resource_dasm (https://github.com/fuzziqersoftware/resource_dasm)
+
+macRect::macRect(int16_t y1, int16_t x1, int16_t y2, int16_t x2)
+	: y1(y1),
+	x1(x1),
+	y2(y2),
+	x2(x2) {
+}
+
+
+size_t macRect::width() const {
+	return this->x2 - this->x1;
+}
+
+size_t macRect::height() const {
+	return this->y2 - this->y1;
+}
+
+ColorIconResourceHeader U3Resources::read_cicn_header(unsigned char* data_file)
+{
+	ColorIconResourceHeader header{};
+	m_utilities->copy_be_16(data_file + 4, &header.pix_map.flags_row_bytes);
+	m_utilities->copy_be_16(data_file + 6, &header.pix_map.bounds.y1);
+	m_utilities->copy_be_16(data_file + 8, &header.pix_map.bounds.x1);
+	m_utilities->copy_be_16(data_file + 10, &header.pix_map.bounds.y2);
+	m_utilities->copy_be_16(data_file + 12, &header.pix_map.bounds.x2);
+	m_utilities->copy_be_16(data_file + 14, &header.pix_map.version);
+	m_utilities->copy_be_16(data_file + 16, &header.pix_map.pack_format);
+
+	m_utilities->copy_be_32(data_file + 18, &header.pix_map.pack_size);
+	m_utilities->copy_be_32(data_file + 22, &header.pix_map.h_res);
+	m_utilities->copy_be_32(data_file + 26, &header.pix_map.v_res);
+
+	m_utilities->copy_be_16(data_file + 30, &header.pix_map.pixel_type);
+	m_utilities->copy_be_16(data_file + 32, &header.pix_map.pixel_size);
+	m_utilities->copy_be_16(data_file + 34, &header.pix_map.component_count);
+	m_utilities->copy_be_16(data_file + 36, &header.pix_map.component_size);
+
+	m_utilities->copy_be_32(data_file + 38, &header.pix_map.plane_offset);
+	m_utilities->copy_be_32(data_file + 42, &header.pix_map.color_table_offset);
+	m_utilities->copy_be_32(data_file + 46, &header.pix_map.reserved);
+
+	m_utilities->copy_be_16(data_file + 54, &header.mask_header.flags_row_bytes);
+	m_utilities->copy_be_16(data_file + 56, &header.mask_header.bounds.y1);
+	m_utilities->copy_be_16(data_file + 58, &header.mask_header.bounds.x1);
+	m_utilities->copy_be_16(data_file + 60, &header.mask_header.bounds.y2);
+	m_utilities->copy_be_16(data_file + 62, &header.mask_header.bounds.x2);
+
+	m_utilities->copy_be_16(data_file + 68, &header.bitmap_header.flags_row_bytes);
+	m_utilities->copy_be_16(data_file + 70, &header.bitmap_header.bounds.y1);
+	m_utilities->copy_be_16(data_file + 72, &header.bitmap_header.bounds.x1);
+	m_utilities->copy_be_16(data_file + 74, &header.bitmap_header.bounds.y2);
+	m_utilities->copy_be_16(data_file + 76, &header.bitmap_header.bounds.x2);
+
+	return header;
+}
+
+size_t U3Resources::read_color_table(unsigned char* data_file, ColorTable& ctable)
+{
+	m_utilities->copy_be_32(data_file + 0, &ctable.seed);
+	m_utilities->copy_be_16(data_file + 4, &ctable.flags);
+	uint16_t num_entries;
+	m_utilities->copy_be_16(data_file + 6, &num_entries);
+	ctable.num_entries = static_cast<int16_t>(num_entries + 1);
+
+	if (ctable.num_entries < 0) {
+		throw std::runtime_error("color table has negative size");
+	}
+
+	size_t curOffset = 8;
+	for (int index = 0; index < ctable.num_entries; ++index)
+	{
+		uint16_t color_num;
+		uint16_t r;
+		uint16_t g;
+		uint16_t b;
+
+		m_utilities->copy_be_16(data_file + curOffset, &color_num);
+		curOffset += 2;
+		m_utilities->copy_be_16(data_file + curOffset, &r);
+		curOffset += 2;
+		m_utilities->copy_be_16(data_file + curOffset, &g);
+		curOffset += 2;
+		m_utilities->copy_be_16(data_file + curOffset, &b);
+		curOffset += 2;
+
+		ctable.entries.insert(std::make_pair(color_num, ColorTableEntry(r, g, b)));
+	}
+	return curOffset;
+}
+
+uint32_t U3Resources::lookup_entry(const std::vector<unsigned char>& pixel_map, uint16_t pixel_size, size_t row_bytes, size_t x, size_t y)
+{
+	switch (pixel_size) {
+	case 1:
+		return (pixel_map[(y * row_bytes) + (x / 8)] >> (7 - (x & 7))) & 1;
+	case 2:
+		return (pixel_map[(y * row_bytes) + (x / 4)] >> (6 - ((x & 3) * 2))) & 3;
+	case 4:
+		return (pixel_map[(y * row_bytes) + (x / 2)] >> (4 - ((x & 1) * 4))) & 15;
+	case 8:
+		return pixel_map[(y * row_bytes) + x];
+	case 16:
+		return *reinterpret_cast<const uint16_t*>(&pixel_map[(y * row_bytes) + (x * 2)]);
+	case 32:
+		return *reinterpret_cast<const uint32_t*>(&pixel_map[(y * row_bytes) + (x * 4)]);
+	default:
+		throw std::runtime_error("pixel size is not 1, 2, 4, 8, 16, or 32 bits");
+	}
+}
+
+void U3Resources::decode_color_image(
+	const size_t indexIcon,
+	const PixelMapHeader& header,
+	const std::vector<unsigned char>& pixel_map,
+	const ColorTable* ctable,
+	const std::vector<unsigned char>* mask_map,
+	size_t mask_row_bytes)
+{
+	// According to Apple's docs, pixel_type is 0 for indexed color and 0x0010 for
+	// direct color, even for 32-bit images
+	if (header.pixel_type != 0 && header.pixel_type != 0x0010) {
+		throw std::runtime_error("unknown pixel type");
+	}
+	if (header.pixel_type == 0 && !ctable) {
+		throw std::runtime_error("color table must be given for indexed-color image");
+	}
+
+	// We only support 3-component direct color images (RGB)
+	if (header.pixel_type == 0x0010 && header.component_count != 3) {
+		throw std::runtime_error("unsupported channel count");
+	}
+	if (header.pixel_type == 0x0010 && header.pixel_size == 0x0010 && header.component_size != 5) {
+		throw std::runtime_error("unsupported 16-bit channel width");
+	}
+	if (header.pixel_type == 0x0010 && header.pixel_size == 0x0020 && header.component_size != 8) {
+		throw std::runtime_error("unsupported 32-bit channel width");
+	}
+
+	size_t width = header.bounds.width();
+	size_t height = header.bounds.height();
+
+	std::vector<unsigned char> canvas;
+	size_t canvasSize = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+	canvas.resize(canvasSize);
+	std::fill(canvas.begin(), canvas.end(), 0);
+
+	for (size_t y = 0; y < height; y++) {
+		for (size_t x = 0; x < width; x++) {
+			uint32_t color_id = lookup_entry(pixel_map, header.pixel_size,
+				header.flags_row_bytes & 0x3FFF, x, y);
+
+			if (header.pixel_type == 0) {
+				const auto e = ctable->entries.find(static_cast<uint16_t>(color_id));
+				if (e == ctable->entries.end())
+				{
+					throw std::runtime_error("color not found in color map");
+				}
+				uint8_t alpha = 0xFF;
+				if (mask_map) {
+					//alpha = lookup_entry(*mask_map, 1, mask_row_bytes, x, y) ? 0xFF : 0x00;
+					alpha = static_cast<uint8_t>(lookup_entry(*mask_map, 1, mask_row_bytes, x, y) ? 0xFF : 0x00);
+					canvas[(y * width * 4 + x * 4) + 0] = alpha;
+					canvas[(y * width * 4 + x * 4) + 1] = e->second.b >> 8;
+					canvas[(y * width * 4 + x * 4) + 2] = e->second.g >> 8;
+					canvas[(y * width * 4 + x * 4) + 3] = e->second.r >> 8;
+				}
+			}
+			else {
+				throw std::runtime_error("unsupported pixel format");
+			}
+		}
+	}
+
+	m_texIcons[indexIcon] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, (int)width, (int)height);
+	SDL_GetTextureProperties(m_texIcons[indexIcon]);
+	SDL_UpdateTexture(m_texIcons[indexIcon], NULL, canvas.data(), (int)width * 4);
+}
+
+void U3Resources::decode_cicn(const size_t indexIcon, std::vector<unsigned char>& vdata)
+{
+	ColorIconResourceHeader header = read_cicn_header(vdata.data());
+
+	// The mask is required, but the bitmap may be missing
+	if ((header.pix_map.bounds.width() != header.mask_header.bounds.width()) ||
+		(header.pix_map.bounds.height() != header.mask_header.bounds.height())) {
+		throw std::runtime_error("mask dimensions don\'t match icon dimensions");
+	}
+	if (header.bitmap_header.flags_row_bytes &&
+		((header.pix_map.bounds.width() != header.mask_header.bounds.width()) ||
+			(header.pix_map.bounds.height() != header.mask_header.bounds.height()))) {
+		throw std::runtime_error("bitmap dimensions don\'t match icon dimensions");
+	}
+	if ((header.pix_map.pixel_size != 8) && (header.pix_map.pixel_size != 4) &&
+		(header.pix_map.pixel_size != 2) && (header.pix_map.pixel_size != 1)) {
+		throw std::runtime_error("pixel bit depth is not 1, 2, 4, or 8");
+	}
+
+	size_t mask_map_size = header.mask_header.flags_row_bytes * header.mask_header.bounds.height();
+	size_t bitmap_size = header.bitmap_header.flags_row_bytes * header.bitmap_header.bounds.height();
+
+	std::vector<unsigned char> mask_map;
+	mask_map.resize(mask_map_size);
+	size_t offset = 82;
+	std::copy(vdata.begin() + offset, vdata.begin() + offset + mask_map_size, mask_map.begin());
+	std::vector<unsigned char> bitmap;
+	bitmap.resize(bitmap_size);
+	std::copy(vdata.begin() + offset + mask_map_size, vdata.begin() + offset + mask_map_size + bitmap_size, bitmap.begin());
+
+	// We can't know the color table's size until we've read the header
+	size_t offset_1 = offset + mask_map_size + bitmap_size;
+
+	ColorTable ctable;
+	size_t last_offset = read_color_table(vdata.data() + offset_1, ctable) + offset_1;
+
+	// Decode the image data
+	size_t pixel_map_size =
+		(header.pix_map.flags_row_bytes & 0x3FFF) * header.pix_map.bounds.height();
+
+	std::vector<unsigned char> pixel_map;
+	pixel_map.resize(pixel_map_size);
+	std::copy(vdata.begin() + last_offset, vdata.begin() + last_offset + pixel_map_size, pixel_map.begin());
+
+	decode_color_image(indexIcon, header.pix_map, pixel_map, &ctable, &mask_map,
+		header.mask_header.flags_row_bytes);
 }

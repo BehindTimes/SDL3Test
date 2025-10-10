@@ -16,6 +16,8 @@ public:
 	std::string PathToSDLString(std::filesystem::path input);
 	std::string GetPaddedNum(int num, int length);
 	std::string replaceAll(std::string str, const std::string& from, const std::string& to);
+	void copy_be_16(const unsigned char* data_file, uint16_t* outval);
+	void copy_be_32(const unsigned char* data_file, uint32_t* outval);
 
 private:
 	std::random_device m_rd;

@@ -108,6 +108,98 @@ struct PartyDisplay
 	TTF_Text* Desc;
 };
 
+// Adapted from phosg library (https://github.com/fuzziqersoftware/phosg)
+// as well as resource_dasm (https://github.com/fuzziqersoftware/resource_dasm)
+
+struct macRect {
+	uint16_t y1;
+	uint16_t x1;
+	uint16_t y2;
+	uint16_t x2;
+
+	macRect() = default;
+	macRect(int16_t y1, int16_t x1, int16_t y2, int16_t x2);
+
+	size_t width() const;
+	size_t height() const;
+
+};
+
+struct PixelMapHeader {
+	/* 00 */ uint16_t flags_row_bytes;
+	/* 02 */ macRect bounds;
+	/* 0A */ uint16_t version;
+	/* 0C */ uint16_t pack_format;
+	/* 0E */ uint32_t pack_size;
+	/* 12 */ uint32_t h_res;
+	/* 16 */ uint32_t v_res;
+	/* 1A */ uint16_t pixel_type;
+	/* 1C */ uint16_t pixel_size; // bits per pixel
+	/* 1E */ uint16_t component_count;
+	/* 20 */ uint16_t component_size;
+	/* 22 */ uint32_t plane_offset;
+	/* 26 */ uint32_t color_table_offset; // when in memory, handle to color table
+	/* 2A */ uint32_t reserved;
+	/* 2E */
+};
+
+struct BitMapHeader {
+	uint16_t flags_row_bytes;
+	macRect bounds;
+
+	inline size_t bytes() const {
+		return (this->flags_row_bytes & 0x3FFF) * bounds.height();
+	}
+};
+
+struct ColorIconResourceHeader {
+	ColorIconResourceHeader()
+	{
+		pix_map_unused = 0;
+		memset(&pix_map, 0, sizeof(PixelMapHeader));
+		mask_unused = 0;
+		memset(&mask_header, 0, sizeof(BitMapHeader));
+		bitmap_unused = 0;
+		memset(&bitmap_header, 0, sizeof(BitMapHeader));
+		icon_data = 0;
+	}
+	// pixMap fields
+	uint32_t pix_map_unused;
+	PixelMapHeader pix_map;
+
+	// mask bitmap fields
+	uint32_t mask_unused;
+	BitMapHeader mask_header;
+
+	// 1-bit icon bitmap fields
+	uint32_t bitmap_unused;
+	BitMapHeader bitmap_header;
+
+	// icon data fields
+	uint32_t icon_data; // ignored
+};
+
+struct ColorTableEntry
+{
+	ColorTableEntry(uint16_t _r, uint16_t _g, uint16_t _b)
+	{
+		r = _r;
+		g = _g;
+		b = _b;
+	}
+	uint16_t r;
+	uint16_t g;
+	uint16_t b;
+};
+
+struct ColorTable
+{
+	uint32_t seed;
+	uint16_t flags;
+	int16_t num_entries;
+	std::map<uint16_t, ColorTableEntry> entries;
+};
+
 class U3Resources
 {
 public:
@@ -240,6 +332,7 @@ public:
 	SDL_Texture* m_texRaceClass;
 	SDL_Texture* m_texCharacterRecord;
 	SDL_Texture* m_texSosariaMap;
+	SDL_Texture* m_texIcons[2];
 	bool m_fullUpdate;
 	std::vector< U3Button> m_zstatbuttons;
 	U3Preferences m_preferences;
@@ -269,6 +362,7 @@ private:
 	bool createFont();
 	void loadGraphics();
 	bool loadImages();
+	bool loadIcons();
 	bool loadCursors();
 	void loadButtons();
 	
@@ -297,6 +391,20 @@ private:
 	void DrawPortrait(char charNum);
 	void zStatDistributeCallback(int button);
 	void zStatJoinGold(int button);
+
+	// Adapted from phosg library (https://github.com/fuzziqersoftware/phosg)
+	// as well as resource_dasm (https://github.com/fuzziqersoftware/resource_dasm)
+	ColorIconResourceHeader read_cicn_header(unsigned char* data_file);
+	size_t read_color_table(unsigned char* data_file, ColorTable& ctable);
+	uint32_t lookup_entry(const std::vector<unsigned char>& pixel_map, uint16_t pixel_size, size_t row_bytes, size_t x, size_t y);
+	void decode_color_image(
+		const size_t indexIcon,
+		const PixelMapHeader& header,
+		const std::vector<unsigned char>& pixel_map,
+		const ColorTable* ctable,
+		const std::vector<unsigned char>* mask_map,
+		size_t mask_row_bytes);
+	void decode_cicn(const size_t indexIcon, std::vector<unsigned char>& vdata);
 
 	static constexpr Uint64 AutoHealTime = 600;
 	static constexpr Uint64 MoveTime = 6000;
@@ -337,6 +445,7 @@ private:
 	SDL_Texture* m_texSpellList;
 	SDL_Texture* m_texMiscTables;
 	SDL_Texture* m_texCommands;
+
 	std::vector<SDL_Surface*> m_cursor_surface;
 
 	std::vector<unsigned char> m_vecSigData;

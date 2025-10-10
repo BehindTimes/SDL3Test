@@ -58,10 +58,10 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 
 U3Dialog::~U3Dialog()
 {
-	if (m_icon)
+	/*if (m_icon)
 	{
 		SDL_DestroyTexture(m_icon);
-	}
+	}*/
 	m_vecButtons.clear();
 	if (m_text_obj_title)
 	{
@@ -411,9 +411,14 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 	{
 		if (temp_data.type == 0xA0) // Icon
 		{
-			std::string icon_str = std::to_string(temp_data.id);
-			m_utilities->trim(icon_str);
-			std::filesystem::path IconPathMessage = m_resources->m_exePath;
+			int tempid = temp_data.id - 400;
+			if (tempid >= 0 && tempid < 2)
+			{
+				m_icon = m_resources->m_texIcons[tempid];
+			}
+			//std::string icon_str = std::to_string(temp_data.id);
+			//m_utilities->trim(icon_str);
+			/*std::filesystem::path IconPathMessage = m_resources->m_exePath;
 			IconPathMessage /= ResourceLoc;
 			IconPathMessage /= BinLoc;
 			IconPathMessage /= IconPathMessage;
@@ -424,7 +429,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 			if (std::filesystem::exists(IconPathMessage) && !m_icon)
 			{
 				m_icon = IMG_LoadTexture(m_renderer, IconPathMessage.string().c_str());
-			}
+			}*/
 		}
 		else if (ditl_data[curId].type == 0x04) // Button
 		{

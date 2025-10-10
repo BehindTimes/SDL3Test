@@ -1180,7 +1180,7 @@ void Game()
 	//m_misc->m_xpos = 10;
 	//m_misc->m_ypos = 10;
 	//m_misc->m_Player[1][17] = 'A';
-	m_misc->m_Player[1][30] = 40;
+	/*m_misc->m_Player[1][30] = 40;
 	m_misc->m_Player[2][30] = 40;
 	m_misc->m_Player[3][30] = 40;
 	m_misc->m_Player[4][30] = 40;
@@ -1198,7 +1198,7 @@ void Game()
 	m_misc->m_Player[1][27] = 10;      // Current Hit Points
 	m_misc->m_Player[1][26] = 0;       // Current Hit Points
 	m_misc->m_Player[2][27] = 10;      // Current Hit Points
-	m_misc->m_Player[2][26] = 0;       // Current Hit Points
+	m_misc->m_Player[2][26] = 0;       // Current Hit Points*/
 	//m_misc->m_Player[3][17] = 'P';
 	//m_misc->m_Player[16][17] = 'P';
 	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;

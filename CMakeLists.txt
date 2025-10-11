@@ -14,7 +14,7 @@ find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(Ogg REQUIRED)
-find_package(Sndfile REQUIRED)
+find_package(SndFile REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(PkgConfig REQUIRED)
 
@@ -44,8 +44,13 @@ target_sources(U3Lairware PRIVATE
 )
 
 target_link_libraries(U3Lairware PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image
-					LibXml2::LibXml2 Ogg::ogg OpenAL::OpenAL SndFile::sndfile
-					PkgConfig::Vorbis PkgConfig::Vorbisenc PkgConfig::Vorbisfile
+					LibXml2::LibXml2 
+					Ogg::ogg
+					OpenAL::OpenAL 
+					SndFile::sndfile
+					PkgConfig::Vorbis 
+					PkgConfig::Vorbisenc 
+					PkgConfig::Vorbisfile
 )
 
 target_include_directories(U3Lairware PRIVATE ${SDL3_INCLUDE_DIRS})

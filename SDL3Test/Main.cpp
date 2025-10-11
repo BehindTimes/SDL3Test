@@ -103,6 +103,25 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	m_dungeon = std::make_unique<UltimaDungeon>();
 	m_audio = std::make_unique<U3Audio>();
 
+#if TARGET_MAC_OSX
+	std::string strOut = settingsPath();
+	strOut += std::string("/U3LW");
+	std::cout << "Data directory for Ultime 3 - LairWare: " << strOut << std::endl;
+	const char* szBasePath = strOut.c_str();
+#else
+	const char* szBasePath = SDL_GetBasePath();
+#endif
+	if (szBasePath == nullptr)
+	{
+		return 4;
+	}
+	m_resources->m_exePath = szBasePath;
+
+	if (!m_resources->loadPreferences())
+	{
+		return EXIT_FAILURE;
+	}
+
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
@@ -120,20 +139,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
 		return 3;
 	}
-
-#if TARGET_MAC_OSX
-	std::string strOut = settingsPath();
-	strOut += std::string("/U3LW");
-	std::cout << "Data directory for Ultime 3 - LairWare: " << strOut << std::endl;
-	const char* szBasePath = strOut.c_str();
-#else
-	const char* szBasePath = SDL_GetBasePath();
-#endif
-	if (szBasePath == nullptr)
-	{
-		return 4;
-	}
-	m_resources->m_exePath = szBasePath;
 
 	if (!TTF_Init())
 	{
@@ -166,7 +171,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	Mix_AllocateChannels(8);
 #endif
 
-	SDL_SetRenderVSync(renderer, 1);
+	SDL_SetRenderVSync(renderer, m_resources->m_preferences.vsync);
 
 	bool valid = m_resources->init(renderer);
 	bool valid2 = m_audio->initMusic();
@@ -206,12 +211,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 bool DoSplashScreen()
 {
-	m_resources->loadPreferences();
 	m_misc->GetMiscStuff(true);
 	m_misc->GetRoster();
 	m_misc->GetParty();

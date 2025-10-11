@@ -128,6 +128,19 @@ bool U3Resources::loadPreferences()
 			m_preferences.theme = curMap["Theme"];
 			changeTheme(m_preferences.theme);
 		}
+		if (curMap.find("MusicSubfolder") != curMap.end())
+		{
+			m_preferences.music_subfolder = curMap["MusicSubfolder"];
+		}
+		if (curMap.find("Font") != curMap.end())
+		{
+			m_preferences.font = curMap["Font"];
+		}
+		if (curMap.find("vsync") != curMap.end())
+		{
+			int val = std::stoi(curMap["vsync"]);
+			m_preferences.vsync = (val != 0) ? 1 : 0;
+		}
 		if (curMap.find("auto_heal_amount") != curMap.end())
 		{
 			int val = std::stoi(curMap["auto_heal_amount"]);
@@ -175,7 +188,14 @@ void U3Resources::savePreferences()
 	xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
 	xmlTextWriterStartElement(writer, BAD_CAST  "U3LW_Settings");
 	xmlTextWriterWriteElement(writer, BAD_CAST  "FullScreen", BAD_CAST(m_preferences.full_screen ? "1" : "0"));
-	xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST  m_themes[m_currentTheme].c_str());
+	if (m_themes.size() > 0 && m_currentTheme >= 0 && m_currentTheme < m_themes.size())
+	{
+		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST(m_themes[m_currentTheme].c_str()));
+	}
+	else
+	{
+		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST(std::string(Standard).c_str()));
+	}
 	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST(m_preferences.auto_save ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST(m_preferences.include_wind ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "classic_appearance", BAD_CAST(m_preferences.classic_appearance ? "1" : "0"));
@@ -190,6 +210,10 @@ void U3Resources::savePreferences()
 	xmlTextWriterWriteElement(writer, BAD_CAST  "volume_music", BAD_CAST(str_number.c_str()));
 	str_number = std::to_string(m_preferences.volume_sfx);
 	xmlTextWriterWriteElement(writer, BAD_CAST  "volume_sfx", BAD_CAST(str_number.c_str()));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "MusicSubfolder", BAD_CAST(m_preferences.music_subfolder.c_str()));
+	xmlTextWriterWriteElement(writer, BAD_CAST  "Font", BAD_CAST(m_preferences.font.c_str()));
+	str_number = std::to_string(m_preferences.vsync);
+	xmlTextWriterWriteElement(writer, BAD_CAST  "vsync", BAD_CAST(str_number.c_str()));
 	xmlTextWriterEndElement(writer);
 	xmlTextWriterEndDocument(writer);
 	xmlFreeTextWriter(writer);
@@ -772,7 +796,7 @@ bool U3Resources::createFont()
 	std::filesystem::path currentPath = m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
-	currentPath /= "FreeSerif.ttf";
+	currentPath /= m_preferences.font;
 
 	// Need to make sure the font stays within the block size.
 	// The font will take up 75% of the space, and we want to give a 4 pixel buffer and then shift the text upwards

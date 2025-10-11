@@ -37,7 +37,10 @@ struct U3Preferences
 		play_sfx(true),
 		auto_heal_amount(750),
 		volume_music(100),
-		volume_sfx(100)
+		volume_sfx(100),
+		vsync(1),
+		music_subfolder("Standard"),
+		font("FreeSerif.ttf")
 	{
 	}
 
@@ -54,6 +57,9 @@ struct U3Preferences
 	int auto_heal_amount;
 	int volume_music;
 	int volume_sfx;
+	int vsync;
+	std::string music_subfolder;
+	std::string font;
 };
 
 struct InverseStruct

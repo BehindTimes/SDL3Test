@@ -375,7 +375,7 @@ bool U3Audio::initMusic()
 		std::filesystem::path currentPath = m_resources->m_exePath;
 		currentPath /= ResourceLoc;
 		currentPath /= MusicLoc;
-		currentPath /= Standard;
+		currentPath /= m_resources->m_preferences.music_subfolder;
 		currentPath /= musicList[index];
 
 		m_music[index] = Mix_LoadMUS(currentPath.string().c_str());
@@ -430,7 +430,7 @@ bool U3Audio::initMusic()
         std::filesystem::path currentPath = m_resources->m_exePath;
         currentPath /= ResourceLoc;
         currentPath /= MusicLoc;
-        currentPath /= Standard;
+        currentPath /= m_resources->m_preferences.music_subfolder;
         currentPath /= musicList[index];
         
         read_ogg_file(currentPath.string(), index);

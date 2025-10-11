@@ -239,7 +239,7 @@ bool U3Dialog::createFont()
 	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
-	currentPath /= "FreeSerif.ttf";
+	currentPath /= m_resources->m_preferences.font;
 
 	if (m_font)
 	{
@@ -1437,7 +1437,7 @@ bool ChooseOptionsDialog::createFont()
 	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
-	currentPath /= "FreeSerif.ttf";
+	currentPath /= m_resources->m_preferences.font;
 
 	if (m_font)
 	{
@@ -2286,7 +2286,7 @@ bool CreateCharacterDialog::createFont()
 	std::filesystem::path currentPath = m_resources->m_exePath;
 	currentPath /= ResourceLoc;
 	currentPath /= FontLoc;
-	currentPath /= "FreeSerif.ttf";
+	currentPath /= m_resources->m_preferences.font;
 
 	if (m_font)
 	{

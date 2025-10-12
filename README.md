@@ -126,4 +126,4 @@ In the **Save** folder, edit settings.xml and change the **Font** value to your 
 
 Right now, you'll have to restart the game in order to use the new font.
 
-This part is very experimental.  Right now I'm using several different unicode characters, and many ttf fonts don't include the full Unicode set, creating several graphical anomalies.  Also, the size of the font was specifically designed around FreeSerif, and font spacing and sizes vary from font to font.which can create abnormalities.  While it is an option to change the font, I'd do this at your own discretion.
+This part is very experimental.  Right now I'm using several different unicode characters, and many ttf fonts don't include the full Unicode set, creating several graphical anomalies.  Also, the size of the font was specifically designed around FreeSerif, and font spacing and sizes vary from font to font which can create abnormalities.  While it is an option to change the font, I'd do this at your own discretion.

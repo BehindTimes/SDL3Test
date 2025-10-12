@@ -105,3 +105,25 @@ Escape quits the game regardless of where you are.  Yes, this is often a cancel 
 To bring up the Options screen, press tab.
 
 For debugging purposes, press Alt-F to show the fps.
+
+*******************************************************************************
+
+Adding new music:
+
+In the **Mustic** folder, add new subfolders and place the ogg files there.
+
+In the **Save** folder, edit settings.xml and change the **MusicSubfolder** value to your new folder.
+
+Right now, you'll have to restart the game in order for the new music to play.
+
+*******************************************************************************
+
+Adding new fonts:
+
+In the **Fonts** folder, add new subfolders and place the ttf files there.
+
+In the **Save** folder, edit settings.xml and change the **MusicSubfolder** value to your new folder.
+
+Right now, you'll have to restart the game in order to use the new font.
+
+This part is very experimental.  Right now I'm using several different unicode characters, and many ttf fonts don't include the full Unicode set, creating several graphical anomalies.  Also, the size of the font was specifically designed around FreeSerif, and font spacing and sizes vary from font to font.which can create abnormalities.  While it is an option to change the font, I'd do this at your own discretion.

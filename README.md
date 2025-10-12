@@ -122,7 +122,7 @@ Adding new fonts:
 
 In the **Fonts** folder, add new subfolders and place the ttf files there.
 
-In the **Save** folder, edit settings.xml and change the **Font** value to your new folder.
+In the **Save** folder, edit settings.xml and change the **Font** value to your new ttf font.
 
 Right now, you'll have to restart the game in order to use the new font.
 

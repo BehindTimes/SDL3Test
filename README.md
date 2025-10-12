@@ -100,7 +100,7 @@ TO DO: In the future, something similar will be there to allow easy replacement 
 
 Controls:
 
-Alt-x quits the game regardless of where you are.  Yes, this is often a cancel selection or a menu hotkey in most games, but for the time being, it just exits.
+Alt-x quits the game regardless of where you are.  Yes, I finally changed this.
 
 To bring up the Options screen, press Esc.
 

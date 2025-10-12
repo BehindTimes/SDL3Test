@@ -1932,8 +1932,8 @@ void U3Misc::Routine6E6B()
 	m_Party[PARTY_XPOS] = (unsigned char)m_xpos;
 	m_Party[PARTY_YPOS] = (unsigned char)m_ypos;
 
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 1;
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(1);
 	m_audio->musicUpdate();
 
 	bool autosave;
@@ -4520,8 +4520,8 @@ bool U3Misc::ResurrectCallback()
 	m_oy = m_ypos - 1;
 	m_gTimeNegate = 0;
 
-	m_audio->m_currentSong = 1;
-	m_audio->m_nextSong = 1;
+	m_audio->setCurrentSong(1);
+	m_audio->setNextSong(1);
 	m_audio->musicUpdate();
 
 	m_audio->playSfx(SFX_BIGDEATH);
@@ -4896,8 +4896,8 @@ bool U3Misc::ExodusDieCallback1()
 	m_Party[PARTY_EXODUSDEFEATED] = 1;
 	bool classic;
 	std::string dispString;
-	m_audio->m_currentSong = 9;
-	m_audio->m_nextSong = 9;
+	m_audio->setCurrentSong(9);
+	m_audio->setNextSong(9);
 	m_audio->musicUpdate();
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
 	if (classic)
@@ -5971,9 +5971,9 @@ void U3Misc::GoWhirlPool() // 772D
 	{
 		m_scrollArea->UPrintMessageRewrapped(256);
 	}
-	m_audio->m_cachedSong = m_audio->m_currentSong;
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 0;
+	m_audio->setCachedSong(m_audio->getCurrentSong());
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(0);
 	m_audio->musicUpdate();
 	m_audio->playSfx(SFX_SINK);
 
@@ -6075,7 +6075,7 @@ bool U3Misc::GoWhirlPoolCallback()
 		m_xpos = (short)m_utilities->getRandom(0, m_mapSize - 1);
 		m_ypos = (short)m_utilities->getRandom(0, m_mapSize - 1);
 		temp = GetXYVal(m_xpos, m_ypos);
-		m_audio->m_nextSong = m_audio->m_cachedSong;
+		m_audio->setNextSong(m_audio->getCachedSong());
 		m_audio->musicUpdate();
 	}
 	return false;
@@ -6087,7 +6087,7 @@ bool U3Misc::GoWhirlPoolCallback2()
 	{
 		m_callbackStack.pop();
 	}
-	m_audio->m_nextSong = 1;
+	m_audio->setNextSong(1);
 	m_audio->musicUpdate();
 	m_scrollArea->UPrintMessage(115);
 	m_inputType = InputType::Default;
@@ -6102,7 +6102,7 @@ bool U3Misc::GoWhirlPoolCallback1()
 		m_callbackStack.pop();
 	}
 
-	m_audio->m_nextSong = 10;
+	m_audio->setNextSong(10);
 	m_audio->musicUpdate();
 	bool classic;
 	m_resources->GetPreference(U3PreferencesType::Classic_Appearance, classic);
@@ -6349,7 +6349,7 @@ bool U3Misc::shrineCallback1()
 		m_callbackStack.pop();
 	}
 	m_resources->m_overrideImage = -1;
-	m_audio->m_nextSong = 10;
+	m_audio->setNextSong(10);
 	return false;
 }
 

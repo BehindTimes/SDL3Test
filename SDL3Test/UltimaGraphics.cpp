@@ -1020,7 +1020,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
     if (!m_miniMapInit)
     {
         m_miniMapInit = true;
-        m_audio->m_currentSong = 9;
+        m_audio->setCurrentSong(9);
         m_audio->musicUpdate();
     }
 
@@ -1125,8 +1125,8 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
     if (!m_miniMapInit)
     {
         m_miniMapInit = true;
-        m_audio->m_currentSong = 9;
-        m_audio->m_nextSong = 4;
+        m_audio->setCurrentSong(9);
+        m_audio->setNextSong(4);
         m_audio->musicUpdate();
     }
 

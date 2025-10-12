@@ -27,9 +27,10 @@ void U3Audio::checkIsPlaying()
     ALint state;
     if(m_playingSong >= 0)
     {
-        if(m_playingSong > 0 && m_playingSong - 1 < m_music.size() && m_music[m_playingSong - 1].m_source > 0)
+        size_t tempsong = static_cast<size_t>(m_playingSong) - 1;
+        if(m_playingSong > 0 && tempsong < m_music.size() && m_music[tempsong].m_source > 0)
         {
-            alGetSourcei(m_music[m_playingSong - 1].m_source, AL_SOURCE_STATE, &state);
+            alGetSourcei(m_music[tempsong].m_source, AL_SOURCE_STATE, &state);
             if(state == AL_STOPPED)
             {
                 m_audio->playNextSong();
@@ -667,4 +668,19 @@ void U3Audio::setVolumeMusic(int volume)
         }
     }
 #endif
+}
+
+void U3Audio::setCurrentSong(int song)
+{
+    m_currentSong = song;
+}
+
+void U3Audio::setNextSong(int song)
+{
+    m_nextSong = song;
+}
+
+void U3Audio::setCachedSong(int song)
+{
+    m_cachedSong = song;
 }

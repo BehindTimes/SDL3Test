@@ -732,16 +732,16 @@ bool U3Misc::CommandEnter()
 
 		m_inputType = InputType::Transact;
 		//m_scrollArea->blockPrompt(true);
-		m_audio->m_currentSong = 9;
-		m_audio->m_nextSong = 10;
+		m_audio->setCurrentSong(9);
+		m_audio->setNextSong(10);
 		m_audio->musicUpdate();
 		m_callbackStack.push(std::bind(&U3Misc::EnterShrineCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ProcessEventCallback, this));
 
 		return false;
 	}
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 0;
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(0);
 	bool autosave;
 	m_resources->GetPreference(U3PreferencesType::Auto_Save, autosave);
 	if (autosave)
@@ -768,19 +768,19 @@ bool U3Misc::CommandEnter()
 	if (m_Party[PARTY_LOCATION] == 1) // Dungeon
 	{
 		m_dungeon->DungeonStart(0);
-		m_audio->m_nextSong = 1;
+		m_audio->setNextSong(1);
 		m_audio->musicUpdate();
 		return false;
 	}
 	if (m_Party[PARTY_LOCATION] == 2) // Town
 	{
-		m_audio->m_nextSong = 2;
+		m_audio->setNextSong(2);
 		m_audio->musicUpdate();
 		return false;
 	}
 	if (placeNum != 1)
 	{
-		m_audio->m_nextSong = 3;
+		m_audio->setNextSong(3);
 		m_audio->musicUpdate();
 		return false;
 	}
@@ -789,8 +789,8 @@ bool U3Misc::CommandEnter()
 		SafeExodus();
 	}
 
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 7;
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(7);
 	m_audio->musicUpdate();
 
 	return false;
@@ -986,12 +986,12 @@ bool U3Misc::transactFinishCallback()
 	{
 		m_callbackStack.pop();
 	}
-	m_audio->m_nextSong = m_Party[PARTY_LOCATION];
-	if (m_audio->m_nextSong > 8)
+	m_audio->setNextSong(m_Party[PARTY_LOCATION]);
+	if (m_audio->getNextSong() > 8)
 	{
-		m_audio->m_nextSong--;
+		m_audio->setNextSong(m_audio->getNextSong() - 1);
 	}
-	m_audio->m_currentSong = m_audio->m_nextSong;
+	m_audio->setCurrentSong(m_audio->getNextSong());
 	m_audio->musicUpdate();
 	return false;
 }
@@ -1035,8 +1035,8 @@ bool U3Misc::TransactCallback2()
 			return false;
 		}
 		shopNum = (m_ypos & 0x07);
-		m_audio->m_currentSong = 6;
-		m_audio->m_nextSong = 6;
+		m_audio->setCurrentSong(6);
+		m_audio->setNextSong(6);
 		m_audio->musicUpdate();
 
 		//gSongCurrent = gSongNext = 6;
@@ -1067,7 +1067,7 @@ bool U3Misc::TransactCallback2()
 		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
-	m_audio->m_currentSong = 8;
+	m_audio->setCurrentSong(8);
 	m_audio->musicUpdate();
 
 	m_scrollArea->UPrintMessage(90);

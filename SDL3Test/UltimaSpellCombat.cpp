@@ -76,11 +76,11 @@ void UltimaSpellCombat::Combat()
 	m_graphics->m_queuedMode = U3GraphicsMode::Combat;
 	m_misc->m_gameMode = GameStateMode::Combat;
 
-	m_g835F = (unsigned char)m_audio->m_currentSong;
+	m_g835F = (unsigned char)m_audio->getCurrentSong();
 	m_g5521 = m_g56E7 = 0;
 	m_audio->playSfx(SFX_COMBATSTART);
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 5;
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(5);
 	m_audio->musicUpdate();
 	m_misc->m_callbackStack.push(std::bind(&UltimaSpellCombat::CombatCallback, this));
 }
@@ -764,8 +764,8 @@ bool UltimaSpellCombat::VictoryCallback() const
 	}
 
 	m_misc->m_gTimeNegate = 0;
-	m_audio->m_currentSong = m_g835F;
-	m_audio->m_nextSong = m_g835F;
+	m_audio->setCurrentSong(m_g835F);
+	m_audio->setNextSong(m_g835F);
 	m_audio->musicUpdate();
 	m_misc->m_Party[PARTY_LOCATION] = m_g835E;
 	m_graphics->m_queuedMode = m_graphics->m_lastMode;

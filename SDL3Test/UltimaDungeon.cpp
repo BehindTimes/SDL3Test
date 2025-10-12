@@ -453,8 +453,8 @@ void UltimaDungeon::DungeonStart(short mode)
 	m_graphics->m_queuedMode = U3GraphicsMode::Dungeon;
 	//m_misc->m_gameMode = GameStateMode::Dungeon;
 
-	m_audio->m_currentSong = 0;
-	m_audio->m_nextSong = 4;
+	m_audio->setCurrentSong(0);
+	m_audio->setNextSong(4);
 	m_audio->musicUpdate();
 
 	if (mode == 1)
@@ -512,8 +512,8 @@ void UltimaDungeon::Routine6E6B()
 	{
 		m_misc->PullSosaria();
 	}
-	m_audio->m_nextSong = 1;
-	m_audio->m_currentSong = 1;
+	m_audio->setCurrentSong(1);
+	m_audio->setNextSong(1);
 	m_audio->musicUpdate();
 }
 
@@ -1501,8 +1501,8 @@ bool UltimaDungeon::FinishAge()
 	}
 	value += 0x18;
 	m_misc->m_gMonType = value * 2;
-	m_audio->m_currentSong = 4;
-	m_audio->m_nextSong = 4;
+	m_audio->setCurrentSong(4);
+	m_audio->setNextSong(4);
 	m_spellCombat->Combat();
 
 	return false;
@@ -1516,8 +1516,8 @@ void UltimaDungeon::dngnotcombat(short value)
 	case 1: // $9076 time lord
 		m_resources->m_overrideImage = 8;
 		m_scrollArea->UPrintMessage(151);
-		m_audio->m_currentSong = 9;
-		m_audio->m_nextSong = 9;
+		m_audio->setCurrentSong(9);
+		m_audio->setNextSong(9);
 		m_audio->musicUpdate();
 		m_misc->m_inputType = InputType::AnyKey;
 		m_misc->m_callbackStack.push(std::bind(&UltimaDungeon::TimeLordCallback, this));
@@ -1543,8 +1543,8 @@ void UltimaDungeon::dngnotcombat(short value)
 		m_misc->BombTrap();
 		break;
 	case 5: // $931C brand
-		m_audio->m_currentSong = 9;
-		m_audio->m_nextSong = 9;
+		m_audio->setCurrentSong(9);
+		m_audio->setNextSong(9);
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = 6;
 		m_misc->m_wx = 0x18;
@@ -1596,7 +1596,7 @@ bool UltimaDungeon::TimeLordCallback()
 		m_misc->m_callbackStack.pop();
 	}
 
-	m_audio->m_nextSong = 4;
+	m_audio->setNextSong(4);
 	m_audio->musicUpdate();
 	m_resources->m_overrideImage = -1;
 	m_scrollArea->UPrintWin("\n");
@@ -1610,8 +1610,8 @@ bool UltimaDungeon::foundFountain()
 	{
 		m_misc->m_callbackStack.pop();
 	}
-	m_audio->m_currentSong = 9;
-	m_audio->m_nextSong = 9;
+	m_audio->setCurrentSong(9);
+	m_audio->setNextSong(9);
 	m_audio->musicUpdate();
 	m_misc->m_wx = 0x18;
 	m_misc->m_wy = 0x17;
@@ -1644,16 +1644,16 @@ bool UltimaDungeon::FountainCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (chNum < 0 || chNum > 3)
 	{
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = -1;
 		return false;
 	}
 	if (m_misc->m_Party[PARTY_ROSTERPOS1 + chNum] == 0)
 	{
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = -1;
 		m_scrollArea->UPrintMessage(41);
@@ -1663,8 +1663,8 @@ bool UltimaDungeon::FountainCallback()
 	{
 		m_audio->playSfx(SFX_ERROR1);
 		m_audio->playSfx(SFX_ERROR1);
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = -1;
 		m_scrollArea->UPrintMessage(126);
@@ -1713,8 +1713,8 @@ bool UltimaDungeon::FountainCallback()
 		break;
 	default:
 		m_resources->m_overrideImage = -1;
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		break;
 	}
@@ -1744,16 +1744,16 @@ bool UltimaDungeon::MarkCallback()
 	m_resources->m_overrideImage = -1;
 	if (chNum < 0 || chNum > 3)
 	{
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		//m_scrollArea->blockPrompt(false);
 		return false;
 	}
 	if (m_misc->m_Party[PARTY_ROSTERPOS1 + chNum] == 0)
 	{
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		//m_scrollArea->blockPrompt(false);
 		m_scrollArea->UPrintMessage(41);
@@ -1761,8 +1761,8 @@ bool UltimaDungeon::MarkCallback()
 	}
 	if (m_misc->CheckAlive(chNum) == false)
 	{
-		m_audio->m_currentSong = 4;
-		m_audio->m_nextSong = 4;
+		m_audio->setCurrentSong(4);
+		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		//m_scrollArea->blockPrompt(false);
 		m_scrollArea->UPrintMessage(126);
@@ -1792,8 +1792,8 @@ bool UltimaDungeon::MarkCallback2()
 	m_misc->HPSubtract(m_misc->m_rosNum, 50);
 	m_scrollArea->UPrintMessage(162);
 	//m_scrollArea->blockPrompt(false);
-	m_audio->m_currentSong = 4;
-	m_audio->m_nextSong = 4;
+	m_audio->setCurrentSong(4);
+	m_audio->setNextSong(4);
 	m_audio->musicUpdate();
 	return false;
 }

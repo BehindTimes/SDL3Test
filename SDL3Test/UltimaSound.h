@@ -50,6 +50,12 @@ public:
 	void playNextSong();
 	void setVolumeSfx(int volume);
 	void setVolumeMusic(int volume);
+	void setCurrentSong(int song);
+	void setNextSong(int song);
+	void setCachedSong(int song);
+	int getCurrentSong() const { return m_currentSong; }
+	int getNextSong() const { return m_nextSong; }
+	int getCachedSong() const { return m_cachedSong; }
 
 #if HAVE_SDL3_MIXER
 	std::vector<Mix_Music*> m_music;
@@ -63,12 +69,13 @@ public:
 	std::vector<MusicData> m_sfx;
 #endif
 
+private:
+	void playMusic(int song);
+
 	int m_currentSong;
 	int m_nextSong;
 	int m_playingSong;
 	int m_cachedSong;
-private:
-	void playMusic(int song);
 
 #if HAVE_OPEN_AL
 	ALCdevice* m_device;

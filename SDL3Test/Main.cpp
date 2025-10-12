@@ -250,8 +250,8 @@ void MainLoop()
 
 	m_misc->m_zp[0xCF] = 0;
 	m_misc->m_zp[0x10] = 0;
-	m_audio->m_nextSong = 0;
-	m_audio->m_currentSong = 0;
+	m_audio->setNextSong(0);
+	m_audio->setCurrentSong(0);
 
 	while (newMode != GameMode::Unknown)
 	{
@@ -270,8 +270,8 @@ void MainLoop()
 					break;
 				}
 				DoSplashScreen();
-				m_audio->m_currentSong = 0;
-				m_audio->m_nextSong = 0;
+				m_audio->setCurrentSong(0);
+				m_audio->setNextSong(0);
 				m_misc->m_demoSong = 0;
 				m_graphics->CreateIntroData();
 				m_graphics->CreateMenuData();
@@ -306,8 +306,8 @@ void MainLoop()
 			switch (newMode)
 			{
 			case GameMode::MainMenu:
-				m_audio->m_currentSong = 0;
-				m_audio->m_nextSong = 0;
+				m_audio->setCurrentSong(0);
+				m_audio->setNextSong(0);
 				m_audio->musicUpdate();
 				break;
 			case GameMode::Intro:
@@ -729,9 +729,9 @@ void Demo()
 	SDL_Event event;
 	changeMode = false;
 
-	if (m_audio->m_currentSong == 0)
+	if (m_audio->getCurrentSong() == 0)
 	{
-		m_audio->m_nextSong = m_misc->m_demoSong;
+		m_audio->setNextSong(m_misc->m_demoSong);
 	}
 	m_audio->musicUpdate();
 
@@ -801,14 +801,14 @@ void Demo()
 		m_resources->DemoUpdate(curTick);
 		SDL_RenderPresent(renderer);
 
-		if (m_audio->m_nextSong == m_audio->m_currentSong)
+		if (m_audio->getNextSong() == m_audio->getCurrentSong())
 		{
-			m_audio->m_nextSong++;
-			if (m_audio->m_nextSong > 10)
+			m_audio->setNextSong(m_audio->getNextSong() + 1);
+			if (m_audio->getNextSong() > 10)
 			{
-				m_audio->m_nextSong = 1;
+				m_audio->setNextSong(1);
 			}
-			m_misc->m_demoSong = m_audio->m_nextSong;
+			m_misc->m_demoSong = m_audio->getNextSong();
 			m_audio->musicUpdate();
 		}
 	}
@@ -1220,8 +1220,8 @@ void Game()
 	m_graphics->m_staydead = false;
 	memset(m_graphics->m_maskArray, 0xFF, sizeof(unsigned char) * 128);
 
-	m_audio->m_currentSong = 1;
-	m_audio->m_nextSong = 1;
+	m_audio->setCurrentSong(1);
+	m_audio->setNextSong(1);
 	m_audio->musicUpdate();
 
 	ReflectNewCursor(-1);

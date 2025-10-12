@@ -4,6 +4,14 @@
 #include <string>
 #include <SDL3_ttf/SDL_ttf.h>
 
+enum class ButtonType
+{
+	Text,
+	UpArrow,
+	DownArrow
+};
+
+
 class U3Button
 {
 public:
@@ -29,6 +37,7 @@ public:
 	float getWidth() const { return m_width; }
 	float getHeight() const { return m_height; }
 	bool isCaptured() const { return m_captureMouse; }
+	void setType(ButtonType type) { m_type = type; }
 
 	int m_x;
 	int m_y;
@@ -49,5 +58,6 @@ private:
 	int m_id;
 	std::string m_text;
 	bool m_hasFocus;
+	ButtonType m_type;
 };
 

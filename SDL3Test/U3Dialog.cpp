@@ -1128,13 +1128,13 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_sfxVolume(100),
 	m_musicVolume(100)
 {
-	m_upArrow += static_cast<char>(0xE2);
+	/*m_upArrow += static_cast<char>(0xE2);
 	m_upArrow += static_cast<char>(0x96);
 	m_upArrow += static_cast<char>(0xB4);
 
 	m_downArrow += static_cast<char>(0xE2);
 	m_downArrow += static_cast<char>(0x96);
-	m_downArrow += static_cast<char>(0xBE);
+	m_downArrow += static_cast<char>(0xBE);*/
 
 	m_curTheme = m_resources->m_currentTheme;
 }
@@ -1332,19 +1332,19 @@ void ChooseOptionsDialog::init()
 	m_sfxVolume = m_resources->m_preferences.volume_sfx;
 	m_healLimit = m_resources->m_preferences.auto_heal_amount;
 
-	addButton(m_upArrow, 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 	addButton(std::string(CancelString), 194, 216, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
 	addButton(std::string(OKString), 266, 216, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
 
-	addButton(m_upArrow, 164, 132, std::bind(&ChooseOptionsDialog::musicVolumeUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 164, 148, std::bind(&ChooseOptionsDialog::musicVolumeDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 164, 132, std::bind(&ChooseOptionsDialog::musicVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 164, 148, std::bind(&ChooseOptionsDialog::musicVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
-	addButton(m_upArrow, 164, 172, std::bind(&ChooseOptionsDialog::sfxVolumeUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 164, 188, std::bind(&ChooseOptionsDialog::sfxVolumeDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 164, 172, std::bind(&ChooseOptionsDialog::sfxVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 164, 188, std::bind(&ChooseOptionsDialog::sfxVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
-	addButton(m_upArrow, (int)(m_Rect.w - 19), 122, std::bind(&ChooseOptionsDialog::healLimitUp, this, std::placeholders::_1));
-	addButton(m_downArrow, (int)(m_Rect.w - 19), 138, std::bind(&ChooseOptionsDialog::healLimitDown, this, std::placeholders::_1));
+	addButton(m_upArrow, (int)(m_Rect.w - 19), 122, std::bind(&ChooseOptionsDialog::healLimitUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, (int)(m_Rect.w - 19), 138, std::bind(&ChooseOptionsDialog::healLimitDown, this, std::placeholders::_1), ButtonType::DownArrow);
 }
 
 void ChooseOptionsDialog::changeBlockSize(int blockSize)
@@ -1395,25 +1395,25 @@ bool ChooseOptionsDialog::display()
 
 	for (auto& curLabel : m_labels)
 	{
-		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler),
+		renderDisplayString(curLabel->m_ttfLabel, (int)((curLabel->m_x + m_Rect.x) * scaler + 0.5f),
 			(int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
 	}
 
 	for (auto& curButton : m_buttons)
 	{
-		curButton->render(m_renderer, m_blockSize, (int)(curButton->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+		curButton->render(m_renderer, m_blockSize, (int)((curButton->m_x + m_Rect.x) * scaler + 0.5f) + screenOffsetX,
 			(int)(curButton->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
 	for (auto& curTextBox : m_textBoxes)
 	{
-		curTextBox->render(m_renderer, (int)(curTextBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+		curTextBox->render(m_renderer, (int)((curTextBox->m_x + m_Rect.x) * scaler + 0.5f) + screenOffsetX,
 			(int)(curTextBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
 	for (auto& curCheckBox : m_checkBoxes)
 	{
-		curCheckBox->render(m_renderer, (int)(curCheckBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+		curCheckBox->render(m_renderer, (int)((curCheckBox->m_x + m_Rect.x) * scaler + 0.5f) + screenOffsetX,
 			(int)(curCheckBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
@@ -1469,9 +1469,10 @@ void ChooseOptionsDialog::addLabel(std::string strLabel, int x, int y)
 	m_labels.push_back(std::move(curLabel));
 }
 
-void ChooseOptionsDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func)
+void ChooseOptionsDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func, ButtonType type)
 {
 	auto curButton = std::make_unique<U3Button>();
+	curButton->setType(type);
 	m_buttons.push_back(std::move(curButton));
 	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
 	m_buttons.back()->setVisible(true);
@@ -1592,13 +1593,13 @@ CreateCharacterDialog::CreateCharacterDialog(SDL_Renderer* renderer, TTF_TextEng
 	m_font(nullptr),
 	m_curPlayer(nullptr)
 {
-	m_upArrow += static_cast<char>(0xE2);
+	/*m_upArrow += static_cast<char>(0xE2);
 	m_upArrow += static_cast<char>(0x96);
 	m_upArrow += static_cast<char>(0xB4);
 
 	m_downArrow += static_cast<char>(0xE2);
 	m_downArrow += static_cast<char>(0x96);
-	m_downArrow += static_cast<char>(0xBE);
+	m_downArrow += static_cast<char>(0xBE);*/
 }
 
 CreateCharacterDialog::~CreateCharacterDialog()
@@ -1753,21 +1754,21 @@ void CreateCharacterDialog::init()
 	addLabel(std::string(RaceString), 176, 90 + offsetY);
 	addLabel(std::string(TypeString), 176, 124 + offsetY);
 
-	addButton(m_upArrow, 144, 32 + offsetY, std::bind(&CreateCharacterDialog::strengthUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 144, 48 + offsetY, std::bind(&CreateCharacterDialog::strengthDown, this, std::placeholders::_1));
-	addButton(m_upArrow, 144, 66 + offsetY, std::bind(&CreateCharacterDialog::dexterityUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 144, 82 + offsetY, std::bind(&CreateCharacterDialog::dexterityDown, this, std::placeholders::_1));
-	addButton(m_upArrow, 144, 100 + offsetY, std::bind(&CreateCharacterDialog::intelligenceUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 144, 116 + offsetY, std::bind(&CreateCharacterDialog::intelligenceDown, this, std::placeholders::_1));
-	addButton(m_upArrow, 144, 134 + offsetY, std::bind(&CreateCharacterDialog::wisdomUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 144, 150 + offsetY, std::bind(&CreateCharacterDialog::wisdomDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 144, 32 + offsetY, std::bind(&CreateCharacterDialog::strengthUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 144, 48 + offsetY, std::bind(&CreateCharacterDialog::strengthDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(m_upArrow, 144, 66 + offsetY, std::bind(&CreateCharacterDialog::dexterityUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 144, 82 + offsetY, std::bind(&CreateCharacterDialog::dexterityDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(m_upArrow, 144, 100 + offsetY, std::bind(&CreateCharacterDialog::intelligenceUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 144, 116 + offsetY, std::bind(&CreateCharacterDialog::intelligenceDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(m_upArrow, 144, 134 + offsetY, std::bind(&CreateCharacterDialog::wisdomUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 144, 150 + offsetY, std::bind(&CreateCharacterDialog::wisdomDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
-	addButton(m_upArrow, 312, 48 + offsetY, std::bind(&CreateCharacterDialog::sexUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 312, 64 + offsetY, std::bind(&CreateCharacterDialog::sexDown, this, std::placeholders::_1));
-	addButton(m_upArrow, 312, 82 + offsetY, std::bind(&CreateCharacterDialog::raceUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 312, 98 + offsetY, std::bind(&CreateCharacterDialog::raceDown, this, std::placeholders::_1));
-	addButton(m_upArrow, 312, 116 + offsetY, std::bind(&CreateCharacterDialog::typeUp, this, std::placeholders::_1));
-	addButton(m_downArrow, 312, 132 + offsetY, std::bind(&CreateCharacterDialog::typeDown, this, std::placeholders::_1));
+	addButton(m_upArrow, 312, 48 + offsetY, std::bind(&CreateCharacterDialog::sexUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 312, 64 + offsetY, std::bind(&CreateCharacterDialog::sexDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(m_upArrow, 312, 82 + offsetY, std::bind(&CreateCharacterDialog::raceUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 312, 98 + offsetY, std::bind(&CreateCharacterDialog::raceDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(m_upArrow, 312, 116 + offsetY, std::bind(&CreateCharacterDialog::typeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton(m_downArrow, 312, 132 + offsetY, std::bind(&CreateCharacterDialog::typeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
 	addButton(std::string(CancelString), 176, 176 + offsetY, std::bind(&CreateCharacterDialog::cancelPushed, this, std::placeholders::_1));
 	addButton(std::string(OKString), 256, 176 + offsetY, std::bind(&CreateCharacterDialog::okPushed, this, std::placeholders::_1));
@@ -2229,19 +2230,19 @@ bool CreateCharacterDialog::display()
 
 	for (auto& curLabel : m_labels)
 	{
-		renderDisplayString(curLabel->m_ttfLabel, (int)(curLabel->m_x * scaler + m_Rect.x * scaler),
+		renderDisplayString(curLabel->m_ttfLabel, (int)((curLabel->m_x + m_Rect.x) * scaler + 0.5f),
 			(int)(curLabel->m_y * scaler + m_Rect.y * scaler), sdl_text_color);
 	}
 
 	for (auto& curButton : m_buttons)
 	{
-		curButton->render(m_renderer, m_blockSize, (int)(curButton->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+		curButton->render(m_renderer, m_blockSize, (int)((curButton->m_x + m_Rect.x) * scaler + 0.5f) + screenOffsetX,
 			(int)(curButton->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
 	for (auto& curTextBox : m_textBoxes)
 	{
-		curTextBox->render(m_renderer, (int)(curTextBox->m_x * scaler + m_Rect.x * scaler) + screenOffsetX,
+		curTextBox->render(m_renderer, (int)((curTextBox->m_x + m_Rect.x) * scaler + 0.5f) + screenOffsetX,
 			(int)(curTextBox->m_y * scaler + m_Rect.y * scaler) + screenOffsetY);
 	}
 
@@ -2265,9 +2266,10 @@ void CreateCharacterDialog::addLabel(std::string strLabel, int x, int y)
 	m_labels.push_back(std::move(curLabel));
 }
 
-void CreateCharacterDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func)
+void CreateCharacterDialog::addButton(std::string strLabel, int x, int y, std::function<void(int)> func, ButtonType type)
 {
 	auto curButton = std::make_unique<U3Button>();
+	curButton->setType(type);
 	m_buttons.push_back(std::move(curButton));
 	m_buttons.back()->CreateTextButton(m_blockSize, m_renderer, m_engine_surface, m_font, strLabel, x, y);
 	m_buttons.back()->setVisible(true);

@@ -604,15 +604,15 @@ void MainMenu()
 
 					m_resources->CalculateBlockSize();
 				}
-				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				else if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
 				}
-			}
-			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
+				else if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			else if (event.key.key == SDLK_R)
 			{
@@ -764,15 +764,15 @@ void Demo()
 
 					m_resources->CalculateBlockSize();
 				}
-				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				else if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
 				}
-			}
-			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
+				else if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			else
 			{
@@ -849,15 +849,15 @@ void Intro()
 
 					m_resources->CalculateBlockSize();
 				}
-				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				else if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
 				}
-			}
-			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
+				else if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			else
 			{
@@ -1106,15 +1106,15 @@ void JourneyOnward()
 
 					m_resources->CalculateBlockSize();
 				}
-				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				else if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
 				}
-			}
-			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
+				else if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			break;
 		default:
@@ -1192,21 +1192,9 @@ void Game()
 	m_misc->m_Player[1][14] = 0xFF;
 	m_misc->m_Player[1][15] = 50;
 	m_misc->m_Player[1][37] = 50;
-	m_misc->m_Player[1][17] = 'G';
-	m_misc->m_Player[2][17] = 'G';
-	m_misc->m_Player[1][34] = 3;      // Current Hit Points
-	m_misc->m_Player[1][34] = 3;      // Current Hit Points
-	m_misc->m_Player[1][PLAYER_FOOD_2] = 3;      // Current Hit Points
-	m_misc->m_Player[1][PLAYER_FOOD_1] = 0;      // Current Hit Points
-	m_misc->m_Player[2][PLAYER_FOOD_2] = 3;      // Current Hit Points
-	m_misc->m_Player[2][PLAYER_FOOD_1] = 0;      // Current Hit Points
-	m_misc->m_Player[1][27] = 10;      // Current Hit Points
-	m_misc->m_Player[1][26] = 0;       // Current Hit Points
-	m_misc->m_Player[2][27] = 10;      // Current Hit Points
-	m_misc->m_Player[2][26] = 0;       // Current Hit Points*/
 	//m_misc->m_Player[3][17] = 'P';
 	//m_misc->m_Player[16][17] = 'P';
-	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;
+	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;*/
 	
 	
 	//m_misc->m_Player[1][17] = 'D';
@@ -1278,12 +1266,12 @@ void Game()
 				{
 					showFPS = !showFPS;
 				}
+				if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
-			}
-			else if (event.key.key == SDLK_TAB)
 			{
 				if (m_graphics->m_curMode != U3GraphicsMode::Menu)
 				{

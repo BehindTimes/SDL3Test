@@ -19,7 +19,8 @@ U3Button::U3Button() :
 	m_hasFocus(false),
 	m_x(0),
 	m_y(0),
-	m_override_width(0)
+	m_override_width(0),
+	m_type(ButtonType::Text)
 {
 }
 
@@ -116,32 +117,42 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 
 	float override_offset = 0;
 
-	TTF_Text* text_obj = NULL;
-	text_obj = TTF_CreateText(engine_surface, font, strText.c_str(), 0);
-	if (text_obj)
+	float triangle_offset = 3;
+
+	if (m_type == ButtonType::UpArrow)
 	{
-		float temp_width = m_override_width * scaler;
-		int w, h;
-		TTF_GetTextSize(text_obj, &w, &h);
+		int w = (int)(blockSize - (2 * scaler));
+		int h = (int)(blockSize - (2 * scaler));
 
-		if (temp_width > w)
-		{
-			override_offset = (temp_width - w) / 2.0f;
-			w = (int)temp_width;
-		}
+		// Define the vertices of the triangle
+		SDL_Vertex vert[3];
 
-		if (h > blockSize)
-		{
-			offsety = (h - blockSize) / 2.0f;
-			h = blockSize;
-		}
-		if (w  + 4 < h)
-		{
-			offset = (h - w) / 2.0f;
-			w = h - 4;
-		}
+		// bottom left
+		vert[0].position.x = triangle_offset * scaler;
+		vert[0].position.y = h - triangle_offset * scaler;
+		vert[0].color.r = 0.0f;
+		vert[0].color.g = 0.0f;
+		vert[0].color.b = 0.0f;
+		vert[0].color.a = 1.0f;
 
-		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+		// bottom right
+		vert[1].position.x = w - triangle_offset * scaler;
+		vert[1].position.y = h - triangle_offset * scaler;
+		vert[1].color.r = 0.0f;
+		vert[1].color.g = 0.0f;
+		vert[1].color.b = 0.0f;
+		vert[1].color.a = 1.0f;
+
+		// top
+		vert[2].position.x = w / 2.0f;
+		vert[2].position.y = triangle_offset * scaler;
+		vert[2].color.r = 0.0f;
+		vert[2].color.g = 0.0f;
+		vert[2].color.b = 0.0f;
+		vert[2].color.a = 1.0f;
+
+
+		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 		SDL_SetTextureScaleMode(m_texDefault, SDL_SCALEMODE_NEAREST);
 
 		SDL_SetRenderTarget(renderer, m_texDefault);
@@ -150,23 +161,24 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
 		//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderFillRect(renderer, NULL);
-		TTF_SetTextColor(text_obj, 0, 0, 0, 255);
-		//TTF_SetTextColor(text_obj, 255, 255, 255, 255);
-		TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
+
+		SDL_RenderGeometry(renderer, nullptr, vert, 3, nullptr, 0);
+
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 
 		SDL_SetRenderTarget(renderer, NULL);
 
-		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 
 		SDL_SetRenderTarget(renderer, m_texPushed);
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
 		SDL_RenderFillRect(renderer, NULL);
-		TTF_SetTextColor(text_obj, 255,255, 255, 255);
-		TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
+
+		SDL_RenderGeometry(renderer, nullptr, vert, 3, nullptr, 0);
+
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderRect(renderer, NULL);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -177,10 +189,146 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 		m_height = (float)h;
 
 		m_visible = true;
+	}
+	else if (m_type == ButtonType::DownArrow)
+	{
+		int w = (int)(blockSize - (2 * scaler));
+		int h = (int)(blockSize - (2 * scaler));
 
-		TTF_DestroyText(text_obj);
-		text_obj = NULL;
-		m_text = strText;
+		// Define the vertices of the triangle
+		SDL_Vertex vert[3];
+
+		// top left
+		vert[0].position.x = triangle_offset * scaler;
+		vert[0].position.y = triangle_offset * scaler;
+		vert[0].color.r = 0.0f;
+		vert[0].color.g = 0.0f;
+		vert[0].color.b = 0.0f;
+		vert[0].color.a = 1.0f;
+
+		// top right
+		vert[1].position.x = w - triangle_offset * scaler;
+		vert[1].position.y = triangle_offset * scaler;
+		vert[1].color.r = 0.0f;
+		vert[1].color.g = 0.0f;
+		vert[1].color.b = 0.0f;
+		vert[1].color.a = 1.0f;
+
+		// bottom
+		vert[2].position.x = w / 2.0f;
+		vert[2].position.y = h - triangle_offset * scaler;
+		vert[2].color.r = 0.0f;
+		vert[2].color.g = 0.0f;
+		vert[2].color.b = 0.0f;
+		vert[2].color.a = 1.0f;
+
+
+		m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+		SDL_SetTextureScaleMode(m_texDefault, SDL_SCALEMODE_NEAREST);
+
+		SDL_SetRenderTarget(renderer, m_texDefault);
+
+		SDL_RenderClear(renderer);
+		SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+		//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderFillRect(renderer, NULL);
+
+		SDL_RenderGeometry(renderer, nullptr, vert, 3, nullptr, 0);
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderRect(renderer, NULL);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+		SDL_SetRenderTarget(renderer, NULL);
+
+		m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+
+		SDL_SetRenderTarget(renderer, m_texPushed);
+		SDL_RenderClear(renderer);
+		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+		SDL_RenderFillRect(renderer, NULL);
+
+		SDL_RenderGeometry(renderer, nullptr, vert, 3, nullptr, 0);
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderRect(renderer, NULL);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+		SDL_SetRenderTarget(renderer, NULL);
+
+		m_width = (float)w;
+		m_height = (float)h;
+
+		m_visible = true;
+	}
+	else
+	{
+		TTF_Text* text_obj = NULL;
+		text_obj = TTF_CreateText(engine_surface, font, strText.c_str(), 0);
+		if (text_obj)
+		{
+			float temp_width = m_override_width * scaler;
+			int w, h;
+			TTF_GetTextSize(text_obj, &w, &h);
+
+			if (temp_width > w)
+			{
+				override_offset = (temp_width - w) / 2.0f;
+				w = (int)temp_width;
+			}
+
+			if (h > blockSize)
+			{
+				offsety = (h - blockSize) / 2.0f;
+				h = blockSize;
+			}
+			if (w + 4 < h)
+			{
+				offset = (h - w) / 2.0f;
+				w = h - 4;
+			}
+
+			m_texDefault = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+			SDL_SetTextureScaleMode(m_texDefault, SDL_SCALEMODE_NEAREST);
+
+			SDL_SetRenderTarget(renderer, m_texDefault);
+
+			SDL_RenderClear(renderer);
+			SDL_SetRenderDrawColor(renderer, 192, 192, 192, 255);
+			//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderFillRect(renderer, NULL);
+			TTF_SetTextColor(text_obj, 0, 0, 0, 255);
+			//TTF_SetTextColor(text_obj, 255, 255, 255, 255);
+			TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderRect(renderer, NULL);
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+			SDL_SetRenderTarget(renderer, NULL);
+
+			m_texPushed = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w + 4, h);
+
+			SDL_SetRenderTarget(renderer, m_texPushed);
+			SDL_RenderClear(renderer);
+			SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+			SDL_RenderFillRect(renderer, NULL);
+			TTF_SetTextColor(text_obj, 255, 255, 255, 255);
+			TTF_DrawRendererText(text_obj, 2 + offset + (int)override_offset, (float)((int)(-1.0f * (int)offsety)));
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderRect(renderer, NULL);
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+
+			SDL_SetRenderTarget(renderer, NULL);
+
+			m_width = (float)w;
+			m_height = (float)h;
+
+			m_visible = true;
+
+			TTF_DestroyText(text_obj);
+			text_obj = NULL;
+			m_text = strText;
+		}
 	}
 }
 

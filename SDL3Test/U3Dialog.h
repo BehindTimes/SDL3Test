@@ -137,7 +137,7 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void addLabel(std::string strLabel, int x, int y);
-	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func);
+	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func, ButtonType type = ButtonType::Text);
 	void addTextBox(int x, int y, int width);
 	void addCheckBox(int x, int y);
 	void cancelPushed(int id);
@@ -192,7 +192,7 @@ public:
 	bool display();
 	void changeBlockSize(int blockSize);
 	void addLabel(std::string strLabel, int x, int y);
-	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func);
+	void addButton(std::string strLabel, int x, int y, std::function<void(int)> func, ButtonType type = ButtonType::Text);
 	void addTextBox(int x, int y, int width);
 	void updateDialog(float xPos, float yPos, int mouseState);
 	void loadPresets();

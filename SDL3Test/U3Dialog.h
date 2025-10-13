@@ -52,9 +52,8 @@ public:
 	U3TextBox(int blockSize, int x, int y, int width);
 	~U3TextBox();
 
-	void U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize);
 	void render(SDL_Renderer* renderer, int x, int y);
-	void setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text);
+	void setText(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string text);
 	std::string getText() const { return m_strText; }
 
 	int m_x;
@@ -65,8 +64,8 @@ public:
 
 private:
 	std::string m_strText;
-	TTF_Text* m_ttfText;
-	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
+	SDL_Texture* m_texture;
+	//void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 };
 
 struct ccdData
@@ -109,7 +108,8 @@ struct codData
 		allow_diagonals(false),
 		auto_heal_amount(750),
 		volume_music(100),
-		volume_sfx(100)
+		volume_sfx(100),
+		font_val(0)
 	{
 	}
 	int theme;
@@ -125,6 +125,7 @@ struct codData
 	int auto_heal_amount;
 	int volume_music;
 	int volume_sfx;
+	size_t font_val;
 };
 
 class ChooseOptionsDialog
@@ -161,6 +162,9 @@ private:
 	void musicVolumeDown(int id);
 	void healLimitUp(int id);
 	void healLimitDown(int id);
+	void fontUp(int id);
+	void fontDown(int id);
+	void setFontTextBox();
 
 	int m_blockSize;
 	SDL_Renderer* m_renderer;
@@ -171,15 +175,13 @@ private:
 	std::vector<std::unique_ptr<U3CheckBox>> m_checkBoxes;
 	TTF_Font* m_font; // block size font
 
-	std::string m_upArrow;
-	std::string m_downArrow;
 	std::function<void(int)> m_callBack;
 	int m_closeValue;
 	int m_curTheme;
 	int m_healLimit;
 	int m_sfxVolume;
 	int m_musicVolume;
-	
+	size_t m_fontKeyPos;
 };
 
 class CreateCharacterDialog

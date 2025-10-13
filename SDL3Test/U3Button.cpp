@@ -125,7 +125,7 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 		int h = (int)(blockSize - (2 * scaler));
 
 		// Define the vertices of the triangle
-		SDL_Vertex vert[3];
+		SDL_Vertex vert[3]{};
 
 		// bottom left
 		vert[0].position.x = triangle_offset * scaler;
@@ -196,7 +196,7 @@ void U3Button::CreateTextButton(int blockSize, SDL_Renderer* renderer, TTF_TextE
 		int h = (int)(blockSize - (2 * scaler));
 
 		// Define the vertices of the triangle
-		SDL_Vertex vert[3];
+		SDL_Vertex vert[3]{};
 
 		// top left
 		vert[0].position.x = triangle_offset * scaler;

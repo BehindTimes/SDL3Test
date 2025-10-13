@@ -200,6 +200,13 @@ struct ColorTableEntry
 
 struct ColorTable
 {
+	ColorTable() :
+		seed(0),
+		flags(0),
+		num_entries(0)
+	{
+	}
+
 	uint32_t seed;
 	uint16_t flags;
 	int16_t num_entries;
@@ -219,6 +226,8 @@ public:
 
 	bool loadPreferences();
 	void savePreferences();
+
+	void changeFont();
 
 	void renderUI(int part, int x, int y, bool adjust = true, int offsetX = 0, int offsetY = 0);
 	void DrawFramePieceReal(int part, int x, int y, bool adjust = false);
@@ -357,7 +366,12 @@ public:
 	std::vector<unsigned char> m_vecResourceData;
     
     bool m_resizeScreen;
+	bool m_changeFonts;
 	std::filesystem::path m_exePath;
+	float m_fontScale;
+	std::map<std::string, float> m_fontScales;
+	std::vector<std::string> m_fontKeys;
+	size_t m_fontKeyPos;
 
 private:
 	void loadTiles(ModeGraphics& curGraphics, std::string strFile);
@@ -411,6 +425,7 @@ private:
 		const std::vector<unsigned char>* mask_map,
 		size_t mask_row_bytes);
 	void decode_cicn(const size_t indexIcon, std::vector<unsigned char>& vdata);
+	void initFontMap();
 
 	static constexpr Uint64 AutoHealTime = 600;
 	static constexpr Uint64 MoveTime = 6000;
@@ -472,7 +487,6 @@ private:
 	
 	Uint64 m_curTickScroll;
 	Uint64 m_elapsedTimeScroll;
-	
 
 	short m_animFlag[4];
 	short m_twiddleFlag[4];
@@ -480,7 +494,6 @@ private:
 	int m_numUpdateAnimate;
 	bool m_shapeSwap[256];
 	
-
 	int m_xPos;
 	int m_yPos;
 	bool m_isInversed;

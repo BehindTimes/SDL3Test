@@ -294,7 +294,10 @@ U3Resources::U3Resources() :
 	m_texSpellList(nullptr),
 	m_texCommands(nullptr),
 	m_texMiscTables(nullptr),
-    m_resizeScreen(false)
+	m_resizeScreen(false),
+	m_changeFonts(false),
+	m_fontScale(1.0f),
+	m_fontKeyPos(0)
 {
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
@@ -538,38 +541,21 @@ U3Resources::~U3Resources()
 		}
 	}
 
-	/*if (m_font)
-	{
-		TTF_CloseFont(m_font);
-		m_font = nullptr;
-	}
-	if (m_font_9)
-	{
-		TTF_CloseFont(m_font_9);
-		m_font_9 = nullptr;
-	}
-	if (m_font_10)
-	{
-		TTF_CloseFont(m_font_10);
-		m_font_10 = nullptr;
-	}
-	if (m_font_11)
-	{
-		TTF_CloseFont(m_font_11);
-		m_font_11 = nullptr;
-	}
-	if (m_font_12)
-	{
-		TTF_CloseFont(m_font_12);
-		m_font_12 = nullptr;
-	}
-	if (m_font_18)
-	{
-		TTF_CloseFont(m_font_18);
-		m_font_18 = nullptr;
-	}*/
+}
 
-
+void U3Resources::changeFont()
+{
+	for (auto& cur_font : m_font_map)
+	{
+		if (cur_font.second)
+		{
+			TTF_CloseFont(cur_font.second);
+			cur_font.second = nullptr;
+		}
+	}
+	m_font_map.clear();
+	createFont();
+	m_changeFonts = false;
 }
 
 void U3Resources::displayFPS(int fps) const
@@ -781,7 +767,66 @@ void U3Resources::SetButtonCallback(short button, std::function<void(int)> func)
 
 bool U3Resources::loadFont()
 {
+	initFontMap();
+	std::string tempFont = m_preferences.font;
+	tempFont.erase(tempFont.length() - 4);
+	auto curFont = m_fontScales.find(tempFont);
+	if (curFont != m_fontScales.end())
+	{
+		m_fontScale = curFont->second;
+	}
 	return createFont();
+}
+
+void U3Resources::initFontMap()
+{
+	std::string strTest("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+	const float EXPECTED_WIDTH = 689;
+	const float EXPECTED_HEIGHT = 27;
+	std::filesystem::path currentPath = m_exePath;
+	currentPath /= ResourceLoc;
+	currentPath /= FontLoc;
+
+	for (const std::filesystem::directory_entry& dirEntry : std::filesystem::recursive_directory_iterator(currentPath))
+	{
+		if (dirEntry.path().extension() != ".ttf")
+		{
+			continue;
+		}
+		std::filesystem::path tempPath = currentPath;
+		tempPath /= dirEntry.path().string();
+
+		// Test the font to get an appropriate idea of how large the multiplier should be
+		TTF_Font* font = TTF_OpenFont(tempPath.string().c_str(), 24);
+		int width;
+		int height;
+
+		if (TTF_GetStringSize(font, strTest.c_str(), SDL_strlen(strTest.c_str()), &width, &height) != false) {
+			float fRatioW = EXPECTED_WIDTH / width;
+			float fRatioH = EXPECTED_HEIGHT / height;
+			if (fRatioW > 0 && fRatioH > 0)
+			{
+				float fontScale = std::min<float>(fRatioW, fRatioH);
+				std::string strFileName = dirEntry.path().filename().string();
+				if (strFileName.length() > 4)
+				{
+					strFileName.erase(strFileName.length() - 4);
+					m_fontScales[strFileName] = fontScale;
+					m_fontKeys.emplace_back(strFileName);
+				}
+			}
+		}
+		TTF_CloseFont(font);
+	}
+
+	std::string strCurFont = m_preferences.font;
+	strCurFont.erase(strCurFont.length() - 4);
+	auto it = std::find(m_fontKeys.begin(), m_fontKeys.end(), strCurFont);
+	if (it != m_fontKeys.end())
+	{
+		m_fontKeyPos = std::distance(m_fontKeys.begin(), it);
+	}
 }
 
 /*
@@ -814,7 +859,7 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font = m_font_map[nFontSize];
 		if (!m_font)
 		{
@@ -832,7 +877,7 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font_9 = m_font_map[nFontSize];
 		if (!m_font_9)
 		{
@@ -850,7 +895,7 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font_10 = m_font_map[nFontSize];
 		if (!m_font_10)
 		{
@@ -868,7 +913,7 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font_11 = m_font_map[nFontSize];
 		if (!m_font_11)
 		{
@@ -887,7 +932,7 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font_12 = m_font_map[nFontSize];
 		if (!m_font_12)
 		{
@@ -905,49 +950,13 @@ bool U3Resources::createFont()
 	}
 	else
 	{
-		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize);
+		m_font_map[nFontSize] = TTF_OpenFont(currentPath.string().c_str(), (float)nFontSize * m_fontScale);
 		m_font_18 = m_font_map[nFontSize];
 		if (!m_font_18)
 		{
 			return false;
 		}
 	}
-
-	/*m_font = TTF_OpenFont(currentPath.string().c_str(), font_size);
-	if (!m_font)
-	{
-		return false;
-	}
-
-	m_font_9 = TTF_OpenFont(currentPath.string().c_str(), 9.0f * scaler);
-	if (!m_font_9)
-	{
-		return false;
-	}
-
-	m_font_10 = TTF_OpenFont(currentPath.string().c_str(), 10.0f * scaler);
-	if (!m_font_10)
-	{
-		return false;
-	}
-
-	m_font_11 = TTF_OpenFont(currentPath.string().c_str(), 11.0f * scaler);
-	if (!m_font_11)
-	{
-		return false;
-	}
-
-	m_font_12 = TTF_OpenFont(currentPath.string().c_str(), 12.0f * scaler);
-	if (!m_font_12)
-	{
-		return false;
-	}
-
-	m_font_18 = TTF_OpenFont(currentPath.string().c_str(), 18.0f * scaler);
-	if (!m_font_18)
-	{
-		return false;
-	}*/
 
 	return true;
 }
@@ -982,36 +991,6 @@ void U3Resources::CalculateBlockSize()
 		m_graphics->m_buttons.clear();
 	}
 
-	/*if (m_font)
-	{
-		TTF_CloseFont(m_font);
-		m_font = nullptr;
-	}
-	if (m_font_9)
-	{
-		TTF_CloseFont(m_font_9);
-		m_font_9 = nullptr;
-	}
-	if (m_font_10)
-	{
-		TTF_CloseFont(m_font_10);
-		m_font_10 = nullptr;
-	}
-	if (m_font_11)
-	{
-		TTF_CloseFont(m_font_11);
-		m_font_11 = nullptr;
-	}
-	if (m_font_12)
-	{
-		TTF_CloseFont(m_font_12);
-		m_font_12 = nullptr;
-	}
-	if (m_font_18)
-	{
-		TTF_CloseFont(m_font_18);
-		m_font_18 = nullptr;
-	}*/
 	createFont();
 
 	if (m_AlertDlg.get())
@@ -1499,7 +1478,7 @@ bool U3Resources::loadIcons()
 		icon_vec.resize(data_size);
 		std::copy(m_vecResourceData.data() + startPos + 4, m_vecResourceData.data() + startPos + 4 + data_size, icon_vec.begin());
 		decode_cicn(index, icon_vec);
-		startPos += (data_size + 4);
+		startPos += static_cast<size_t>(data_size + 4);
 
 	}
 	return true;
@@ -3253,6 +3232,15 @@ void U3Resources::OptionsDlgClosed(int button)
 		m_audio->setVolumeSfx(m_preferences.volume_sfx);
 		m_audio->setVolumeMusic(m_preferences.volume_music);
 
+		if (m_SetOptionsDlg->m_codData.font_val != m_fontKeyPos)
+		{
+			std::string strFont = m_fontKeys[m_SetOptionsDlg->m_codData.font_val];
+			m_fontKeyPos = m_SetOptionsDlg->m_codData.font_val;
+			m_preferences.font = strFont + std::string(".ttf");
+			m_fontScale = m_fontScales[strFont];
+			m_changeFonts = true;
+		}
+
 		if (changeScreen)
 		{
             m_resizeScreen = changeScreen;
@@ -3267,12 +3255,13 @@ void U3Resources::OptionsDlgClosed(int button)
 
 void U3Resources::CreateOptionsDlg()
 {
+	const int optionsDlgHeight = 260;
 	// Initial screen size is 640x384.  This will be scaled later on depending on the block size
 	m_SetOptionsDlg = std::make_unique<ChooseOptionsDialog>(m_renderer, engine_surface);
 	m_SetOptionsDlg->m_Rect.x = 152;
-	m_SetOptionsDlg->m_Rect.y = ((384 - (240)) / 2.0f);
+	m_SetOptionsDlg->m_Rect.y = ((384 - optionsDlgHeight) / 2.0f);
 	m_SetOptionsDlg->m_Rect.w = 336;
-	m_SetOptionsDlg->m_Rect.h = 240;
+	m_SetOptionsDlg->m_Rect.h = optionsDlgHeight;
 	m_SetOptionsDlg->changeBlockSize(m_blockSize);
 	m_SetOptionsDlg->SetDialogFinishedCallback(std::bind(&U3Resources::OptionsDlgClosed, this, std::placeholders::_1));
 }
@@ -5420,11 +5409,11 @@ macRect::macRect(int16_t y1, int16_t x1, int16_t y2, int16_t x2)
 
 
 size_t macRect::width() const {
-	return this->x2 - this->x1;
+	return static_cast<size_t>(this->x2 - this->x1);
 }
 
 size_t macRect::height() const {
-	return this->y2 - this->y1;
+	return static_cast<size_t>(this->y2 - this->y1);
 }
 
 ColorIconResourceHeader U3Resources::read_cicn_header(unsigned char* data_file)

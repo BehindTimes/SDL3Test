@@ -117,7 +117,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL3.lib;SDL3_image.lib;libxml2.lib;SDL3_ttf.lib;libogg.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;sndfile.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.10\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.1.0\lib\x64;G:\source\SDL_mixer-main\libraries;G:\source\libsndfile-1.2.2-win64\lib;G:\source\openal-soft-1.24.3-bin\libs\Win64;G:\source\libogg\win32\VS2010\x64\Release;G:\source\libvorbis-1.3.7\win32\VS2010\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.24\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.2.2\VisualC\x64\Release;G:\source\SDL_mixer-main\libraries;G:\source\libsndfile-1.2.2-win64\lib;G:\source\openal-soft-1.24.3-bin\libs\Win64;G:\source\libogg\win32\VS2010\x64\Release;G:\source\libvorbis-1.3.7\win32\VS2010\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -138,7 +138,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.10\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.1.0\lib\x64;G:\source\SDL_mixer-main\libraries;G:\source\libsndfile-1.2.2-win64\lib;G:\source\openal-soft-1.24.3-bin\libs\Win64;G:\source\libogg\win32\VS2010\x64\Release;G:\source\libvorbis-1.3.7\win32\VS2010\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>G:\source\SDL3\SDL3-3.2.24\lib\x64;G:\source\SDL_image-release-3.2.4\VisualC\x64\Release;G:\source\libxml2-2.13.6\win32\bin.msvc;G:\source\SDL3_ttf-3.2.2\VisualC\x64\Release;G:\source\SDL_mixer-main\libraries;G:\source\libsndfile-1.2.2-win64\lib;G:\source\openal-soft-1.24.3-bin\libs\Win64;G:\source\libogg\win32\VS2010\x64\Release;G:\source\libvorbis-1.3.7\win32\VS2010\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_image.lib;libxml2.lib;SDL3_ttf.lib;libogg.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;sndfile.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>

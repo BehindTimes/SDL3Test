@@ -249,7 +249,7 @@ bool U3Dialog::createFont()
 
 	if (m_blockSize > 8)
 	{
-		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f * m_resources->m_fontScale);
 		if (m_font)
 		{
 			retVal = true;
@@ -384,7 +384,7 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 			file_size <<= 8;
 			file_size += m_resources->m_vecResourceData[start_address + byte];
 		}
-		start_address += file_size + 4;
+		start_address += static_cast<size_t>(file_size) + 4;
 	}
 	file_size <<= 8;
 	for (int byte = 0; byte < 4; ++byte)
@@ -416,20 +416,6 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 			{
 				m_icon = m_resources->m_texIcons[tempid];
 			}
-			//std::string icon_str = std::to_string(temp_data.id);
-			//m_utilities->trim(icon_str);
-			/*std::filesystem::path IconPathMessage = m_resources->m_exePath;
-			IconPathMessage /= ResourceLoc;
-			IconPathMessage /= BinLoc;
-			IconPathMessage /= IconPathMessage;
-			IconPathMessage /= std::string("MainResources.rsrc_cicn_");
-			IconPathMessage += icon_str;
-			IconPathMessage += std::string(".bmp");
-
-			if (std::filesystem::exists(IconPathMessage) && !m_icon)
-			{
-				m_icon = IMG_LoadTexture(m_renderer, IconPathMessage.string().c_str());
-			}*/
 		}
 		else if (ditl_data[curId].type == 0x04) // Button
 		{
@@ -449,159 +435,6 @@ void U3Dialog::loadDitl(int blockSize, std::function<void(int)> callback)
 		}
 	}
 }
-/*
-void U3Dialog::loadDitlString(int blockSize, std::function<void(int)> callback)
-{
-	std::filesystem::path currentPathMessage = m_resources->m_exePath;
-	currentPathMessage /= ResourceLoc;
-	currentPathMessage /= TextLoc;
-	currentPathMessage /= std::string("MainResources.rsrc_DITL_") + std::to_string(m_message + 1) + std::string(".txt");
-
-	if (!std::filesystem::exists(currentPathMessage))
-	{
-		return;
-	}
-
-	std::uintmax_t file_size = std::filesystem::file_size(currentPathMessage);
-	std::string strTemp = m_utilities->PathToSDLString(currentPathMessage);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	SDL_IOStream* file = SDL_IOFromFile(strTemp.c_str(), "rb");
-
-	if (!file)
-	{
-		return;
-	}
-	std::vector<char> fileTitleData;
-	fileTitleData.resize(file_size);
-
-	SDL_ReadIO(file, fileTitleData.data(), file_size);
-	SDL_CloseIO(file);
-	fileTitleData.emplace_back(0);
-
-	file_size = std::filesystem::file_size(currentPathMessage);
-	strTemp = m_utilities->PathToSDLString(currentPathMessage);
-	if (strTemp.empty())
-	{
-		return;
-	}
-	file = SDL_IOFromFile(strTemp.c_str(), "rb");
-
-	if (!file)
-	{
-		return;
-	}
-	std::vector<char> fileData;
-	fileData.resize(file_size);
-
-	SDL_ReadIO(file, fileData.data(), file_size);
-	SDL_CloseIO(file);
-	fileData.emplace_back(0);
-	std::string strData = std::string(fileData.data());
-
-	auto tokens = m_utilities->splitString(strData, '\n');
-
-	int mode = 0;
-
-	m_strMessage.clear();
-
-	int curId = 0;
-
-	for (auto& curToken : tokens)
-	{
-		if (curToken.size() == 0)
-		{
-			continue;
-		}
-		curToken.erase(0, 1);
-		m_utilities->trim(curToken);
-		auto linetokens = m_utilities->splitString(curToken, ':');
-		if (linetokens.size() < 2)
-		{
-			continue;
-		}
-		if (linetokens[0].find("item", 0) != std::string::npos)
-		{
-			if (linetokens[1].find("BUTTON", 0) != std::string::npos)
-			{
-				mode = 1;
-			}
-			else if (linetokens[1].find("TEXT", 0) != std::string::npos)
-			{
-				mode = 2;
-			}
-			else if (linetokens[1].find("ICON", 0) != std::string::npos)
-			{
-				mode = 3;
-			}
-			else
-			{
-				mode = 0;
-			}
-		}
-		else if (linetokens[0].rfind("text", 0) != std::string::npos)
-		{
-			// m_textButtons
-			if (mode == 1)
-			{
-				std::string strText = linetokens[1];
-				m_utilities->trim(strText);
-				size_t nStart = strText.find('\"');
-				size_t nEnd = strText.rfind('\"');
-				if (nStart != std::string::npos && nStart < nEnd)
-				{
-					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
-					strText = std::string(" ") + strText + std::string(" "); // just to give some extra padding
-					//m_vecButtons.emplace_back(m_renderer, m_engine_surface, m_font, strText);
-
-					curId++;
-					auto curButton = std::make_unique<U3Button>();
-					m_vecButtons.push_back(std::move(curButton));
-					m_vecButtons.back()->CreateTextButton(blockSize, m_renderer, m_engine_surface, m_font, strText);
-					m_vecButtons.back()->SetButtonCallback(callback, curId);
-				}
-			}
-			else if (mode == 2)
-			{
-				std::string strText = linetokens[1];
-				m_utilities->trim(strText);
-				size_t nStart = strText.find('\"');
-				size_t nEnd = strText.rfind('\"');
-				if (nStart != std::string::npos && nStart < nEnd)
-				{
-					strText = strText.substr(nStart + 1, (nEnd - nStart) - 1);
-
-					m_strMessage += strText;
-				}
-			}
-		}
-		else if (linetokens[0].rfind("ICON", 0) != std::string::npos)
-		{
-			if (mode == 3)
-			{
-				std::string icon_str = linetokens[1];
-				m_utilities->trim(icon_str);
-				std::filesystem::path IconPathMessage = m_resources->m_exePath;
-				IconPathMessage /= ResourceLoc;
-				IconPathMessage /= BinLoc;
-				IconPathMessage /= IconPathMessage;
-				IconPathMessage /= std::string("MainResources.rsrc_cicn_");
-				IconPathMessage += icon_str;
-				IconPathMessage += std::string(".bmp");
-
-				if (std::filesystem::exists(IconPathMessage) && !m_icon)
-				{
-					m_icon = IMG_LoadTexture(m_renderer, IconPathMessage.string().c_str());
-				}
-			}
-		}
-	}
-
-	m_strTitle.clear();
-	RewrapMessage(m_strMessage);
-}*/
 
 void U3Dialog::RewrapMessage([[maybe_unused]]std::string& strMesssage)
 {
@@ -964,33 +797,23 @@ void U3CheckBox::render(SDL_Renderer* renderer, int x, int y) const
 }
 
 U3TextBox::U3TextBox(int blockSize, int x, int y, int width) :
-	m_ttfText(nullptr),
 	m_x(x),
 	m_y(y),
 	m_width(width),
 	m_blockSize(blockSize),
-	m_readOnly(true)
+	m_readOnly(true),
+	m_texture(nullptr)
 {
+	
 }
 
 U3TextBox::~U3TextBox()
 {
-	if (m_ttfText)
+	if (m_texture)
 	{
-		TTF_DestroyText(m_ttfText);
-		m_ttfText = nullptr;
+		SDL_DestroyTexture(m_texture);
+		m_texture = nullptr;
 	}
-}
-
-void U3TextBox::U3TextBoxFont(TTF_TextEngine* engine_surface, TTF_Font* font, int blockSize)
-{
-	if (m_ttfText)
-	{
-		TTF_DestroyText(m_ttfText);
-		m_ttfText = nullptr;
-	}
-	m_ttfText = TTF_CreateText(engine_surface, font, m_strText.c_str(), 0);
-	m_blockSize = blockSize;
 }
 
 void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
@@ -1003,36 +826,45 @@ void U3TextBox::render(SDL_Renderer* renderer, int x, int y)
 	myRect.w = (float)m_width * scaler;
 	myRect.h = (float)m_blockSize;
 
+	SDL_RenderTexture(renderer, m_texture, NULL, &myRect);
+}
+
+void U3TextBox::setText(SDL_Renderer* renderer, TTF_TextEngine* engine_surface, TTF_Font* font, std::string text)
+{
+	TTF_Text* ttfText;
+
+	if (m_texture)
+	{
+		SDL_DestroyTexture(m_texture);
+		m_texture = nullptr;
+	}
+	SDL_FRect myRect{};
+	float scaler = (float)m_blockSize / 16.0f;
+	m_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)(m_width * scaler), m_blockSize);
+
+	m_strText = text;
+	ttfText = TTF_CreateText(engine_surface, font, text.c_str(), 0);
+
+	myRect.x = (float)0;
+	myRect.y = (float)0;
+	myRect.w = (float)m_width * scaler;
+	myRect.h = (float)m_blockSize;
+
+	SDL_SetRenderTarget(renderer, m_texture);
+
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderFillRect(renderer, &myRect);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderRect(renderer, &myRect);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-
 	SDL_Color sdl_text_color = { 0, 0, 0 };
 
-	renderDisplayString(m_ttfText, (int)(x + (4 * scaler)), (int)(y - (1 * scaler)), sdl_text_color);
-}
+	TTF_SetTextColor(ttfText, sdl_text_color.r, sdl_text_color.g, sdl_text_color.b, 255);
+	TTF_DrawRendererText(ttfText, (float)4, (float)0);
 
-void U3TextBox::renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color)
-{
-	if (!text_obj)
-	{
-		return;
-	}
-	TTF_SetTextColor(text_obj, color.r, color.g, color.b, 255);
-	TTF_DrawRendererText(text_obj, (float)x, (float)y);
-}
+	SDL_SetRenderTarget(renderer, NULL);
 
-void U3TextBox::setText(TTF_TextEngine* engine_surface, TTF_Font* font, std::string text)
-{
-	if (m_ttfText)
-	{
-		TTF_DestroyText(m_ttfText);
-		m_ttfText = nullptr;
-	}
-	m_strText = text;
-	m_ttfText = TTF_CreateText(engine_surface, font, text.c_str(), 0);
+	TTF_DestroyText(ttfText);
 }
 
 U3DlgLabel::U3DlgLabel(TTF_TextEngine* engine_surface, TTF_Font* font, std::string strLabel, int x, int y) :
@@ -1126,7 +958,8 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_curTheme(-1),
 	m_healLimit(750),
 	m_sfxVolume(100),
-	m_musicVolume(100)
+	m_musicVolume(100),
+	m_fontKeyPos(0)
 {
 	/*m_upArrow += static_cast<char>(0xE2);
 	m_upArrow += static_cast<char>(0x96);
@@ -1137,6 +970,7 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_downArrow += static_cast<char>(0xBE);*/
 
 	m_curTheme = m_resources->m_currentTheme;
+	m_fontKeyPos = m_resources->m_fontKeyPos;
 }
 
 ChooseOptionsDialog::~ChooseOptionsDialog()
@@ -1163,7 +997,7 @@ void ChooseOptionsDialog::themeUp([[maybe_unused]]int id)
 	m_curTheme %= m_resources->m_themes.size();
 
 	std::string strTheme = m_resources->m_themes[m_curTheme];
-	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, strTheme);
 }
 
 void ChooseOptionsDialog::themeDown([[maybe_unused]] int id)
@@ -1178,7 +1012,7 @@ void ChooseOptionsDialog::themeDown([[maybe_unused]] int id)
 		m_curTheme = (int)m_resources->m_themes.size() - 1;
 	}
 	std::string strTheme = m_resources->m_themes[m_curTheme];
-	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, strTheme);
 }
 
 void ChooseOptionsDialog::sfxVolumeUp([[maybe_unused]] int id)
@@ -1191,7 +1025,7 @@ void ChooseOptionsDialog::sfxVolumeUp([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_sfxVolume);
 
-	m_textBoxes[2]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strVal);
 }
 
 void ChooseOptionsDialog::sfxVolumeDown([[maybe_unused]] int id)
@@ -1204,7 +1038,7 @@ void ChooseOptionsDialog::sfxVolumeDown([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_sfxVolume);
 
-	m_textBoxes[2]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strVal);
 }
 
 void ChooseOptionsDialog::musicVolumeUp([[maybe_unused]] int id)
@@ -1217,7 +1051,7 @@ void ChooseOptionsDialog::musicVolumeUp([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_musicVolume);
 
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strVal);
 }
 
 void ChooseOptionsDialog::musicVolumeDown([[maybe_unused]] int id)
@@ -1230,7 +1064,7 @@ void ChooseOptionsDialog::musicVolumeDown([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_musicVolume);
 
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strVal);
 }
 
 void ChooseOptionsDialog::healLimitUp([[maybe_unused]] int id)
@@ -1243,7 +1077,7 @@ void ChooseOptionsDialog::healLimitUp([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_healLimit);
 
-	m_textBoxes[3]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strVal);
 }
 
 void ChooseOptionsDialog::healLimitDown([[maybe_unused]] int id)
@@ -1256,7 +1090,65 @@ void ChooseOptionsDialog::healLimitDown([[maybe_unused]] int id)
 
 	std::string strVal = std::to_string(m_healLimit);
 
-	m_textBoxes[3]->setText(m_engine_surface, m_font, strVal);
+	m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strVal);
+}
+
+void ChooseOptionsDialog::setFontTextBox()
+{
+	TTF_Font* font = nullptr;
+
+	std::filesystem::path currentPath = m_resources->m_exePath;
+	currentPath /= ResourceLoc;
+	currentPath /= FontLoc;
+	std::string strVal = m_resources->m_fontKeys[m_fontKeyPos];
+
+	currentPath /= strVal;
+	currentPath += std::string(".ttf");
+
+	if (m_blockSize > 8)
+	{
+		auto curScale = m_resources->m_fontScales.find(strVal);
+		if (curScale != m_resources->m_fontScales.end())
+		{
+			font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f * curScale->second);
+		}
+	}
+
+	if (font)
+	{
+		m_textBoxes[4]->setText(m_renderer, m_engine_surface, font, strVal);
+
+		TTF_CloseFont(font);
+	}
+	else
+	{
+		m_textBoxes[4]->setText(m_renderer, m_engine_surface, m_font, strVal);
+	}
+}
+
+void ChooseOptionsDialog::fontUp([[maybe_unused]] int id)
+{
+	m_fontKeyPos++;
+	if (m_fontKeyPos >= m_resources->m_fontKeys.size())
+	{
+		m_fontKeyPos = 0;
+	}
+
+	setFontTextBox();
+}
+
+void ChooseOptionsDialog::fontDown([[maybe_unused]] int id)
+{
+	if (m_fontKeyPos == 0)
+	{
+		m_fontKeyPos = m_resources->m_fontKeys.size() - 1;
+	}
+	else
+	{
+		m_fontKeyPos--;
+	}
+
+	setFontTextBox();
 }
 
 void ChooseOptionsDialog::init()
@@ -1292,6 +1184,7 @@ void ChooseOptionsDialog::init()
 	addLabel(std::string(VolumeStr), 75, 140);
 	addLabel(std::string(SFXStr), 8, 180);
 	addLabel(std::string(VolumeStr), 75, 180);
+	addLabel(std::string(FontStr), 190, 180);
 
 	addCheckBox((int)(m_Rect.w - 20), 40);
 	addCheckBox((int)(m_Rect.w - 20), 60);
@@ -1319,32 +1212,38 @@ void ChooseOptionsDialog::init()
 	addTextBox(124, 140, 36);
 	addTextBox(124, 180, 36);
 	addTextBox((int)m_Rect.w - 72, 130, 48);
+	addTextBox(198, 200, 114);
+
 	std::string strTheme = m_resources->m_themes[m_curTheme];
-	m_textBoxes[0]->setText(m_engine_surface, m_font, strTheme);
+	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, strTheme);
 	std::string strMusVol = std::to_string(m_resources->m_preferences.volume_music);
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strMusVol);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strMusVol);
 	std::string strSfxVol = std::to_string(m_resources->m_preferences.volume_sfx);
-	m_textBoxes[2]->setText(m_engine_surface, m_font, strSfxVol);
+	m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strSfxVol);
 	std::string strHealAmount = std::to_string(m_resources->m_preferences.auto_heal_amount);
-	m_textBoxes[3]->setText(m_engine_surface, m_font, strHealAmount);
+	m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strHealAmount);
+	setFontTextBox();
 
 	m_musicVolume = m_resources->m_preferences.volume_music;
 	m_sfxVolume = m_resources->m_preferences.volume_sfx;
 	m_healLimit = m_resources->m_preferences.auto_heal_amount;
 
-	addButton(m_upArrow, 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1), ButtonType::UpArrow);
-	addButton(m_downArrow, 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1), ButtonType::DownArrow);
-	addButton(std::string(CancelString), 194, 216, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
-	addButton(std::string(OKString), 266, 216, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
+	addButton("", 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton(std::string(CancelString), 194, 236, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
+	addButton(std::string(OKString), 266, 236, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
 
-	addButton(m_upArrow, 164, 132, std::bind(&ChooseOptionsDialog::musicVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
-	addButton(m_downArrow, 164, 148, std::bind(&ChooseOptionsDialog::musicVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton("", 164, 132, std::bind(&ChooseOptionsDialog::musicVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", 164, 148, std::bind(&ChooseOptionsDialog::musicVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
-	addButton(m_upArrow, 164, 172, std::bind(&ChooseOptionsDialog::sfxVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
-	addButton(m_downArrow, 164, 188, std::bind(&ChooseOptionsDialog::sfxVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton("", 164, 172, std::bind(&ChooseOptionsDialog::sfxVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", 164, 188, std::bind(&ChooseOptionsDialog::sfxVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 
-	addButton(m_upArrow, (int)(m_Rect.w - 19), 122, std::bind(&ChooseOptionsDialog::healLimitUp, this, std::placeholders::_1), ButtonType::UpArrow);
-	addButton(m_downArrow, (int)(m_Rect.w - 19), 138, std::bind(&ChooseOptionsDialog::healLimitDown, this, std::placeholders::_1), ButtonType::DownArrow);
+	addButton("", (int)(m_Rect.w - 19), 122, std::bind(&ChooseOptionsDialog::healLimitUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", (int)(m_Rect.w - 19), 138, std::bind(&ChooseOptionsDialog::healLimitDown, this, std::placeholders::_1), ButtonType::DownArrow);
+
+	addButton("", (int)(m_Rect.w - 19), 192, std::bind(&ChooseOptionsDialog::fontUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", (int)(m_Rect.w - 19), 208, std::bind(&ChooseOptionsDialog::fontDown, this, std::placeholders::_1), ButtonType::DownArrow);
 }
 
 void ChooseOptionsDialog::changeBlockSize(int blockSize)
@@ -1447,7 +1346,7 @@ bool ChooseOptionsDialog::createFont()
 
 	if (m_blockSize > 8)
 	{
-		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f * m_resources->m_fontScale);
 		if (m_font)
 		{
 			retVal = true;
@@ -1518,6 +1417,7 @@ void ChooseOptionsDialog::okPushed([[maybe_unused]] int id)
 	m_codData.volume_music = musicvol;
 	m_codData.volume_sfx = sfxvol;
 	m_codData.auto_heal_amount = heallimit;
+	m_codData.font_val = m_fontKeyPos;
 
 	m_closeValue = 1;
 	m_callBack(1);
@@ -1779,7 +1679,7 @@ void CreateCharacterDialog::init()
 	addTextBox(210, 90 + offsetY, 100);
 	addTextBox(210, 124 + offsetY, 100);
 
-	m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, m_ccdData.name);
 	std::string strSex;
 	switch (m_ccdData.sex)
 	{
@@ -1793,7 +1693,7 @@ void CreateCharacterDialog::init()
 		strSex = std::string(MaleStr);
 		break;
 	}
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strSex);
 
 	std::string strRace;
 	if (m_resources->m_plistMap["Races"].size() < m_ccdData.race)
@@ -1804,7 +1704,7 @@ void CreateCharacterDialog::init()
 	{
 		strRace = m_resources->m_plistMap["Races"][m_ccdData.race];
 	}
-	m_textBoxes[2]->setText(m_engine_surface, m_font, strRace);
+	m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strRace);
 	std::string strClass;
 	if (m_resources->m_plistMap["Classes"].size() < m_ccdData.type)
 	{
@@ -1814,7 +1714,7 @@ void CreateCharacterDialog::init()
 	{
 		strClass = m_resources->m_plistMap["Classes"][m_ccdData.type];
 	}
-	m_textBoxes[3]->setText(m_engine_surface, m_font, strClass);
+	m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strClass);
 }
 
 void CreateCharacterDialog::strengthUp([[maybe_unused]]int id)
@@ -1925,7 +1825,7 @@ void CreateCharacterDialog::sexUp([[maybe_unused]] int id)
 		strSex = std::string("Male");
 		break;
 	}
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strSex);
 }
 
 void CreateCharacterDialog::sexDown([[maybe_unused]] int id)
@@ -1948,7 +1848,7 @@ void CreateCharacterDialog::sexDown([[maybe_unused]] int id)
 		strSex = std::string("Male");
 		break;
 	}
-	m_textBoxes[1]->setText(m_engine_surface, m_font, strSex);
+	m_textBoxes[1]->setText(m_renderer, m_engine_surface, m_font, strSex);
 }
 
 void CreateCharacterDialog::raceUp([[maybe_unused]] int id)
@@ -1961,7 +1861,7 @@ void CreateCharacterDialog::raceUp([[maybe_unused]] int id)
 	if (m_resources->m_plistMap["Races"].size() > 0)
 	{
 		std::string strValue = m_resources->m_plistMap["Races"][m_ccdData.race];
-		m_textBoxes[2]->setText(m_engine_surface, m_font, strValue);
+		m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strValue);
 	}
 }
 
@@ -1975,7 +1875,7 @@ void CreateCharacterDialog::raceDown([[maybe_unused]] int id)
 	if (m_resources->m_plistMap["Races"].size() > 0)
 	{
 		std::string strValue = m_resources->m_plistMap["Races"][m_ccdData.race];
-		m_textBoxes[2]->setText(m_engine_surface, m_font, strValue);
+		m_textBoxes[2]->setText(m_renderer, m_engine_surface, m_font, strValue);
 	}
 }
 
@@ -1989,7 +1889,7 @@ void CreateCharacterDialog::typeUp([[maybe_unused]] int id)
 	if (m_resources->m_plistMap["Classes"].size() > 0)
 	{
 		std::string strValue = m_resources->m_plistMap["Classes"][m_ccdData.type];
-		m_textBoxes[3]->setText(m_engine_surface, m_font, strValue);
+		m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strValue);
 	}
 }
 
@@ -2003,7 +1903,7 @@ void CreateCharacterDialog::typeDown([[maybe_unused]] int id)
 	if (m_resources->m_plistMap["Classes"].size() > 0)
 	{
 		std::string strValue = m_resources->m_plistMap["Classes"][m_ccdData.type];
-		m_textBoxes[3]->setText(m_engine_surface, m_font, strValue);
+		m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strValue);
 	}
 }
 
@@ -2105,7 +2005,7 @@ void CreateCharacterDialog::randomNamePushed([[maybe_unused]] int id)
 	{
 		m_ccdData.name.clear();
 	}
-	m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, m_ccdData.name);
 }
 
 
@@ -2140,7 +2040,7 @@ void CreateCharacterDialog::HandleInputText(SDL_KeyboardEvent key)
 			if (maxInputLength > (int)m_ccdData.name.size())
 			{
 				m_ccdData.name += (char)display_key;
-				m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+				m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, m_ccdData.name);
 			}
 	}
 	else if (key.key == SDLK_BACKSPACE)
@@ -2148,7 +2048,7 @@ void CreateCharacterDialog::HandleInputText(SDL_KeyboardEvent key)
 		if (!m_ccdData.name.empty())
 		{
 			m_ccdData.name.pop_back();
-			m_textBoxes[0]->setText(m_engine_surface, m_font, m_ccdData.name);
+			m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, m_ccdData.name);
 		}
 	}
 }
@@ -2298,7 +2198,7 @@ bool CreateCharacterDialog::createFont()
 
 	if (m_blockSize > 8)
 	{
-		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f);
+		m_font = TTF_OpenFont(currentPath.string().c_str(), (float)m_blockSize * 0.875f * m_resources->m_fontScale);
 		if (m_font)
 		{
 			retVal = true;

@@ -63,7 +63,7 @@ void backToOrganize(int button);
 void createCharacterChooseSlot(int button);
 
 #if TARGET_MAC_OSX
-std::string expandTilde(const char* str) {
+static std::string expandTilde(const char* str) {
 	if (!str) return {};
 
 	glob_t globbuf;
@@ -78,7 +78,7 @@ std::string expandTilde(const char* str) {
 	return "";
 }
 
-std::string settingsPath() {
+static std::string settingsPath() {
 	char path[PATH_MAX];
 	auto state = sysdir_start_search_path_enumeration(SYSDIR_DIRECTORY_APPLICATION_SUPPORT,
 		SYSDIR_DOMAIN_MASK_USER);
@@ -710,6 +710,12 @@ void MainMenu()
 		if (changeMode)
 		{
 			gInterrupt = true;
+		}
+
+		if (m_resources->m_changeFonts)
+		{
+			m_resources->changeFont();
+			m_resources->m_resizeScreen = true;
 		}
         
         if(m_resources->m_resizeScreen)
@@ -1362,6 +1368,12 @@ void Game()
 		{
 			gInterrupt = true;
 		}
+
+		if (m_resources->m_changeFonts)
+		{
+			m_resources->changeFont();
+			m_resources->m_resizeScreen = true;
+		}
         
         if(m_resources->m_resizeScreen)
         {
@@ -1370,6 +1382,7 @@ void Game()
             m_resources->CalculateBlockSize();
             m_resources->m_resizeScreen = false;
         }
+		
 	}
 }
 

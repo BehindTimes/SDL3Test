@@ -554,7 +554,6 @@ void U3Resources::changeFont()
 		}
 	}
 	m_font_map.clear();
-	createFont();
 	m_changeFonts = false;
 }
 

@@ -932,15 +932,15 @@ void Organize()
 
 					m_resources->CalculateBlockSize();
 				}
-				if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
+				else if (event.key.key >= SDLK_0 && event.key.key <= SDLK_9)
 				{
 					int mode = event.key.key - SDLK_0;
 					m_resources->changeTheme(mode);
 				}
-			}
-			else if (event.key.key == SDLK_ESCAPE)
-			{
-				quit = true;
+				else if (event.key.key == SDLK_X)
+				{
+					quit = true;
+				}
 			}
 			else
 			{

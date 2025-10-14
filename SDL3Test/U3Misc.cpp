@@ -140,10 +140,6 @@ bool U3Misc::OpenRstr()
 
 	std::filesystem::path rosterPath = currentPath / "Roster.ult";
 
-	std::filesystem::path resourcePath = m_resources->m_exePath;
-	resourcePath /= ResourceLoc;
-	resourcePath /= BinLoc;
-
 	std::vector<std::pair<size_t, std::string>> orig_files = {
 		{ 0x17425, "Sosaria_Current.ult" },
 		{ 0x2889d, "Party.ult" },

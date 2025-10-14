@@ -50,7 +50,9 @@ U3Audio::U3Audio() :
 	m_currentSong(0),
 	m_nextSong(0),
 	m_playingSong(0),
-	m_cachedSong(0)
+	m_cachedSong(0),
+    m_currentTheme(0),
+    m_changeMusic(false)
 {
 #if HAVE_SDL3_MIXER
 	Mix_HookMusicFinished(musicFinished);
@@ -311,7 +313,64 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
 }
 #endif
 
-bool U3Audio::initMusic()
+void U3Audio::initThemes()
+{
+    std::filesystem::path currentPath = m_resources->m_exePath;
+    currentPath /= ResourceLoc;
+    currentPath /= MusicLoc;
+    int curPos = 1;
+
+    m_themes.emplace_back(StandardString);
+
+    for (const std::filesystem::directory_entry& dirEntry : std::filesystem::directory_iterator(currentPath))
+    {
+        if (dirEntry.is_directory())
+        {
+            std::string curTheme = dirEntry.path().filename().string();
+            if (curTheme == StandardString)
+            {
+                continue;
+            }
+            m_themes.emplace_back(dirEntry.path().filename().string());
+            if (curTheme == m_resources->m_preferences.music_subfolder)
+            {
+                m_currentTheme = curPos;
+            }
+            curPos++;
+        }
+    }
+}
+
+void U3Audio::changeMusic()
+{
+    m_changeMusic = false;
+#if HAVE_OPEN_AL
+    // Clearing out errors, just incase
+    alGetError();
+
+    stopMusic();
+    for (auto& cur_music : m_music)
+    {
+        if (cur_music.m_source)
+        {
+            alSourceStop(cur_music.m_source);
+            alDeleteSources(1, &cur_music.m_source);
+            cur_music.m_source = 0;
+        }
+        
+
+        if (cur_music.m_buffer)
+        {
+            alDeleteBuffers(1, &cur_music.m_buffer);
+            cur_music.m_buffer = 0;
+        }
+    }
+    loadMusic();
+    playMusic(m_currentSong);
+#endif
+}
+
+void U3Audio::loadMusic()
 {
     std::vector<std::string> musicList = {
         { "Song_1.ogg" },
@@ -325,6 +384,27 @@ bool U3Audio::initMusic()
         { "Song_A.ogg" },
         { "Song_B.ogg" }
     };
+
+    m_music.resize(musicList.size());
+
+    if (m_currentTheme >= 0 && m_currentTheme < m_themes.size())
+    {
+        for (size_t index = 0; index < musicList.size(); ++index)
+        {
+            std::filesystem::path currentPath = m_resources->m_exePath;
+            currentPath /= ResourceLoc;
+            currentPath /= MusicLoc;
+            currentPath /= m_themes[m_currentTheme];
+            currentPath /= musicList[index];
+
+            read_ogg_file(currentPath.string(), index);
+        }
+    }
+}
+
+bool U3Audio::initMusic()
+{
+    
     
     std::vector<std::string> sfxList = {
         { "Alarm.wav" },
@@ -366,6 +446,8 @@ bool U3Audio::initMusic()
         { "Fade1.wav" },
         { "Fade2.wav" },
     };
+
+    initThemes();
     
 #if HAVE_SDL3_MIXER
 	
@@ -402,10 +484,8 @@ bool U3Audio::initMusic()
 		}
 	}
 #elif HAVE_OPEN_AL
-    
-    m_music.resize(musicList.size());
+
     m_sfx.resize(sfxList.size());
-    
     
     m_device = alcOpenDevice(NULL);
     if (!m_device)
@@ -426,16 +506,7 @@ bool U3Audio::initMusic()
         read_wav_file(currentPath.string(), index);
     }
     
-    for(size_t index = 0; index < musicList.size(); ++index)
-    {
-        std::filesystem::path currentPath = m_resources->m_exePath;
-        currentPath /= ResourceLoc;
-        currentPath /= MusicLoc;
-        currentPath /= m_resources->m_preferences.music_subfolder;
-        currentPath /= musicList[index];
-        
-        read_ogg_file(currentPath.string(), index);
-    }
+    loadMusic();
 #endif
     
 	return true;
@@ -553,7 +624,10 @@ void U3Audio::playSfx([[maybe_unused]] int sfx)
     {
         return;
     }
-    alSourcePlay(m_sfx[sfx].m_source);
+    if (m_sfx[sfx].m_source > 0)
+    {
+        alSourcePlay(m_sfx[sfx].m_source);
+    }
 #endif
 }
 
@@ -637,7 +711,7 @@ void U3Audio::setVolumeSfx(int volume)
         float volume_percent = float(volume) / 100.0f;
         for (auto& curSfx : m_sfx)
         {
-            if (curSfx.m_source >= 0)
+            if (curSfx.m_source > 0)
             {
                 alSourcef(curSfx.m_source, AL_GAIN, volume_percent);
             }
@@ -661,7 +735,7 @@ void U3Audio::setVolumeMusic(int volume)
         float volume_percent = float(volume) / 100.0f;
         for (auto& curMusic : m_music)
         {
-            if (curMusic.m_source >= 0)
+            if (curMusic.m_source > 0)
             {
                 alSourcef(curMusic.m_source, AL_GAIN, volume_percent);
             }

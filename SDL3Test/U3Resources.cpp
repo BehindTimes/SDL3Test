@@ -194,7 +194,7 @@ void U3Resources::savePreferences()
 	}
 	else
 	{
-		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST(std::string(Standard).c_str()));
+		xmlTextWriterWriteElement(writer, BAD_CAST  "Theme", BAD_CAST(std::string(StandardString).c_str()));
 	}
 	xmlTextWriterWriteElement(writer, BAD_CAST  "auto_save", BAD_CAST(m_preferences.auto_save ? "1" : "0"));
 	xmlTextWriterWriteElement(writer, BAD_CAST  "include_wind", BAD_CAST(m_preferences.include_wind ? "1" : "0"));
@@ -726,11 +726,11 @@ bool U3Resources::init(SDL_Renderer* renderer)
 		}
 	}
 
-	if (m_allGraphics.find(std::string(Standard)) != m_allGraphics.end())
+	if (m_allGraphics.find(std::string(StandardString)) != m_allGraphics.end())
 	{
-		m_standardGraphics = &m_allGraphics[std::string(Standard)];
+		m_standardGraphics = &m_allGraphics[std::string(StandardString)];
 		m_currentGraphics = m_standardGraphics;
-		auto it = std::find(m_themes.begin(), m_themes.end(), std::string(Standard));
+		auto it = std::find(m_themes.begin(), m_themes.end(), std::string(StandardString));
 		if (it != m_themes.end())
 		{
 			m_currentTheme = (int)std::distance(m_themes.begin(), it);
@@ -1777,7 +1777,7 @@ void U3Resources::loadGraphics()
 			m_allGraphics.emplace(mode, ModeGraphics());
 			m_themes.emplace_back(mode);
 
-			if (mode == Standard)
+			if (mode == StandardString)
 			{
 				m_defaultMode = m_themes.size() - 1;
 			}
@@ -3208,6 +3208,7 @@ void U3Resources::OptionsDlgClosed(int button)
 	{
 		bool changeScreen = false;
 		int tempTheme = m_SetOptionsDlg->m_codData.theme;
+		int tempMusicTheme = m_SetOptionsDlg->m_codData.music_theme;
 		m_preferences.allow_diagonal = m_SetOptionsDlg->m_codData.allow_diagonals;
 		m_preferences.auto_combat = m_SetOptionsDlg->m_codData.auto_combat;
 		m_preferences.auto_heal = m_SetOptionsDlg->m_codData.auto_heal;
@@ -3226,6 +3227,12 @@ void U3Resources::OptionsDlgClosed(int button)
 		m_preferences.auto_heal_amount = m_SetOptionsDlg->m_codData.auto_heal_amount;
 		m_preferences.volume_music = m_SetOptionsDlg->m_codData.volume_music;
 		m_preferences.volume_sfx = m_SetOptionsDlg->m_codData.volume_sfx;
+		if (m_preferences.music_subfolder != m_audio->m_themes[tempMusicTheme])
+		{
+			m_preferences.music_subfolder = m_audio->m_themes[tempMusicTheme];
+			m_audio->m_changeMusic = true;
+			m_audio->m_currentTheme = tempMusicTheme;
+		}
 
 		changeTheme(tempTheme);
 		m_audio->setVolumeSfx(m_preferences.volume_sfx);
@@ -3254,7 +3261,7 @@ void U3Resources::OptionsDlgClosed(int button)
 
 void U3Resources::CreateOptionsDlg()
 {
-	const int optionsDlgHeight = 260;
+	const int optionsDlgHeight = 270;
 	// Initial screen size is 640x384.  This will be scaled later on depending on the block size
 	m_SetOptionsDlg = std::make_unique<ChooseOptionsDialog>(m_renderer, engine_surface);
 	m_SetOptionsDlg->m_Rect.x = 152;

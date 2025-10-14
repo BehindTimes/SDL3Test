@@ -3,6 +3,7 @@
 
 #include "UltimaGraphics.h"
 #include "UltimaIncludes.h"
+#include "UltimaSound.h"
 #include "U3Button.h"
 #include "U3Dialog.h"
 #include "U3Misc.h"
@@ -16,6 +17,7 @@ extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Utilities> m_utilities;
 extern std::unique_ptr<U3Graphics> m_graphics;
 extern std::unique_ptr<U3Misc> m_misc;
+extern std::unique_ptr<U3Audio> m_audio;
 
 U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	ModeGraphics** currentGraphics, ModeGraphics** standardGraphics,
@@ -956,6 +958,7 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_font(nullptr),
 	m_closeValue(-1),
 	m_curTheme(-1),
+	m_curMusicTheme(-1),
 	m_healLimit(750),
 	m_sfxVolume(100),
 	m_musicVolume(100),
@@ -971,6 +974,7 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 
 	m_curTheme = m_resources->m_currentTheme;
 	m_fontKeyPos = m_resources->m_fontKeyPos;
+	m_curMusicTheme = m_audio->m_currentTheme;
 }
 
 ChooseOptionsDialog::~ChooseOptionsDialog()
@@ -1013,6 +1017,34 @@ void ChooseOptionsDialog::themeDown([[maybe_unused]] int id)
 	}
 	std::string strTheme = m_resources->m_themes[m_curTheme];
 	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, strTheme);
+}
+
+void ChooseOptionsDialog::musicThemeUp([[maybe_unused]] int id)
+{
+	if (m_audio->m_themes.size() < 1)
+	{
+		return;
+	}
+	m_curMusicTheme++;
+	m_curMusicTheme %= m_audio->m_themes.size();
+
+	std::string strTheme = m_audio->m_themes[m_curMusicTheme];
+	m_textBoxes[5]->setText(m_renderer, m_engine_surface, m_font, strTheme);
+}
+
+void ChooseOptionsDialog::musicThemeDown([[maybe_unused]] int id)
+{
+	if (m_audio->m_themes.size() < 1)
+	{
+		return;
+	}
+	m_curMusicTheme--;
+	if (m_curMusicTheme < 0)
+	{
+		m_curMusicTheme = (int)m_audio->m_themes.size() - 1;
+	}
+	std::string strTheme = m_audio->m_themes[m_curMusicTheme];
+	m_textBoxes[5]->setText(m_renderer, m_engine_surface, m_font, strTheme);
 }
 
 void ChooseOptionsDialog::sfxVolumeUp([[maybe_unused]] int id)
@@ -1185,6 +1217,7 @@ void ChooseOptionsDialog::init()
 	addLabel(std::string(SFXStr), 8, 180);
 	addLabel(std::string(VolumeStr), 75, 180);
 	addLabel(std::string(FontStr), 190, 180);
+	addLabel(std::string(ThemeStr), 8, 220);
 
 	addCheckBox((int)(m_Rect.w - 20), 40);
 	addCheckBox((int)(m_Rect.w - 20), 60);
@@ -1213,6 +1246,7 @@ void ChooseOptionsDialog::init()
 	addTextBox(124, 180, 36);
 	addTextBox((int)m_Rect.w - 72, 130, 48);
 	addTextBox(198, 200, 114);
+	addTextBox(50, 220, 110);
 
 	std::string strTheme = m_resources->m_themes[m_curTheme];
 	m_textBoxes[0]->setText(m_renderer, m_engine_surface, m_font, strTheme);
@@ -1223,6 +1257,8 @@ void ChooseOptionsDialog::init()
 	std::string strHealAmount = std::to_string(m_resources->m_preferences.auto_heal_amount);
 	m_textBoxes[3]->setText(m_renderer, m_engine_surface, m_font, strHealAmount);
 	setFontTextBox();
+	std::string strMusicTheme = m_audio->m_themes[m_curMusicTheme];
+	m_textBoxes[5]->setText(m_renderer, m_engine_surface, m_font, strMusicTheme);
 
 	m_musicVolume = m_resources->m_preferences.volume_music;
 	m_sfxVolume = m_resources->m_preferences.volume_sfx;
@@ -1230,8 +1266,8 @@ void ChooseOptionsDialog::init()
 
 	addButton("", 164, 60, std::bind(&ChooseOptionsDialog::themeUp, this, std::placeholders::_1), ButtonType::UpArrow);
 	addButton("", 164, 76, std::bind(&ChooseOptionsDialog::themeDown, this, std::placeholders::_1), ButtonType::DownArrow);
-	addButton(std::string(CancelString), 194, 236, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
-	addButton(std::string(OKString), 266, 236, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
+	addButton(std::string(CancelString), 194, 246, std::bind(&ChooseOptionsDialog::cancelPushed, this, std::placeholders::_1));
+	addButton(std::string(OKString), 266, 246, std::bind(&ChooseOptionsDialog::okPushed, this, std::placeholders::_1));
 
 	addButton("", 164, 132, std::bind(&ChooseOptionsDialog::musicVolumeUp, this, std::placeholders::_1), ButtonType::UpArrow);
 	addButton("", 164, 148, std::bind(&ChooseOptionsDialog::musicVolumeDown, this, std::placeholders::_1), ButtonType::DownArrow);
@@ -1244,6 +1280,9 @@ void ChooseOptionsDialog::init()
 
 	addButton("", (int)(m_Rect.w - 19), 192, std::bind(&ChooseOptionsDialog::fontUp, this, std::placeholders::_1), ButtonType::UpArrow);
 	addButton("", (int)(m_Rect.w - 19), 208, std::bind(&ChooseOptionsDialog::fontDown, this, std::placeholders::_1), ButtonType::DownArrow);
+
+	addButton("", 164, 212, std::bind(&ChooseOptionsDialog::musicThemeUp, this, std::placeholders::_1), ButtonType::UpArrow);
+	addButton("", 164, 228, std::bind(&ChooseOptionsDialog::musicThemeDown, this, std::placeholders::_1), ButtonType::DownArrow);
 }
 
 void ChooseOptionsDialog::changeBlockSize(int blockSize)
@@ -1400,6 +1439,7 @@ void ChooseOptionsDialog::cancelPushed([[maybe_unused]] int id)
 void ChooseOptionsDialog::okPushed([[maybe_unused]] int id)
 {
 	m_codData.theme = m_curTheme;
+	m_codData.music_theme = m_curMusicTheme;
 	m_codData.include_wind = m_checkBoxes[0]->m_checked;
 	m_codData.allow_diagonals = m_checkBoxes[1]->m_checked;
 	m_codData.auto_combat = m_checkBoxes[2]->m_checked;

@@ -97,6 +97,7 @@ struct codData
 {
 	codData() :
 		theme(0),
+		music_theme(0),
 		classic(false),
 		include_wind(false),
 		auto_heal(false),
@@ -113,6 +114,7 @@ struct codData
 	{
 	}
 	int theme;
+	int music_theme;
 	bool classic;
 	bool include_wind;
 	bool auto_heal;
@@ -156,6 +158,8 @@ private:
 	void renderDisplayString(TTF_Text* text_obj, int x, int y, SDL_Color color);
 	void themeUp(int id);
 	void themeDown(int id);
+	void musicThemeUp(int id);
+	void musicThemeDown(int id);
 	void sfxVolumeUp(int id);
 	void sfxVolumeDown(int id);
 	void musicVolumeUp(int id);
@@ -178,6 +182,7 @@ private:
 	std::function<void(int)> m_callBack;
 	int m_closeValue;
 	int m_curTheme;
+	int m_curMusicTheme;
 	int m_healLimit;
 	int m_sfxVolume;
 	int m_musicVolume;

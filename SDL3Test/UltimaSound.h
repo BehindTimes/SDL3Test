@@ -56,12 +56,14 @@ public:
 	int getCurrentSong() const { return m_currentSong; }
 	int getNextSong() const { return m_nextSong; }
 	int getCachedSong() const { return m_cachedSong; }
+	void changeMusic();
 
 #if HAVE_SDL3_MIXER
 	std::vector<Mix_Music*> m_music;
 	std::vector<Mix_Chunk*> m_sfx;
 #elif HAVE_OPEN_AL
 	void checkIsPlaying();
+	void loadMusic();
 	bool read_wav_file(std::string fname, size_t index);
 	bool read_ogg_file(std::string fname, size_t index);
 
@@ -69,7 +71,12 @@ public:
 	std::vector<MusicData> m_sfx;
 #endif
 
+	std::vector<std::string> m_themes;
+	int m_currentTheme;
+	bool m_changeMusic;
+
 private:
+	void initThemes();
 	void playMusic(int song);
 
 	int m_currentSong;

@@ -725,6 +725,11 @@ void MainMenu()
             m_resources->CalculateBlockSize();
             m_resources->m_resizeScreen = false;
         }
+
+		if (m_audio->m_changeMusic)
+		{
+			m_audio->changeMusic();
+		}
 	}
 }
 
@@ -1383,6 +1388,10 @@ void Game()
             m_resources->m_resizeScreen = false;
         }
 		
+		if (m_audio->m_changeMusic)
+		{
+			m_audio->changeMusic();
+		}
 	}
 }
 

@@ -298,6 +298,7 @@ void MainLoop()
 				m_resources->m_inverses.tiles = false;
 				m_resources->m_inverses.stayInversed = false;
 				m_misc->m_checkDead = false;
+				m_misc->m_gWhirlCtr = 1;
 
 				m_misc->m_zp[0xCF] = 0;
 				m_misc->m_zp[0x10] = 0;

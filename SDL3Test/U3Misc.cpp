@@ -722,6 +722,8 @@ void U3Misc::LoadUltimaMap(short map)
 				m_WhirlY = map_data[static_cast<size_t>(mapLength + 2)];
 				m_WhirlDX = map_data[static_cast<size_t>(mapLength + 3)];
 				m_WhirlDY = map_data[static_cast<size_t>(mapLength + 4)];
+
+				PutXYVal(0x30, (unsigned char)m_WhirlX, (unsigned char)m_WhirlY);
 			}
 			else
 			{

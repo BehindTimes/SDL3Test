@@ -248,6 +248,7 @@ public:
 	short m_ballY;
 	short m_ballVal;
 	int m_curButton;
+	int m_gWhirlCtr;
 
 private:
 	void Attack();
@@ -528,7 +529,7 @@ private:
 	int m_transactNum;
 	long m_gTime[2];
 	std::unique_ptr <SosariaHandle> m_saved_map;
-	int m_gWhirlCtr;
+	
 	short m_gMoon[2];
 	unsigned char m_validDirValue;
 	bool m_GoodPlace;

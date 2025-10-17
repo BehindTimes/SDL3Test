@@ -87,7 +87,8 @@ U3Misc::U3Misc() :
 	m_inTransaction(false),
 	m_ballX(-1),
 	m_ballY(-1),
-	m_ballVal(-1)
+	m_ballVal(-1),
+	m_curButton(-1)
 {
 	memset(m_gShapeSwapped, 0, sizeof(bool) * 256);
 	memset(m_Player, 0, sizeof(char) * (1365)); // 21 * 65
@@ -3916,6 +3917,7 @@ bool U3Misc::IgniteCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_InputDeque.clear();
 		m_scrollArea->UPrintMessage(41);
 		return false;
@@ -3956,6 +3958,15 @@ bool U3Misc::JoinGoldCallback()
 		m_InputDeque.clear();
 		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n");
+		m_scrollArea->UPrintMessage(41);
+		return false;
+	}
+	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
+	{
+		m_InputDeque.clear();
+		m_audio->playSfx(SFX_ERROR1);
+		std::string strRosNum = std::to_string(m_input_num + 1) + std::string("\n");
+		m_scrollArea->UPrintWin(strRosNum);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -4019,7 +4030,9 @@ bool U3Misc::PeerGemCallback()
 	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
 		m_InputDeque.clear();
-		m_scrollArea->UPrintWin("\n");
+		m_audio->playSfx(SFX_ERROR1);
+		std::string strRosNum = std::to_string(m_input_num + 1) + std::string("\n");
+		m_scrollArea->UPrintWin(strRosNum);
 		m_scrollArea->UPrintMessage(41);
 		m_scrollArea->UPrintWin("\n");
 		return false;
@@ -4122,6 +4135,7 @@ bool U3Misc::StealCallback1()
 	if (m_Party[PARTY_ROSTERPOS1 + m_rosNum] == 0)
 	{
 		m_InputDeque.clear();
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -4238,6 +4252,7 @@ bool U3Misc::UnlockKeyCallback()
 	}
 	if (m_input_num > 3 || m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		std::string dispString = std::to_string(m_input_num + 1) + std::string("\n");
 		m_scrollArea->UPrintWin(dispString);
 		m_scrollArea->UPrintMessage(41);
@@ -4591,6 +4606,7 @@ bool U3Misc::OtherCallback()
 	}
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -5255,6 +5271,7 @@ bool U3Misc::GetChestCallback()
 	if (m_Party[PARTY_ROSTERPOS1 + m_input_num] == 0)
 	{
 		m_InputDeque.clear();
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin("\n");
 		m_scrollArea->UPrintMessage(41);
 		//m_scrollArea->blockPrompt(false);
@@ -6210,6 +6227,7 @@ bool U3Misc::EnterShrineCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -6478,6 +6496,18 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 	bool retVal = false;
 	int mouse_buttons;
 
+	// Also need to add in the border to the button size
+	const float MIDBUTTON_X = 76;
+	const float MIDBUTTON_Y = 24;
+	std::vector<std::pair<float, float>> vecButtonPos = { {114 + MIDBUTTON_X, 100 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 120 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 140 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 160 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 180 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 200 + MIDBUTTON_Y},
+		{114 + MIDBUTTON_X, 240 + MIDBUTTON_Y}
+	};
+
 	switch (event.type)
 	{
 	case SDL_EVENT_QUIT:
@@ -6486,9 +6516,78 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 	case SDL_EVENT_KEY_DOWN:
 		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
 		{
-			if (event.key.key == SDLK_ESCAPE)
+			float mouseX;
+			float mouseY;
+
+			switch (event.key.key)
 			{
+			case SDLK_O:
+				m_graphics->goOptions(-1);
+				break;
+			case SDLK_C:
+				m_graphics->goCommandList(-1);
+				break;
+			case SDLK_S:
+				m_graphics->goSpellList(-1);
+				break;
+			case SDLK_T:
+				m_graphics->goTables(-1);
+				break;
+			case SDLK_M:
+				m_graphics->backToMenu(-1);
+				break;
+			case SDLK_Q:
+				m_graphics->quitGame(-1);
+				break;
+			case SDLK_R:
+				m_graphics->returnToGame(-1);
+				break;
+			case SDLK_ESCAPE:
 				m_graphics->returnToGame(0);
+				break;
+			case SDLK_UP:
+				m_curButton--;
+				if (m_curButton == -1)
+				{
+					m_curButton = (int)vecButtonPos.size() - 1;
+				}
+				else if (m_curButton < -1)
+				{
+					m_curButton = 0;
+				}
+				else if (m_curButton > ((int)vecButtonPos.size() - 1))
+				{
+					m_curButton = 0;
+				}
+				m_resources->SetMouseHoverOver(vecButtonPos[m_curButton].first, vecButtonPos[m_curButton].second);
+				break;
+			case SDLK_DOWN:
+				m_curButton++;
+
+				if (m_curButton > ((int)vecButtonPos.size() - 1))
+				{
+					m_curButton = 0;
+				}
+				else if (m_curButton < 0)
+				{
+					m_curButton = 0;
+				}
+				m_resources->SetMouseHoverOver(vecButtonPos[m_curButton].first, vecButtonPos[m_curButton].second);
+				break;
+			case SDLK_RETURN:
+				SDL_GetMouseState(&mouseX, &mouseY);
+
+				if (m_graphics->m_buttons.size() > 0)
+				{
+					for (auto& curButton : m_graphics->m_buttons)
+					{
+						curButton->setMouseCapture(1, mouseX, mouseY);
+						curButton->setMouseCapture(2, mouseX, mouseY);
+					}
+				}
+				break;
+			default:
+				break;
 			}
 		}
 		break;
@@ -6499,16 +6598,6 @@ bool U3Misc::ProcessMenuEvent(SDL_Event event)
 			mouseState = 1;
 			updateMouse = true;
 		}
-		/*if (m_inputType == InputType::AnyKey)
-		{
-			HandleAnyKey();
-			retVal = true;
-		}
-		else if (m_inputType == InputType::AnyKeyEscape)
-		{
-			HandleAnyKeyEscape(0);
-			retVal = true;
-		}*/
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_UP:
 		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);

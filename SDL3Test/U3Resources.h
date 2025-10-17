@@ -308,6 +308,7 @@ public:
 	void CreateOptionsDlg();
 	bool loadDemo();
 	bool HandleOptions(SDL_Event& event);
+	void SetMouseHoverOver(const float x, const float y);
 
 	unsigned char m_TileArray[128];
 	SDL_Texture* m_texDisplay;

@@ -428,10 +428,12 @@ void disperseParty([[maybe_unused]] int button)
 	if (altMessage)
 	{
 		m_graphics->m_obsCurMode = OrganizeBottomScreen::DispersedNoOne;
+		m_misc->m_curButton = -1;
 	}
 	else
 	{
 		m_graphics->m_obsCurMode = OrganizeBottomScreen::Dispersed;
+		m_misc->m_curButton = -1;
 	}
 }
 
@@ -439,6 +441,7 @@ void createCharacterChooseSlot([[maybe_unused]] int button)
 {
 	bool hasSpace = m_resources->CheckRosterSpace();
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterChooseSlot;
+	m_misc->m_curButton = -1;
 
 	if (!hasSpace)
 	{
@@ -453,6 +456,7 @@ void createCharacterChooseSlot([[maybe_unused]] int button)
 void terminateCharacter([[maybe_unused]] int button)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::TerminateCharacter;
+	m_misc->m_curButton = -1;
 	m_resources->SetButtonCallback(4, removeCharacter);
 	m_resources->SetButtonCallback(7, backToOrganize);
 }
@@ -478,6 +482,7 @@ void formParty([[maybe_unused]] int button)
 	if (m_misc->m_Party[PARTY_ROSTERPOS1] != 0)
 	{
 		m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormedInUse;
+		m_misc->m_curButton = -1;
 		m_resources->SetButtonVisibility(3, false);
 		m_resources->SetButtonVisibility(4, true);
 		m_resources->SetButtonVisibility(5, false);
@@ -487,6 +492,7 @@ void formParty([[maybe_unused]] int button)
 	else
 	{
 		m_graphics->m_obsCurMode = OrganizeBottomScreen::FormParty;
+		m_misc->m_curButton = -1;
 		m_resources->SetButtonVisibility(3, false);
 		m_resources->SetButtonVisibility(4, false);
 		m_resources->SetButtonVisibility(5, false);
@@ -500,6 +506,7 @@ void formParty([[maybe_unused]] int button)
 void partyFormed([[maybe_unused]] int button)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_misc->m_curButton = -1;
 	m_misc->m_partyFormed = true;
 
 	memset(m_misc->m_Party, 0, sizeof(unsigned char) * 64);
@@ -537,12 +544,14 @@ void partyFormed([[maybe_unused]] int button)
 	m_resources->m_selectedCharacters.clear();
 
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::PartyFormed;
+	m_misc->m_curButton = -1;
 }
 
 void backToOrganize([[maybe_unused]] int button)
 {
 	m_resources->m_selectedCharacters.clear();
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+	m_misc->m_curButton = -1;
 	m_resources->m_selectedFormRect = -1;
 
 	m_resources->SetButtonVisibility(3, true);
@@ -571,11 +580,14 @@ void MainMenu()
 	int mouseState = 0;
 	bool updateMouse = false;
 	changeMode = false;
+	int curButton = -1;
 
 	m_resources->SetButtonCallback(0, returnToView);
 	m_resources->SetButtonCallback(1, organizeParty);
 	m_resources->SetButtonCallback(2, journeyOnward);
 	m_resources->SetButtonCallback(8, changeOptions);
+
+	std::vector<std::pair<float, float>> vecButtonPos = { {67 + 48, 219 + 48}, {202 + 48, 219 + 48}, {338 + 48, 219 + 48}, {473 + 48, 219 + 48} };
 
 	while (1)
 	{
@@ -592,6 +604,59 @@ void MainMenu()
 		{
 		case SDL_EVENT_QUIT:
 			quit = true;
+			break;
+		case SDL_EVENT_KEY_UP:
+			if (!(event.key.mod & SDL_KMOD_ALT))
+			{
+				float mouseX;
+				float mouseY;
+
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					switch (event.key.key)
+					{
+					case SDLK_R:
+						returnToView(-1);
+						break;
+					case SDLK_O:
+						organizeParty(-1);
+						break;
+					case SDLK_A:
+						changeOptions(-1);
+						break;
+					case SDLK_J:
+						journeyOnward(-1);
+						break;
+					case SDLK_RETURN:
+						SDL_GetMouseState(&mouseX, &mouseY);
+						m_resources->UpdateButtons(mouseX, mouseY, 1);
+						m_resources->UpdateButtons(mouseX, mouseY, 2);
+						break;
+					default:
+						break;
+					}
+				}
+				else
+				{
+					switch (event.key.key)
+					{
+					case SDLK_RETURN:
+						SDL_GetMouseState(&mouseX, &mouseY);
+
+						m_resources->m_SetOptionsDlg->updateDialog(mouseX, mouseY, 1);
+						if (m_resources->m_SetOptionsDlg->updateDialog(mouseX, mouseY, 2))
+						{
+							m_resources->m_SetOptionsDlg.reset();
+							m_resources->m_cleanupAlert = false;
+							changeMode = true;
+							newMode = GameMode::MainMenu;
+						}
+						break;
+					default:
+						break;
+					}
+				}
+			}
 			break;
 		case SDL_EVENT_KEY_DOWN:
 			if (event.key.mod & SDL_KMOD_ALT)
@@ -614,36 +679,61 @@ void MainMenu()
 					quit = true;
 				}
 			}
-			else if (event.key.key == SDLK_R)
-			{
-				if (!m_resources->m_SetOptionsDlg)
-				{
-					returnToView(-1);
-				}
-			}
-			else if (event.key.key == SDLK_O)
-			{
-				if (!m_resources->m_SetOptionsDlg)
-				{
-					organizeParty(-1);
-				}
-			}
-			else if (event.key.key == SDLK_A)
-			{
-				if (!m_resources->m_SetOptionsDlg)
-				{
-					changeOptions(-1);
-				}
-			}
-			else if (event.key.key == SDLK_J)
-			{
-				if (!m_resources->m_SetOptionsDlg)
-				{
-					journeyOnward(-1);
-				}
-			}
 			else
 			{
+				if (!m_resources->m_SetOptionsDlg)
+				{
+					switch (event.key.key)
+					{
+					case SDLK_LEFT:
+						curButton--;
+						if (curButton == -1)
+						{
+							curButton = (int)vecButtonPos.size() - 1;
+						}
+						else if (curButton < -1)
+						{
+							curButton = 0;
+						}
+						else if (curButton > (int)vecButtonPos.size() - 1)
+						{
+							curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[curButton].first, vecButtonPos[curButton].second);
+						break;
+					case SDLK_RIGHT:
+						curButton++;
+
+						if (curButton > (int)vecButtonPos.size() - 1)
+						{
+							curButton = 0;
+						}
+						else if (curButton < 0)
+						{
+							curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[curButton].first, vecButtonPos[curButton].second);
+						break;
+					default:
+						break;
+					}
+				}
+				else
+				{
+					switch (event.key.key)
+					{
+					case SDLK_UP:
+					case SDLK_LEFT:
+						m_resources->m_SetOptionsDlg->changeCurButton(-1);
+						break;
+					case SDLK_DOWN:
+					case SDLK_RIGHT:
+						m_resources->m_SetOptionsDlg->changeCurButton(1);
+						break;
+					default:
+						break;
+					}
+				}
 			}
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -910,6 +1000,7 @@ void Organize()
 	changeMode = false;
 	bool hasAlert = false;
 	int mouse_buttons;
+	m_misc->m_curButton = -1;
 
 	while (1)
 	{
@@ -919,6 +1010,7 @@ void Organize()
 		}
 
 		updateMouse = false;
+		bool skipAlert = false;
 
 		SDL_PollEvent(&event);
 		switch (event.type)
@@ -926,7 +1018,153 @@ void Organize()
 		case SDL_EVENT_QUIT:
 			quit = true;
 			break;
+		case SDL_EVENT_KEY_UP:
+			if ( !(event.key.mod & SDL_KMOD_ALT))
+			{
+				switch (m_graphics->m_obsCurMode)
+				{
+				case OrganizeBottomScreen::CreateCharacterAborted:
+				case OrganizeBottomScreen::CreateCharacterDone:
+				case OrganizeBottomScreen::PartyFormed:
+				case OrganizeBottomScreen::PartyFormedInUse:
+				case OrganizeBottomScreen::DispersedNoOne:
+				case OrganizeBottomScreen::Dispersed:
+					m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+					m_misc->m_curButton = -1;
+					break;
+				case OrganizeBottomScreen::CreateCharacterChooseSlot:
+					switch (event.key.key)
+					{
+					case SDLK_B:
+						backToOrganize(-1);
+						break;
+					case SDLK_RETURN:
+					{
+						if (!m_resources->HasAlert())
+						{
+							float mouseX;
+							float mouseY;
+							SDL_GetMouseState(&mouseX, &mouseY);
+							m_resources->UpdateCreateCharacterChooseSlot(mouseX, mouseY, 1);
+							m_resources->UpdateButtons(mouseX, mouseY, 1);
+							m_resources->UpdateCreateCharacterChooseSlot(mouseX, mouseY, 2);
+							m_resources->UpdateButtons(mouseX, mouseY, 2);
+							skipAlert = true;
+							event = SDL_Event();
+						}
+					}
+					break;
+					default:
+						break;
+					}
+					break;
+				case OrganizeBottomScreen::FormParty:
+					switch (event.key.key)
+					{
+					case SDLK_F:
+						if (m_resources->m_selectedCharacters.size() > 0)
+						{
+							partyFormed(-1);
+						}
+						break;
+					case SDLK_B:
+						backToOrganize(-1);
+						break;
+					case SDLK_RETURN:
+					{
+						if (!m_resources->HasAlert())
+						{
+							float mouseX;
+							float mouseY;
+							SDL_GetMouseState(&mouseX, &mouseY);
+							m_resources->UpdateFormParty(mouseX, mouseY, 1);
+							m_resources->UpdateButtons(mouseX, mouseY, 1);
+							m_resources->UpdateFormParty(mouseX, mouseY, 2);
+							m_resources->UpdateButtons(mouseX, mouseY, 2);
+							skipAlert = true;
+						}
+					}
+					break;
+					default:
+						break;
+					}
+					break;
+				case OrganizeBottomScreen::TerminateCharacter:
+					switch (event.key.key)
+					{
+					case SDLK_T:
+						removeCharacter(-1);
+						break;
+					case SDLK_B:
+						backToOrganize(-1);
+						break;
+					case SDLK_RETURN:
+					{
+						if (!m_resources->HasAlert())
+						{
+							float mouseX;
+							float mouseY;
+							SDL_GetMouseState(&mouseX, &mouseY);
+							m_resources->UpdateTerminateCharacter(mouseX, mouseY, 1);
+							m_resources->UpdateButtons(mouseX, mouseY, 1);
+							m_resources->UpdateTerminateCharacter(mouseX, mouseY, 2);
+							m_resources->UpdateButtons(mouseX, mouseY, 2);
+							skipAlert = true;
+						}
+					}
+					break;
+					default:
+						break;
+					}
+					break;
+				case OrganizeBottomScreen::None:
+					switch (event.key.key)
+					{
+					case SDLK_C:
+						createCharacterChooseSlot(-1);
+						break;
+					case SDLK_T:
+						terminateCharacter(-1);
+						break;
+					case SDLK_D:
+						if (m_misc->m_partyFormed)
+						{
+							disperseParty(-1);
+						}
+						break;
+					case SDLK_F:
+						if (!m_misc->m_partyFormed)
+						{
+							formParty(-1);
+						}
+						break;
+					case SDLK_B:
+						backToMenu(-1);
+						break;
+					case SDLK_RETURN:
+					{
+						if (!m_resources->HasAlert())
+						{
+							float mouseX;
+							float mouseY;
+							SDL_GetMouseState(&mouseX, &mouseY);
+							m_resources->UpdateButtons(mouseX, mouseY, 1);
+							m_resources->UpdateButtons(mouseX, mouseY, 2);
+							skipAlert = true;
+						}
+					}
+					break;
+					default:
+						break;
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			break;
 		case SDL_EVENT_KEY_DOWN:
+
 			if (event.key.mod & SDL_KMOD_ALT)
 			{
 				if (event.key.key == SDLK_RETURN)
@@ -951,14 +1189,222 @@ void Organize()
 			{
 				switch (m_graphics->m_obsCurMode)
 				{
-				case OrganizeBottomScreen::CreateCharacterAborted:
-				case OrganizeBottomScreen::CreateCharacterDone:
-				case OrganizeBottomScreen::PartyFormed:
-				case OrganizeBottomScreen::PartyFormedInUse:
-				case OrganizeBottomScreen::DispersedNoOne:
-				case OrganizeBottomScreen::Dispersed:
-					m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+				case OrganizeBottomScreen::CreateCharacterChooseSlot:
+				{
+					std::vector<std::pair<float, float>> vecButtonPos;
+					for (size_t index = 0; index < 20; ++index)
+					{
+						if (index < 10)
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(30, 236.5f + index * 13));
+						}
+						else
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(330, 236.5f + (index - 10) * 13));
+						}
+					}
+
+					vecButtonPos.emplace_back(std::make_pair<float, float>(563 + 26, 208));
+
+					switch (event.key.key)
+					{
+					case SDLK_UP:
+					case SDLK_LEFT:
+						m_misc->m_curButton--;
+						if (m_misc->m_curButton == -1)
+						{
+							m_misc->m_curButton = (int)vecButtonPos.size() - 1;
+						}
+						else if (m_misc->m_curButton < -1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					case SDLK_DOWN:
+					case SDLK_RIGHT:
+						m_misc->m_curButton++;
+
+						if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton < 0)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					default:
+						break;
+					}
+				}
 					break;
+				case OrganizeBottomScreen::FormParty:
+				{
+					std::vector<std::pair<float, float>> vecButtonPos;
+					for (size_t index = 0; index < 20; ++index)
+					{
+						if (index < 10)
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(30, 236.5f + index * 13));
+						}
+						else
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(330, 236.5f + (index - 10) * 13));
+						}
+					}
+					if (m_resources->m_selectedCharacters.size() > 0)
+					{
+						vecButtonPos.emplace_back(std::make_pair<float, float>(384 + 86, 208));
+					}
+
+					vecButtonPos.emplace_back(std::make_pair<float, float>(563 + 26, 208));
+
+					switch (event.key.key)
+					{
+					case SDLK_UP:
+					case SDLK_LEFT:
+						m_misc->m_curButton--;
+						if (m_misc->m_curButton == -1)
+						{
+							m_misc->m_curButton = (int)vecButtonPos.size() - 1;
+						}
+						else if (m_misc->m_curButton < -1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					case SDLK_DOWN:
+					case SDLK_RIGHT:
+						m_misc->m_curButton++;
+
+						if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton < 0)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					default:
+						break;
+					}
+				}
+					break;
+				case OrganizeBottomScreen::TerminateCharacter:
+				{
+					std::vector<std::pair<float, float>> vecButtonPos;
+					for (size_t index = 0; index < 20; ++index)
+					{
+						if (index < 10)
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(30, 236.5f + index * 13));
+						}
+						else
+						{
+							vecButtonPos.emplace_back(std::make_pair<float, float>(330, 236.5f + (index - 10) * 13));
+						}
+					}
+					vecButtonPos.emplace_back(std::make_pair<float, float>(205 + 86, 208));
+					vecButtonPos.emplace_back(std::make_pair<float, float>(563 + 26, 208));
+
+					switch (event.key.key)
+					{
+					case SDLK_UP:
+					case SDLK_LEFT:
+						m_misc->m_curButton--;
+						if (m_misc->m_curButton == -1)
+						{
+							m_misc->m_curButton = (int)vecButtonPos.size() - 1;
+						}
+						else if (m_misc->m_curButton < -1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					case SDLK_DOWN:
+					case SDLK_RIGHT:
+						m_misc->m_curButton++;
+
+						if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton < 0)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					default:
+						break;
+					}
+				}
+					break;
+				case OrganizeBottomScreen::None:
+				{
+					float x_offet = 0;
+					float y_offset = 8;
+					std::vector<std::pair<float, float>> vecButtonPos = {
+						{26 + 86, 200 + y_offset},
+						{205 + x_offet + 86, 200 + y_offset},
+						{384 + x_offet + 86, 200 + y_offset},
+						{563 + x_offet + 26, 200 + y_offset}
+					};
+					switch (event.key.key)
+					{
+					case SDLK_LEFT:
+						m_misc->m_curButton--;
+						if (m_misc->m_curButton == -1)
+						{
+							m_misc->m_curButton = (int)vecButtonPos.size() - 1;
+						}
+						else if (m_misc->m_curButton < -1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					case SDLK_RIGHT:
+						m_misc->m_curButton++;
+
+						if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+						{
+							m_misc->m_curButton = 0;
+						}
+						else if (m_misc->m_curButton < 0)
+						{
+							m_misc->m_curButton = 0;
+						}
+						m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+						break;
+					default:
+						break;
+					}
+				}
+					break;
+				
 				default:
 					break;
 				}
@@ -1038,6 +1484,7 @@ void Organize()
 				{
 					m_resources->m_CreateCharacterDlg.reset();
 					m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+					m_misc->m_curButton = -1;
 				}
 				break;
 			default:
@@ -1049,6 +1496,10 @@ void Organize()
 		m_graphics->DrawOrganizeMenu(event);
 		if (hasAlert)
 		{
+			if (skipAlert)
+			{
+				event = SDL_Event();
+			}
 			m_resources->HandleAlert(event);
 		}
 		SDL_RenderPresent(renderer);
@@ -1059,6 +1510,7 @@ void Organize()
 			{
 				hasAlert = false;
 				m_graphics->m_obsCurMode = OrganizeBottomScreen::None;
+				m_misc->m_curButton = -1;
 			}
 		}
 

@@ -755,7 +755,7 @@ void U3Graphics::DrawMiniMap()
     SDL_SetRenderDrawColor(m_resources->m_renderer, 0, 0, 0, 0);
 }
 
-void U3Graphics::DrawMap(unsigned char x, unsigned char y)
+void U3Graphics::DrawMap(unsigned char x, unsigned char y, bool render)
 {
     const char xhide[11] = { 1, 1, 1, 1, 1, 0, -1, -1, -1, -1, -1 };
     const char yhide[11] = { 11, 11, 11, 11, 11, 0, -11, -11, -11, -11, -11 };
@@ -870,7 +870,10 @@ void U3Graphics::DrawMap(unsigned char x, unsigned char y)
     }
     m_misc->m_stx = x - 5;
     m_misc->m_sty = y - 5;
-    m_resources->DrawTiles();
+    if (render)
+    {
+        m_resources->DrawTiles();
+    }
 }
 
 void U3Graphics::DrawGameMenu() const
@@ -1248,6 +1251,7 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
 
         addButton(std::string(ReturnToGameStr), 114, 240, 120, std::bind(&U3Graphics::returnToGame, this, std::placeholders::_1));
         m_menuInit = true;
+        m_misc->m_curButton = -1;
     }
     m_misc->m_currentEvent = event;
     DrawFrame(1);

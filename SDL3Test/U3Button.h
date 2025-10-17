@@ -38,6 +38,7 @@ public:
 	float getHeight() const { return m_height; }
 	bool isCaptured() const { return m_captureMouse; }
 	void setType(ButtonType type) { m_type = type; }
+	SDL_FRect m_renderRect;
 
 	int m_x;
 	int m_y;
@@ -45,7 +46,6 @@ private:
 	SDL_Texture* m_texDefault;
 	SDL_Texture* m_texPushed;
 	SDL_Texture* m_texDisabled;
-	SDL_FRect m_renderRect;
 	std::function<void(int)> m_callbackFunction;
 
 	float m_override_width;

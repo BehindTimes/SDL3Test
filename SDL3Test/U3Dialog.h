@@ -148,6 +148,7 @@ public:
 	bool updateDialog(float xPos, float yPos, int mouseState);
 	void SetDialogFinishedCallback(std::function<void(int)> func);
 	void HandleEvent(SDL_Event& event);
+	void changeCurButton(int button);
 
 	SDL_FRect m_Rect;
 
@@ -187,6 +188,8 @@ private:
 	int m_sfxVolume;
 	int m_musicVolume;
 	size_t m_fontKeyPos;
+	int m_curButton;
+	std::vector<std::pair<float, float>> m_vecButtonPos;
 };
 
 class CreateCharacterDialog
@@ -327,5 +330,6 @@ private:
 	//std::vector<TTF_Text*> m_textButtons;
 	std::function<void()> m_callback;
 	int m_retVal;
+	int m_curButton;
 };
 

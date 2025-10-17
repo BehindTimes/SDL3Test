@@ -1319,9 +1319,20 @@ bool UltimaDungeon::PeerGemCallback()
 
 	short rosnum;
 
-	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0 || m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
+	if (m_misc->m_input_num > 3 || m_misc->m_input_num < 0)
 	{
 		m_scrollArea->UPrintWin("\n\n");
+		m_misc->AddFinishTurn();
+		return false;
+	}
+	else if (m_misc->m_Party[PARTY_ROSTERPOS1 + m_misc->m_input_num] == 0)
+	{
+		m_audio->playSfx(SFX_ERROR1);
+		std::string strRosNum = std::to_string(m_misc->m_input_num + 1) + std::string("\n");
+		m_scrollArea->UPrintWin(strRosNum);
+		m_scrollArea->UPrintMessage(41);
+		m_scrollArea->UPrintWin("\n");
+		
 		m_misc->AddFinishTurn();
 		return false;
 	}
@@ -1329,6 +1340,7 @@ bool UltimaDungeon::PeerGemCallback()
 	std::string strRosNum = std::to_string(rosnum) + std::string("\n\n");
 	if (m_misc->m_Player[rosnum][37] < 1)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintWin(strRosNum);
 		m_scrollArea->UPrintMessage(67);
 		m_misc->AddFinishTurn();
@@ -1656,6 +1668,7 @@ bool UltimaDungeon::FountainCallback()
 		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		m_resources->m_overrideImage = -1;
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -1756,6 +1769,7 @@ bool UltimaDungeon::MarkCallback()
 		m_audio->setNextSong(4);
 		m_audio->musicUpdate();
 		//m_scrollArea->blockPrompt(false);
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}

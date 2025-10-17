@@ -247,6 +247,7 @@ public:
 	short m_ballX;
 	short m_ballY;
 	short m_ballVal;
+	int m_curButton;
 
 private:
 	void Attack();

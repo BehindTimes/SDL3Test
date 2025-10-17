@@ -179,6 +179,13 @@ bool U3Misc::CommandNorthCallback()
 	{
 		m_ypos--;
 		m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+		// Because rendering is now separate of the game logic, and the game map occurs during
+		// the map rendering, there were issues of monsters & projectiles able to go through walls.
+		// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+		// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+		// display.
+		m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 	}
 	return false;
 }
@@ -219,6 +226,13 @@ bool U3Misc::CommandSouthCallback()
 	{
 		m_ypos++;
 		m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+		// Because rendering is now separate of the game logic, and the game map occurs during
+		// the map rendering, there were issues of monsters & projectiles able to go through walls.
+		// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+		// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+		// display.
+		m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 	}
 	return false;
 }
@@ -259,6 +273,13 @@ bool U3Misc::CommandEastCallback()
 	{
 		m_xpos++;
 		m_xpos = m_graphics->MapConstrain((short)m_xpos);
+
+		// Because rendering is now separate of the game logic, and the game map occurs during
+		// the map rendering, there were issues of monsters & projectiles able to go through walls.
+		// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+		// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+		// display.
+		m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 	}
 	return false;
 }
@@ -299,6 +320,13 @@ bool U3Misc::CommandWestCallback()
 	{
 		m_xpos--;
 		m_xpos = m_graphics->MapConstrain((short)m_xpos);
+
+		// Because rendering is now separate of the game logic, and the game map occurs during
+		// the map rendering, there were issues of monsters & projectiles able to go through walls.
+		// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+		// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+		// display.
+		m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 	}
 	return false;
 }
@@ -348,6 +376,13 @@ bool U3Misc::CommandSouthEastCallback()
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+			// Because rendering is now separate of the game logic, and the game map occurs during
+			// the map rendering, there were issues of monsters & projectiles able to go through walls.
+			// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+			// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+			// display.
+			m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 		}
 	}
 	return false;
@@ -397,6 +432,13 @@ bool U3Misc::CommandSouthWestCallback()
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
 			m_ypos++;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+			// Because rendering is now separate of the game logic, and the game map occurs during
+			// the map rendering, there were issues of monsters & projectiles able to go through walls.
+			// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+			// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+			// display.
+			m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 		}
 	}
 	return false;
@@ -446,6 +488,13 @@ bool U3Misc::CommandNorthEastCallback()
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
 			m_ypos--;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+			// Because rendering is now separate of the game logic, and the game map occurs during
+			// the map rendering, there were issues of monsters & projectiles able to go through walls.
+			// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+			// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+			// display.
+			m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 		}
 	}
 	return false;
@@ -495,6 +544,13 @@ bool U3Misc::CommandNorthWestCallback()
 			m_xpos = m_graphics->MapConstrain((short)m_xpos);
 			m_ypos--;
 			m_ypos = m_graphics->MapConstrain((short)m_ypos);
+
+			// Because rendering is now separate of the game logic, and the game map occurs during
+			// the map rendering, there were issues of monsters & projectiles able to go through walls.
+			// We're now updating the map, but we're not rendering it, otherwise you'll get one frame
+			// rendered of npcs/enemies of their old location which was shifted to a new spot on the
+			// display.
+			m_graphics->DrawMap((unsigned char)m_xpos, (unsigned char)m_ypos, false);
 		}
 	}
 	return false;
@@ -517,16 +573,6 @@ bool U3Misc::CommandNorthWest()
 		m_validDirValue = GetXYVal(m_xpos - 1, m_ypos - 1);
 		m_callbackStack.push(std::bind(&U3Misc::CommandNorthWestCallback, this));
 		m_callbackStack.push(std::bind(&U3Misc::ValidDir, this));
-
-		/*if (!ValidDir(GetXYVal(m_xpos, m_ypos + 1)))
-		{
-			NoGo();
-		}
-		else
-		{
-			m_ypos++;
-			m_ypos = m_graphics->MapConstrain((short)m_ypos);
-		}*/
 	}
 
 	return false;
@@ -957,6 +1003,7 @@ bool U3Misc::TransactCallback()
 		if (m_rosNum == 0)
 		{
 			m_InputDeque.clear();
+			m_audio->playSfx(SFX_ERROR1);
 			m_scrollArea->UPrintMessage(41);
 			return false;
 		}
@@ -1512,6 +1559,7 @@ bool U3Misc::StatsCallback()
 	m_surpressTextDisplay = false;
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -1926,6 +1974,7 @@ bool U3Misc::WearArmourCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -2041,6 +2090,7 @@ bool U3Misc::ReadyWeaponCallback()
 	m_surpressTextDisplay = false;
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -2124,6 +2174,7 @@ bool U3Misc::NegateTimeCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -2201,6 +2252,7 @@ bool U3Misc::ModifyOrderCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -2283,12 +2335,14 @@ bool U3Misc::HandEquipCallback()
 	m_scrollArea->UPrintWin(dispString);
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
 
 	if (!m_Player[m_Party[PARTY_ROSTERPOS1 + m_chNum]][17])
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}
@@ -2889,6 +2943,7 @@ bool U3Misc::CastCallback()
 	m_surpressTextDisplay = false;
 	if (m_Party[PARTY_ROSTERPOS1 + m_chNum] == 0)
 	{
+		m_audio->playSfx(SFX_ERROR1);
 		m_scrollArea->UPrintMessage(41);
 		return false;
 	}

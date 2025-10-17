@@ -2578,6 +2578,15 @@ void U3Resources::SetButtonVisibility(short button, bool visible)
 	}
 }
 
+void U3Resources::SetMouseHoverOver(const float x, const float y)
+{
+	float mult = m_blockSize / 16.0f;
+	float x_out = x * mult + screenOffsetX;
+	float y_out = y * mult + screenOffsetY;
+
+	SDL_WarpMouseInWindow(window, x_out, y_out);
+}
+
 void U3Resources::DrawButton(short butNum)
 {
 	short butOffsetX[] = { 67, 202, 473, 26, 205, 384, 384, 563, 338 };
@@ -3186,6 +3195,7 @@ void U3Resources::UpdateCreateCharacterChooseSlot(float xPos, float yPos, int mo
 			float addheight1 = 336.0f * (34.0f / 400.0f);
 			float addheight2 = 336.0f * (53.0f / 400.0f);
 			m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacter;
+			m_misc->m_curButton = -1;
 			m_CreateCharacterDlg = std::make_unique<CreateCharacterDialog>(m_renderer, engine_surface);
 			m_CreateCharacterDlg->loadPresets();
 			m_CreateCharacterDlg->m_Rect.x = 144;

@@ -61,7 +61,7 @@ public:
 	void DrawDemoScreen(Uint64 curTick);
 	void DrawMenu();
 	void DrawOrganizeMenu(SDL_Event event);
-	void DrawMap(unsigned char x, unsigned char y);
+	void DrawMap(unsigned char x, unsigned char y, bool render = true);
 	void DrawMiniMap();
 	short MapConstrain(short value);
 	void ChangeClassic();
@@ -75,6 +75,12 @@ public:
 	
 	void render(SDL_Event event, Uint64 deltaTime);
 	void returnToGame(int button);
+	void quitGame(int button);
+	void backToMenu(int button);
+	void goCommandList(int button);
+	void goSpellList(int button);
+	void goTables(int button);
+	void goOptions(int button);
 
 	unsigned char m_maskRestoreArray[128];
 	unsigned char m_maskArray[128];
@@ -145,12 +151,6 @@ private:
 	bool CheckIfHasLava();
 	void DrawGameMenu() const;
 	void addButton(std::string strLabel, int x, int y, int width, std::function<void(int)> func);
-	void quitGame(int button);
-	void backToMenu(int button);
-	void goCommandList(int button);
-	void goSpellList(int button);
-	void goTables(int button);
-	void goOptions(int button);
 	bool closeImage();
 
 	static constexpr Uint64 DelayScroll = 700;

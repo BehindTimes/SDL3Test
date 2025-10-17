@@ -42,7 +42,8 @@ U3Dialog::U3Dialog(SDL_Renderer* renderer, TTF_TextEngine* engine_surface,
 	m_messageY(0),
 	m_icon(nullptr),
 	m_callback(callback),
-	m_retVal(0)
+	m_retVal(0),
+	m_curButton(-1)
 {
 	createFont();
 	if (type == DialogType::Alert)
@@ -708,15 +709,79 @@ void U3Dialog::HandleEvent(SDL_Event& event)
 	switch (event.type)
 	{
 	case SDL_EVENT_KEY_UP:
-		if (event.key.key == SDLK_RETURN)
+		if (m_vecButtons.size() > 0)
 		{
-			m_backButton.click();
+			if (event.key.key == SDLK_RETURN)
+			{
+				for (auto& curButton : m_vecButtons)
+				{
+					float mouseX;
+					float mouseY;
+					SDL_GetMouseState(&mouseX, &mouseY);
+
+					curButton->setMouseCapture(1, mouseX, mouseY);
+					curButton->setMouseCapture(2, mouseX, mouseY);
+				}
+			}
+		}
+		else
+		{
+			if (event.key.key == SDLK_RETURN)
+			{
+				m_backButton.click();
+			}
 		}
 		break;
 	case SDL_EVENT_KEY_DOWN:
-		if (event.key.key == SDLK_RETURN)
+		if (m_vecButtons.size() > 0)
 		{
-			m_backButton.forceCapture();
+			float xpos;
+			float ypos;
+			switch (event.key.key)
+			{
+			case SDLK_LEFT:
+				m_curButton--;
+				if (m_curButton == -1)
+				{
+					m_curButton = (int)m_vecButtons.size() - 1;
+				}
+				else if (m_curButton < -1)
+				{
+					m_curButton = 0;
+				}
+				else if (m_curButton > (int)m_vecButtons.size() - 1)
+				{
+					m_curButton = 0;
+				}
+				xpos = m_vecButtons[m_curButton]->m_renderRect.x + m_vecButtons[m_curButton]->m_renderRect.w / 2.0f;
+				ypos = m_vecButtons[m_curButton]->m_renderRect.y + m_vecButtons[m_curButton]->m_renderRect.h / 2.0f;
+				SDL_WarpMouseInWindow(window, xpos, ypos);
+				break;
+			case SDLK_RIGHT:
+				m_curButton++;
+
+				if (m_curButton > (int)m_vecButtons.size() - 1)
+				{
+					m_curButton = 0;
+				}
+				else if (m_curButton < 0)
+				{
+					m_curButton = 0;
+				}
+				xpos = m_vecButtons[m_curButton]->m_renderRect.x + m_vecButtons[m_curButton]->m_renderRect.w / 2.0f;
+				ypos = m_vecButtons[m_curButton]->m_renderRect.y + m_vecButtons[m_curButton]->m_renderRect.h / 2.0f;
+				SDL_WarpMouseInWindow(window, xpos, ypos);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			if (event.key.key == SDLK_RETURN)
+			{
+				m_backButton.forceCapture();
+			}
 		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -913,12 +978,61 @@ void ChooseOptionsDialog::HandleEvent(SDL_Event& event)
 	bool updateMouse = false;
 	int mouseState = 0;
 	int mouse_buttons;
+	float mouseX;
+	float mouseY;
+
+	const int tile_size_offset = 8;
+	m_vecButtonPos = {
+		{80 + tile_size_offset, 40 + tile_size_offset},
+		{164 + tile_size_offset, 60 + tile_size_offset},
+		{164 + tile_size_offset, 76 + tile_size_offset},
+		{80 + tile_size_offset, 100 + tile_size_offset},
+		{50 + tile_size_offset, 140 + tile_size_offset},
+		{164 + tile_size_offset, 132 + tile_size_offset},
+		{164 + tile_size_offset, 148 + tile_size_offset},
+		{50 + tile_size_offset, 180 + tile_size_offset},
+		{164 + tile_size_offset, 172 + tile_size_offset},
+		{164 + tile_size_offset, 188 + tile_size_offset},
+		{164 + tile_size_offset, 212 + tile_size_offset},
+		{164 + tile_size_offset, 228 + tile_size_offset},
+		{316 + tile_size_offset, 40 + tile_size_offset},
+		{316 + tile_size_offset, 60 + tile_size_offset},
+		{316 + tile_size_offset, 80 + tile_size_offset},
+		{316 + tile_size_offset, 100 + tile_size_offset},
+		{316 + tile_size_offset, 122 + tile_size_offset},
+		{316 + tile_size_offset, 138 + tile_size_offset},
+		{316 + tile_size_offset, 160 + tile_size_offset},
+		{316 + tile_size_offset, 192 + tile_size_offset},
+		{316 + tile_size_offset, 208 + tile_size_offset},
+		{194 + tile_size_offset, 246 + tile_size_offset}, // Cancel
+		{266 + tile_size_offset, 246 + tile_size_offset}  // OK
+	};
 
 	switch (event.type)
 	{
 	case SDL_EVENT_KEY_UP:
 		break;
 	case SDL_EVENT_KEY_DOWN:
+		switch (event.key.key)
+		{
+		case SDLK_UP:
+		case SDLK_LEFT:
+			m_resources->m_SetOptionsDlg->changeCurButton(-1);
+			break;
+		case SDLK_DOWN:
+		case SDLK_RIGHT:
+			m_resources->m_SetOptionsDlg->changeCurButton(1);
+			break;
+		case SDLK_RETURN:
+
+
+			SDL_GetMouseState(&mouseX, &mouseY);
+			m_resources->m_SetOptionsDlg->updateDialog(mouseX, mouseY, 1);
+			m_resources->m_SetOptionsDlg->updateDialog(mouseX, mouseY, 2);
+			break;
+		default:
+			break;
+		}
 		break;
 	case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
@@ -962,7 +1076,8 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_healLimit(750),
 	m_sfxVolume(100),
 	m_musicVolume(100),
-	m_fontKeyPos(0)
+	m_fontKeyPos(0),
+	m_curButton(-1)
 {
 	/*m_upArrow += static_cast<char>(0xE2);
 	m_upArrow += static_cast<char>(0x96);
@@ -975,6 +1090,33 @@ ChooseOptionsDialog::ChooseOptionsDialog(SDL_Renderer* renderer, TTF_TextEngine*
 	m_curTheme = m_resources->m_currentTheme;
 	m_fontKeyPos = m_resources->m_fontKeyPos;
 	m_curMusicTheme = m_audio->m_currentTheme;
+
+	const int tile_size_offset = 8;
+	m_vecButtonPos = {
+		{80 + tile_size_offset, 40 + tile_size_offset},
+		{164 + tile_size_offset, 60 + tile_size_offset},
+		{164 + tile_size_offset, 76 + tile_size_offset},
+		{80 + tile_size_offset, 100 + tile_size_offset},
+		{50 + tile_size_offset, 140 + tile_size_offset},
+		{164 + tile_size_offset, 132 + tile_size_offset},
+		{164 + tile_size_offset, 148 + tile_size_offset},
+		{50 + tile_size_offset, 180 + tile_size_offset},
+		{164 + tile_size_offset, 172 + tile_size_offset},
+		{164 + tile_size_offset, 188 + tile_size_offset},
+		{164 + tile_size_offset, 212 + tile_size_offset},
+		{164 + tile_size_offset, 228 + tile_size_offset},
+		{316 + tile_size_offset, 40 + tile_size_offset},
+		{316 + tile_size_offset, 60 + tile_size_offset},
+		{316 + tile_size_offset, 80 + tile_size_offset},
+		{316 + tile_size_offset, 100 + tile_size_offset},
+		{316 + tile_size_offset, 122 + tile_size_offset},
+		{316 + tile_size_offset, 138 + tile_size_offset},
+		{316 + tile_size_offset, 160 + tile_size_offset},
+		{316 + tile_size_offset, 192 + tile_size_offset},
+		{316 + tile_size_offset, 208 + tile_size_offset},
+		{194 + tile_size_offset, 246 + tile_size_offset}, // Cancel
+		{266 + tile_size_offset, 246 + tile_size_offset}  // OK
+	};
 }
 
 ChooseOptionsDialog::~ChooseOptionsDialog()
@@ -1181,6 +1323,28 @@ void ChooseOptionsDialog::fontDown([[maybe_unused]] int id)
 	}
 
 	setFontTextBox();
+}
+
+void ChooseOptionsDialog::changeCurButton(int button)
+{
+	const int MAX_BUTTON = (int)m_vecButtonPos.size() - 1;
+	m_curButton += button;
+	if (m_curButton < -1)
+	{
+		m_curButton = 0;
+	}
+	else if (m_curButton == -1)
+	{
+		m_curButton = (int)m_vecButtonPos.size() - 1;
+	}
+	else if (m_curButton > MAX_BUTTON)
+	{
+		m_curButton = 0;
+	}
+	if (m_curButton >= 0 && m_curButton < m_vecButtonPos.size())
+	{
+		m_resources->SetMouseHoverOver(m_vecButtonPos[m_curButton].first + m_Rect.x, m_vecButtonPos[m_curButton].second + m_Rect.y);
+	}
 }
 
 void ChooseOptionsDialog::init()
@@ -1950,11 +2114,13 @@ void CreateCharacterDialog::typeDown([[maybe_unused]] int id)
 void CreateCharacterDialog::cancelPushed([[maybe_unused]] int id)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterAborted;
+	m_misc->m_curButton = -1;
 }
 
 void CreateCharacterDialog::okPushed([[maybe_unused]] int id)
 {
 	m_graphics->m_obsCurMode = OrganizeBottomScreen::CreateCharacterDone;
+	m_misc->m_curButton = -1;
 	memset(m_curPlayer, 0, sizeof(unsigned char) * 65);
 	size_t copySize = std::min<size_t>(13, m_ccdData.name.size());
 	memcpy(m_curPlayer, m_ccdData.name.c_str(), copySize);
@@ -2095,12 +2261,88 @@ void CreateCharacterDialog::HandleInputText(SDL_KeyboardEvent key)
 
 void CreateCharacterDialog::ProcessEvent(SDL_Event event)
 {
+	const float x_offset = 144;
+	const float y_offset = 78;
+	std::vector<std::pair<float, float>> vecButtonPos = {
+		{ 245 + x_offset, 14 + y_offset }, // Random Name
+		{ 151 + x_offset, 35 + y_offset },
+		{ 151 + x_offset, 51 + y_offset },
+		{ 151 + x_offset, 69 + y_offset },
+		{ 151 + x_offset, 85 + y_offset },
+		{ 151 + x_offset, 103 + y_offset },
+		{ 151 + x_offset, 119 + y_offset },
+		{ 151 + x_offset, 137 + y_offset },
+		{ 151 + x_offset, 153 + y_offset },
+		{ 319 + x_offset, 51 + y_offset },
+		{ 319 + x_offset, 67 + y_offset },
+		{ 319 + x_offset, 85 + y_offset },
+		{ 319 + x_offset, 101 + y_offset },
+		{ 319 + x_offset, 119 + y_offset },
+		{ 319 + x_offset, 135 + y_offset },
+		{ 184 + x_offset, 182 + y_offset }, // Cancel
+		{ 264 + x_offset, 182 + y_offset } // OK
+	};
+
 	switch (event.type)
 	{
+	case SDL_EVENT_KEY_UP:
+		float mouseX;
+		float mouseY;
+		
+		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
+		{
+			switch (event.key.key)
+			{
+			case SDLK_RETURN:
+				SDL_GetMouseState(&mouseX, &mouseY);
+				m_resources->UpdateCreateCharacter(mouseX, mouseY, 1);
+				m_resources->UpdateCreateCharacter(mouseX, mouseY, 2);
+				break;
+			default:
+				break;
+			}
+		}
+		break;
 	case SDL_EVENT_KEY_DOWN:
 		if (!(event.key.mod & SDL_KMOD_ALT) && !(event.key.mod & SDL_KMOD_CTRL) && !(event.key.mod & SDL_KMOD_GUI))
 		{
-			HandleInputText(event.key);
+			switch (event.key.key)
+			{
+			case SDLK_UP:
+			case SDLK_LEFT:
+				m_misc->m_curButton--;
+				if (m_misc->m_curButton == -1)
+				{
+					m_misc->m_curButton = (int)vecButtonPos.size() - 1;
+				}
+				else if (m_misc->m_curButton < -1)
+				{
+					m_misc->m_curButton = 0;
+				}
+				else if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+				{
+					m_misc->m_curButton = 0;
+				}
+				m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+				break;
+			case SDLK_DOWN:
+			case SDLK_RIGHT:
+				m_misc->m_curButton++;
+
+				if (m_misc->m_curButton > (int)vecButtonPos.size() - 1)
+				{
+					m_misc->m_curButton = 0;
+				}
+				else if (m_misc->m_curButton < 0)
+				{
+					m_misc->m_curButton = 0;
+				}
+				m_resources->SetMouseHoverOver(vecButtonPos[m_misc->m_curButton].first, vecButtonPos[m_misc->m_curButton].second);
+				break;
+			default:
+				HandleInputText(event.key);
+				break;
+			}
 		}
 		break;
 	default:

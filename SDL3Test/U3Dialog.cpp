@@ -1469,7 +1469,6 @@ void ChooseOptionsDialog::changeBlockSize(int blockSize)
 bool ChooseOptionsDialog::display()
 {
 	SDL_FRect myRect{};
-	SDL_FRect fromRect{};
 	float scaler = (float)m_blockSize / 16.0f;
 
 	myRect.x = (float)m_Rect.x * scaler;

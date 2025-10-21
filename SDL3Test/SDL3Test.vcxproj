@@ -110,7 +110,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;HAVE_OPEN_AL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;G:\source\SDL_mixer-main\include;G:\source\libogg\include;G:\source\libvorbis-1.3.7\include;G:\source\libsndfile-1.2.2-win64\include;G:\source\openal-soft-1.24.3-bin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.24\include;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.2.2\include;G:\source\SDL3_ttf-3.1.0\include;G:\source\SDL_mixer-main\include;G:\source\libogg\include;G:\source\libvorbis-1.3.7\include;G:\source\libsndfile-1.2.2-win64\include;G:\source\openal-soft-1.24.3-bin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -129,7 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;HAVE_OPEN_AL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.10\include\;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.1.0\include;G:\source\SDL_mixer-main\include;G:\source\libogg\include;G:\source\libvorbis-1.3.7\include;G:\source\libsndfile-1.2.2-win64\include;G:\source\openal-soft-1.24.3-bin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\source\SDL3\SDL3-3.2.24\include;G:\source\SDL_image-release-3.2.4\include\;G:\source\libxml2-2.13.6\include;G:\source\SDL3_ttf-3.2.2\include;G:\source\SDL3_ttf-3.1.0\include;G:\source\SDL_mixer-main\include;G:\source\libogg\include;G:\source\libvorbis-1.3.7\include;G:\source\libsndfile-1.2.2-win64\include;G:\source\openal-soft-1.24.3-bin\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>

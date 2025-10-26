@@ -1604,8 +1604,8 @@ void U3Resources::loadExtendedTiles(ModeGraphics& curGraphics, std::string strFi
 	float tileYSize = ySize / EXTENDED_TILES_NUM_Y;
 
 	// Forcing the tiles to be 128x128.  This will allow for consistent smooth scrolling on super small tiles.
-	int tempWidth = TEXTURE_SIZE_X;
-	int tempHeight = TEXTURE_SIZE_Y;
+	int tempWidth = (int)tileXSize;
+	int tempHeight = (int)tileYSize;
 
 	for (size_t index = 0; index < static_cast<size_t>(EXTENDED_TILES_NUM_X) * EXTENDED_TILES_NUM_Y; ++index)
 	{
@@ -1708,7 +1708,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	curGraphics.tiles_height = (float)tempHeight;
 	for (size_t index = 0; index < static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y; ++index)
 	{
-		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileXSize, tileYSize);
 		curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
 		SDL_SetTextureScaleMode(curGraphics.tiles[index], SDL_SCALEMODE_NEAREST);
 		SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);

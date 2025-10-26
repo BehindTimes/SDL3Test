@@ -855,12 +855,12 @@ void U3Graphics::renderDiorama()
 
                 fromRect.x = 0;
                 fromRect.y = 0;
-                fromRect.w = (float)TEXTURE_SIZE_X;
-                fromRect.h = ((float)TEXTURE_SIZE_Y / (float)minSize);
+                fromRect.w = (float)m_resources->m_currentGraphics->tiles[0]->w;
+                fromRect.h = ((float)m_resources->m_currentGraphics->tiles[0]->h / (float)minSize);
                 fromRect1.x = 0;
                 fromRect1.y = 0;
-                fromRect1.w = ((float)TEXTURE_SIZE_X / (float)minSize);;
-                fromRect1.h = (float)TEXTURE_SIZE_Y;
+                fromRect1.w = ((float)m_resources->m_currentGraphics->tiles[0]->w / (float)minSize);;
+                fromRect1.h = (float)m_resources->m_currentGraphics->tiles[0]->h;
 
                 toRect.h = 1.0f;
                 toRect.w = minSize;

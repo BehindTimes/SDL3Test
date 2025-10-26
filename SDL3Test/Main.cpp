@@ -1658,7 +1658,7 @@ void Game()
 	m_misc->m_Player[1][37] = 50;
 	//m_misc->m_Player[3][17] = 'P';
 	//m_misc->m_Player[16][17] = 'P';
-	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 0;
+	m_misc->m_Party[PARTY_EXODUSDEFEATED] = 1;
 	
 	
 	//m_misc->m_Player[1][17] = 'D';

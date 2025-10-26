@@ -186,8 +186,8 @@ enum {
 	freqDurationCmd = 40
 };
 
-const int TEXTURE_SIZE_X = 128;
-const int TEXTURE_SIZE_Y = 128;
+const int TEXTURE_SIZE_X = 64;
+const int TEXTURE_SIZE_Y = 64;
 
 enum SFX_LIST
 {

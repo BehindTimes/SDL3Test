@@ -311,6 +311,38 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
     ov_clear(&vf);
     return true;
 }
+
+void U3Audio::loadMusic()
+{
+    std::vector<std::string> musicList = {
+        { "Song_1.ogg" },
+        { "Song_2.ogg" },
+        { "Song_3.ogg" },
+        { "Song_4.ogg" },
+        { "Song_5.ogg" },
+        { "Song_6.ogg" },
+        { "Song_7.ogg" },
+        { "Song_8.ogg" },
+        { "Song_A.ogg" },
+        { "Song_B.ogg" }
+    };
+
+    m_music.resize(musicList.size());
+
+    if (m_currentTheme >= 0 && m_currentTheme < m_themes.size())
+    {
+        for (size_t index = 0; index < musicList.size(); ++index)
+        {
+            std::filesystem::path currentPath = m_resources->m_exePath;
+            currentPath /= ResourceLoc;
+            currentPath /= MusicLoc;
+            currentPath /= m_themes[m_currentTheme];
+            currentPath /= musicList[index];
+
+            read_ogg_file(currentPath.string(), index);
+        }
+    }
+}
 #endif
 
 void U3Audio::initThemes()
@@ -370,42 +402,8 @@ void U3Audio::changeMusic()
 #endif
 }
 
-void U3Audio::loadMusic()
-{
-    std::vector<std::string> musicList = {
-        { "Song_1.ogg" },
-        { "Song_2.ogg" },
-        { "Song_3.ogg" },
-        { "Song_4.ogg" },
-        { "Song_5.ogg" },
-        { "Song_6.ogg" },
-        { "Song_7.ogg" },
-        { "Song_8.ogg" },
-        { "Song_A.ogg" },
-        { "Song_B.ogg" }
-    };
-
-    m_music.resize(musicList.size());
-
-    if (m_currentTheme >= 0 && m_currentTheme < m_themes.size())
-    {
-        for (size_t index = 0; index < musicList.size(); ++index)
-        {
-            std::filesystem::path currentPath = m_resources->m_exePath;
-            currentPath /= ResourceLoc;
-            currentPath /= MusicLoc;
-            currentPath /= m_themes[m_currentTheme];
-            currentPath /= musicList[index];
-
-            read_ogg_file(currentPath.string(), index);
-        }
-    }
-}
-
 bool U3Audio::initMusic()
 {
-    
-    
     std::vector<std::string> sfxList = {
         { "Alarm.wav" },
         { "Attack.wav" },

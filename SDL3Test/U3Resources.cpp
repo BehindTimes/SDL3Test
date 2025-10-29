@@ -1708,10 +1708,16 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	curGraphics.tiles_height = (float)tempHeight;
 	for (size_t index = 0; index < static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y; ++index)
 	{
-		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileXSize, tileYSize);
+		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)tileXSize, (int)tileYSize);
 		////curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
 		SDL_SetTextureScaleMode(curGraphics.tiles[index], SDL_SCALEMODE_NEAREST);
 		////SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
+
+		if (index == 0x00 || index == 0x40 || index == 0x41 || index == 0x42)
+		{
+			curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+			SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
+		}
 	}
 
 	int curVecPos = 0;
@@ -1726,6 +1732,12 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
 			////SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
 			////SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+
+			if (curVecPos == 0x00 || curVecPos == 0x40 || curVecPos == 0x41 || curVecPos == 0x42)
+			{
+				SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
+				SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+			}
 
 			curVecPos++;
 		}
@@ -2657,6 +2669,17 @@ void U3Resources::ScrollShape(int tilenum, float offset)
 	myRect.w = m_currentGraphics->tiles_width;
 	myRect.h = m_currentGraphics->tiles_height;
 
+	if (m_currentGraphics->tile_target[realTile])
+	{
+		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+		myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+	}
+	else
+	{
+		int j = 9;
+	}
 	/*SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
 	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
 	myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;

@@ -360,7 +360,10 @@ U3Resources::~U3Resources()
 		}
 		for (auto& curTex : mode.second.tile_target)
 		{
-			SDL_DestroyTexture(curTex);
+			if (curTex != nullptr)
+			{
+				SDL_DestroyTexture(curTex);
+			}
 			curTex = nullptr;
 		}
 		for (auto& curTex : mode.second.mini_tiles)
@@ -1691,6 +1694,7 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 
 	curGraphics.tiles.resize(static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y);
 	curGraphics.tile_target.resize(static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y);
+	curGraphics.tile_display.resize(static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y);
 
 	SDL_Texture* curTexture = nullptr;
 
@@ -1708,10 +1712,19 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 	curGraphics.tiles_height = (float)tempHeight;
 	for (size_t index = 0; index < static_cast<size_t>(TILES_NUM_X) * TILES_NUM_Y; ++index)
 	{
-		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileXSize, tileYSize);
-		curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+		curGraphics.tiles[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)tileXSize, (int)tileYSize);
+		////curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
 		SDL_SetTextureScaleMode(curGraphics.tiles[index], SDL_SCALEMODE_NEAREST);
-		SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
+		////SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
+
+		curGraphics.tile_display[index] = curGraphics.tiles[index];
+
+		if (index == 0x00 || index == 0x40 || index == 0x41 || index == 0x42)
+		{
+			curGraphics.tile_target[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tempWidth, tempHeight);
+			SDL_SetTextureScaleMode(curGraphics.tile_target[index], SDL_SCALEMODE_NEAREST);
+			curGraphics.tile_display[index] = curGraphics.tile_target[index];
+		}
 	}
 
 	int curVecPos = 0;
@@ -1724,8 +1737,14 @@ void U3Resources::loadTiles(ModeGraphics& curGraphics, std::string strFile)
 			GetTileRectForIndex(curVecPos, frameRect, tileXSize, tileYSize, TILES_NUM_Y);
 			SDL_SetRenderTarget(m_renderer, curGraphics.tiles[curVecPos]);
 			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
-			SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
-			SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+			////SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
+			////SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+
+			if (curVecPos == 0x00 || curVecPos == 0x40 || curVecPos == 0x41 || curVecPos == 0x42)
+			{
+				SDL_SetRenderTarget(m_renderer, curGraphics.tile_target[curVecPos]);
+				SDL_RenderTexture(m_renderer, curTexture, &frameRect, NULL);
+			}
 
 			curVecPos++;
 		}
@@ -2657,10 +2676,18 @@ void U3Resources::ScrollShape(int tilenum, float offset)
 	myRect.w = m_currentGraphics->tiles_width;
 	myRect.h = m_currentGraphics->tiles_height;
 
-	SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+	if (m_currentGraphics->tile_target[realTile])
+	{
+		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+		myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;
+		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+	}
+
+	/*SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[realTile]);
 	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
 	myRect.y = (m_currentGraphics->tiles_height * offset) - m_currentGraphics->tiles_height;
-	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[realTile], NULL, &myRect);*/
 }
 
 void U3Resources::SwapShape(short shape)
@@ -2896,7 +2923,8 @@ void U3Resources::DrawDemo(Uint64 curTick)
 					{
 						realTile += 16;
 					}
-					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &shapeRect);
+					
 					if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 					{
 						if (ypos > 0)
@@ -2947,7 +2975,8 @@ void U3Resources::DrawDemo(Uint64 curTick)
 				{
 					realTile += 16;
 				}
-				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &shapeRect);
+				////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
 
 				if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 				{
@@ -2996,7 +3025,8 @@ void U3Resources::DrawDemo(Uint64 curTick)
 				{
 					realTile += 16;
 				}
-				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &shapeRect);
+				////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &shapeRect);
 			}
 			demoffset++;
 		}
@@ -3579,8 +3609,8 @@ void U3Resources::DrawMasked(unsigned short shape, unsigned short x, unsigned sh
 	{
 		realTile += 16;
 	}
-
-	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &ToRect);
+	SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &ToRect);
+	////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &ToRect);
 }
 
 void U3Resources::DrawTiles()
@@ -3636,9 +3666,11 @@ void U3Resources::DrawTiles()
 			if (realTile == 32 || realTile == 48)
 			{
 				const int FLOOR_TILE = 8;
-				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[FLOOR_TILE], NULL, &offRect);
+				SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[FLOOR_TILE], NULL, &offRect);
+				////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[FLOOR_TILE], NULL, &offRect);
 			}
-			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
+			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &offRect);
+			////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
 			
 			if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 			{
@@ -5406,7 +5438,9 @@ void U3Resources::ExodusLights()
 		m_exoduslitez++;
 		m_exoduslitez %= 4;
 
-		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[47]);
+		SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_display[47]);
+
+		////SDL_SetRenderTarget(m_renderer, m_currentGraphics->tile_target[47]);
 		size_t tile_size = 80 + static_cast<size_t>(3 - m_exoduslitez);
 		SDL_RenderTexture(m_renderer, m_currentGraphics->tiles[tile_size], NULL, NULL);
 		SDL_SetRenderTarget(m_renderer, NULL);

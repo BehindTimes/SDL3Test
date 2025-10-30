@@ -108,6 +108,7 @@ public:
 	IntroEnum m_curIntro;
 	Uint64 m_startFightTick;
 	bool m_miniMapInit;
+	bool m_forcePortraitRedraw;
 
 private:
 	void renderMiniMapDungeon();

@@ -52,7 +52,8 @@ U3Graphics::U3Graphics() :
     m_writeLordBritish(false),
     m_curIntro(IntroEnum::PRE_FIGHT),
     m_startFightTick(0),
-    m_miniMapInit(false)
+    m_miniMapInit(false),
+    m_forcePortraitRedraw(true)
 {
     memset(m_storeIcons, 0, sizeof(unsigned char) * 19);
     memset(m_maskRestoreArray, 0, sizeof(unsigned char) * 128);
@@ -78,6 +79,7 @@ void U3Graphics::setForceRedraw()
 void U3Graphics::setBlockSize(int blockSize)
 {
     m_blockSize = blockSize;
+    m_forcePortraitRedraw = true;
     if (!m_texMap)
     {
         SDL_DestroyTexture(m_texMap);
@@ -970,7 +972,7 @@ void U3Graphics::DrawWinScreen(float ratio)
 void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, [[maybe_unused]] bool fade)
 {
     DrawFrame(1);
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_scrollArea->render(deltaTime);
     m_resources->DrawWind();
     m_blinkElapsed += deltaTime;
@@ -1029,7 +1031,7 @@ void U3Graphics::renderMiniMap(SDL_Event event, Uint64 deltaTime)
 
     DrawFrame(1);
     DrawMiniMap();
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_scrollArea->render(deltaTime);
     m_resources->DrawWind();
     bool returnToGame = m_misc->ProcessAnyEvent(event);
@@ -1055,7 +1057,7 @@ void U3Graphics::renderDiorama(SDL_Event event, Uint64 deltaTime)
 {
     DrawFrame(1);
     DrawDioramaMap();
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_scrollArea->render(deltaTime);
     m_resources->DrawWind();
     bool returnToGame = m_misc->ProcessAnyEvent(event);
@@ -1089,7 +1091,7 @@ void U3Graphics::renderKreateMap([[maybe_unused]]SDL_Event event, Uint64 deltaTi
 
     DrawFrame(1);
     DrawKreateMap();
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_scrollArea->render(deltaTime);
     m_resources->DrawWind();
     m_resources->DrawInverses(deltaTime);
@@ -1135,7 +1137,7 @@ void U3Graphics::renderMiniMapDungeon(SDL_Event event, Uint64 deltaTime)
 
     DrawFrame(1);
     DrawMiniMapDungeon();
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_scrollArea->render(deltaTime);
     m_dungeon->DngInfo();
     bool returnToGame = m_misc->ProcessAnyEvent(event);
@@ -1255,7 +1257,7 @@ void U3Graphics::renderGameMenu(SDL_Event event, Uint64 deltaTime)
     }
     m_misc->m_currentEvent = event;
     DrawFrame(1);
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     if (m_resources->m_overrideImageMenu >= 0)
     {
         m_resources->ImageDisplay();
@@ -1323,7 +1325,7 @@ void U3Graphics::renderCombat(SDL_Event event, Uint64 deltaTime)
 
     m_misc->m_currentEvent = event;
     DrawFrame(1);
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     if (m_resources->m_overrideImage >= 0)
     {
         m_resources->ImageDisplay();
@@ -1511,7 +1513,7 @@ void U3Graphics::renderGameMap(SDL_Event event, Uint64 deltaTime)
             DrawMap((unsigned char)m_misc->m_xpos, (unsigned char)m_misc->m_ypos);
         }
     }
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_resources->DrawInverses(deltaTime);
     m_resources->DrawWind();
     m_scrollArea->render(deltaTime);
@@ -1610,7 +1612,7 @@ void U3Graphics::renderDungeon(SDL_Event event, Uint64 deltaTime)
             m_dungeon->DrawDungeon();
         }
     }
-    m_resources->ShowChars(true);
+    m_resources->ShowChars(m_forcePortraitRedraw);
     m_resources->DrawInverses(deltaTime);
     m_scrollArea->render(deltaTime);
     bool updateGame = true;

@@ -235,7 +235,6 @@ U3Resources::U3Resources() :
 	m_texExodusFade(nullptr),
 	m_texUltimaLogoFade(nullptr),
 	m_texDisplay(nullptr),
-	m_texStats(nullptr),
 	m_exodusWidth(0),
 	m_exodusHeight(0),
 	m_ultimaLogoWidth(0),
@@ -299,6 +298,7 @@ U3Resources::U3Resources() :
 	m_fontScale(1.0f),
 	m_fontKeyPos(0)
 {
+	memset(m_texStats, 0, sizeof(m_texStats));
 	memset(m_texIntro, 0, sizeof(m_texIntro));
 	memset(m_shapeSwap, 0, sizeof(bool) * 256);
 	memset(m_texIcons, 0, sizeof(m_texIcons));
@@ -485,10 +485,14 @@ U3Resources::~U3Resources()
 		SDL_DestroyTexture(m_texDisplay);
 		m_texDisplay = nullptr;
 	}
-	if (m_texStats)
+
+	for (int index = 0; index < 4; ++index)
 	{
-		SDL_DestroyTexture(m_texStats);
-		m_texStats = nullptr;
+		if (m_texStats[index])
+		{
+			SDL_DestroyTexture(m_texStats[index]);
+			m_texStats[index] = nullptr;
+		}
 	}
 
 	if (m_texExodus)
@@ -631,6 +635,7 @@ void U3Resources::SetPreference(U3PreferencesType type, bool value)
 		break;
 	case U3PreferencesType::Classic_Appearance:
 		m_preferences.classic_appearance = value;
+		m_graphics->m_forcePortraitRedraw = true;
 		break;
 	default:
 		break;
@@ -1017,10 +1022,16 @@ void U3Resources::CalculateBlockSize()
 	{
 		SDL_DestroyTexture(m_texDisplay);
 	}
-	if (m_texStats)
+
+	for (int index = 0; index < 4; ++index)
 	{
-		SDL_DestroyTexture(m_texStats);
+		if (m_texStats[index])
+		{
+			SDL_DestroyTexture(m_texStats[index]);
+			m_texStats[index] = nullptr;
+		}
 	}
+
 	loadButtons();
 
 	if (m_zstatbuttons.size() > 0)
@@ -1033,7 +1044,10 @@ void U3Resources::CalculateBlockSize()
 	m_graphics->m_menuInit = false;
 
 	m_texDisplay = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, final, final);
-	m_texStats = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
+	for (int index = 0; index < 4; ++index)
+	{
+		m_texStats[index] = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, m_blockSize * 15, m_blockSize * 3);
+	}
 	m_fullUpdate = true;
 }
 
@@ -1462,7 +1476,7 @@ bool U3Resources::loadCursors()
 		SDL_Surface* newSurface = SDL_ScaleSurface(curSurface, (int)(curSurface->w * scaler), (int)(curSurface->h * scaler), SDL_SCALEMODE_LINEAR);
 		SDL_DestroySurface(curSurface);
 		m_cursor_surface.push_back(newSurface);
-		SDL_Cursor*  newCursor = SDL_CreateColorCursor(newSurface, 0, 0);
+		SDL_Cursor* newCursor = SDL_CreateColorCursor(newSurface, 0, 0);
 		m_cursors.push_back(newCursor);
 	}
 	return true;
@@ -2924,7 +2938,7 @@ void U3Resources::DrawDemo(Uint64 curTick)
 						realTile += 16;
 					}
 					SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &shapeRect);
-					
+
 					if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 					{
 						if (ypos > 0)
@@ -3263,6 +3277,7 @@ void U3Resources::OptionsDlgClosed(int button)
 		m_preferences.play_music = m_SetOptionsDlg->m_codData.play_music;
 		m_preferences.play_sfx = m_SetOptionsDlg->m_codData.play_sfx;
 		m_preferences.classic_appearance = m_SetOptionsDlg->m_codData.classic;
+		m_graphics->m_forcePortraitRedraw = true;
 
 		m_preferences.auto_heal_amount = m_SetOptionsDlg->m_codData.auto_heal_amount;
 		m_preferences.volume_music = m_SetOptionsDlg->m_codData.volume_music;
@@ -3289,7 +3304,7 @@ void U3Resources::OptionsDlgClosed(int button)
 
 		if (changeScreen)
 		{
-            m_resizeScreen = changeScreen;
+			m_resizeScreen = changeScreen;
 			/*SDL_SetWindowFullscreen(window, m_preferences.full_screen);
 			SDL_SyncWindow(window);
 			CalculateBlockSize();*/
@@ -3671,7 +3686,7 @@ void U3Resources::DrawTiles()
 			}
 			SDL_RenderTexture(m_renderer, m_currentGraphics->tile_display[realTile], NULL, &offRect);
 			////SDL_RenderTexture(m_renderer, m_currentGraphics->tile_target[realTile], NULL, &offRect);
-			
+
 			if (realTile == 0 && m_currentGraphics->extended_tiles.size() >= 4)
 			{
 				if (ypos > 0)
@@ -4188,7 +4203,13 @@ void U3Resources::ShowChars(bool force) // $7338 methinx
 			RenderCharStats(i, rect);
 			somethingChanged = true;
 		}
+
+		adjustRect(rect);
+		SDL_SetRenderTarget(m_renderer, NULL);
+		SDL_RenderTexture(m_renderer, m_texStats[i], NULL, &rect);
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 	}
+	m_graphics->m_forcePortraitRedraw = false;
 }
 
 void U3Resources::DrawPortrait(char charNum)
@@ -4267,7 +4288,7 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 	SDL_FRect fromRect{};
 	SDL_FRect barRect{};
 
-	SDL_SetRenderTarget(m_renderer, m_texStats);
+	SDL_SetRenderTarget(m_renderer, m_texStats[ch]);
 	SDL_RenderClear(m_renderer);
 
 	short ros;
@@ -4602,10 +4623,10 @@ void U3Resources::RenderCharStats(short ch, SDL_FRect rect)
 			renderString(tempstr, 8 + showPortraitVal, 2, false);
 		}
 	}
-	adjustRect(rect);
+	/*adjustRect(rect);
 	SDL_SetRenderTarget(m_renderer, NULL);
-	SDL_RenderTexture(m_renderer, m_texStats, NULL, &rect);
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	SDL_RenderTexture(m_renderer, m_texStats[ch], NULL, &rect);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);*/
 }
 
 void U3Resources::UPrint(std::string gString, char x, char y, bool autoadjust)

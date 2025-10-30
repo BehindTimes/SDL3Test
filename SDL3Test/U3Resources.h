@@ -451,7 +451,7 @@ private:
 	SDL_Texture* m_texUltimaLogoFade;
 	SDL_Texture* m_texBy;
 	SDL_Texture* m_texCredits;
-	SDL_Texture* m_texStats;
+	SDL_Texture* m_texStats[4];
 	SDL_Texture* m_texPortraits;
 
 	SDL_Texture* m_texFountain;

@@ -221,6 +221,7 @@ public:
 
 	bool init(SDL_Renderer* renderer);
 	void CalculateBlockSize();
+	void removeIntroData();
 
 	void displayFPS(int fps) const;
 

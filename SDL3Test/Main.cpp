@@ -247,6 +247,7 @@ void MainLoop()
 	m_graphics->CreateMenuData();
 	CreateButtonCallbacks();
 	Intro();
+	m_resources->removeIntroData();
 
 	m_misc->m_zp[0xCF] = 0;
 	m_misc->m_zp[0x10] = 0;

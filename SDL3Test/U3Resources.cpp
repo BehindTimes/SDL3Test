@@ -315,6 +315,8 @@ U3Resources::U3Resources() :
 
 U3Resources::~U3Resources()
 {
+	removeIntroData();
+
 	m_SetOptionsDlg.reset();
 	m_CreateCharacterDlg.reset();
 	m_AlertDlg.reset();
@@ -450,25 +452,10 @@ U3Resources::~U3Resources()
 		m_texTimeLord = nullptr;
 	}
 
-	if (m_texStalagtites)
-	{
-		SDL_DestroyTexture(m_texStalagtites);
-		m_texStalagtites = nullptr;
-	}
-
 	if (m_texPortraits)
 	{
 		SDL_DestroyTexture(m_texPortraits);
 		m_texPortraits = nullptr;
-	}
-
-	for (int index = 0; index < 5; ++index)
-	{
-		if (m_texIntro[index])
-		{
-			SDL_DestroyTexture(m_texIntro[index]);
-			m_texIntro[index] = nullptr;
-		}
 	}
 
 	for (int index = 0; index < 2; ++index)
@@ -500,33 +487,6 @@ U3Resources::~U3Resources()
 		SDL_DestroyTexture(m_texExodus);
 		m_texExodus = nullptr;
 	}
-	if (m_texUltimaLogo)
-	{
-		SDL_DestroyTexture(m_texUltimaLogo);
-		m_texUltimaLogo = nullptr;
-	}
-	if (m_texBy)
-	{
-		SDL_DestroyTexture(m_texBy);
-		m_texBy = nullptr;
-	}
-
-	if (m_texCredits)
-	{
-		SDL_DestroyTexture(m_texCredits);
-		m_texCredits = nullptr;
-	}
-
-	if (m_texExodusFade)
-	{
-		SDL_DestroyTexture(m_texExodusFade);
-		m_texExodusFade = nullptr;
-	}
-	if (m_texUltimaLogoFade)
-	{
-		SDL_DestroyTexture(m_texUltimaLogoFade);
-		m_texUltimaLogoFade = nullptr;
-	}
 
 	if (m_texRaceClass)
 	{
@@ -548,6 +508,48 @@ U3Resources::~U3Resources()
 		}
 	}
 
+}
+
+void U3Resources::removeIntroData()
+{
+	if (m_texStalagtites)
+	{
+		SDL_DestroyTexture(m_texStalagtites);
+		m_texStalagtites = nullptr;
+	}
+	if (m_texExodusFade)
+	{
+		SDL_DestroyTexture(m_texExodusFade);
+		m_texExodusFade = nullptr;
+	}
+	if (m_texUltimaLogoFade)
+	{
+		SDL_DestroyTexture(m_texUltimaLogoFade);
+		m_texUltimaLogoFade = nullptr;
+	}
+	if (m_texUltimaLogo)
+	{
+		SDL_DestroyTexture(m_texUltimaLogo);
+		m_texUltimaLogo = nullptr;
+	}
+	if (m_texBy)
+	{
+		SDL_DestroyTexture(m_texBy);
+		m_texBy = nullptr;
+	}
+	for (int index = 0; index < 5; ++index)
+	{
+		if (m_texIntro[index])
+		{
+			SDL_DestroyTexture(m_texIntro[index]);
+			m_texIntro[index] = nullptr;
+		}
+	}
+	if (m_texCredits)
+	{
+		SDL_DestroyTexture(m_texCredits);
+		m_texCredits = nullptr;
+	}
 }
 
 void U3Resources::changeFont()
@@ -2237,21 +2239,24 @@ void U3Resources::drawExodus(Uint8 alpha)
 
 	drawImage(m_texExodus, m_blockSize * 5.25f, m_blockSize * 1.25f, m_blockSize * 29.5f, m_blockSize * 8.375f);
 
-	unsigned char* pixels = NULL;
-	int pitch;
-	SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
-	for (int indexY = 0; indexY < m_exodusHeight; ++indexY)
+	if (m_texExodusFade)
 	{
-		for (int indexX = 0; indexX < m_exodusWidth * 4; indexX += 4)
+		unsigned char* pixels = NULL;
+		int pitch;
+		SDL_LockTexture(m_texExodusFade, NULL, (void**)&pixels, &pitch);
+		for (int indexY = 0; indexY < m_exodusHeight; ++indexY)
 		{
-			int display = SDL_rand(255);
+			for (int indexX = 0; indexX < m_exodusWidth * 4; indexX += 4)
+			{
+				int display = SDL_rand(255);
 
-			pixels[(indexY * pitch) + indexX] = (display > alpha) ? 255 : 0;
+				pixels[(indexY * pitch) + indexX] = (display > alpha) ? 255 : 0;
+			}
 		}
-	}
-	SDL_UnlockTexture(m_texExodusFade);
+		SDL_UnlockTexture(m_texExodusFade);
 
-	drawImage(m_texExodusFade, m_blockSize * 5.25f, m_blockSize * 1.25f, m_blockSize * 29.5f, m_blockSize * 8.375f);
+		drawImage(m_texExodusFade, m_blockSize * 5.25f, m_blockSize * 1.25f, m_blockSize * 29.5f, m_blockSize * 8.375f);
+	}
 }
 
 void U3Resources::drawUltimaLogo(Uint8 alpha)

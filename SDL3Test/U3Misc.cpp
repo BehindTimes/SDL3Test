@@ -689,6 +689,16 @@ void U3Misc::LoadUltimaMap(short map)
 				return;
 			}
 			memcpy(m_Monsters, m_resources->m_vecResourceData.data() + (start_loc + 4), sizeof(unsigned char) * file_size);
+			// Fix a bug if you start to kill Exodus and need to leave (perhaps you don't have all the cards).
+			// We only save if Exodus is defeated, not how many parts of him are destroyed.
+			// This can be confusing if you partially destroy him and leave the castle, whereas his body
+			// will respawn but you'll still need to interact with the portion to the right.
+			// We could always clear it out, but if you restart the game, it regenerates anyway, so might as
+			// well just always reset the order for consistency.
+			if (map == 1 && !m_Party[PARTY_EXODUSDEFEATED])
+			{
+				m_lastCard = 0x1e;
+			}
 		}
 		else if (map == 19)
 		{

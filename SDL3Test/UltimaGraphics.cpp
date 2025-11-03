@@ -724,7 +724,7 @@ void U3Graphics::DrawMiniMap()
     if (!m_texMap)
     {
         return;
-    } 
+    }
 
     theRect.x = (float)m_blockSize;
     theRect.y = (float)m_blockSize;
@@ -1004,6 +1004,8 @@ void U3Graphics::renderWinScreen(SDL_Event event, Uint64 deltaTime, [[maybe_unus
                 m_scrollArea->UPrintWin("\n");
                 m_misc->m_inputType = InputType::Default;
                 m_misc->SafeExodus();
+                SDL_SetTextureAlphaMod(m_texMap, 255);
+                return;
             }
         }
         else

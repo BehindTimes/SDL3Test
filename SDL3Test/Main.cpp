@@ -270,6 +270,10 @@ void MainLoop()
 				{
 					break;
 				}
+				if (!m_resources->loadPreferences())
+				{
+					break;
+				}
 				DoSplashScreen();
 				m_audio->setCurrentSong(0);
 				m_audio->setNextSong(0);

@@ -153,7 +153,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	}
 
 #if HAVE_SDL3_MIXER
-	int result = 0;
+
+	MIX_Init();
+	/*int result = 0;
 	int flags = MIX_INIT_WAVPACK | MIX_INIT_MP3 | MIX_INIT_OGG;
 	if (flags != (result = Mix_Init(flags)))
 	{
@@ -168,7 +170,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	curSpec.channels = 2;
 	Mix_OpenAudio(0, &curSpec);
 	// Allocate a number of channels
-	Mix_AllocateChannels(8);
+	Mix_AllocateChannels(8);*/
 #endif
 
 	SDL_SetRenderVSync(renderer, m_resources->m_preferences.vsync);
@@ -205,7 +207,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	//Mix_FreeMusic(music);
 #if HAVE_SDL3_MIXER
-	Mix_CloseAudio();
+	MIX_Quit();
+	//Mix_CloseAudio();
 #endif
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
@@ -845,9 +848,7 @@ void Demo()
 
 	while (1)
 	{
-#if HAVE_OPEN_AL
         m_audio->checkIsPlaying();
-#endif
         if (gInterrupt)
 		{
 			changeMode = true;
@@ -1699,9 +1700,7 @@ void Game()
 
 	while (1)
 	{
-#if HAVE_OPEN_AL
         m_audio->checkIsPlaying();
-#endif
 		if (gInterrupt)
 		{
 			break;

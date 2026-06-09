@@ -57,13 +57,17 @@ public:
 	int getNextSong() const { return m_nextSong; }
 	int getCachedSong() const { return m_cachedSong; }
 	void changeMusic();
+	void loadMusic();
+	void checkIsPlaying();
 
 #if HAVE_SDL3_MIXER
-	std::vector<Mix_Music*> m_music;
-	std::vector<Mix_Chunk*> m_sfx;
+	MIX_Mixer* m_mixer;
+	std::vector<MIX_Audio*> m_music;
+	std::vector<MIX_Audio*> m_sfx;
+	MIX_Track* m_mus_track;
+	MIX_Track* m_sfx_track;
 #elif HAVE_OPEN_AL
-	void checkIsPlaying();
-	void loadMusic();
+	
 	bool read_wav_file(std::string fname, size_t index);
 	bool read_ogg_file(std::string fname, size_t index);
 
@@ -83,6 +87,7 @@ private:
 	int m_nextSong;
 	int m_playingSong;
 	int m_cachedSong;
+	bool m_hasAudio;
 
 #if HAVE_OPEN_AL
 	ALCdevice* m_device;

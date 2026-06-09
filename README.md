@@ -20,8 +20,6 @@ libvorbis
 
 Just including a Visual Studio project at the moment, as that's what I'm developing this with.  It should build with any C++20 compiler that supports the above packages though.
 
-SDL3 Mixer doesn't have an official release yet, so you'll have to build from the main repository.
-
 You will also need the resources file (**MainResources.rsrc**) from the creator of the original program this work is based off of.  Place it in the **Resources** folder of this program.
 
 There are also a few files which didn't seem to be uploaded to the repo, but you can find them in the zip under the Releases.
@@ -30,7 +28,7 @@ https://github.com/beastie/ultima3
 
 *******************************************************************************
 
-While it initially supported SDL Mixer 3, due to there being no official version yet, development on that has been paused, and went to a purely OpenAL approach.
+As SDL3 Mixer has finally been been released, I've created a branch supporting it.  You won't need libsndfile, libogg, libvorbis, or OpenAL if you use that branch. 
 
 [SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
 

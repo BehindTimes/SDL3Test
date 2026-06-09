@@ -129,4 +129,5 @@ This part is very experimental.  Right now I'm using several different unicode c
 *******************************************************************************
 
 **License**
+
 Usage is provided under the [MIT License](https://opensource.org/license/mit)

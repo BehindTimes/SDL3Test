@@ -75,6 +75,7 @@ cd ~/Library/Frameworks
 xattr -r -d com.apple.quarantine SDL3.xcframework
 xattr -r -d com.apple.quarantine SDL3_image.xcframework
 xattr -r -d com.apple.quarantine SDL3_ttf.xcframework
+xattr -r -d com.apple.quarantine SDL3_mixer.xcframework
 xattr -r -d com.apple.quarantine share
 ```
 At this point, you should now have everything necessary to build.

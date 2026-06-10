@@ -10,13 +10,7 @@ C++20
 
 [LibXML2](https://github.com/GNOME/libxml2)
 
-libsndfile
-
-libogg
-
-libvorbis
-
-[OpenAL](https://www.openal.org/downloads/)
+[SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
 
 Just including a Visual Studio project at the moment, as that's what I'm developing this with.  It should build with any C++20 compiler that supports the above packages though.
 
@@ -28,9 +22,23 @@ https://github.com/beastie/ultima3
 
 *******************************************************************************
 
-As SDL3 Mixer has finally been been released, I've created a branch supporting it.  You won't need libsndfile, libogg, libvorbis, or OpenAL if you use that branch. 
+When this program was originally created, SDL3 Mixer was not exactly complete, thus the project used OpenAL as an audio substitute.  It still should support OpenAL if you configure the CMakeLists.txt properly.
 
-[SDL3 Mixer](https://github.com/libsdl-org/SDL_mixer/)
+You'll need the following libraries for OpenAL support:
+
+libsndfile
+
+libogg
+
+libvorbis
+
+[OpenAL](https://www.openal.org/downloads/)
+
+In CMakeLists.txt, replace
+
+HAVE_SDL3_MIXER with HAVE_OPEN_AL
+
+You'll then also need to find and link the above libraries.
 
 *******************************************************************************
 

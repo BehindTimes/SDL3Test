@@ -13,14 +13,7 @@ find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(LibXml2 REQUIRED)
-find_package(Ogg REQUIRED)
-find_package(SndFile REQUIRED)
-find_package(OpenAL REQUIRED)
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(Vorbis REQUIRED IMPORTED_TARGET vorbis)
-pkg_check_modules(Vorbisenc REQUIRED IMPORTED_TARGET vorbisenc)
-pkg_check_modules(Vorbisfile REQUIRED IMPORTED_TARGET vorbisfile)
+find_package(SDL3_mixer REQUIRED)
 
 add_executable(U3Lairware)
 
@@ -44,16 +37,10 @@ target_sources(U3Lairware PRIVATE
 )
 
 target_link_libraries(U3Lairware PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf SDL3_image::SDL3_image
-					LibXml2::LibXml2 
-					Ogg::ogg
-					OpenAL::OpenAL 
-					SndFile::sndfile
-					PkgConfig::Vorbis 
-					PkgConfig::Vorbisenc 
-					PkgConfig::Vorbisfile
+					LibXml2::LibXml2 SDL3_mixer::SDL3_mixer
 )
 
 target_include_directories(U3Lairware PRIVATE ${SDL3_INCLUDE_DIRS})
 
-add_compile_definitions(HAVE_OPEN_AL=1)
+add_compile_definitions(HAVE_SDL3_MIXER=1)
 add_compile_definitions(NDEBUG)

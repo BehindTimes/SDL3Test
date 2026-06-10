@@ -4,6 +4,7 @@
 #if HAVE_OPEN_AL
 #include <fstream>
 #include <sndfile.h>
+#elif HAVE_SDL3_MIXER
 #endif
 #include "UltimaIncludes.h"
 #include "UltimaSound.h"
@@ -14,16 +15,26 @@ extern std::unique_ptr<U3Misc> m_misc;
 extern std::unique_ptr<U3Resources> m_resources;
 extern std::unique_ptr<U3Audio> m_audio;
 
-#if HAVE_SDL3_MIXER
-static void musicFinished()
-{
-	m_audio->playNextSong();
-}
-#endif
 
-#if HAVE_OPEN_AL
 void U3Audio::checkIsPlaying()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
+#if HAVE_SDL3_MIXER
+    if (m_playingSong >= 0)
+    {
+        size_t tempsong = static_cast<size_t>(m_playingSong) - 1;
+        if (m_playingSong > 0 && tempsong < m_music.size() && m_music[tempsong] != nullptr)
+        {
+            if (!MIX_TrackPlaying(m_mus_track))
+            {
+                m_audio->playNextSong();
+            }
+        }
+    }
+#elif HAVE_OPEN_AL
     ALint state;
     if(m_playingSong >= 0)
     {
@@ -37,8 +48,9 @@ void U3Audio::checkIsPlaying()
             }
         }
     }
-}
 #endif
+}
+
 
 void U3Audio::playNextSong()
 {
@@ -52,24 +64,41 @@ U3Audio::U3Audio() :
 	m_playingSong(0),
 	m_cachedSong(0),
     m_currentTheme(0),
-    m_changeMusic(false)
-{
+    m_changeMusic(false),
 #if HAVE_SDL3_MIXER
-	Mix_HookMusicFinished(musicFinished);
-#elif HAVE_OPEN_AL
+    m_mixer(nullptr),
+    m_mus_track(nullptr),
+    m_sfx_track(nullptr),
+#endif
+    m_hasAudio(false)
+{
+
+
+#if HAVE_OPEN_AL
     m_device = nullptr;
     m_context = nullptr;
+    m_hasAudio = true;
 #endif
 }
 
 U3Audio::~U3Audio()
 {
 #if HAVE_SDL3_MIXER
+    if (m_sfx_track)
+    {
+        MIX_DestroyTrack(m_sfx_track);
+        m_sfx_track = nullptr;
+    }
+    if (m_mus_track)
+    {
+        MIX_DestroyTrack(m_mus_track);
+        m_mus_track = nullptr;
+    }
 	for (auto& curMusic : m_music)
 	{
 		if (curMusic)
 		{
-			Mix_FreeMusic(curMusic);
+            MIX_DestroyAudio(curMusic);
 		}
 	}
 	m_music.clear();
@@ -77,9 +106,11 @@ U3Audio::~U3Audio()
 	{
 		if (curSfx)
 		{
-			Mix_FreeChunk(curSfx);
+            MIX_DestroyAudio(curSfx);
 		}
 	}
+    m_music.clear();
+    m_sfx.clear();
 #elif HAVE_OPEN_AL
     for(auto& cur_music : m_music)
     {
@@ -312,41 +343,14 @@ bool U3Audio::read_ogg_file(std::string fname, size_t index)
     return true;
 }
 
-void U3Audio::loadMusic()
-{
-    std::vector<std::string> musicList = {
-        { "Song_1.ogg" },
-        { "Song_2.ogg" },
-        { "Song_3.ogg" },
-        { "Song_4.ogg" },
-        { "Song_5.ogg" },
-        { "Song_6.ogg" },
-        { "Song_7.ogg" },
-        { "Song_8.ogg" },
-        { "Song_A.ogg" },
-        { "Song_B.ogg" }
-    };
-
-    m_music.resize(musicList.size());
-
-    if (m_currentTheme >= 0 && m_currentTheme < m_themes.size())
-    {
-        for (size_t index = 0; index < musicList.size(); ++index)
-        {
-            std::filesystem::path currentPath = m_resources->m_exePath;
-            currentPath /= ResourceLoc;
-            currentPath /= MusicLoc;
-            currentPath /= m_themes[m_currentTheme];
-            currentPath /= musicList[index];
-
-            read_ogg_file(currentPath.string(), index);
-        }
-    }
-}
 #endif
 
 void U3Audio::initThemes()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
     std::filesystem::path currentPath = m_resources->m_exePath;
     currentPath /= ResourceLoc;
     currentPath /= MusicLoc;
@@ -375,8 +379,16 @@ void U3Audio::initThemes()
 
 void U3Audio::changeMusic()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
     m_changeMusic = false;
-#if HAVE_OPEN_AL
+#if HAVE_SDL3_MIXER
+    stopMusic();
+    loadMusic();
+    playMusic(m_currentSong);
+#elif HAVE_OPEN_AL
     // Clearing out errors, just incase
     alGetError();
 
@@ -402,8 +414,79 @@ void U3Audio::changeMusic()
 #endif
 }
 
+void U3Audio::loadMusic()
+{
+    if (!m_hasAudio)
+    {
+        return;
+    }
+    std::vector<std::string> musicList = {
+        { "Song_1.ogg" },
+        { "Song_2.ogg" },
+        { "Song_3.ogg" },
+        { "Song_4.ogg" },
+        { "Song_5.ogg" },
+        { "Song_6.ogg" },
+        { "Song_7.ogg" },
+        { "Song_8.ogg" },
+        { "Song_A.ogg" },
+        { "Song_B.ogg" }
+    };
+#if HAVE_SDL3_MIXER
+    m_music.resize(musicList.size());
+
+    for (size_t index = 0; index < m_music.size(); ++index)
+    {
+        std::filesystem::path currentPath = m_resources->m_exePath;
+        currentPath /= ResourceLoc;
+        currentPath /= MusicLoc;
+        currentPath /= m_resources->m_preferences.music_subfolder;
+        currentPath /= musicList[index];
+
+        m_music[index] = MIX_LoadAudio(m_mixer, currentPath.string().c_str(), true);
+        if (m_music[index] == nullptr)
+        {
+            return;
+        }
+    }
+#elif HAVE_OPEN_AL
+
+    m_music.resize(musicList.size());
+
+    if (m_currentTheme >= 0 && m_currentTheme < m_themes.size())
+    {
+        for (size_t index = 0; index < musicList.size(); ++index)
+        {
+            std::filesystem::path currentPath = m_resources->m_exePath;
+            currentPath /= ResourceLoc;
+            currentPath /= MusicLoc;
+            currentPath /= m_themes[m_currentTheme];
+            currentPath /= musicList[index];
+
+            read_ogg_file(currentPath.string(), index);
+        }
+    }
+#endif
+}
+
 bool U3Audio::initMusic()
 {
+#if HAVE_SDL3_MIXER
+    m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    m_mus_track = MIX_CreateTrack(m_mixer);
+    m_sfx_track = MIX_CreateTrack(m_mixer);
+
+    if (m_mixer)
+    {
+        m_hasAudio = true;
+    }
+    if (!m_hasAudio)
+    {
+        return true;
+    }
+#endif
+
+    //Mix_HookMusicFinished(musicFinished);
     std::vector<std::string> sfxList = {
         { "Alarm.wav" },
         { "Attack.wav" },
@@ -448,24 +531,6 @@ bool U3Audio::initMusic()
     initThemes();
     
 #if HAVE_SDL3_MIXER
-	
-	m_music.resize(musicList.size());
-
-	for (size_t index = 0; index < m_music.size(); ++index)
-	{
-		std::filesystem::path currentPath = m_resources->m_exePath;
-		currentPath /= ResourceLoc;
-		currentPath /= MusicLoc;
-		currentPath /= m_resources->m_preferences.music_subfolder;
-		currentPath /= musicList[index];
-
-		m_music[index] = Mix_LoadMUS(currentPath.string().c_str());
-		if (m_music[index] == nullptr)
-		{
-			return false;
-		}
-	}
-
 	m_sfx.resize(sfxList.size());
 
 	for (size_t index = 0; index < sfxList.size(); ++index)
@@ -475,7 +540,7 @@ bool U3Audio::initMusic()
 		currentPath /= SfxLoc;
 		currentPath /= sfxList[index];
 
-		m_sfx[index] = Mix_LoadWAV(currentPath.string().c_str());
+		m_sfx[index] = MIX_LoadAudio(m_mixer, currentPath.string().c_str(), true);
 		if (m_sfx[index] == nullptr)
 		{
 			return false;
@@ -504,14 +569,18 @@ bool U3Audio::initMusic()
         read_wav_file(currentPath.string(), index);
     }
     
-    loadMusic();
 #endif
+    loadMusic();
     
 	return true;
 }
 
 void U3Audio::playMusic([[maybe_unused]] int song)
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
 	m_playingSong = song;
 	song--;
@@ -521,14 +590,16 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 	}
 	if (song >= 0 && song < m_music.size())
 	{
-		if (Mix_PausedMusic())
+        MIX_SetTrackAudio(m_mus_track, m_music[song]);
+        MIX_PlayTrack(m_mus_track, NULL);
+		/*if (Mix_PausedMusic())
 		{
 			Mix_ResumeMusic();
 		}
 		else
 		{
 			Mix_PlayMusic(m_music[song], 0);
-		}
+		}*/
 	}
 #elif HAVE_OPEN_AL
     m_playingSong = song;
@@ -558,11 +629,16 @@ void U3Audio::playMusic([[maybe_unused]] int song)
 
 void U3Audio::stopSfx()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
-	Mix_HaltChannel(-1);
+    MIX_StopTrack(m_sfx_track, 0);
+	/*Mix_HaltChannel(-1);
 #ifdef NDEBUG
 	Mix_HaltMusic();
-#endif
+#endif*/
 #elif HAVE_OPEN_AL
     for(auto& curSfx : m_sfx)
     {
@@ -577,12 +653,17 @@ void U3Audio::stopSfx()
 
 void U3Audio::stopMusic()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
-	if (Mix_PausedMusic())
+    MIX_StopTrack(m_mus_track, 0);
+	/*if (Mix_PausedMusic())
 	{
 		Mix_ResumeMusic();
 	}
-	Mix_HaltMusic();
+	Mix_HaltMusic();*/
 #elif HAVE_OPEN_AL
     for(auto& curMusic : m_music)
     {
@@ -596,13 +677,21 @@ void U3Audio::stopMusic()
 
 void U3Audio::pauseMusic()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
-	Mix_PauseMusic();
+	//Mix_PauseMusic();
 #endif
 }
 
 void U3Audio::playSfx([[maybe_unused]] int sfx)
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
 	if (!m_resources->m_preferences.play_sfx)
 	{
@@ -612,7 +701,9 @@ void U3Audio::playSfx([[maybe_unused]] int sfx)
 	{
 		return;
 	}
-	Mix_PlayChannel(-1, m_sfx[sfx], 0);
+	//Mix_PlayChannel(-1, m_sfx[sfx], 0);
+    MIX_SetTrackAudio(m_sfx_track, m_sfx[sfx]);
+    MIX_PlayTrack(m_sfx_track, NULL);
 #elif HAVE_OPEN_AL
     if (!m_resources->m_preferences.play_sfx)
     {
@@ -631,6 +722,10 @@ void U3Audio::playSfx([[maybe_unused]] int sfx)
 
 void U3Audio::musicUpdate()
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
 	if (!m_resources->m_preferences.play_music)
 	{
@@ -655,10 +750,10 @@ void U3Audio::musicUpdate()
 		m_currentSong = m_nextSong;
 		playMusic(m_currentSong);
 	}
-	else if (Mix_PlayingMusic() == 0)
+	/*else if (Mix_PlayingMusic() == 0)
 	{
 		playMusic(m_currentSong);
-	}
+	}*/
 #elif HAVE_OPEN_AL
     if (!m_resources->m_preferences.play_music)
     {
@@ -696,12 +791,15 @@ void U3Audio::musicUpdate()
 
 void U3Audio::setVolumeSfx(int volume)
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
     if (volume >= 0 && volume <= 100)
     {
-        float volume_percent = float(volume) / MIX_MAX_VOLUME;
-        int new_volume = (int)(volume_percent * MIX_MAX_VOLUME);
-        Mix_Volume(new_volume, -1);
+        float volume_percent = float(volume) / 100.0f;
+        MIX_SetTrackGain(m_sfx_track, volume_percent);
     }
 #elif HAVE_OPEN_AL
     if (volume >= 0 && volume <= 100)
@@ -720,12 +818,15 @@ void U3Audio::setVolumeSfx(int volume)
 
 void U3Audio::setVolumeMusic(int volume)
 {
+    if (!m_hasAudio)
+    {
+        return;
+    }
 #if HAVE_SDL3_MIXER
     if (volume >= 0 && volume <= 100)
     {
-        float volume_percent = float(volume) / MIX_MAX_VOLUME;
-        int new_volume = (int)(volume_percent * MIX_MAX_VOLUME);
-        Mix_VolumeMusic(new_volume);
+        float volume_percent = float(volume) / 100.0f;
+        MIX_SetTrackGain(m_mus_track, volume_percent);
     }
 #elif HAVE_OPEN_AL
     if (volume >= 0 && volume <= 100)
